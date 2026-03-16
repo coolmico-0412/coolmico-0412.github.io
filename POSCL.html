@@ -1,203 +1,255 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>掃碼 POS 系統</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<title>ระบบ POS / POS系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-:root {
-  --bg:#080b10; --surface:#0f1420; --surface2:#161d2e; --border:#242d42; --border2:#2e3a56;
-  --accent:#00d4ff; --accent2:#0099cc; --accent-glow:rgba(0,212,255,.13);
-  --gold:#f5c518; --gold2:#d4a200;
-  --green:#00e676; --red:#ff4444; --purple:#9c6bff;
-  --text:#dde4f0; --muted:#5a6680; --muted2:#3a4560;
-  --font:'Noto Sans TC',sans-serif; --mono:'Space Mono',monospace;
+:root{
+  --bg:#080b10;--surface:#0f1420;--surface2:#161d2e;--border:#242d42;--border2:#2e3a56;
+  --accent:#00d4ff;--accent2:#0099cc;--aglow:rgba(0,212,255,.13);
+  --gold:#f5c518;--gold2:#d4a200;--gold-glow:rgba(245,197,24,.2);
+  --green:#00e676;--red:#ff4444;--purple:#9c6bff;--orange:#ff9800;
+  --text:#dde4f0;--muted:#5a6680;--muted2:#3a4560;
+  --th:'Sarabun',sans-serif;--zh:'Noto Sans TC',sans-serif;--mono:'Space Mono',monospace;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden;font-size:14px;}
+body{background:var(--bg);color:var(--text);font-family:var(--th);min-height:100vh;overflow-x:hidden;font-size:14px;}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:var(--surface);}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
 
-/* NAV */
-nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:54px;position:sticky;top:0;z-index:100;gap:4px;}
-.brand{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:3px;margin-right:auto;text-shadow:0 0 20px var(--accent-glow);}
-.brand small{font-size:10px;color:var(--muted);letter-spacing:.5px;font-family:var(--font);font-weight:400;display:block;margin-top:1px;}
-.nav-tab{padding:7px 14px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .2s;font-family:var(--font);}
+/* ── NAV ── */
+nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--border);padding:0 18px;height:54px;position:sticky;top:0;z-index:100;gap:2px;}
+.brand{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:3px;margin-right:auto;}
+.brand small{font-size:10px;color:var(--muted);letter-spacing:.3px;font-family:var(--th);font-weight:400;display:block;margin-top:1px;}
+.nav-tab{padding:7px 13px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .2s;font-family:var(--th);line-height:1.2;text-align:center;}
+.nav-tab .zh{font-family:var(--zh);font-size:10px;display:block;opacity:.6;}
 .nav-tab:hover{color:var(--text);background:var(--surface2);}
-.nav-tab.active{color:var(--accent);background:var(--accent-glow);}
+.nav-tab.active{color:var(--accent);background:var(--aglow);}
 
-/* PAGES */
+/* ── PAGES ── */
 .page{display:none;padding:20px;max-width:1180px;margin:0 auto;}
 .page.active{display:block;animation:fadeIn .22s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 
-/* LAYOUT */
-.pos-grid{display:grid;grid-template-columns:1fr 350px;gap:18px;align-items:start;}
+/* ── POS GRID ── */
+.pos-grid{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start;}
 
-/* CARD */
+/* ── CARD ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
 .card-hd{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;}
+.card-hd .zh{font-family:var(--zh);font-size:11px;color:var(--muted);font-weight:400;margin-left:2px;}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;}
 .dot.green{background:var(--green);box-shadow:0 0 9px var(--green);}
 .dot.pulse{background:var(--accent);box-shadow:0 0 9px var(--accent);animation:blink 1.4s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* SCANNER */
+/* ── SCANNER ── */
 .scanner-body{padding:18px;display:flex;flex-direction:column;gap:12px;}
 .video-wrap{position:relative;background:#000;border-radius:10px;overflow:hidden;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;border:1px solid var(--border2);}
 #preview{width:100%;height:100%;object-fit:cover;display:none;}
 .scan-overlay{position:absolute;inset:0;pointer-events:none;}
 .scan-line{position:absolute;left:14%;right:14%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanmove 2s ease-in-out infinite;box-shadow:0 0 10px var(--accent);}
 @keyframes scanmove{0%,100%{top:20%;opacity:0}10%,90%{opacity:1}50%{top:78%}}
-.sc{position:absolute;width:26px;height:26px;border-color:var(--accent);border-style:solid;opacity:.9;}
+.sc{position:absolute;width:24px;height:24px;border-color:var(--accent);border-style:solid;opacity:.9;}
 .sc.tl{top:12%;left:12%;border-width:3px 0 0 3px}.sc.tr{top:12%;right:12%;border-width:3px 3px 0 0}
 .sc.bl{bottom:12%;left:12%;border-width:0 0 3px 3px}.sc.br{bottom:12%;right:12%;border-width:0 3px 3px 0}
-.cam-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:32px;color:var(--muted);font-size:13px;text-align:center;}
-.cam-ph .icon{font-size:40px;opacity:.25;}
-.cam-ph .hint{font-size:11px;opacity:.5;margin-top:2px;}
-
-/* BUTTONS */
-.btn{padding:10px 16px;border-radius:8px;border:none;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;}
-.btn-accent{background:var(--accent);color:#000;flex:1;justify-content:center;}
-.btn-accent:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 18px var(--accent-glow);}
-.btn-accent:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;transform:none;box-shadow:none;}
-.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text);}
-.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
-.btn-ghost:disabled{opacity:.4;cursor:not-allowed;}
-.btn-danger{background:transparent;border:1px solid var(--border2);color:var(--muted);}
-.btn-danger:hover{border-color:var(--red);color:var(--red);background:rgba(255,68,68,.06);}
-.btn-green{background:transparent;border:1px solid var(--border2);color:var(--muted);}
-.btn-green:hover{border-color:var(--green);color:var(--green);background:rgba(0,230,118,.06);}
-
+.cam-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:30px;color:var(--muted);font-size:13px;text-align:center;}
+.cam-ph .icon{font-size:38px;opacity:.22;}
+.cam-ph .hint{font-size:11px;opacity:.5;margin-top:2px;font-family:var(--zh);}
 .scan-controls{display:flex;gap:8px;}
-.manual-row{display:flex;gap:8px;}
-.inp{flex:1;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border-color .2s;font-family:var(--mono);}
-.inp:focus{border-color:var(--accent);}
-.inp::placeholder{color:var(--muted);font-family:var(--font);}
-
-.scan-st{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);font-family:var(--mono);min-height:40px;display:flex;align-items:center;gap:7px;}
+.scan-st{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);font-family:var(--zh);min-height:40px;display:flex;align-items:center;gap:7px;}
 .scan-st.ok{border-color:var(--green);color:var(--green);}
 .scan-st.err{border-color:var(--red);color:var(--red);}
 .scan-st.warn{border-color:var(--gold);color:var(--gold);}
 
-/* CART */
+/* ── MEMBER SELECT ── */
+.member-row{display:flex;gap:8px;align-items:center;}
+.member-select{flex:1;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;font-family:var(--th);transition:border-color .2s;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a6680' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.member-select:focus{border-color:var(--accent);}
+.member-select option{background:var(--surface2);color:var(--text);}
+.member-badge{display:none;background:var(--aglow);border:1px solid var(--accent);color:var(--accent);padding:4px 10px;border-radius:6px;font-size:12px;font-family:var(--zh);white-space:nowrap;align-items:center;gap:5px;}
+.member-badge.show{display:flex;}
+
+/* ── BUTTONS ── */
+.btn{padding:10px 16px;border-radius:8px;border:none;font-family:var(--th);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:5px;}
+.btn .zh{font-family:var(--zh);font-size:11px;}
+.btn-accent{background:var(--accent);color:#000;}
+.btn-accent:hover{background:var(--accent2);transform:translateY(-1px);}
+.btn-accent:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;transform:none;}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-ghost:disabled{opacity:.38;cursor:not-allowed;}
+.btn-danger{background:transparent;border:1px solid var(--border2);color:var(--muted);}
+.btn-danger:hover{border-color:var(--red);color:var(--red);background:rgba(255,68,68,.07);}
+.btn-green{background:transparent;border:1px solid var(--border2);color:var(--muted);}
+.btn-green:hover{border-color:var(--green);color:var(--green);background:rgba(0,230,118,.07);}
+.btn-orange{background:var(--orange);color:#000;}
+.btn-orange:hover{background:#e68900;transform:translateY(-1px);}
+.btn-orange:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;transform:none;}
+
+/* ── INP ── */
+.inp{flex:1;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border-color .2s;}
+.inp:focus{border-color:var(--accent);}
+.inp::placeholder{color:var(--muted);}
+
+/* ── CART TABLE ── */
 .cart-wrap{margin-top:16px;}
 .sec-lbl{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:7px;}
+.sec-lbl .zh{font-family:var(--zh);font-weight:400;font-size:11px;letter-spacing:0;text-transform:none;}
 .count-badge{background:var(--accent);color:#000;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:var(--mono);}
 .tbl{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-.t-head{display:grid;grid-template-columns:30px 1fr 110px 90px 90px 36px;padding:9px 14px;border-bottom:1px solid var(--border);font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
-.t-row{display:grid;grid-template-columns:30px 1fr 110px 90px 90px 36px;padding:12px 14px;border-bottom:1px solid var(--border);align-items:center;transition:background .15s;animation:rowIn .2s ease;}
+.t-head{display:grid;grid-template-columns:28px 1fr 110px 80px 90px 34px;padding:9px 14px;border-bottom:1px solid var(--border);font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.t-head .zh{font-family:var(--zh);font-weight:400;letter-spacing:0;text-transform:none;font-size:10px;}
+.t-row{display:grid;grid-template-columns:28px 1fr 110px 80px 90px 34px;padding:12px 14px;border-bottom:1px solid var(--border);align-items:center;transition:background .15s;animation:rowIn .2s ease;}
 .t-row:last-child{border-bottom:none;}
 .t-row:hover{background:var(--surface2);}
 @keyframes rowIn{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:translateX(0)}}
 .t-num{font-family:var(--mono);font-size:11px;color:var(--muted);}
 .t-name{font-weight:500;line-height:1.3;}
-.t-bc-cell{font-family:var(--mono);font-size:10px;color:var(--muted2);}
+.t-bc-sm{display:block;font-family:var(--mono);font-size:10px;color:var(--muted2);margin-top:1px;}
+.t-bc-col{font-family:var(--mono);font-size:10px;color:var(--muted2);}
 .t-price{font-family:var(--mono);font-size:12px;color:var(--muted);}
-.t-sub{font-family:var(--mono);font-size:13px;font-weight:700;}
 .qty-ctrl{display:flex;align-items:center;gap:5px;}
-.qty-btn{width:22px;height:22px;border-radius:5px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1;}
+.qty-btn{width:22px;height:22px;border-radius:5px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .qty-btn:hover{border-color:var(--accent);color:var(--accent);}
 .qty-n{font-family:var(--mono);font-size:13px;min-width:18px;text-align:center;}
 .del-btn{width:28px;height:28px;border-radius:6px;background:transparent;border:1px solid transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;}
 .del-btn:hover{border-color:var(--red);color:var(--red);background:rgba(255,68,68,.08);}
-.empty-st{padding:42px 20px;text-align:center;color:var(--muted);}
-.empty-st .ei{font-size:28px;margin-bottom:9px;opacity:.25;}
+.empty-st{padding:40px 20px;text-align:center;color:var(--muted);}
+.empty-st .ei{font-size:28px;margin-bottom:9px;opacity:.22;}
+.empty-st .zh{font-family:var(--zh);font-size:12px;margin-top:3px;}
 
-/* CHECKOUT */
+/* ── CHECKOUT PANEL ── */
 .co-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:sticky;top:72px;}
-.totals{padding:18px;display:flex;flex-direction:column;gap:10px;}
+.totals{padding:16px 18px;display:flex;flex-direction:column;gap:10px;}
 .tot-row{display:flex;justify-content:space-between;align-items:center;}
 .tot-row .lbl{color:var(--muted);}
+.tot-row .lbl .zh{font-family:var(--zh);font-size:11px;}
 .tot-row .val{font-family:var(--mono);font-weight:700;}
-.tdiv{height:1px;background:var(--border);}
-.grand{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;background:var(--surface2);border-top:1px solid var(--border);}
-.grand .glbl{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
-.grand .gamt{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--gold);}
-.co-actions{padding:14px 18px;display:flex;flex-direction:column;gap:8px;}
-.btn-checkout{width:100%;padding:14px;background:var(--gold);color:#000;font-weight:700;font-size:15px;border:none;border-radius:10px;cursor:pointer;font-family:var(--font);letter-spacing:.3px;transition:all .2s;}
-.btn-checkout:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 8px 28px rgba(245,197,24,.22);}
+.grand{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:var(--surface2);border-top:1px solid var(--border);}
+.grand .glbl{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+.grand .glbl .zh{font-family:var(--zh);font-size:10px;letter-spacing:0;text-transform:none;display:block;font-weight:400;margin-top:1px;}
+.grand .gamt{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--gold);}
+.co-actions{padding:13px 18px;display:flex;flex-direction:column;gap:8px;}
+.btn-checkout{width:100%;padding:13px;background:var(--gold);color:#000;font-weight:700;font-size:15px;border:none;border-radius:10px;cursor:pointer;font-family:var(--th);transition:all .2s;}
+.btn-checkout:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 8px 24px var(--gold-glow);}
 .btn-checkout:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-credit{width:100%;padding:13px;background:var(--orange);color:#000;font-weight:700;font-size:15px;border:none;border-radius:10px;cursor:pointer;font-family:var(--th);transition:all .2s;}
+.btn-credit:hover{background:#e68900;transform:translateY(-1px);box-shadow:0 8px 24px rgba(255,152,0,.25);}
+.btn-credit:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;transform:none;box-shadow:none;}
+.credit-note{font-family:var(--zh);font-size:11px;color:var(--muted);text-align:center;padding:0 4px;}
+.selected-member-strip{background:rgba(0,212,255,.07);border:1px solid var(--accent);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:12px;display:none;}
+.selected-member-strip.show{display:flex;}
+.selected-member-strip .mem-icon{font-size:16px;}
+.selected-member-strip .mem-info{flex:1;font-family:var(--zh);}
+.selected-member-strip .mem-id{font-family:var(--mono);font-size:10px;color:var(--accent);}
 
-/* REPORT */
-.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px;}
+/* ── REPORT ── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
 .stat-lbl{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.stat-lbl .zh{font-family:var(--zh);font-weight:400;letter-spacing:0;text-transform:none;margin-left:3px;font-size:11px;}
 .stat-val{font-family:var(--mono);font-size:22px;font-weight:700;}
 .stat-val.hi{color:var(--gold);}
-.stat-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+.stat-sub{font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--zh);}
 .report-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
 .r-tabs{display:flex;gap:3px;}
-.r-tab{padding:7px 13px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);transition:all .2s;}
+.r-tab{padding:7px 13px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--th);transition:all .2s;}
+.r-tab .zh{font-family:var(--zh);font-size:10px;display:block;}
 .r-tab:hover{color:var(--text);border-color:var(--border2);}
-.r-tab.active{background:var(--accent-glow);border-color:var(--accent);color:var(--accent);}
+.r-tab.active{background:var(--aglow);border-color:var(--accent);color:var(--accent);}
 .export-grp{display:flex;gap:6px;flex-wrap:wrap;}
-.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:18px;}
-.chart-lbl{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
-.bar-chart{display:flex;align-items:flex-end;gap:5px;height:110px;}
-.bar-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;}
-.bar{width:100%;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:4px 4px 0 0;min-height:3px;opacity:.75;transition:opacity .2s;}
-.bar:hover{opacity:1;}
-.bar-lbl{font-size:9px;color:var(--muted);font-family:var(--mono);}
-.bar-v{font-size:9px;color:var(--muted);font-family:var(--mono);}
 .r-table{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.r-table-row{display:grid;padding:13px 14px;border-bottom:1px solid var(--border);font-size:13px;align-items:center;transition:background .15s;cursor:pointer;}
+.r-table-row:last-child{border-bottom:none;}
+.r-table-row:hover{background:var(--surface2);}
+.r-table-row .arrow{color:var(--muted);font-size:11px;text-align:right;}
+.r-table-row:hover .arrow{color:var(--accent);}
 
-/* PRODUCTS PAGE */
+/* ── MEMBERS PAGE ── */
+.mem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.mem-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:7px;transition:border-color .2s;}
+.mem-card:hover{border-color:var(--border2);}
+.mem-card-id{font-family:var(--mono);font-size:11px;color:var(--purple);}
+.mem-card-name{font-size:15px;font-weight:600;font-family:var(--zh);}
+.mem-card-acts{display:flex;gap:6px;margin-top:4px;}
+
+/* ── PRODUCTS PAGE ── */
 .prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
 .prod-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:7px;transition:border-color .2s;}
 .prod-card:hover{border-color:var(--border2);}
 .prod-bc{font-family:var(--mono);font-size:11px;color:var(--accent);}
-.prod-name{font-size:14px;font-weight:600;}
+.prod-name{font-size:14px;font-weight:600;font-family:var(--zh);}
 .prod-price{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--gold);}
 .prod-acts{display:flex;gap:6px;margin-top:3px;}
 
-/* TOAST */
-#toast{position:fixed;bottom:20px;right:20px;z-index:999;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:13px;transform:translateY(70px);opacity:0;transition:all .3s;max-width:320px;pointer-events:none;}
+/* ── PAGE HEADER ── */
+.page-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.page-hd-title{font-size:18px;font-weight:700;}
+.page-hd-title .zh{font-family:var(--zh);font-size:13px;color:var(--muted);font-weight:400;margin-left:6px;}
+.page-hd-sub{font-size:12px;color:var(--muted);margin-top:3px;font-family:var(--zh);}
+.btn-row{display:flex;gap:7px;flex-wrap:wrap;}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:20px;right:20px;z-index:9999;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:13px;transform:translateY(70px);opacity:0;transition:all .3s;max-width:320px;pointer-events:none;font-family:var(--zh);}
 #toast.show{transform:translateY(0);opacity:1;}
 #toast.ok{border-color:var(--green);color:var(--green);}
 #toast.err{border-color:var(--red);color:var(--red);}
 
-/* MODALS */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s;}
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s;}
 .overlay.open{opacity:1;pointer-events:all;}
-.mbox{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:26px;width:420px;max-width:94vw;transform:scale(.93);transition:transform .22s;max-height:90vh;overflow-y:auto;}
+.mbox{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:26px;width:440px;max-width:94vw;transform:scale(.93);transition:transform .22s;max-height:90vh;overflow-y:auto;}
 .overlay.open .mbox{transform:scale(1);}
-.m-title{font-size:17px;font-weight:700;margin-bottom:4px;}
-.m-sub{font-size:12px;color:var(--muted);margin-bottom:18px;font-family:var(--mono);}
+.m-title{font-size:17px;font-weight:700;margin-bottom:4px;font-family:var(--th);}
+.m-title .zh{font-family:var(--zh);font-size:12px;color:var(--muted);font-weight:400;display:block;margin-top:2px;}
+.m-sub{font-size:12px;color:var(--muted);margin-bottom:16px;font-family:var(--mono);}
 .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:13px;}
-.fg label{font-size:12px;color:var(--muted);}
-.fi{padding:10px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:14px;outline:none;transition:border-color .2s;font-family:var(--font);width:100%;}
+.fg label{font-size:12px;color:var(--muted);font-family:var(--zh);}
+.fi{padding:10px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:14px;outline:none;transition:border-color .2s;font-family:var(--zh);width:100%;}
 .fi:focus{border-color:var(--accent);}
 .m-acts{display:flex;gap:8px;margin-top:18px;}
 
-/* RECEIPT */
-.rcpt-box{width:340px;}
-.rcpt-hd{text-align:center;margin-bottom:18px;}
+/* ── RECEIPT ── */
+.rcpt-wrap{width:340px;}
+#rcpt-content{padding:4px;}
+.rcpt-hd{text-align:center;margin-bottom:16px;}
 .rcpt-logo{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--accent);letter-spacing:3px;}
 .rcpt-date{font-size:11px;color:var(--muted);margin-top:4px;font-family:var(--mono);}
 .rcpt-id{font-size:10px;color:var(--purple);margin-top:2px;font-family:var(--mono);}
-.rdiv{border:none;border-top:1px dashed var(--border2);margin:13px 0;}
+.rcpt-member{font-size:12px;color:var(--accent);margin-top:4px;font-family:var(--zh);background:var(--aglow);padding:4px 10px;border-radius:5px;display:inline-block;}
+.rdiv{border:none;border-top:1px dashed var(--border2);margin:12px 0;}
 .rcpt-item{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;font-size:13px;}
-.rcpt-iname{flex:1;}
+.rcpt-iname{flex:1;font-family:var(--zh);}
 .rcpt-qty{color:var(--muted);font-size:11px;margin:0 8px;white-space:nowrap;}
 .rcpt-iprice{font-family:var(--mono);font-weight:700;}
 .rcpt-total{display:flex;justify-content:space-between;align-items:center;}
-.rcpt-total .rl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
-.rcpt-total .ra{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--gold);}
-.rcpt-ft{text-align:center;font-size:11px;color:var(--muted);margin-top:16px;}
+.rcpt-total .rl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-family:var(--zh);}
+.rcpt-total .ra{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--gold);}
+.credit-tag{background:rgba(255,152,0,.15);border:1px solid var(--orange);color:var(--orange);font-size:11px;padding:4px 10px;border-radius:5px;font-family:var(--zh);text-align:center;margin-top:8px;}
+.rcpt-ft{text-align:center;font-size:11px;color:var(--muted);margin-top:14px;font-family:var(--zh);}
 
-.badge-paid{background:rgba(0,230,118,.12);color:var(--green);font-size:10px;padding:3px 7px;border-radius:4px;font-weight:700;}
+/* ── DRILLDOWN MODAL ── */
+.drill-table{width:100%;border-collapse:collapse;margin-top:12px;}
+.drill-table th{padding:8px 10px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);text-align:left;font-family:var(--zh);}
+.drill-table td{padding:10px 10px;font-size:13px;border-bottom:1px solid var(--border);font-family:var(--zh);}
+.drill-table tr:last-child td{border-bottom:none;}
+.drill-table .num{font-family:var(--mono);text-align:right;}
+.drill-total{display:flex;justify-content:space-between;align-items:center;padding:12px 0 0;margin-top:4px;border-top:1px solid var(--border2);}
+.drill-total .dl{font-size:12px;color:var(--muted);font-family:var(--zh);}
+.drill-total .dr{font-family:var(--mono);font-weight:700;color:var(--gold);font-size:16px;}
 
 @media(max-width:768px){
   .pos-grid{grid-template-columns:1fr;}
-  .stat-grid{grid-template-columns:1fr 1fr;}
-  .t-head,.t-row{grid-template-columns:26px 1fr 80px 80px 34px;}
+  .stat-grid{grid-template-columns:1fr;}
+  .t-head,.t-row{grid-template-columns:24px 1fr 80px 80px 32px;}
   .t-head>:nth-child(3),.t-row>:nth-child(3){display:none;}
   .co-panel{position:static;}
-  .prod-grid{grid-template-columns:1fr 1fr;}
+  .mem-grid,.prod-grid{grid-template-columns:1fr 1fr;}
 }
 </style>
 </head>
@@ -205,30 +257,36 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 
 <nav>
   <div class="brand">POS<span style="color:var(--muted);font-weight:400"> SYSTEM</span>
-    <small>掃碼銷售系統</small>
+    <small>ระบบขายหน้าร้าน / 掃碼銷售系統</small>
   </div>
-  <button class="nav-tab active" onclick="showPage('pos',this)">🏪 收銀台</button>
-  <button class="nav-tab" onclick="showPage('products',this)">📦 商品管理</button>
-  <button class="nav-tab" onclick="showPage('report',this)">📊 銷售報表</button>
+  <button class="nav-tab active" onclick="showPage('pos',this)">🏪 แคชเชียร์<span class="zh">收銀台</span></button>
+  <button class="nav-tab" onclick="showPage('members',this)">👥 สมาชิก<span class="zh">會員管理</span></button>
+  <button class="nav-tab" onclick="showPage('products',this)">📦 สินค้า<span class="zh">商品管理</span></button>
+  <button class="nav-tab" onclick="showPage('report',this)">📊 รายงาน<span class="zh">銷售報表</span></button>
 </nav>
 
-<!-- ═══ 收銀台 ═══ -->
+<!-- ═══════════════════════════════════════
+     收銀台
+════════════════════════════════════════ -->
 <div class="page active" id="page-pos">
   <div class="pos-grid">
+
+    <!-- LEFT: scanner + cart -->
     <div>
       <div class="card">
         <div class="card-hd">
           <div class="dot" id="cam-dot"></div>
-          <span id="cam-status">條碼掃描器</span>
+          <span id="cam-status">สแกนบาร์โค้ด</span>
+          <span class="zh">條碼掃描器</span>
         </div>
         <div class="scanner-body">
+          <!-- VIDEO -->
           <div class="video-wrap">
             <div class="cam-ph" id="cam-ph">
               <div class="icon">📷</div>
               <div>按下「開始掃描」啟動鏡頭</div>
-              <div class="hint">支援 EAN-13 / QR Code / Code128</div>
+              <div class="hint">支援 EAN-13 / QR Code / Code128 等格式</div>
             </div>
-            <!-- autoplay + muted + playsinline 為正常啟動必要屬性 -->
             <video id="preview" autoplay muted playsinline></video>
             <div class="scan-overlay" id="scan-ol" style="display:none">
               <div class="scan-line"></div>
@@ -236,130 +294,167 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
               <div class="sc bl"></div><div class="sc br"></div>
             </div>
           </div>
+          <!-- CONTROLS -->
           <div class="scan-controls">
-            <button class="btn btn-accent" id="btn-start" onclick="startScanner()">▶ 開始掃描</button>
-            <button class="btn btn-ghost" id="btn-stop" onclick="stopScanner()" disabled>■ 停止</button>
+            <button class="btn btn-accent" style="flex:1" id="btn-start" onclick="startScanner()">▶ เริ่มสแกน / 開始掃描</button>
+            <button class="btn btn-ghost" id="btn-stop" onclick="stopScanner()" disabled>■ หยุด / 停止</button>
           </div>
-          <div class="manual-row">
-            <input class="inp" type="text" id="manual-bc" placeholder="手動輸入條碼..." onkeydown="if(event.key==='Enter')addByBarcode(this.value)">
-            <button class="btn btn-ghost" onclick="addByBarcode(document.getElementById('manual-bc').value)">加入</button>
+          <!-- MEMBER SELECT -->
+          <div class="member-row">
+            <select class="member-select" id="member-select" onchange="onMemberChange()">
+              <option value="">── เลือกสมาชิก / 選擇會員（賒帳用）──</option>
+            </select>
           </div>
+          <!-- SCAN STATUS (Chinese only) -->
           <div class="scan-st" id="scan-st">等待掃描...</div>
         </div>
       </div>
 
+      <!-- CART -->
       <div class="cart-wrap">
-        <div class="sec-lbl">購物車 <span class="count-badge" id="item-count">0</span></div>
+        <div class="sec-lbl">ตะกร้า <span class="zh">購物車</span> <span class="count-badge" id="item-count">0</span></div>
         <div class="tbl">
           <div class="t-head">
-            <div>#</div><div>品項名稱</div><div>條碼</div><div>單價</div><div>數量</div><div></div>
+            <div>#</div>
+            <div>สินค้า <span class="zh">品項</span></div>
+            <div>บาร์โค้ด <span class="zh">條碼</span></div>
+            <div>ราคา <span class="zh">單價</span></div>
+            <div>จำนวน <span class="zh">數量</span></div>
+            <div></div>
           </div>
           <div id="cart-body">
-            <div class="empty-st"><div class="ei">🛒</div><div>尚無商品，請掃描條碼</div></div>
+            <div class="empty-st"><div class="ei">🛒</div><div>สแกนบาร์โค้ดเพื่อเพิ่มสินค้า</div><div class="zh">尚無商品，請掃描條碼</div></div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- RIGHT: checkout -->
     <div>
       <div class="co-panel">
         <div class="card-hd">
           <div class="dot pulse"></div>
-          <span>結帳明細</span>
+          <span>รายการชำระเงิน</span>
+          <span class="zh">結帳明細</span>
         </div>
+
+        <!-- Selected member strip -->
+        <div class="selected-member-strip" id="sel-member-strip" style="margin:12px 18px 0;">
+          <span class="mem-icon">👤</span>
+          <div class="mem-info">
+            <div id="sel-member-name" style="font-weight:600"></div>
+            <div class="mem-id" id="sel-member-id"></div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;font-family:var(--zh)" onclick="clearMember()">移除</button>
+        </div>
+
         <div class="totals">
-          <div class="tot-row"><span class="lbl">商品數量</span><span class="val" id="total-qty">0 件</span></div>
-          <div class="tot-row"><span class="lbl">小計</span><span class="val" id="subtotal">NT$ 0.00</span></div>
-          <div class="tdiv"></div>
-          <div class="tot-row"><span class="lbl">稅金 5%</span><span class="val" id="tax">NT$ 0.00</span></div>
+          <div class="tot-row">
+            <span class="lbl">จำนวนชิ้น <span class="zh">商品數量</span></span>
+            <span class="val" id="total-qty">0 件</span>
+          </div>
+          <div class="tot-row">
+            <span class="lbl">ยอดรวม <span class="zh">合計</span></span>
+            <span class="val" id="subtotal">NT$ 0</span>
+          </div>
         </div>
+
         <div class="grand">
-          <div class="glbl">總計</div>
-          <div class="gamt" id="grand-total">NT$ 0.00</div>
+          <div class="glbl">ยอดรวมทั้งหมด <span class="zh">總計</span></div>
+          <div class="gamt" id="grand-total">NT$ 0</div>
         </div>
+
         <div class="co-actions">
-          <button class="btn-checkout" id="btn-checkout" onclick="checkout()" disabled>結帳</button>
-          <button class="btn btn-danger" style="width:100%;justify-content:center" onclick="clearCart()">清除購物車</button>
+          <button class="btn-checkout" id="btn-checkout" onclick="checkout(false)" disabled>ชำระเงิน / 結帳</button>
+          <button class="btn-credit" id="btn-credit" onclick="checkout(true)" disabled title="需選擇會員才可賒帳">賒帳 (+10%) <span style="font-family:var(--zh);font-size:12px;font-weight:400">需選擇會員</span></button>
+          <button class="btn btn-danger" style="width:100%" onclick="clearCart()">ล้างตะกร้า / 清除購物車</button>
         </div>
       </div>
     </div>
+
   </div>
 </div>
 
-<!-- ═══ 商品管理 ═══ -->
-<div class="page" id="page-products">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+<!-- ═══════════════════════════════════════
+     會員管理
+════════════════════════════════════════ -->
+<div class="page" id="page-members">
+  <div class="page-hd">
     <div>
-      <div style="font-size:18px;font-weight:700">商品管理</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:3px" id="prod-count-lbl"></div>
+      <div class="page-hd-title">สมาชิก <span class="zh">會員管理</span></div>
+      <div class="page-hd-sub" id="mem-count-lbl"></div>
     </div>
-    <div style="display:flex;gap:7px;flex-wrap:wrap">
-      <button class="btn btn-accent" onclick="openAddProduct()">+ 新增商品</button>
-      <button class="btn btn-green" onclick="exportProducts()">⬇ 匯出條碼</button>
-      <button class="btn btn-ghost" onclick="document.getElementById('imp-prod').click()">⬆ 匯入條碼</button>
+    <div class="btn-row">
+      <button class="btn btn-accent" onclick="openAddMember()">+ เพิ่มสมาชิก / 新增會員</button>
+    </div>
+  </div>
+  <div class="mem-grid" id="mem-grid"></div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     商品管理
+════════════════════════════════════════ -->
+<div class="page" id="page-products">
+  <div class="page-hd">
+    <div>
+      <div class="page-hd-title">สินค้า <span class="zh">商品管理</span></div>
+      <div class="page-hd-sub" id="prod-count-lbl"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-accent" onclick="openAddProduct()">+ เพิ่มสินค้า / 新增商品</button>
+      <button class="btn btn-green" onclick="exportProducts()">⬇ ส่งออก / 匯出條碼</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('imp-prod').click()">⬆ นำเข้า / 匯入條碼</button>
       <input type="file" id="imp-prod" accept=".json" style="display:none" onchange="importProducts(event)">
     </div>
   </div>
   <div class="prod-grid" id="prod-grid"></div>
 </div>
 
-<!-- ═══ 銷售報表 ═══ -->
+<!-- ═══════════════════════════════════════
+     銷售報表
+════════════════════════════════════════ -->
 <div class="page" id="page-report">
   <div class="stat-grid">
     <div class="stat-card">
-      <div class="stat-lbl">今日銷售</div>
+      <div class="stat-lbl">ยอดขายวันนี้ <span class="zh">今日銷售</span></div>
       <div class="stat-val hi" id="stat-today">NT$ 0</div>
       <div class="stat-sub"><span id="stat-today-count">0</span> 筆交易</div>
     </div>
     <div class="stat-card">
-      <div class="stat-lbl">本月銷售</div>
+      <div class="stat-lbl">ยอดขายเดือนนี้ <span class="zh">本月銷售</span></div>
       <div class="stat-val" id="stat-month">NT$ 0</div>
       <div class="stat-sub"><span id="stat-month-count">0</span> 筆交易</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-lbl">累計銷售</div>
-      <div class="stat-val" id="stat-all">NT$ 0</div>
-      <div class="stat-sub"><span id="stat-all-count">0</span> 筆交易</div>
-    </div>
   </div>
-  <div class="chart-card">
-    <div class="chart-lbl">近 7 日銷售趨勢</div>
-    <div class="bar-chart" id="bar-chart"></div>
-  </div>
+
   <div class="report-top">
     <div class="r-tabs">
-      <button class="r-tab active" onclick="switchReport('daily',this)">每日報表</button>
-      <button class="r-tab" onclick="switchReport('monthly',this)">每月報表</button>
-      <button class="r-tab" onclick="switchReport('transactions',this)">交易明細</button>
+      <button class="r-tab active" onclick="switchReport('daily',this)">รายวัน <span class="zh">每日報表</span></button>
+      <button class="r-tab" onclick="switchReport('monthly',this)">รายเดือน <span class="zh">每月報表</span></button>
     </div>
     <div class="export-grp">
-      <button class="btn btn-green" style="font-size:12px;padding:7px 12px" onclick="exportReport('json')">⬇ JSON</button>
-      <button class="btn btn-green" style="font-size:12px;padding:7px 12px" onclick="exportReport('csv')">⬇ CSV</button>
-      <button class="btn btn-ghost" style="font-size:12px;padding:7px 12px" onclick="document.getElementById('imp-report').click()">⬆ 匯入報表</button>
+      <button class="btn btn-green" style="font-size:12px;padding:7px 12px" onclick="exportCSV()">⬇ ส่งออก CSV / 匯出報表</button>
+      <button class="btn btn-ghost" style="font-size:12px;padding:7px 12px" onclick="document.getElementById('imp-report').click()">⬆ นำเข้า / 匯入報表</button>
       <input type="file" id="imp-report" accept=".json" style="display:none" onchange="importReport(event)">
-      <button class="btn btn-danger" style="font-size:12px;padding:7px 12px" onclick="clearAllData()">🗑 清除資料</button>
+      <button class="btn btn-danger" style="font-size:12px;padding:7px 12px" onclick="clearAllData()">🗑 ลบทั้งหมด / 清除資料</button>
     </div>
   </div>
+
   <div class="r-table" id="report-table">
-    <div class="empty-st"><div class="ei">📋</div><div>尚無銷售資料</div></div>
+    <div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>
   </div>
+  <div style="font-size:11px;color:var(--muted);margin-top:10px;font-family:var(--zh);text-align:right">💡 點擊列項查看當期銷售明細</div>
 </div>
 
-<!-- ═══ Modal: 新條碼輸入 ═══ -->
+<!-- ═══ Modal: 新條碼 ═══ -->
 <div class="overlay" id="m-newprod">
   <div class="mbox">
-    <div class="m-title">⚡ 發現新條碼！</div>
+    <div class="m-title">⚡ พบบาร์โค้ดใหม่<span class="zh">發現新條碼！請輸入商品資訊</span></div>
     <div class="m-sub" id="np-bc"></div>
-    <div class="fg">
-      <label>品項名稱 *</label>
-      <input class="fi" id="np-name" type="text" placeholder="例如：礦泉水、可樂...">
-    </div>
-    <div class="fg">
-      <label>單價（NT$）*</label>
-      <input class="fi" id="np-price" type="number" min="0" step="1" placeholder="0">
-    </div>
+    <div class="fg"><label>品項名稱 *</label><input class="fi" id="np-name" type="text" placeholder="例如：礦泉水、可樂..."></div>
+    <div class="fg"><label>單價（NT$）*</label><input class="fi" id="np-price" type="number" min="0" step="1" placeholder="0"></div>
     <div class="m-acts">
-      <button class="btn btn-accent" style="flex:1;justify-content:center" onclick="saveNewProduct()">✓ 儲存並加入購物車</button>
+      <button class="btn btn-accent" style="flex:1" onclick="saveNewProduct()">✓ 儲存並加入購物車</button>
       <button class="btn btn-ghost" onclick="closeM('m-newprod')">取消</button>
     </div>
   </div>
@@ -368,18 +463,12 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 <!-- ═══ Modal: 編輯商品 ═══ -->
 <div class="overlay" id="m-editprod">
   <div class="mbox">
-    <div class="m-title">✏ 編輯商品</div>
+    <div class="m-title">✏ แก้ไขสินค้า<span class="zh">編輯商品</span></div>
     <div class="m-sub" id="ep-bc"></div>
-    <div class="fg">
-      <label>品項名稱 *</label>
-      <input class="fi" id="ep-name" type="text">
-    </div>
-    <div class="fg">
-      <label>單價（NT$）*</label>
-      <input class="fi" id="ep-price" type="number" min="0" step="1">
-    </div>
+    <div class="fg"><label>品項名稱 *</label><input class="fi" id="ep-name" type="text"></div>
+    <div class="fg"><label>單價（NT$）*</label><input class="fi" id="ep-price" type="number" min="0" step="1"></div>
     <div class="m-acts">
-      <button class="btn btn-accent" style="flex:1;justify-content:center" onclick="saveEditProduct()">儲存</button>
+      <button class="btn btn-accent" style="flex:1" onclick="saveEditProduct()">儲存</button>
       <button class="btn btn-ghost" onclick="closeM('m-editprod')">取消</button>
     </div>
   </div>
@@ -388,45 +477,85 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 <!-- ═══ Modal: 手動新增商品 ═══ -->
 <div class="overlay" id="m-addprod">
   <div class="mbox">
-    <div class="m-title">+ 新增商品</div>
-    <div class="fg">
-      <label>條碼 *</label>
-      <input class="fi" id="ap-bc" type="text" placeholder="輸入條碼" style="font-family:var(--mono)">
-    </div>
-    <div class="fg">
-      <label>品項名稱 *</label>
-      <input class="fi" id="ap-name" type="text" placeholder="例如：礦泉水">
-    </div>
-    <div class="fg">
-      <label>單價（NT$）*</label>
-      <input class="fi" id="ap-price" type="number" min="0" step="1" placeholder="0">
-    </div>
+    <div class="m-title">+ เพิ่มสินค้า<span class="zh">新增商品</span></div>
+    <div class="fg"><label>條碼 *</label><input class="fi" id="ap-bc" type="text" placeholder="輸入條碼" style="font-family:var(--mono)"></div>
+    <div class="fg"><label>品項名稱 *</label><input class="fi" id="ap-name" type="text" placeholder="例如：礦泉水"></div>
+    <div class="fg"><label>單價（NT$）*</label><input class="fi" id="ap-price" type="number" min="0" step="1" placeholder="0"></div>
     <div class="m-acts">
-      <button class="btn btn-accent" style="flex:1;justify-content:center" onclick="saveAddProduct()">儲存</button>
+      <button class="btn btn-accent" style="flex:1" onclick="saveAddProduct()">儲存</button>
       <button class="btn btn-ghost" onclick="closeM('m-addprod')">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Modal: 新增會員 ═══ -->
+<div class="overlay" id="m-addmem">
+  <div class="mbox">
+    <div class="m-title">+ เพิ่มสมาชิก<span class="zh">新增會員</span></div>
+    <div class="fg"><label>會員名稱 *</label><input class="fi" id="am-name" type="text" placeholder="輸入姓名"></div>
+    <div class="m-acts">
+      <button class="btn btn-accent" style="flex:1" onclick="saveAddMember()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeM('m-addmem')">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Modal: 編輯會員 ═══ -->
+<div class="overlay" id="m-editmem">
+  <div class="mbox">
+    <div class="m-title">✏ แก้ไขสมาชิก<span class="zh">編輯會員</span></div>
+    <div class="m-sub" id="em-id-lbl"></div>
+    <div class="fg"><label>會員名稱 *</label><input class="fi" id="em-name" type="text"></div>
+    <div class="m-acts">
+      <button class="btn btn-accent" style="flex:1" onclick="saveEditMember()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeM('m-editmem')">取消</button>
     </div>
   </div>
 </div>
 
 <!-- ═══ Modal: 收據 ═══ -->
 <div class="overlay" id="m-receipt">
-  <div class="mbox rcpt-box">
-    <div class="rcpt-hd">
-      <div class="rcpt-logo">POS SYSTEM</div>
-      <div class="rcpt-date" id="rcpt-date"></div>
-      <div class="rcpt-id" id="rcpt-id"></div>
+  <div class="mbox rcpt-wrap">
+    <div id="rcpt-content">
+      <div class="rcpt-hd">
+        <div class="rcpt-logo">POS SYSTEM</div>
+        <div class="rcpt-date" id="rcpt-date"></div>
+        <div class="rcpt-id" id="rcpt-id"></div>
+        <div class="rcpt-member" id="rcpt-member" style="display:none"></div>
+      </div>
+      <hr class="rdiv">
+      <div id="rcpt-items"></div>
+      <hr class="rdiv">
+      <div class="rcpt-total">
+        <div class="rl">總計金額</div>
+        <div class="ra" id="rcpt-total-amt"></div>
+      </div>
+      <div class="credit-tag" id="rcpt-credit-tag" style="display:none">⚠ 此筆為賒帳交易（含 10% 加收）</div>
+      <div class="rcpt-ft">感謝您的惠顧 ♥</div>
     </div>
-    <hr class="rdiv">
-    <div id="rcpt-items"></div>
-    <hr class="rdiv">
-    <div class="rcpt-total">
-      <div class="rl">總計金額</div>
-      <div class="ra" id="rcpt-total"></div>
-    </div>
-    <div class="rcpt-ft">感謝您的惠顧 ♥</div>
     <div class="m-acts" style="margin-top:16px">
-      <button class="btn btn-accent" style="flex:1;justify-content:center" onclick="closeM('m-receipt')">確認</button>
+      <button class="btn btn-accent" style="flex:1" onclick="closeM('m-receipt')">確認</button>
+      <button class="btn btn-ghost" id="btn-screenshot" onclick="takeScreenshot()" style="display:none">📸 截圖</button>
       <button class="btn btn-ghost" onclick="closeM('m-receipt');showPage('report',null)">查看報表</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Modal: 報表明細 ═══ -->
+<div class="overlay" id="m-drill">
+  <div class="mbox">
+    <div class="m-title" id="drill-title">銷售明細<span class="zh"></span></div>
+    <div class="m-sub" id="drill-sub"></div>
+    <table class="drill-table" id="drill-table">
+      <thead><tr><th>品項名稱</th><th class="num">銷售數量</th><th class="num">小計</th></tr></thead>
+      <tbody id="drill-body"></tbody>
+    </table>
+    <div class="drill-total">
+      <div class="dl">合計收入</div>
+      <div class="dr" id="drill-total-amt"></div>
+    </div>
+    <div class="m-acts" style="margin-top:14px">
+      <button class="btn btn-accent" style="flex:1" onclick="closeM('m-drill')">關閉</button>
     </div>
   </div>
 </div>
@@ -434,26 +563,23 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 <div id="toast"></div>
 
 <script>
-// ══════════════════════════════════════
-//  動態載入 ZXing（避免 CDN 快取問題）
-// ══════════════════════════════════════
-(function loadZXing() {
+// ═══════════════════════════════
+//  ZXing 動態載入
+// ═══════════════════════════════
+(function(){
   const s = document.createElement('script');
   s.src = 'https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js';
-  s.onload = () => console.log('[ZXing] 載入成功');
   s.onerror = () => {
-    // fallback to older version
     const s2 = document.createElement('script');
     s2.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.19.2/umd/index.min.js';
-    s2.onload = () => console.log('[ZXing] fallback 載入成功');
     document.head.appendChild(s2);
   };
   document.head.appendChild(s);
 })();
 
-// ══════════════════════════════════════
-//  商品資料庫
-// ══════════════════════════════════════
+// ═══════════════════════════════
+//  資料存取
+// ═══════════════════════════════
 const DEFAULT_PRODUCTS = {
   '4710088001001':{name:'統一麥香奶茶',price:25},
   '4710088001002':{name:'光泉鮮乳',price:65},
@@ -466,264 +592,176 @@ const DEFAULT_PRODUCTS = {
   '4712345678900':{name:'農夫山泉礦泉水',price:15},
   '4711234000001':{name:'小美冰淇淋',price:25},
 };
-function getProds(){
-  try{const s=localStorage.getItem('pos_products');if(s)return JSON.parse(s);}catch(e){}
-  localStorage.setItem('pos_products',JSON.stringify(DEFAULT_PRODUCTS));
-  return{...DEFAULT_PRODUCTS};
-}
+function getProds(){try{const s=localStorage.getItem('pos_products');if(s)return JSON.parse(s);}catch(e){}localStorage.setItem('pos_products',JSON.stringify(DEFAULT_PRODUCTS));return{...DEFAULT_PRODUCTS};}
 function saveProds(o){localStorage.setItem('pos_products',JSON.stringify(o));}
+function getMembers(){try{const s=localStorage.getItem('pos_members');if(s)return JSON.parse(s);}catch(e){}return[];}
+function saveMembers(a){localStorage.setItem('pos_members',JSON.stringify(a));}
+function getTx(){try{return JSON.parse(localStorage.getItem('pos_transactions')||'[]');}catch(e){return[];}}
+function saveTx(a){localStorage.setItem('pos_transactions',JSON.stringify(a));}
 
-// ══════════════════════════════════════
+// ═══════════════════════════════
 //  全域狀態
-// ══════════════════════════════════════
-let cart=[], scanning=false, codeReader=null, pendingBC=null, editingBC=null;
-let lastScannedCode='', lastScannedTime=0;
+// ═══════════════════════════════
+let cart=[], scanning=false, codeReader=null;
+let pendingBC=null, editingBC=null, editingMemId=null;
+let lastCode='', lastCodeTime=0;
+let selectedMember=null; // {id, name}
 
-// ══════════════════════════════════════
-//  掃描器 — 核心修正
-// ══════════════════════════════════════
+// ═══════════════════════════════
+//  掃描器
+// ═══════════════════════════════
 async function startScanner(){
   try{
-    // 1. 先取得鏡頭串流
-    const constraints = {
-      video:{
-        facingMode:{ideal:'environment'}, // 後鏡頭優先
-        width:{ideal:1280},
-        height:{ideal:720}
-      }
-    };
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    const video = document.getElementById('preview');
-
-    // 2. 設定串流並強制播放
-    video.srcObject = stream;
-    video.style.display = 'block';
+    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
+    const v = document.getElementById('preview');
+    v.srcObject = stream;
+    v.style.display = 'block';
     document.getElementById('cam-ph').style.display = 'none';
     document.getElementById('scan-ol').style.display = 'block';
-
-    // 3. 等待 metadata 載入後再 play
-    await new Promise((resolve, reject) => {
-      video.onloadedmetadata = () => {
-        video.play().then(resolve).catch(reject);
-      };
-      video.onerror = reject;
-      // timeout 保護
-      setTimeout(reject, 5000);
+    await new Promise((res,rej)=>{
+      v.onloadedmetadata=()=>v.play().then(res).catch(rej);
+      v.onerror=rej;
+      setTimeout(rej,6000);
     });
-
-    document.getElementById('btn-start').disabled = true;
-    document.getElementById('btn-stop').disabled = false;
-    document.getElementById('cam-dot').className = 'dot green';
-    document.getElementById('cam-status').textContent = '掃描中...';
-    scanning = true;
-
-    // 4. 啟動解碼迴圈
-    startDecodeLoop(video);
-
+    document.getElementById('btn-start').disabled=true;
+    document.getElementById('btn-stop').disabled=false;
+    document.getElementById('cam-dot').className='dot green';
+    document.getElementById('cam-status').textContent='กำลังสแกน...';
+    scanning=true;
+    startDecodeLoop(v);
   }catch(e){
-    console.error('[Scanner]', e);
-    setSt('無法存取相機：' + (e.message || e), 'err');
-    showToast('相機啟動失敗，請確認已授權相機權限', 'err');
+    setSt('無法存取相機：'+(e.message||'請確認已授權'), 'err');
+    showToast('相機啟動失敗，請確認相機授權', 'err');
   }
 }
 
-function startDecodeLoop(video){
-  // 優先使用原生 BarcodeDetector API（Chrome 83+, Android）
-  if('BarcodeDetector' in window){
-    console.log('[Scanner] 使用原生 BarcodeDetector');
-    useNativeDetector(video);
-  } else if(typeof ZXing !== 'undefined'){
-    console.log('[Scanner] 使用 ZXing');
-    useZXing(video);
-  } else {
-    // ZXing 可能還在載入，等待後重試
-    let retries = 0;
-    const wait = setInterval(() => {
-      retries++;
-      if(typeof ZXing !== 'undefined'){
-        clearInterval(wait);
-        console.log('[Scanner] ZXing 延遲載入完成');
-        useZXing(video);
-      } else if(retries > 20){
-        clearInterval(wait);
-        setSt('無法載入掃描器程式庫，請重新整理頁面', 'err');
-      }
-    }, 300);
+function startDecodeLoop(v){
+  if('BarcodeDetector' in window){ useNative(v); }
+  else if(typeof ZXing!=='undefined'){ useZXing(v); }
+  else{
+    let r=0;
+    const t=setInterval(()=>{
+      r++;
+      if(typeof ZXing!=='undefined'){clearInterval(t);useZXing(v);}
+      else if(r>25){clearInterval(t);setSt('掃描器程式庫載入失敗，請重新整理頁面','err');}
+    },300);
   }
 }
-
-// ── 原生 BarcodeDetector ──
-async function useNativeDetector(video){
-  const formats = ['ean_13','ean_8','qr_code','code_128','upc_a','upc_e','code_39','code_93'];
-  let detector;
+async function useNative(v){
+  let det;
+  try{det=new BarcodeDetector({formats:['ean_13','ean_8','qr_code','code_128','upc_a','upc_e','code_39']});}
+  catch(e){det=new BarcodeDetector();}
+  const loop=async()=>{
+    if(!scanning)return;
+    try{if(v.readyState>=2){const bs=await det.detect(v);if(bs.length)onCode(bs[0].rawValue);}}catch(e){}
+    if(scanning)requestAnimationFrame(loop);
+  };loop();
+}
+function useZXing(v){
   try{
-    detector = new BarcodeDetector({formats});
-  }catch(e){
-    detector = new BarcodeDetector(); // 不指定格式（全部支援）
-  }
-  const loop = async() => {
-    if(!scanning) return;
-    try{
-      if(video.readyState >= 2){ // HAVE_CURRENT_DATA
-        const barcodes = await detector.detect(video);
-        if(barcodes.length > 0){
-          onCode(barcodes[0].rawValue);
-        }
-      }
-    }catch(e){}
-    if(scanning) requestAnimationFrame(loop);
-  };
-  loop();
+    codeReader=new ZXing.BrowserMultiFormatReader();
+    codeReader.decodeFromVideoElement(v,(r)=>{if(scanning&&r)onCode(r.getText());});
+  }catch(e){useZXingCanvas(v);}
 }
-
-// ── ZXing ──
-function useZXing(video){
-  try{
-    codeReader = new ZXing.BrowserMultiFormatReader();
-    // decodeFromVideoElement 持續解碼
-    codeReader.decodeFromVideoElement(video, (result, err) => {
-      if(!scanning) return;
-      if(result) onCode(result.getText());
-    });
-  }catch(e){
-    console.error('[ZXing]', e);
-    // 回退：手動用 canvas 截圖解碼
-    useZXingCanvas(video);
-  }
+function useZXingCanvas(v){
+  const c=document.createElement('canvas');const ctx=c.getContext('2d');
+  const reader=new ZXing.BrowserMultiFormatReader();
+  const loop=async()=>{
+    if(!scanning)return;
+    try{if(v.readyState>=2&&v.videoWidth>0){c.width=v.videoWidth;c.height=v.videoHeight;ctx.drawImage(v,0,0);const r=await reader.decodeFromCanvas(c);if(r)onCode(r.getText());}}catch(e){}
+    if(scanning)setTimeout(loop,150);
+  };loop();
 }
-
-// ── ZXing Canvas 回退（相容性最佳）──
-function useZXingCanvas(video){
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  const reader = new ZXing.BrowserMultiFormatReader();
-  const loop = async() => {
-    if(!scanning) return;
-    try{
-      if(video.readyState >= 2 && video.videoWidth > 0){
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0);
-        const result = await reader.decodeFromCanvas(canvas);
-        if(result) onCode(result.getText());
-      }
-    }catch(e){
-      // NotFoundException 是正常的（沒掃到），忽略
-    }
-    if(scanning) setTimeout(loop, 150); // 每 150ms 掃一次
-  };
-  loop();
-}
-
-// ── 掃描結果統一處理 ──
 function onCode(code){
-  if(!code) return;
-  const now = Date.now();
-  // 防重複：同一條碼 2.5 秒內只處理一次
-  if(code === lastScannedCode && now - lastScannedTime < 2500) return;
-  lastScannedCode = code;
-  lastScannedTime = now;
-  console.log('[Scanner] 掃到:', code);
-  handleScan(code);
+  if(!code)return;
+  const now=Date.now();
+  if(code===lastCode&&now-lastCodeTime<2500)return;
+  lastCode=code;lastCodeTime=now;
+  addByBarcode(code,true);
 }
-
 function stopScanner(){
-  scanning = false;
-  const video = document.getElementById('preview');
-  if(video.srcObject){
-    video.srcObject.getTracks().forEach(t => t.stop());
-    video.srcObject = null;
-  }
-  video.style.display = 'none';
-  document.getElementById('cam-ph').style.display = 'flex';
-  document.getElementById('scan-ol').style.display = 'none';
-  document.getElementById('btn-start').disabled = false;
-  document.getElementById('btn-stop').disabled = true;
-  document.getElementById('cam-dot').className = 'dot';
-  document.getElementById('cam-status').textContent = '條碼掃描器';
-  if(codeReader){ try{codeReader.reset();}catch(e){} codeReader = null; }
-  lastScannedCode = '';
+  scanning=false;
+  const v=document.getElementById('preview');
+  if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;}
+  v.style.display='none';
+  document.getElementById('cam-ph').style.display='flex';
+  document.getElementById('scan-ol').style.display='none';
+  document.getElementById('btn-start').disabled=false;
+  document.getElementById('btn-stop').disabled=true;
+  document.getElementById('cam-dot').className='dot';
+  document.getElementById('cam-status').textContent='สแกนบาร์โค้ด';
+  if(codeReader){try{codeReader.reset();}catch(e){}codeReader=null;}
+  lastCode='';
   setSt('掃描已停止');
 }
 
-// ══════════════════════════════════════
-//  加入商品邏輯
-// ══════════════════════════════════════
-function handleScan(code){ addByBarcode(code, true); }
-
-function addByBarcode(code, fromCam=false){
-  code = (code || '').trim();
-  if(!code) return;
-  document.getElementById('manual-bc').value = '';
-  const prods = getProds();
+// ═══════════════════════════════
+//  商品查找 & 加入
+// ═══════════════════════════════
+function addByBarcode(code){
+  code=(code||'').trim();if(!code)return;
+  const prods=getProds();
   if(!prods[code]){
-    // 未知條碼：跳出輸入視窗
-    pendingBC = code;
-    document.getElementById('np-bc').textContent = '條碼：' + code;
-    document.getElementById('np-name').value = '';
-    document.getElementById('np-price').value = '';
+    pendingBC=code;
+    document.getElementById('np-bc').textContent='條碼：'+code;
+    document.getElementById('np-name').value='';
+    document.getElementById('np-price').value='';
     openM('m-newprod');
-    setSt('⚠ 未知條碼：' + code + '　請輸入商品資料', 'warn');
+    setSt('⚠ 未知條碼：'+code+'　請輸入商品資料','warn');
     return;
   }
-  const p = prods[code];
-  addToCart(code, p);
-  setSt('✓ 已加入：' + p.name + '　NT$ ' + p.price, 'ok');
+  const p=prods[code];
+  addToCart(code,p);
+  setSt('✓ 已加入：'+p.name+'　NT$ '+p.price,'ok');
   playBeep();
 }
-
 function saveNewProduct(){
-  const name = document.getElementById('np-name').value.trim();
-  const price = parseFloat(document.getElementById('np-price').value);
-  if(!name){ showToast('請輸入品項名稱', 'err'); return; }
-  if(isNaN(price) || price < 0){ showToast('請輸入正確價格', 'err'); return; }
-  const prods = getProds();
-  prods[pendingBC] = {name, price};
-  saveProds(prods);
+  const name=document.getElementById('np-name').value.trim();
+  const price=parseFloat(document.getElementById('np-price').value);
+  if(!name){showToast('請輸入品項名稱','err');return;}
+  if(isNaN(price)||price<0){showToast('請輸入正確價格','err');return;}
+  const prods=getProds();prods[pendingBC]={name,price};saveProds(prods);
   closeM('m-newprod');
-  addToCart(pendingBC, {name, price});
-  setSt('✓ 已儲存並加入：' + name + '　NT$ ' + price, 'ok');
-  playBeep();
-  renderProdGrid();
-  showToast('已新增商品：' + name, 'ok');
-  pendingBC = null;
+  addToCart(pendingBC,{name,price});
+  setSt('✓ 已儲存並加入：'+name+'　NT$ '+price,'ok');
+  playBeep();renderProdGrid();
+  showToast('已新增商品：'+name,'ok');
+  pendingBC=null;
 }
 
-// ══════════════════════════════════════
+// ═══════════════════════════════
 //  購物車
-// ══════════════════════════════════════
-function addToCart(bc, p){
-  const ex = cart.find(i => i.barcode === bc);
-  if(ex) ex.qty++;
-  else cart.push({barcode:bc, name:p.name, price:p.price, qty:1});
+// ═══════════════════════════════
+function addToCart(bc,p){
+  const ex=cart.find(i=>i.barcode===bc);
+  if(ex)ex.qty++;else cart.push({barcode:bc,name:p.name,price:p.price,qty:1});
   renderCart();
 }
-function changeQty(bc, d){
-  const item = cart.find(i => i.barcode === bc);
-  if(!item) return;
-  item.qty += d;
-  if(item.qty <= 0) cart = cart.filter(i => i.barcode !== bc);
+function changeQty(bc,d){
+  const item=cart.find(i=>i.barcode===bc);if(!item)return;
+  item.qty+=d;if(item.qty<=0)cart=cart.filter(i=>i.barcode!==bc);
   renderCart();
 }
-function removeItem(bc){ cart = cart.filter(i => i.barcode !== bc); renderCart(); }
-function clearCart(){ cart = []; renderCart(); }
+function removeItem(bc){cart=cart.filter(i=>i.barcode!==bc);renderCart();}
+function clearCart(){cart=[];renderCart();}
 
 function renderCart(){
-  const body = document.getElementById('cart-body');
+  const body=document.getElementById('cart-body');
   if(!cart.length){
-    body.innerHTML = `<div class="empty-st"><div class="ei">🛒</div><div>尚無商品，請掃描條碼</div></div>`;
-    updateTotals(0, 0);
-    document.getElementById('item-count').textContent = '0';
-    document.getElementById('btn-checkout').disabled = true;
+    body.innerHTML=`<div class="empty-st"><div class="ei">🛒</div><div>สแกนบาร์โค้ดเพื่อเพิ่มสินค้า</div><div class="zh">尚無商品，請掃描條碼</div></div>`;
+    updateTotals(0,0);
+    document.getElementById('item-count').textContent='0';
+    document.getElementById('btn-checkout').disabled=true;
+    updateCreditBtn();
     return;
   }
-  const totalQty = cart.reduce((s,i) => s+i.qty, 0);
-  const sub = cart.reduce((s,i) => s+i.price*i.qty, 0);
-  body.innerHTML = cart.map((item, idx) => `
+  const totalQty=cart.reduce((s,i)=>s+i.qty,0);
+  const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  body.innerHTML=cart.map((item,idx)=>`
     <div class="t-row">
       <div class="t-num">${idx+1}</div>
-      <div class="t-name">${item.name}<span style="display:block;font-family:var(--mono);font-size:10px;color:var(--muted2);margin-top:1px">${item.barcode}</span></div>
-      <div class="t-bc-cell">${item.barcode}</div>
+      <div class="t-name">${item.name}<span class="t-bc-sm">${item.barcode}</span></div>
+      <div class="t-bc-col">${item.barcode}</div>
       <div class="t-price">NT$ ${item.price}</div>
       <div class="qty-ctrl">
         <button class="qty-btn" onclick="changeQty('${item.barcode}',-1)">−</button>
@@ -732,304 +770,440 @@ function renderCart(){
       </div>
       <button class="del-btn" onclick="removeItem('${item.barcode}')">×</button>
     </div>`).join('');
-  document.getElementById('item-count').textContent = totalQty;
-  document.getElementById('btn-checkout').disabled = false;
-  updateTotals(sub, totalQty);
+  document.getElementById('item-count').textContent=totalQty;
+  document.getElementById('btn-checkout').disabled=false;
+  updateTotals(sub,totalQty);
+  updateCreditBtn();
 }
 
-function updateTotals(sub, qty){
-  const tax = Math.round(sub * 0.05);
-  const grand = sub + tax;
-  document.getElementById('total-qty').textContent = qty + ' 件';
-  document.getElementById('subtotal').textContent = 'NT$ ' + sub;
-  document.getElementById('tax').textContent = 'NT$ ' + tax;
-  document.getElementById('grand-total').textContent = 'NT$ ' + grand;
+function updateTotals(sub,qty){
+  document.getElementById('total-qty').textContent=qty+' 件';
+  document.getElementById('subtotal').textContent='NT$ '+sub;
+  document.getElementById('grand-total').textContent='NT$ '+sub;
+}
+function updateCreditBtn(){
+  const hasItems=cart.length>0;
+  const hasMember=!!selectedMember;
+  const btn=document.getElementById('btn-credit');
+  btn.disabled=!(hasItems&&hasMember);
 }
 
-// ══════════════════════════════════════
-//  結帳
-// ══════════════════════════════════════
-function checkout(){
-  if(!cart.length) return;
-  const sub = cart.reduce((s,i) => s+i.price*i.qty, 0);
-  const tax = Math.round(sub * 0.05);
-  const total = sub + tax;
-  const now = new Date();
-  const tx = {
+// ═══════════════════════════════
+//  會員選擇
+// ═══════════════════════════════
+function populateMemberDropdown(){
+  const members=getMembers();
+  const sel=document.getElementById('member-select');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">── เลือกสมาชิก / 選擇會員（賒帳用）──</option>'+
+    members.map(m=>`<option value="${m.id}">${m.id} - ${m.name}</option>`).join('');
+  if(cur)sel.value=cur;
+}
+function onMemberChange(){
+  const sel=document.getElementById('member-select');
+  const id=sel.value;
+  const members=getMembers();
+  const m=members.find(x=>x.id===id);
+  if(m){
+    selectedMember={id:m.id,name:m.name};
+    const strip=document.getElementById('sel-member-strip');
+    strip.classList.add('show');
+    document.getElementById('sel-member-name').textContent=m.name;
+    document.getElementById('sel-member-id').textContent=m.id;
+  }else{
+    selectedMember=null;
+    document.getElementById('sel-member-strip').classList.remove('show');
+  }
+  updateCreditBtn();
+}
+function clearMember(){
+  selectedMember=null;
+  document.getElementById('member-select').value='';
+  document.getElementById('sel-member-strip').classList.remove('show');
+  updateCreditBtn();
+}
+
+// ═══════════════════════════════
+//  結帳 & 賒帳
+// ═══════════════════════════════
+function checkout(isCredit){
+  if(!cart.length)return;
+  if(isCredit&&!selectedMember){showToast('賒帳需選擇會員','err');return;}
+  const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const total=isCredit?Math.round(sub*1.1):sub;
+  const now=new Date();
+  const tx={
     id:'TX'+now.getTime().toString(36).toUpperCase(),
     date:now.toISOString(),
     items:JSON.parse(JSON.stringify(cart)),
-    subtotal:sub, tax, total
+    subtotal:sub, total,
+    isCredit, memberId:isCredit?selectedMember.id:null,
+    memberName:isCredit?selectedMember.name:null
   };
-  const txList = JSON.parse(localStorage.getItem('pos_transactions')||'[]');
-  txList.push(tx);
-  localStorage.setItem('pos_transactions', JSON.stringify(txList));
-  showReceipt(tx);
-  cart = []; renderCart(); stopScanner();
-  showToast('結帳成功！', 'ok');
+  const txList=getTx();txList.push(tx);saveTx(txList);
+  showReceipt(tx,isCredit);
+  cart=[];
+  renderCart();
+  if(!isCredit)stopScanner();
+  showToast(isCredit?'賒帳完成！':'結帳完成！','ok');
 }
 
-function showReceipt(tx){
-  const d = new Date(tx.date);
-  document.getElementById('rcpt-date').textContent = d.toLocaleString('zh-TW');
-  document.getElementById('rcpt-id').textContent = '# ' + tx.id;
-  document.getElementById('rcpt-items').innerHTML =
-    tx.items.map(i => `
-      <div class="rcpt-item">
-        <div class="rcpt-iname">${i.name}</div>
-        <div class="rcpt-qty">x${i.qty}</div>
-        <div class="rcpt-iprice">NT$ ${i.price*i.qty}</div>
-      </div>`).join('') +
-    `<div class="rcpt-item" style="margin-top:7px;opacity:.55;font-size:12px">
-      <div>稅金 5%</div><div></div>
-      <div style="font-family:var(--mono)">NT$ ${tx.tax}</div>
-    </div>`;
-  document.getElementById('rcpt-total').textContent = 'NT$ ' + tx.total;
+function showReceipt(tx,isCredit){
+  const d=new Date(tx.date);
+  document.getElementById('rcpt-date').textContent=d.toLocaleString('zh-TW');
+  document.getElementById('rcpt-id').textContent='# '+tx.id;
+  const memEl=document.getElementById('rcpt-member');
+  if(isCredit&&tx.memberName){
+    memEl.textContent='👤 會員：'+tx.memberName+' ('+tx.memberId+')';
+    memEl.style.display='inline-block';
+  }else{memEl.style.display='none';}
+  document.getElementById('rcpt-items').innerHTML=tx.items.map(i=>`
+    <div class="rcpt-item">
+      <div class="rcpt-iname">${i.name}</div>
+      <div class="rcpt-qty">x${i.qty}</div>
+      <div class="rcpt-iprice">NT$ ${i.price*i.qty}</div>
+    </div>`).join('');
+  document.getElementById('rcpt-total-amt').textContent='NT$ '+tx.total;
+  const ctag=document.getElementById('rcpt-credit-tag');
+  ctag.style.display=isCredit?'block':'none';
+  // 截圖按鈕只在賒帳時顯示
+  document.getElementById('btn-screenshot').style.display=isCredit?'':'none';
   openM('m-receipt');
 }
 
-// ══════════════════════════════════════
-//  商品管理頁
-// ══════════════════════════════════════
-function renderProdGrid(){
-  const prods = getProds();
-  const keys = Object.keys(prods);
-  document.getElementById('prod-count-lbl').textContent = `共 ${keys.length} 種商品`;
-  const grid = document.getElementById('prod-grid');
-  if(!keys.length){
-    grid.innerHTML = `<div class="empty-st" style="grid-column:1/-1"><div class="ei">📦</div><div>尚無商品資料</div></div>`;
+// ═══════════════════════════════
+//  截圖功能
+// ═══════════════════════════════
+async function takeScreenshot(){
+  const el=document.getElementById('rcpt-content');
+  try{
+    const canvas=await html2canvas(el,{
+      backgroundColor:'#0f1420',
+      scale:2,
+      useCORS:true,
+      logging:false
+    });
+    const link=document.createElement('a');
+    link.download='receipt_'+dateStamp()+'.png';
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+    showToast('收據截圖已儲存','ok');
+  }catch(e){
+    // html2canvas 失敗時，用 canvas 手繪簡單版
+    fallbackScreenshot();
+  }
+}
+function fallbackScreenshot(){
+  const tx=getTx().slice(-1)[0];if(!tx)return;
+  const canvas=document.createElement('canvas');
+  canvas.width=680;canvas.height=Math.max(400,tx.items.length*44+260);
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#0f1420';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#00d4ff';ctx.font='bold 22px monospace';ctx.textAlign='center';
+  ctx.fillText('POS SYSTEM',canvas.width/2,50);
+  ctx.fillStyle='#5a6680';ctx.font='14px monospace';
+  ctx.fillText(new Date(tx.date).toLocaleString('zh-TW'),canvas.width/2,78);
+  ctx.fillText('# '+tx.id,canvas.width/2,98);
+  if(tx.memberName){ctx.fillStyle='#00d4ff';ctx.fillText('👤 '+tx.memberName,canvas.width/2,120);}
+  ctx.fillStyle='#2e3a56';ctx.fillRect(40,130,canvas.width-80,1);
+  ctx.textAlign='left';let y=160;
+  tx.items.forEach(item=>{
+    ctx.fillStyle='#dde4f0';ctx.font='15px "Noto Sans TC",sans-serif';
+    ctx.fillText(item.name,50,y);
+    ctx.fillStyle='#5a6680';ctx.font='13px monospace';
+    ctx.fillText('x'+item.qty,ctx.measureText(item.name).width+70,y);
+    ctx.textAlign='right';ctx.fillStyle='#f5c518';ctx.font='bold 15px monospace';
+    ctx.fillText('NT$ '+(item.price*item.qty),canvas.width-50,y);
+    ctx.textAlign='left';y+=40;
+  });
+  ctx.fillStyle='#2e3a56';ctx.fillRect(40,y,canvas.width-80,1);y+=20;
+  if(tx.isCredit){ctx.fillStyle='#ff9800';ctx.font='13px "Noto Sans TC",sans-serif';ctx.textAlign='center';ctx.fillText('⚠ 賒帳交易（含 10% 加收）',canvas.width/2,y);y+=30;}
+  ctx.fillStyle='#5a6680';ctx.font='13px monospace';ctx.textAlign='left';ctx.fillText('合計',50,y+10);
+  ctx.fillStyle='#f5c518';ctx.font='bold 26px monospace';ctx.textAlign='right';
+  ctx.fillText('NT$ '+tx.total,canvas.width-50,y+12);
+  const link=document.createElement('a');
+  link.download='receipt_'+dateStamp()+'.png';
+  link.href=canvas.toDataURL('image/png');link.click();
+  showToast('收據截圖已儲存','ok');
+}
+
+// ═══════════════════════════════
+//  會員管理
+// ═══════════════════════════════
+function genMemberId(){
+  const members=getMembers();
+  let n=members.length+1;
+  while(members.find(m=>m.id==='M'+String(n).padStart(4,'0')))n++;
+  return 'M'+String(n).padStart(4,'0');
+}
+function renderMemGrid(){
+  const members=getMembers();
+  document.getElementById('mem-count-lbl').textContent='共 '+members.length+' 位會員';
+  const grid=document.getElementById('mem-grid');
+  if(!members.length){
+    grid.innerHTML=`<div class="empty-st" style="grid-column:1/-1"><div class="ei">👥</div><div class="zh">尚無會員資料</div></div>`;
     return;
   }
-  grid.innerHTML = keys.map(bc => {
-    const p = prods[bc];
-    return `<div class="prod-card">
+  grid.innerHTML=members.map(m=>`
+    <div class="mem-card">
+      <div class="mem-card-id">${m.id}</div>
+      <div class="mem-card-name">${m.name}</div>
+      <div class="mem-card-acts">
+        <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;font-family:var(--zh)" onclick="openEditMember('${m.id}')">✏ 編輯</button>
+        <button class="btn btn-danger" style="font-size:12px;padding:6px 10px;font-family:var(--zh)" onclick="delMember('${m.id}')">🗑 刪除</button>
+      </div>
+    </div>`).join('');
+}
+function openAddMember(){
+  document.getElementById('am-name').value='';
+  openM('m-addmem');
+}
+function saveAddMember(){
+  const name=document.getElementById('am-name').value.trim();
+  if(!name){showToast('請輸入會員名稱','err');return;}
+  const members=getMembers();
+  members.push({id:genMemberId(),name});
+  saveMembers(members);
+  closeM('m-addmem');
+  renderMemGrid();
+  populateMemberDropdown();
+  showToast('已新增會員：'+name,'ok');
+}
+function openEditMember(id){
+  const m=getMembers().find(x=>x.id===id);if(!m)return;
+  editingMemId=id;
+  document.getElementById('em-id-lbl').textContent='會員編號：'+id;
+  document.getElementById('em-name').value=m.name;
+  openM('m-editmem');
+}
+function saveEditMember(){
+  const name=document.getElementById('em-name').value.trim();
+  if(!name){showToast('請輸入會員名稱','err');return;}
+  const members=getMembers();
+  const m=members.find(x=>x.id===editingMemId);if(!m)return;
+  m.name=name;saveMembers(members);
+  closeM('m-editmem');renderMemGrid();populateMemberDropdown();
+  showToast('已更新：'+name,'ok');editingMemId=null;
+}
+function delMember(id){
+  const m=getMembers().find(x=>x.id===id);
+  if(!confirm('確定刪除會員「'+m.name+'」（'+id+'）？\n此操作無法復原。'))return;
+  const members=getMembers().filter(x=>x.id!==id);
+  saveMembers(members);renderMemGrid();populateMemberDropdown();
+  if(selectedMember&&selectedMember.id===id)clearMember();
+  showToast('已刪除會員：'+m.name,'ok');
+}
+
+// ═══════════════════════════════
+//  商品管理
+// ═══════════════════════════════
+function renderProdGrid(){
+  const prods=getProds();const keys=Object.keys(prods);
+  document.getElementById('prod-count-lbl').textContent='共 '+keys.length+' 種商品';
+  const grid=document.getElementById('prod-grid');
+  if(!keys.length){grid.innerHTML=`<div class="empty-st" style="grid-column:1/-1"><div class="ei">📦</div><div class="zh">尚無商品資料</div></div>`;return;}
+  grid.innerHTML=keys.map(bc=>{const p=prods[bc];return`
+    <div class="prod-card">
       <div class="prod-bc">${bc}</div>
       <div class="prod-name">${p.name}</div>
       <div class="prod-price">NT$ ${p.price}</div>
       <div class="prod-acts">
-        <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px" onclick="openEditProduct('${bc}')">✏ 編輯</button>
-        <button class="btn btn-danger" style="font-size:12px;padding:6px 10px" onclick="delProduct('${bc}')">🗑</button>
+        <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;font-family:var(--zh)" onclick="openEditProduct('${bc}')">✏ 編輯</button>
+        <button class="btn btn-danger" style="font-size:12px;padding:6px 10px;font-family:var(--zh)" onclick="delProduct('${bc}')">🗑 刪除</button>
       </div>
-    </div>`;
-  }).join('');
+    </div>`;}).join('');
 }
-function openAddProduct(){
-  ['ap-bc','ap-name','ap-price'].forEach(id => document.getElementById(id).value='');
-  openM('m-addprod');
-}
+function openAddProduct(){['ap-bc','ap-name','ap-price'].forEach(id=>document.getElementById(id).value='');openM('m-addprod');}
 function saveAddProduct(){
-  const bc = document.getElementById('ap-bc').value.trim();
-  const name = document.getElementById('ap-name').value.trim();
-  const price = parseFloat(document.getElementById('ap-price').value);
-  if(!bc){ showToast('請輸入條碼', 'err'); return; }
-  if(!name){ showToast('請輸入品項名稱', 'err'); return; }
-  if(isNaN(price)||price<0){ showToast('請輸入正確價格', 'err'); return; }
-  const prods = getProds();
-  prods[bc] = {name, price};
-  saveProds(prods);
-  closeM('m-addprod');
-  renderProdGrid();
-  showToast('已新增：' + name, 'ok');
+  const bc=document.getElementById('ap-bc').value.trim();
+  const name=document.getElementById('ap-name').value.trim();
+  const price=parseFloat(document.getElementById('ap-price').value);
+  if(!bc){showToast('請輸入條碼','err');return;}
+  if(!name){showToast('請輸入品項名稱','err');return;}
+  if(isNaN(price)||price<0){showToast('請輸入正確價格','err');return;}
+  const prods=getProds();prods[bc]={name,price};saveProds(prods);
+  closeM('m-addprod');renderProdGrid();showToast('已新增：'+name,'ok');
 }
 function openEditProduct(bc){
-  const p = getProds()[bc]; if(!p) return;
-  editingBC = bc;
-  document.getElementById('ep-bc').textContent = '條碼：' + bc;
-  document.getElementById('ep-name').value = p.name;
-  document.getElementById('ep-price').value = p.price;
+  const p=getProds()[bc];if(!p)return;editingBC=bc;
+  document.getElementById('ep-bc').textContent='條碼：'+bc;
+  document.getElementById('ep-name').value=p.name;document.getElementById('ep-price').value=p.price;
   openM('m-editprod');
 }
 function saveEditProduct(){
-  const name = document.getElementById('ep-name').value.trim();
-  const price = parseFloat(document.getElementById('ep-price').value);
-  if(!name||isNaN(price)){ showToast('請填寫完整資料', 'err'); return; }
-  const prods = getProds();
-  prods[editingBC] = {name, price};
-  saveProds(prods);
-  closeM('m-editprod');
-  renderProdGrid();
-  showToast('已更新：' + name, 'ok');
-  editingBC = null;
+  const name=document.getElementById('ep-name').value.trim();const price=parseFloat(document.getElementById('ep-price').value);
+  if(!name||isNaN(price)){showToast('請填寫完整資料','err');return;}
+  const prods=getProds();prods[editingBC]={name,price};saveProds(prods);
+  closeM('m-editprod');renderProdGrid();showToast('已更新：'+name,'ok');editingBC=null;
 }
 function delProduct(bc){
-  if(!confirm('確定刪除此商品？')) return;
-  const prods = getProds();
-  delete prods[bc];
-  saveProds(prods);
-  renderProdGrid();
-  showToast('已刪除商品', 'ok');
+  if(!confirm('確定刪除此商品？'))return;
+  const prods=getProds();delete prods[bc];saveProds(prods);renderProdGrid();showToast('已刪除商品','ok');
 }
-
-// ══════════════════════════════════════
-//  條碼匯出 / 匯入
-// ══════════════════════════════════════
 function exportProducts(){
-  downloadFile(JSON.stringify(getProds(),null,2), 'products_'+dateStamp()+'.json', 'application/json');
-  showToast('已匯出商品條碼資料', 'ok');
+  downloadFile(JSON.stringify(getProds(),null,2),'products_'+dateStamp()+'.json','application/json');
+  showToast('已匯出商品條碼資料','ok');
 }
 function importProducts(e){
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
     try{
-      const data = JSON.parse(ev.target.result);
-      if(typeof data !== 'object' || Array.isArray(data)) throw new Error();
-      const prods = getProds(); let count = 0;
-      Object.entries(data).forEach(([bc,p]) => { if(p.name && p.price !== undefined){ prods[bc]=p; count++; } });
-      saveProds(prods); renderProdGrid();
-      showToast('已匯入 ' + count + ' 筆商品資料', 'ok');
-    }catch{ showToast('檔案格式錯誤', 'err'); }
-    e.target.value = '';
-  };
-  reader.readAsText(file);
+      const data=JSON.parse(ev.target.result);if(typeof data!=='object'||Array.isArray(data))throw 0;
+      const prods=getProds();let count=0;
+      Object.entries(data).forEach(([bc,p])=>{if(p.name&&p.price!==undefined){prods[bc]=p;count++;}});
+      saveProds(prods);renderProdGrid();showToast('已匯入 '+count+' 筆商品','ok');
+    }catch{showToast('檔案格式錯誤','err');}
+    e.target.value='';
+  };reader.readAsText(file);
 }
 
-// ══════════════════════════════════════
-//  報表匯出 / 匯入
-// ══════════════════════════════════════
-function exportReport(fmt){
-  const txList = JSON.parse(localStorage.getItem('pos_transactions')||'[]');
-  if(!txList.length){ showToast('無資料可匯出', 'err'); return; }
-  if(fmt === 'json'){
-    downloadFile(JSON.stringify(txList,null,2), 'transactions_'+dateStamp()+'.json', 'application/json');
-    showToast('已匯出 JSON 報表', 'ok');
-  } else {
-    const rows = [['交易編號','日期時間','品項摘要','小計','稅金','總計']];
-    txList.forEach(tx => {
-      const items = tx.items.map(i => `${i.name}x${i.qty}`).join('; ');
-      rows.push([tx.id, tx.date, items, tx.subtotal, tx.tax, tx.total]);
-    });
-    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
-    downloadFile('\uFEFF'+csv, 'transactions_'+dateStamp()+'.csv', 'text/csv;charset=utf-8');
-    showToast('已匯出 CSV 報表（可用 Excel 開啟）', 'ok');
-  }
-}
-function importReport(e){
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try{
-      const data = JSON.parse(ev.target.result);
-      if(!Array.isArray(data)) throw new Error();
-      const existing = JSON.parse(localStorage.getItem('pos_transactions')||'[]');
-      const ids = new Set(existing.map(t => t.id));
-      let added = 0;
-      data.forEach(tx => { if(!ids.has(tx.id)){ existing.push(tx); added++; } });
-      existing.sort((a,b) => new Date(a.date)-new Date(b.date));
-      localStorage.setItem('pos_transactions', JSON.stringify(existing));
-      renderStats(); renderReport();
-      showToast('已匯入 ' + added + ' 筆交易紀錄', 'ok');
-    }catch{ showToast('檔案格式錯誤', 'err'); }
-    e.target.value = '';
-  };
-  reader.readAsText(file);
-}
-
-// ══════════════════════════════════════
-//  報表頁面
-// ══════════════════════════════════════
-let reportMode = 'daily';
-function switchReport(mode, btn){
-  reportMode = mode;
-  document.querySelectorAll('.r-tab').forEach(t => t.classList.remove('active'));
+// ═══════════════════════════════
+//  報表
+// ═══════════════════════════════
+let reportMode='daily';
+function switchReport(mode,btn){
+  reportMode=mode;
+  document.querySelectorAll('.r-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
   renderReport();
 }
 function renderStats(){
-  const txList = JSON.parse(localStorage.getItem('pos_transactions')||'[]');
-  const now = new Date();
-  const todayStr=fd(now), monthStr=fm(now);
-  let tT=0,tC=0,mT=0,mC=0,aT=0;
-  txList.forEach(tx => {
+  const txList=getTx();const now=new Date();
+  const today=fd(now),month=fm(now);
+  let tT=0,tC=0,mT=0,mC=0;
+  txList.forEach(tx=>{
     const d=new Date(tx.date);
-    if(fd(d)===todayStr){tT+=tx.total;tC++;}
-    if(fm(d)===monthStr){mT+=tx.total;mC++;}
-    aT+=tx.total;
+    if(fd(d)===today){tT+=tx.total;tC++;}
+    if(fm(d)===month){mT+=tx.total;mC++;}
   });
-  document.getElementById('stat-today').textContent = 'NT$ '+tT;
-  document.getElementById('stat-today-count').textContent = tC;
-  document.getElementById('stat-month').textContent = 'NT$ '+mT;
-  document.getElementById('stat-month-count').textContent = mC;
-  document.getElementById('stat-all').textContent = 'NT$ '+aT;
-  document.getElementById('stat-all-count').textContent = txList.length;
-  renderBarChart(txList);
-}
-function renderBarChart(txList){
-  const days=[];
-  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push({key:fd(d),label:`${d.getMonth()+1}/${d.getDate()}`,total:0});}
-  txList.forEach(tx=>{const day=days.find(d=>d.key===fd(new Date(tx.date)));if(day)day.total+=tx.total;});
-  const max=Math.max(...days.map(d=>d.total),1);
-  document.getElementById('bar-chart').innerHTML=days.map(d=>{
-    const h=Math.max(Math.round((d.total/max)*100),d.total?4:2);
-    return`<div class="bar-item"><div class="bar-v">${d.total?'$'+d.total:''}</div><div class="bar" style="height:${h}%" title="${d.label}: NT$${d.total}"></div><div class="bar-lbl">${d.label}</div></div>`;
-  }).join('');
+  document.getElementById('stat-today').textContent='NT$ '+tT;
+  document.getElementById('stat-today-count').textContent=tC;
+  document.getElementById('stat-month').textContent='NT$ '+mT;
+  document.getElementById('stat-month-count').textContent=mC;
 }
 function renderReport(){
-  const txList=JSON.parse(localStorage.getItem('pos_transactions')||'[]');
+  const txList=getTx();
   const table=document.getElementById('report-table');
-  if(reportMode==='transactions'){
-    if(!txList.length){table.innerHTML=emptyHtml();return;}
-    const sorted=[...txList].reverse();
-    table.innerHTML=`<div style="display:grid;grid-template-columns:145px 1fr 110px 110px 80px;padding:9px 14px;border-bottom:1px solid var(--border);font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase">
-      <div>日期時間</div><div>交易編號</div><div>品項摘要</div><div>金額</div><div>狀態</div>
-    </div>`+sorted.map(tx=>{
-      const d=new Date(tx.date);
-      const summary=tx.items.map(i=>`${i.name}x${i.qty}`).join('、');
-      return`<div style="display:grid;grid-template-columns:145px 1fr 110px 110px 80px;padding:13px 14px;border-bottom:1px solid var(--border);font-size:13px;align-items:center;transition:background .15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-        <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">${d.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
-        <div style="font-family:var(--mono);font-size:11px;color:var(--purple)">${tx.id}</div>
-        <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${summary}</div>
-        <div style="font-family:var(--mono);font-weight:700;color:var(--gold)">NT$ ${tx.total}</div>
-        <div><span class="badge-paid">已付款</span></div>
-      </div>`;
-    }).join('');return;
-  }
   const grouped={};
   txList.forEach(tx=>{
-    const d=new Date(tx.date);const key=reportMode==='daily'?fd(d):fm(d);
+    const d=new Date(tx.date);
+    const key=reportMode==='daily'?fd(d):fm(d);
     if(!grouped[key])grouped[key]={total:0,count:0,items:0};
     grouped[key].total+=tx.total;grouped[key].count++;
     grouped[key].items+=tx.items.reduce((s,i)=>s+i.qty,0);
   });
   const keys=Object.keys(grouped).sort().reverse();
-  if(!keys.length){table.innerHTML=emptyHtml();return;}
+  if(!keys.length){table.innerHTML=`<div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>`;return;}
   const colLabel=reportMode==='daily'?'日期':'月份';
-  table.innerHTML=`<div style="display:grid;grid-template-columns:150px 1fr 130px 80px;padding:9px 14px;border-bottom:1px solid var(--border);font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase">
-    <div>${colLabel}</div><div>商品件數</div><div>銷售金額</div><div>筆數</div>
-  </div>`+keys.map(k=>`
-    <div style="display:grid;grid-template-columns:150px 1fr 130px 80px;padding:13px 14px;border-bottom:1px solid var(--border);font-size:13px;align-items:center;transition:background .15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+  const cols='155px 1fr 130px 80px 32px';
+  table.innerHTML=`
+    <div style="display:grid;grid-template-columns:${cols};padding:9px 14px;border-bottom:1px solid var(--border);font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:var(--zh)">
+      <div>${colLabel}</div><div>商品件數</div><div>銷售金額</div><div>筆數</div><div></div>
+    </div>`+keys.map(k=>`
+    <div class="r-table-row" style="grid-template-columns:${cols}" onclick="showDrilldown('${k}','${reportMode}')">
       <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">${k}</div>
-      <div style="font-size:12px;color:var(--muted)">${grouped[k].items} 件</div>
+      <div style="font-size:12px;color:var(--muted);font-family:var(--zh)">${grouped[k].items} 件</div>
       <div style="font-family:var(--mono);font-weight:700;color:var(--gold)">NT$ ${grouped[k].total}</div>
       <div style="font-family:var(--mono);font-size:12px;color:var(--muted)">${grouped[k].count} 筆</div>
+      <div class="arrow">›</div>
     </div>`).join('');
 }
-function emptyHtml(){return`<div class="empty-st"><div class="ei">📋</div><div>尚無銷售資料</div></div>`;}
 
-// ══════════════════════════════════════
+// ═══════════════════════════════
+//  報表明細 Drill-down
+// ═══════════════════════════════
+function showDrilldown(key, mode){
+  const txList=getTx();
+  const filtered=txList.filter(tx=>{
+    const d=new Date(tx.date);
+    return (mode==='daily'?fd(d):fm(d))===key;
+  });
+  // 彙整品項
+  const itemMap={};
+  filtered.forEach(tx=>{
+    tx.items.forEach(item=>{
+      if(!itemMap[item.name])itemMap[item.name]={qty:0,total:0};
+      itemMap[item.name].qty+=item.qty;
+      itemMap[item.name].total+=item.price*item.qty;
+    });
+  });
+  const items=Object.entries(itemMap).sort((a,b)=>b[1].total-a[1].total);
+  const grandTotal=items.reduce((s,[,v])=>s+v.total,0);
+  // 標題
+  document.getElementById('drill-title').textContent=(mode==='daily'?'每日':'每月')+'銷售明細';
+  document.getElementById('drill-sub').textContent=key+'　共 '+filtered.length+' 筆交易';
+  // 填表
+  document.getElementById('drill-body').innerHTML=items.map(([name,v])=>`
+    <tr>
+      <td>${name}</td>
+      <td class="num">${v.qty} 件</td>
+      <td class="num" style="color:var(--gold);font-weight:700">NT$ ${v.total}</td>
+    </tr>`).join('');
+  document.getElementById('drill-total-amt').textContent='NT$ '+grandTotal;
+  openM('m-drill');
+}
+
+// ═══════════════════════════════
+//  CSV 匯出
+// ═══════════════════════════════
+function exportCSV(){
+  const txList=getTx();
+  if(!txList.length){showToast('無資料可匯出','err');return;}
+  const rows=[['交易編號','日期時間','品項摘要','合計','是否賒帳','會員編號','會員名稱']];
+  txList.forEach(tx=>{
+    const items=tx.items.map(i=>`${i.name}x${i.qty}`).join('; ');
+    rows.push([tx.id,tx.date,items,tx.total,tx.isCredit?'是':'否',tx.memberId||'',tx.memberName||'']);
+  });
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  downloadFile('\uFEFF'+csv,'transactions_'+dateStamp()+'.csv','text/csv;charset=utf-8');
+  showToast('已匯出 CSV 報表（可用 Excel 開啟）','ok');
+}
+function importReport(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);if(!Array.isArray(data))throw 0;
+      const existing=getTx();const ids=new Set(existing.map(t=>t.id));let added=0;
+      data.forEach(tx=>{if(!ids.has(tx.id)){existing.push(tx);added++;}});
+      existing.sort((a,b)=>new Date(a.date)-new Date(b.date));saveTx(existing);
+      renderStats();renderReport();showToast('已匯入 '+added+' 筆交易紀錄','ok');
+    }catch{showToast('檔案格式錯誤','err');}
+    e.target.value='';
+  };reader.readAsText(file);
+}
+function clearAllData(){
+  if(!confirm('確定清除所有銷售資料？此操作無法復原。'))return;
+  localStorage.removeItem('pos_transactions');
+  renderStats();renderReport();showToast('已清除所有資料','ok');
+}
+
+// ═══════════════════════════════
 //  頁面切換
-// ══════════════════════════════════════
-function showPage(id, btn){
+// ═══════════════════════════════
+function showPage(id,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  if(btn) btn.classList.add('active');
+  if(btn)btn.classList.add('active');
   if(id==='report'){renderStats();renderReport();}
-  if(id==='products') renderProdGrid();
+  if(id==='products')renderProdGrid();
+  if(id==='members')renderMemGrid();
 }
 
-// ══════════════════════════════════════
+// ═══════════════════════════════
 //  Modal 輔助
-// ══════════════════════════════════════
+// ═══════════════════════════════
 function openM(id){document.getElementById(id).classList.add('open');}
 function closeM(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.overlay').forEach(ol=>{
-  ol.addEventListener('click', e=>{if(e.target===ol) ol.classList.remove('open');});
+  ol.addEventListener('click',e=>{if(e.target===ol)ol.classList.remove('open');});
 });
 
-// ══════════════════════════════════════
+// ═══════════════════════════════
 //  工具函式
-// ══════════════════════════════════════
+// ═══════════════════════════════
 function setSt(msg,type=''){const el=document.getElementById('scan-st');el.textContent=msg;el.className='scan-st'+(type?' '+type:'');}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='show '+type;clearTimeout(t._t);t._t=setTimeout(()=>t.className='',3000);}
 function playBeep(){try{const ctx=new(window.AudioContext||window.webkitAudioContext)();const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=960;o.type='sine';g.gain.setValueAtTime(.2,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.1);o.start();o.stop(ctx.currentTime+.1);}catch(e){}}
@@ -1037,18 +1211,16 @@ function fd(d){return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0'
 function fm(d){return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;}
 function dateStamp(){const n=new Date();return`${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}`;}
 function downloadFile(content,filename,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=filename;a.click();URL.revokeObjectURL(a.href);}
-function clearAllData(){if(!confirm('確定清除所有銷售資料？此操作無法復原。'))return;localStorage.removeItem('pos_transactions');renderStats();renderReport();showToast('已清除所有資料', 'ok');}
 
-// ══════════════════════════════════════
+// ═══════════════════════════════
 //  示範資料
-// ══════════════════════════════════════
+// ═══════════════════════════════
 function seedDemo(){
-  if(localStorage.getItem('pos_transactions')) return;
+  if(getTx().length)return;
   const prods=getProds();const pkeys=Object.keys(prods);const txs=[];const now=new Date();
   for(let i=30;i>=0;i--){
     const d=new Date(now);d.setDate(d.getDate()-i);
-    const txCount=Math.floor(Math.random()*7)+1;
-    for(let j=0;j<txCount;j++){
+    for(let j=0;j<Math.floor(Math.random()*6)+1;j++){
       d.setHours(9+Math.floor(Math.random()*12),Math.floor(Math.random()*60));
       const items=[];
       for(let k=0;k<Math.floor(Math.random()*4)+1;k++){
@@ -1057,15 +1229,18 @@ function seedDemo(){
         if(ex)ex.qty++;else items.push({barcode:bc,name:p.name,price:p.price,qty:1});
       }
       const sub=items.reduce((s,i)=>s+i.price*i.qty,0);
-      const tax=Math.round(sub*.05);
-      txs.push({id:'TX'+d.getTime().toString(36).toUpperCase(),date:d.toISOString(),items,subtotal:sub,tax,total:sub+tax});
+      txs.push({id:'TX'+d.getTime().toString(36).toUpperCase(),date:d.toISOString(),items,subtotal:sub,total:sub,isCredit:false,memberId:null,memberName:null});
     }
   }
-  localStorage.setItem('pos_transactions',JSON.stringify(txs));
+  saveTx(txs);
 }
 
+// ═══════════════════════════════
+//  初始化
+// ═══════════════════════════════
 seedDemo();
 renderCart();
+populateMemberDropdown();
 </script>
 </body>
 </html>
