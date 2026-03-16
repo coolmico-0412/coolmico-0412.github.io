@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>掃碼 POS 系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161a22;
+    --surface2: #1e2330;
+    --border: #2a3040;
+    --accent: #f5a623;
+    --accent2: #e8830a;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --blue: #3498db;
+    --text: #e8ecf0;
+    --muted: #6b7888;
+    --font-mono: 'Space Mono', monospace;
+    --font-body: 'Noto Sans TC', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-brand {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-right: auto;
+    text-transform: uppercase;
+  }
+  .nav-brand span { color: var(--muted); font-weight: 400; }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab {
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    transition: all .2s;
+    font-family: var(--font-body);
+    letter-spacing: .5px;
+  }
+  .nav-tab:hover { color: var(--text); background: var(--surface2); }
+  .nav-tab.active { color: var(--accent); background: rgba(245,166,35,.1); }
+
+  /* PAGES */
+  .page { display: none; padding: 24px; max-width: 1100px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* POS PAGE */
+  .pos-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* SCANNER */
+  .scanner-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .card-header .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+  }
+  .card-header .dot.green { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .card-header .dot.amber { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 1.5s infinite; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .scanner-area {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .video-wrap {
+    position: relative;
+    background: #000;
+    border-radius: 10px;
+    overflow: hidden;
+    aspect-ratio: 16/9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #preview {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .scan-overlay {
+    position: absolute; inset: 0;
+    pointer-events: none;
+  }
+  .scan-line {
+    position: absolute;
+    left: 15%; right: 15%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    top: 50%;
+    animation: scanline 2s ease-in-out infinite;
+    box-shadow: 0 0 8px var(--accent);
+  }
+  @keyframes scanline {
+    0%,100%{ top: 25%; opacity: 0; }
+    10%{ opacity: 1; }
+    90%{ opacity: 1; }
+    50%{ top: 75%; }
+  }
+  .scan-corner {
+    position: absolute;
+    width: 28px; height: 28px;
+    border-color: var(--accent);
+    border-style: solid;
+    opacity: .8;
+  }
+  .scan-corner.tl { top: 14%; left: 14%; border-width: 3px 0 0 3px; }
+  .scan-corner.tr { top: 14%; right: 14%; border-width: 3px 3px 0 0; }
+  .scan-corner.bl { bottom: 14%; left: 14%; border-width: 0 0 3px 3px; }
+  .scan-corner.br { bottom: 14%; right: 14%; border-width: 0 3px 3px 0; }
+
+  .cam-placeholder {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px; padding: 40px;
+    color: var(--muted); font-size: 13px; text-align: center;
+  }
+  .cam-icon { font-size: 48px; opacity: .3; }
+
+  .scan-controls { display: flex; gap: 10px; }
+  .btn {
+    flex: 1; padding: 11px 16px;
+    border-radius: 8px; border: none;
+    font-family: var(--font-body);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all .2s;
+    letter-spacing: .3px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-primary:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; transform: none; }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  .manual-input {
+    display: flex; gap: 8px;
+  }
+  .manual-input input {
+    flex: 1; padding: 10px 14px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text);
+    font-family: var(--font-mono); font-size: 13px;
+    outline: none; transition: border-color .2s;
+  }
+  .manual-input input:focus { border-color: var(--accent); }
+  .manual-input input::placeholder { color: var(--muted); }
+
+  /* LAST SCAN */
+  .scan-result {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    min-height: 44px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .scan-result.success { border-color: var(--green); color: var(--green); }
+  .scan-result.error { border-color: var(--red); color: var(--red); }
+
+  /* PRODUCT TABLE */
+  .product-table-wrap { margin-top: 20px; }
+  .section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .product-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .table-head {
+    display: grid;
+    grid-template-columns: 40px 1fr 90px 90px 80px 44px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; color: var(--muted);
+    font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .table-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 90px 90px 80px 44px;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    font-size: 14px;
+    animation: rowIn .25s ease;
+    transition: background .15s;
+  }
+  .table-row:last-child { border-bottom: none; }
+  .table-row:hover { background: var(--surface2); }
+  @keyframes rowIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .row-num {
+    font-family: var(--font-mono);
+    font-size: 11px; color: var(--muted);
+  }
+  .row-name { font-weight: 500; }
+  .row-barcode {
+    font-family: var(--font-mono);
+    font-size: 11px; color: var(--muted);
+  }
+  .row-price {
+    font-family: var(--font-mono); font-size: 13px;
+    color: var(--muted);
+  }
+  .row-subtotal {
+    font-family: var(--font-mono); font-size: 13px;
+    color: var(--text); font-weight: 700;
+  }
+  .qty-control {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .qty-btn {
+    width: 22px; height: 22px; border-radius: 4px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s; line-height: 1;
+  }
+  .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .qty-num {
+    font-family: var(--font-mono); font-size: 13px;
+    min-width: 20px; text-align: center;
+  }
+  .del-btn {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: transparent; border: 1px solid transparent;
+    color: var(--muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; transition: all .15s;
+  }
+  .del-btn:hover { border-color: var(--red); color: var(--red); background: rgba(231,76,60,.08); }
+
+  .empty-state {
+    padding: 50px 20px;
+    text-align: center; color: var(--muted);
+    font-size: 13px;
+  }
+  .empty-icon { font-size: 32px; margin-bottom: 10px; opacity: .3; }
+
+  /* CHECKOUT PANEL */
+  .checkout-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    position: sticky;
+    top: 80px;
+  }
+  .total-rows { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .total-row {
+    display: flex; justify-content: space-between;
+    align-items: center; font-size: 14px;
+  }
+  .total-row .label { color: var(--muted); }
+  .total-row .value { font-family: var(--font-mono); font-weight: 700; }
+  .total-divider { height: 1px; background: var(--border); margin: 4px 0; }
+  .grand-total {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 16px 20px;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+  }
+  .grand-total .label { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .grand-total .amount {
+    font-family: var(--font-mono); font-size: 28px; font-weight: 700;
+    color: var(--accent);
+  }
+  .checkout-actions { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .btn-checkout {
+    width: 100%; padding: 16px;
+    background: var(--accent); color: #000;
+    font-weight: 700; font-size: 15px;
+    border: none; border-radius: 10px;
+    cursor: pointer; font-family: var(--font-body);
+    letter-spacing: .5px;
+    transition: all .2s;
+    position: relative; overflow: hidden;
+  }
+  .btn-checkout::after {
+    content: ''; position: absolute;
+    inset: 0; background: rgba(255,255,255,0);
+    transition: background .2s;
+  }
+  .btn-checkout:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(245,166,35,.3); }
+  .btn-checkout:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-clear-all {
+    width: 100%; padding: 10px;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); font-size: 13px;
+    border-radius: 8px; cursor: pointer;
+    font-family: var(--font-body); transition: all .2s;
+  }
+  .btn-clear-all:hover { border-color: var(--red); color: var(--red); }
+
+  /* ITEM COUNT BADGE */
+  .item-count {
+    background: var(--accent); color: #000;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 10px;
+    font-family: var(--font-mono);
+    margin-left: auto;
+  }
+
+  /* REPORTS PAGE */
+  .report-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .stat-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .stat-value {
+    font-family: var(--font-mono); font-size: 26px; font-weight: 700;
+    color: var(--text);
+  }
+  .stat-value.accent { color: var(--accent); }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .report-tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+  .report-tab {
+    padding: 7px 16px; border-radius: 6px; font-size: 13px;
+    font-weight: 500; cursor: pointer; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-family: var(--font-body);
+    transition: all .2s;
+  }
+  .report-tab.active { background: rgba(245,166,35,.1); border-color: var(--accent); color: var(--accent); }
+
+  .report-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .rt-head {
+    display: grid;
+    grid-template-columns: 160px 1fr 100px 120px 80px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; color: var(--muted);
+    font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .rt-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 100px 120px 80px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px; align-items: center;
+    transition: background .15s;
+  }
+  .rt-row:last-child { border-bottom: none; }
+  .rt-row:hover { background: var(--surface2); }
+  .rt-date { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  .rt-id { font-family: var(--font-mono); font-size: 12px; color: var(--blue); }
+  .rt-items { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rt-total { font-family: var(--font-mono); font-weight: 700; color: var(--accent); }
+  .rt-count { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  .badge-paid {
+    background: rgba(46,204,113,.15); color: var(--green);
+    font-size: 11px; padding: 3px 8px; border-radius: 4px;
+    font-weight: 700; letter-spacing: .5px;
+  }
+
+  .chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .chart-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
+  .bar-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .bar {
+    width: 100%; background: var(--accent);
+    border-radius: 4px 4px 0 0; min-height: 4px;
+    opacity: .8; transition: opacity .2s;
+    position: relative;
+  }
+  .bar:hover { opacity: 1; }
+  .bar-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); white-space: nowrap; }
+  .bar-val { font-size: 10px; color: var(--muted); font-family: var(--font-mono); }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 20px;
+    font-size: 14px; z-index: 999;
+    transform: translateY(80px); opacity: 0;
+    transition: all .3s;
+    max-width: 300px;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { border-color: var(--green); color: var(--green); }
+  #toast.error { border-color: var(--red); color: var(--red); }
+
+  /* RECEIPT MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 200; display: flex;
+    align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .25s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .receipt {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    width: 340px;
+    transform: scale(.9); transition: transform .25s;
+    max-height: 80vh; overflow-y: auto;
+  }
+  .modal-overlay.open .receipt { transform: scale(1); }
+  .receipt-header { text-align: center; margin-bottom: 24px; }
+  .receipt-logo { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: 3px; }
+  .receipt-date { font-size: 12px; color: var(--muted); margin-top: 4px; font-family: var(--font-mono); }
+  .receipt-id { font-size: 11px; color: var(--blue); margin-top: 2px; font-family: var(--font-mono); }
+  .receipt-divider { border: none; border-top: 1px dashed var(--border); margin: 16px 0; }
+  .receipt-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 14px; }
+  .receipt-item-name { flex: 1; }
+  .receipt-item-qty { color: var(--muted); font-size: 12px; margin: 0 12px; }
+  .receipt-item-price { font-family: var(--font-mono); font-weight: 700; }
+  .receipt-total { display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; margin-top: 8px; }
+  .receipt-total .t-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .receipt-total .t-amount { font-family: var(--font-mono); color: var(--accent); }
+  .receipt-footer { text-align: center; font-size: 11px; color: var(--muted); margin-top: 20px; }
+  .receipt-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+  @media (max-width: 768px) {
+    .pos-grid { grid-template-columns: 1fr; }
+    .report-grid { grid-template-columns: 1fr 1fr; }
+    .table-head, .table-row { grid-template-columns: 32px 1fr 70px 70px 40px; }
+    .table-head > :nth-child(3), .table-row > :nth-child(3) { display: none; }
+    .rt-head, .rt-row { grid-template-columns: 120px 1fr 100px 60px; }
+    .rt-head > :nth-child(4), .rt-row > :nth-child(4) { display: none; }
+    .checkout-panel { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">POS<span> / 銷售系統</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('pos')">📦 收銀台</button>
+    <button class="nav-tab" onclick="showPage('report')">📊 銷售報表</button>
+  </div>
+</nav>
+
+<!-- POS PAGE -->
+<div class="page active" id="page-pos">
+  <div class="pos-grid">
+    <!-- LEFT -->
+    <div>
+      <div class="scanner-card">
+        <div class="card-header">
+          <div class="dot" id="cam-dot"></div>
+          <span id="cam-status">條碼掃描器</span>
+        </div>
+        <div class="scanner-area">
+          <div class="video-wrap" id="video-wrap">
+            <div class="cam-placeholder" id="cam-placeholder">
+              <div class="cam-icon">📷</div>
+              <div>按下「啟動掃描」開啟鏡頭</div>
+              <div style="font-size:11px;margin-top:4px;opacity:.6">支援 EAN-13 / QR Code / Code128</div>
+            </div>
+            <video id="preview" style="display:none" playsinline></video>
+            <div class="scan-overlay" id="scan-overlay" style="display:none">
+              <div class="scan-line"></div>
+              <div class="scan-corner tl"></div>
+              <div class="scan-corner tr"></div>
+              <div class="scan-corner bl"></div>
+              <div class="scan-corner br"></div>
+            </div>
+          </div>
+          <div class="scan-controls">
+            <button class="btn btn-primary" id="btn-start" onclick="startScanner()">啟動掃描</button>
+            <button class="btn btn-outline" id="btn-stop" onclick="stopScanner()" disabled>停止</button>
+          </div>
+          <div class="manual-input">
+            <input type="text" id="manual-barcode" placeholder="手動輸入條碼..." onkeydown="if(event.key==='Enter')addByBarcode(this.value)">
+            <button class="btn btn-outline" style="flex:0;padding:10px 16px;" onclick="addByBarcode(document.getElementById('manual-barcode').value)">加入</button>
+          </div>
+          <div class="scan-result" id="scan-result">等待掃描...</div>
+        </div>
+      </div>
+
+      <div class="product-table-wrap">
+        <div class="section-title" style="display:flex;align-items:center;gap:8px">
+          購物車
+          <span class="item-count" id="item-count">0</span>
+        </div>
+        <div class="product-table">
+          <div class="table-head">
+            <div>#</div>
+            <div>品項名稱</div>
+            <div>條碼</div>
+            <div>單價</div>
+            <div>數量</div>
+            <div></div>
+          </div>
+          <div id="cart-body">
+            <div class="empty-state">
+              <div class="empty-icon">🛒</div>
+              <div>尚無商品，請掃描條碼</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: CHECKOUT -->
+    <div>
+      <div class="checkout-panel">
+        <div class="card-header">
+          <div class="dot amber"></div>
+          <span>結帳明細</span>
+        </div>
+        <div class="total-rows">
+          <div class="total-row">
+            <span class="label">商品數量</span>
+            <span class="value" id="total-qty">0 件</span>
+          </div>
+          <div class="total-row">
+            <span class="label">小計</span>
+            <span class="value" id="subtotal">NT$ 0</span>
+          </div>
+          <div class="total-row">
+            <span class="label">稅金 (5%)</span>
+            <span class="value" id="tax">NT$ 0</span>
+          </div>
+        </div>
+        <div class="grand-total">
+          <div class="label">總計</div>
+          <div class="amount" id="grand-total">NT$ 0</div>
+        </div>
+        <div class="checkout-actions">
+          <button class="btn-checkout" id="btn-checkout" onclick="checkout()" disabled>
+            結帳
+          </button>
+          <button class="btn-clear-all" onclick="clearCart()">清除購物車</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT PAGE -->
+<div class="page" id="page-report">
+  <div class="report-grid">
+    <div class="stat-card">
+      <div class="stat-label">今日銷售</div>
+      <div class="stat-value accent" id="stat-today">NT$ 0</div>
+      <div class="stat-sub" id="stat-today-count">0 筆交易</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">本月銷售</div>
+      <div class="stat-value" id="stat-month">NT$ 0</div>
+      <div class="stat-sub" id="stat-month-count">0 筆交易</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">累計銷售</div>
+      <div class="stat-value" id="stat-all">NT$ 0</div>
+      <div class="stat-sub" id="stat-all-count">0 筆交易</div>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">近 7 日銷售趨勢</div>
+    <div class="bar-chart" id="bar-chart"></div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div class="report-tabs">
+      <button class="report-tab active" onclick="switchReport('daily',this)">每日報表</button>
+      <button class="report-tab" onclick="switchReport('monthly',this)">每月報表</button>
+      <button class="report-tab" onclick="switchReport('transactions',this)">交易明細</button>
+    </div>
+    <button class="btn btn-outline" style="font-size:12px;padding:7px 14px;" onclick="clearAllData()">清除所有資料</button>
+  </div>
+
+  <div class="report-table" id="report-table">
+    <div class="empty-state"><div class="empty-icon">📋</div><div>尚無銷售資料</div></div>
+  </div>
+</div>
+
+<!-- RECEIPT MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="receipt">
+    <div class="receipt-header">
+      <div class="receipt-logo">POS SYSTEM</div>
+      <div class="receipt-date" id="receipt-date"></div>
+      <div class="receipt-id" id="receipt-id"></div>
+    </div>
+    <hr class="receipt-divider">
+    <div id="receipt-items"></div>
+    <hr class="receipt-divider">
+    <div class="receipt-total">
+      <div>
+        <div class="t-label">總計金額</div>
+        <div class="t-amount" id="receipt-total"></div>
+      </div>
+    </div>
+    <div class="receipt-footer">感謝您的惠顧 ♥</div>
+    <div class="receipt-actions">
+      <button class="btn btn-primary" style="flex:1" onclick="closeModal()">確認</button>
+      <button class="btn btn-outline" onclick="closeModal();showPage('report')">查看報表</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ============= PRODUCT DATABASE =============
+const PRODUCTS = {
+  '4710088001001': { name: '統一麥香奶茶', price: 25 },
+  '4710088001002': { name: '光泉鮮乳', price: 65 },
+  '4714771060000': { name: '旺旺仙貝', price: 35 },
+  '4719854210008': { name: '義美小泡芙', price: 39 },
+  '4710085081026': { name: '統一布丁', price: 15 },
+  '8850999000001': { name: '泰山八寶粥', price: 29 },
+  '4710438001234': { name: '御茶園煎茶', price: 25 },
+  '4901340000003': { name: 'Pocky 巧克力', price: 45 },
+  '4710088002003': { name: '統一罐裝咖啡', price: 30 },
+  '4712345678900': { name: '農夫山泉礦泉水', price: 15 },
+  '0012345678905': { name: '進口洋芋片', price: 55 },
+  '1234567890128': { name: '有機豆漿', price: 35 },
+  '9781234567897': { name: '科學月刊', price: 120 },
+  '4710088005001': { name: '統一超大杯麵', price: 45 },
+  '4711234000001': { name: '小美冰淇淋', price: 25 },
+};
+
+// ============= STATE =============
+let cart = [];
+let scanning = false;
+let codeReader = null;
+
+// ============= SCANNER =============
+async function startScanner() {
+  if (!('BarcodeDetector' in window) && typeof ZXing === 'undefined') {
+    showToast('請確認已載入 ZXing 函式庫', 'error'); return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    const video = document.getElementById('preview');
+    video.srcObject = stream;
+    video.style.display = 'block';
+    document.getElementById('cam-placeholder').style.display = 'none';
+    document.getElementById('scan-overlay').style.display = 'block';
+    await video.play();
+    document.getElementById('btn-start').disabled = true;
+    document.getElementById('btn-stop').disabled = false;
+    document.getElementById('cam-dot').className = 'dot green';
+    document.getElementById('cam-status').textContent = '掃描中...';
+    scanning = true;
+    startZXing(video);
+  } catch(e) {
+    showToast('無法存取相機：' + e.message, 'error');
+    setScanResult('無法存取相機，請使用手動輸入', 'error');
+  }
+}
+
+function startZXing(video) {
+  if (typeof ZXing === 'undefined') { startNativeBarcodeDetector(video); return; }
+  codeReader = new ZXing.BrowserMultiFormatReader();
+  codeReader.decodeFromVideoElement(video, (result, err) => {
+    if (!scanning) return;
+    if (result) {
+      const code = result.getText();
+      handleScan(code);
+    }
+  });
+}
+
+async function startNativeBarcodeDetector(video) {
+  if (!('BarcodeDetector' in window)) return;
+  const detector = new BarcodeDetector({ formats: ['ean_13','ean_8','qr_code','code_128','upc_a','upc_e'] });
+  let lastCode = '';
+  const loop = async () => {
+    if (!scanning) return;
+    try {
+      const barcodes = await detector.detect(video);
+      if (barcodes.length > 0) {
+        const code = barcodes[0].rawValue;
+        if (code !== lastCode) { lastCode = code; handleScan(code); setTimeout(() => lastCode = '', 2000); }
+      }
+    } catch(e) {}
+    if (scanning) requestAnimationFrame(loop);
+  };
+  loop();
+}
+
+function stopScanner() {
+  scanning = false;
+  const video = document.getElementById('preview');
+  if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); video.srcObject = null; }
+  video.style.display = 'none';
+  document.getElementById('cam-placeholder').style.display = 'flex';
+  document.getElementById('scan-overlay').style.display = 'none';
+  document.getElementById('btn-start').disabled = false;
+  document.getElementById('btn-stop').disabled = true;
+  document.getElementById('cam-dot').className = 'dot';
+  document.getElementById('cam-status').textContent = '條碼掃描器';
+  if (codeReader) { try { codeReader.reset(); } catch(e){} codeReader = null; }
+  setScanResult('掃描已停止');
+}
+
+function handleScan(code) {
+  if (!code) return;
+  addByBarcode(code, true);
+}
+
+function addByBarcode(code, fromCam = false) {
+  code = code.trim();
+  if (!code) return;
+  const product = PRODUCTS[code];
+  if (!product) {
+    setScanResult(`❌ 找不到條碼：${code}`, 'error');
+    if (!fromCam) showToast('查無此條碼', 'error');
+    document.getElementById('manual-barcode').value = '';
+    return;
+  }
+  addToCart(code, product);
+  setScanResult(`✓ 已加入：${product.name} — NT$ ${product.price}`, 'success');
+  document.getElementById('manual-barcode').value = '';
+}
+
+function setScanResult(msg, type = '') {
+  const el = document.getElementById('scan-result');
+  el.textContent = msg;
+  el.className = 'scan-result' + (type ? ' ' + type : '');
+}
+
+// ============= CART =============
+function addToCart(barcode, product) {
+  const existing = cart.find(i => i.barcode === barcode);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ barcode, name: product.name, price: product.price, qty: 1 });
+  }
+  renderCart();
+  playBeep();
+}
+
+function changeQty(barcode, delta) {
+  const item = cart.find(i => i.barcode === barcode);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) cart = cart.filter(i => i.barcode !== barcode);
+  renderCart();
+}
+
+function removeItem(barcode) {
+  cart = cart.filter(i => i.barcode !== barcode);
+  renderCart();
+}
+
+function clearCart() {
+  cart = [];
+  renderCart();
+}
+
+function renderCart() {
+  const body = document.getElementById('cart-body');
+  if (cart.length === 0) {
+    body.innerHTML = `<div class="empty-state"><div class="empty-icon">🛒</div><div>尚無商品，請掃描條碼</div></div>`;
+    updateTotals(0, 0);
+    document.getElementById('item-count').textContent = '0';
+    document.getElementById('btn-checkout').disabled = true;
+    return;
+  }
+  let total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  let totalQty = cart.reduce((s, i) => s + i.qty, 0);
+  body.innerHTML = cart.map((item, idx) => `
+    <div class="table-row">
+      <div class="row-num">${idx+1}</div>
+      <div class="row-name">${item.name}</div>
+      <div class="row-barcode">${item.barcode}</div>
+      <div class="row-price">NT$ ${item.price}</div>
+      <div class="qty-control">
+        <button class="qty-btn" onclick="changeQty('${item.barcode}',-1)">−</button>
+        <span class="qty-num">${item.qty}</span>
+        <button class="qty-btn" onclick="changeQty('${item.barcode}',1)">+</button>
+      </div>
+      <button class="del-btn" onclick="removeItem('${item.barcode}')">×</button>
+    </div>
+  `).join('');
+  document.getElementById('item-count').textContent = totalQty;
+  document.getElementById('btn-checkout').disabled = false;
+  updateTotals(total, totalQty);
+}
+
+function updateTotals(subtotal, qty) {
+  const tax = Math.round(subtotal * 0.05);
+  const grand = subtotal + tax;
+  document.getElementById('total-qty').textContent = qty + ' 件';
+  document.getElementById('subtotal').textContent = 'NT$ ' + subtotal;
+  document.getElementById('tax').textContent = 'NT$ ' + tax;
+  document.getElementById('grand-total').textContent = 'NT$ ' + grand;
+}
+
+// ============= CHECKOUT =============
+function checkout() {
+  if (cart.length === 0) return;
+  const subtotal = cart.reduce((s,i) => s + i.price*i.qty, 0);
+  const tax = Math.round(subtotal * 0.05);
+  const total = subtotal + tax;
+  const now = new Date();
+  const txId = 'TX' + now.getTime().toString(36).toUpperCase();
+
+  const tx = {
+    id: txId,
+    date: now.toISOString(),
+    items: JSON.parse(JSON.stringify(cart)),
+    subtotal, tax, total
+  };
+
+  const txList = JSON.parse(localStorage.getItem('pos_transactions') || '[]');
+  txList.push(tx);
+  localStorage.setItem('pos_transactions', JSON.stringify(txList));
+
+  showReceipt(tx);
+  cart = [];
+  renderCart();
+  stopScanner();
+}
+
+function showReceipt(tx) {
+  const d = new Date(tx.date);
+  document.getElementById('receipt-date').textContent = d.toLocaleString('zh-TW');
+  document.getElementById('receipt-id').textContent = '# ' + tx.id;
+  document.getElementById('receipt-items').innerHTML = tx.items.map(i => `
+    <div class="receipt-item">
+      <div class="receipt-item-name">${i.name}</div>
+      <div class="receipt-item-qty">x${i.qty}</div>
+      <div class="receipt-item-price">NT$ ${i.price * i.qty}</div>
+    </div>
+  `).join('') + `
+    <div class="receipt-item" style="margin-top:8px;color:var(--muted);font-size:12px">
+      <div>稅金 (5%)</div><div class="receipt-item-price" style="font-family:var(--font-mono)">NT$ ${tx.tax}</div>
+    </div>`;
+  document.getElementById('receipt-total').textContent = 'NT$ ' + tx.total;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+// ============= REPORTS =============
+let reportMode = 'daily';
+
+function switchReport(mode, btn) {
+  reportMode = mode;
+  document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderReport();
+}
+
+function renderReport() {
+  const txList = JSON.parse(localStorage.getItem('pos_transactions') || '[]');
+  const table = document.getElementById('report-table');
+
+  if (reportMode === 'transactions') {
+    if (txList.length === 0) { table.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div>尚無交易紀錄</div></div>`; return; }
+    const sorted = [...txList].reverse();
+    table.innerHTML = `
+      <div class="rt-head"><div>時間</div><div>交易編號</div><div>品項摘要</div><div>金額</div><div>狀態</div></div>
+      ${sorted.map(tx => {
+        const d = new Date(tx.date);
+        const summary = tx.items.map(i => `${i.name}x${i.qty}`).join('、');
+        return `<div class="rt-row">
+          <div class="rt-date">${d.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
+          <div class="rt-id">${tx.id}</div>
+          <div class="rt-items">${summary}</div>
+          <div class="rt-total">NT$ ${tx.total}</div>
+          <div><span class="badge-paid">已付款</span></div>
+        </div>`;
+      }).join('')}`;
+    return;
+  }
+
+  // group
+  const grouped = {};
+  txList.forEach(tx => {
+    const d = new Date(tx.date);
+    const key = reportMode === 'daily'
+      ? `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`
+      : `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    if (!grouped[key]) grouped[key] = { total: 0, count: 0, items: 0 };
+    grouped[key].total += tx.total;
+    grouped[key].count++;
+    grouped[key].items += tx.items.reduce((s,i) => s+i.qty, 0);
+  });
+
+  const keys = Object.keys(grouped).sort().reverse();
+  if (keys.length === 0) { table.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div>尚無銷售資料</div></div>`; return; }
+
+  table.innerHTML = `
+    <div style="display:grid;grid-template-columns:160px 1fr 120px 80px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase">
+      <div>${reportMode==='daily'?'日期':'月份'}</div><div>商品件數</div><div>銷售金額</div><div>筆數</div>
+    </div>
+    ${keys.map(k => `
+      <div style="display:grid;grid-template-columns:160px 1fr 120px 80px;padding:14px 16px;border-bottom:1px solid var(--border);font-size:13px;align-items:center;transition:background .15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">${k}</div>
+        <div style="font-size:12px;color:var(--muted)">${grouped[k].items} 件</div>
+        <div style="font-family:var(--font-mono);font-weight:700;color:var(--accent)">NT$ ${grouped[k].total}</div>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">${grouped[k].count} 筆</div>
+      </div>
+    `).join('')}`;
+}
+
+function renderStats() {
+  const txList = JSON.parse(localStorage.getItem('pos_transactions') || '[]');
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
+  const monthStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
+
+  let todayTotal=0, todayCount=0, monthTotal=0, monthCount=0, allTotal=0;
+  txList.forEach(tx => {
+    const d = new Date(tx.date);
+    const ds = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+    const ms = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    if (ds === todayStr) { todayTotal += tx.total; todayCount++; }
+    if (ms === monthStr) { monthTotal += tx.total; monthCount++; }
+    allTotal += tx.total;
+  });
+
+  document.getElementById('stat-today').textContent = 'NT$ ' + todayTotal;
+  document.getElementById('stat-today-count').textContent = todayCount + ' 筆交易';
+  document.getElementById('stat-month').textContent = 'NT$ ' + monthTotal;
+  document.getElementById('stat-month-count').textContent = monthCount + ' 筆交易';
+  document.getElementById('stat-all').textContent = 'NT$ ' + allTotal;
+  document.getElementById('stat-all-count').textContent = txList.length + ' 筆交易';
+
+  renderBarChart(txList);
+}
+
+function renderBarChart(txList) {
+  const chart = document.getElementById('bar-chart');
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+    const label = `${d.getMonth()+1}/${d.getDate()}`;
+    days.push({ key, label, total: 0 });
+  }
+  txList.forEach(tx => {
+    const d = new Date(tx.date);
+    const ds = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+    const day = days.find(x => x.key === ds);
+    if (day) day.total += tx.total;
+  });
+  const max = Math.max(...days.map(d => d.total), 1);
+  chart.innerHTML = days.map(d => {
+    const h = Math.round((d.total / max) * 100);
+    return `<div class="bar-item">
+      <div class="bar-val">${d.total ? 'NT$' + d.total : ''}</div>
+      <div class="bar" style="height:${h}%" title="${d.label}: NT$${d.total}"></div>
+      <div class="bar-label">${d.label}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============= PAGES =============
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'report') { renderStats(); renderReport(); }
+}
+
+// ============= UTILS =============
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = '', 2800);
+}
+
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880; o.type = 'sine';
+    g.gain.setValueAtTime(.3, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .15);
+    o.start(); o.stop(ctx.currentTime + .15);
+  } catch(e) {}
+}
+
+function clearAllData() {
+  if (!confirm('確定要清除所有銷售資料嗎？此操作無法復原。')) return;
+  localStorage.removeItem('pos_transactions');
+  renderStats(); renderReport();
+  showToast('已清除所有資料');
+}
+
+// ============= DEMO DATA =============
+function seedDemoData() {
+  if (localStorage.getItem('pos_transactions')) return;
+  const now = new Date();
+  const txs = [];
+  const pkeys = Object.keys(PRODUCTS);
+  for (let i = 30; i >= 0; i--) {
+    const d = new Date(now); d.setDate(d.getDate() - i);
+    const txCount = Math.floor(Math.random() * 8) + 1;
+    for (let j = 0; j < txCount; j++) {
+      d.setHours(9 + Math.floor(Math.random()*12), Math.floor(Math.random()*60));
+      const items = [];
+      const itemCount = Math.floor(Math.random()*4)+1;
+      for (let k = 0; k < itemCount; k++) {
+        const bc = pkeys[Math.floor(Math.random()*pkeys.length)];
+        const p = PRODUCTS[bc];
+        const existing = items.find(x => x.barcode === bc);
+        if (existing) existing.qty++;
+        else items.push({ barcode: bc, name: p.name, price: p.price, qty: 1 });
+      }
+      const subtotal = items.reduce((s,i) => s+i.price*i.qty, 0);
+      const tax = Math.round(subtotal*.05);
+      txs.push({ id:'TX'+d.getTime().toString(36).toUpperCase(), date:d.toISOString(), items, subtotal, tax, total: subtotal+tax });
+    }
+  }
+  localStorage.setItem('pos_transactions', JSON.stringify(txs));
+}
+
+seedDemoData();
+renderCart();
+</script>
+</body>
+</html>
