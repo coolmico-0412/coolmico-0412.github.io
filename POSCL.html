@@ -24,7 +24,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--th);min-height:100
 /* ── NAV ── */
 nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--border);padding:0 18px;height:54px;position:sticky;top:0;z-index:100;gap:2px;}
 .brand{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:3px;margin-right:auto;}
-.brand small{font-size:10px;color:var(--muted);letter-spacing:.3px;font-family:var(--th);font-weight:400;display:block;margin-top:1px;}
 .nav-tab{padding:7px 13px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .2s;font-family:var(--th);line-height:1.2;text-align:center;}
 .nav-tab .zh{font-family:var(--zh);font-size:10px;display:block;opacity:.6;}
 .nav-tab:hover{color:var(--text);background:var(--surface2);}
@@ -61,7 +60,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .cam-ph .icon{font-size:38px;opacity:.22;}
 .cam-ph .hint{font-size:11px;opacity:.5;margin-top:2px;font-family:var(--zh);}
 .scan-controls{display:flex;gap:8px;}
-.scan-st{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);font-family:var(--zh);min-height:40px;display:flex;align-items:center;gap:7px;}
+.scan-st{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);font-family:var(--th);min-height:40px;display:flex;align-items:center;gap:7px;}
 .scan-st.ok{border-color:var(--green);color:var(--green);}
 .scan-st.err{border-color:var(--red);color:var(--red);}
 .scan-st.warn{border-color:var(--gold);color:var(--gold);}
@@ -256,9 +255,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 <body>
 
 <nav>
-  <div class="brand">POS<span style="color:var(--muted);font-weight:400"> SYSTEM</span>
-    <small>ระบบขายหน้าร้าน / 掃碼銷售系統</small>
-  </div>
+  <div class="brand">POS<span style="color:var(--muted);font-weight:400"> SYSTEM</span></div>
   <button class="nav-tab active" onclick="showPage('pos',this)">🏪 แคชเชียร์<span class="zh">收銀台</span></button>
   <button class="nav-tab" onclick="showPage('members',this)">👥 สมาชิก<span class="zh">會員管理</span></button>
   <button class="nav-tab" onclick="showPage('products',this)">📦 สินค้า<span class="zh">商品管理</span></button>
@@ -284,8 +281,8 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
           <div class="video-wrap">
             <div class="cam-ph" id="cam-ph">
               <div class="icon">📷</div>
-              <div>按下「開始掃描」啟動鏡頭</div>
-              <div class="hint">支援 EAN-13 / QR Code / Code128 等格式</div>
+              <div>กดปุ่ม "เริ่มสแกน" เพื่อเปิดกล้อง</div>
+              <div class="hint">รองรับ EAN-13 / QR Code / Code128</div>
             </div>
             <video id="preview" autoplay muted playsinline></video>
             <div class="scan-overlay" id="scan-ol" style="display:none">
@@ -306,7 +303,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
             </select>
           </div>
           <!-- SCAN STATUS (Chinese only) -->
-          <div class="scan-st" id="scan-st">等待掃描...</div>
+          <div class="scan-st" id="scan-st">รอสแกน...</div>
         </div>
       </div>
 
@@ -345,7 +342,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
             <div id="sel-member-name" style="font-weight:600"></div>
             <div class="mem-id" id="sel-member-id"></div>
           </div>
-          <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;font-family:var(--zh)" onclick="clearMember()">移除</button>
+          <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px" onclick="clearMember()">นำออก / 移除</button>
         </div>
 
         <div class="totals">
@@ -366,7 +363,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 
         <div class="co-actions">
           <button class="btn-checkout" id="btn-checkout" onclick="checkout(false)" disabled>ชำระเงิน / 結帳</button>
-          <button class="btn-credit" id="btn-credit" onclick="checkout(true)" disabled title="需選擇會員才可賒帳">賒帳 (+10%) <span style="font-family:var(--zh);font-size:12px;font-weight:400">需選擇會員</span></button>
+          <button class="btn-credit" id="btn-credit" onclick="checkout(true)" disabled title="ต้องเลือกสมาชิกเพื่อชำระเป็นเชื่อ">ชำระเป็นเชื่อ (+10%) <span style="font-size:12px;font-weight:400">ต้องเลือกสมาชิก</span></button>
           <button class="btn btn-danger" style="width:100%" onclick="clearCart()">ล้างตะกร้า / 清除購物車</button>
         </div>
       </div>
@@ -386,6 +383,9 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
     </div>
     <div class="btn-row">
       <button class="btn btn-accent" onclick="openAddMember()">+ เพิ่มสมาชิก / 新增會員</button>
+      <button class="btn btn-green" onclick="exportMembers()">⬇ ส่งออก CSV / 匯出會員</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('imp-mem').click()">⬆ นำเข้า CSV / 匯入會員</button>
+      <input type="file" id="imp-mem" accept=".csv" style="display:none" onchange="importMembers(event)">
     </div>
   </div>
   <div class="mem-grid" id="mem-grid"></div>
@@ -402,9 +402,9 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
     </div>
     <div class="btn-row">
       <button class="btn btn-accent" onclick="openAddProduct()">+ เพิ่มสินค้า / 新增商品</button>
-      <button class="btn btn-green" onclick="exportProducts()">⬇ ส่งออก / 匯出條碼</button>
-      <button class="btn btn-ghost" onclick="document.getElementById('imp-prod').click()">⬆ นำเข้า / 匯入條碼</button>
-      <input type="file" id="imp-prod" accept=".json" style="display:none" onchange="importProducts(event)">
+      <button class="btn btn-green" onclick="exportProducts()">⬇ ส่งออก CSV / 匯出條碼</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('imp-prod').click()">⬆ นำเข้า CSV / 匯入條碼</button>
+      <input type="file" id="imp-prod" accept=".csv" style="display:none" onchange="importProducts(event)">
     </div>
   </div>
   <div class="prod-grid" id="prod-grid"></div>
@@ -527,11 +527,11 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
       <div id="rcpt-items"></div>
       <hr class="rdiv">
       <div class="rcpt-total">
-        <div class="rl">總計金額</div>
+        <div class="rl">ยอดรวมทั้งหมด / 總計金額</div>
         <div class="ra" id="rcpt-total-amt"></div>
       </div>
-      <div class="credit-tag" id="rcpt-credit-tag" style="display:none">⚠ 此筆為賒帳交易（含 10% 加收）</div>
-      <div class="rcpt-ft">感謝您的惠顧 ♥</div>
+      <div class="credit-tag" id="rcpt-credit-tag" style="display:none">⚠ ชำระเป็นเชื่อ / 此筆為賒帳交易（含 10% 加收）</div>
+      <div class="rcpt-ft">ขอบคุณที่ใช้บริการ / 感謝您的惠顧 ♥</div>
     </div>
     <div class="m-acts" style="margin-top:16px">
       <button class="btn btn-accent" style="flex:1" onclick="closeM('m-receipt')">確認</button>
@@ -630,8 +630,8 @@ async function startScanner(){
     scanning=true;
     startDecodeLoop(v);
   }catch(e){
-    setSt('無法存取相機：'+(e.message||'請確認已授權'), 'err');
-    showToast('相機啟動失敗，請確認相機授權', 'err');
+    setSt('ไม่สามารถเข้าถึงกล้อง: '+(e.message||'กรุณาอนุญาตการเข้าถึงกล้อง'), 'err');
+    showToast('กล้องไม่สามารถเริ่มได้ กรุณาอนุญาตสิทธิ์กล้อง', 'err');
   }
 }
 
@@ -643,7 +643,7 @@ function startDecodeLoop(v){
     const t=setInterval(()=>{
       r++;
       if(typeof ZXing!=='undefined'){clearInterval(t);useZXing(v);}
-      else if(r>25){clearInterval(t);setSt('掃描器程式庫載入失敗，請重新整理頁面','err');}
+      else if(r>25){clearInterval(t);setSt('โหลดไลบรารีสแกนไม่สำเร็จ กรุณารีเฟรชหน้า','err');}
     },300);
   }
 }
@@ -692,7 +692,7 @@ function stopScanner(){
   document.getElementById('cam-status').textContent='สแกนบาร์โค้ด';
   if(codeReader){try{codeReader.reset();}catch(e){}codeReader=null;}
   lastCode='';
-  setSt('掃描已停止');
+  setSt('หยุดสแกนแล้ว');
 }
 
 // ═══════════════════════════════
@@ -707,12 +707,12 @@ function addByBarcode(code){
     document.getElementById('np-name').value='';
     document.getElementById('np-price').value='';
     openM('m-newprod');
-    setSt('⚠ 未知條碼：'+code+'　請輸入商品資料','warn');
+    setSt('⚠ ไม่พบบาร์โค้ด: '+code+' กรุณาเพิ่มข้อมูลสินค้า','warn');
     return;
   }
   const p=prods[code];
   addToCart(code,p);
-  setSt('✓ 已加入：'+p.name+'　NT$ '+p.price,'ok');
+  setSt('✓ เพิ่มแล้ว: '+p.name+' NT$ '+p.price,'ok');
   playBeep();
 }
 function saveNewProduct(){
@@ -723,7 +723,7 @@ function saveNewProduct(){
   const prods=getProds();prods[pendingBC]={name,price};saveProds(prods);
   closeM('m-newprod');
   addToCart(pendingBC,{name,price});
-  setSt('✓ 已儲存並加入：'+name+'　NT$ '+price,'ok');
+  setSt('✓ บันทึกและเพิ่มแล้ว: '+name+' NT$ '+price,'ok');
   playBeep();renderProdGrid();
   showToast('已新增商品：'+name,'ok');
   pendingBC=null;
@@ -845,7 +845,14 @@ function checkout(isCredit){
   cart=[];
   renderCart();
   if(!isCredit)stopScanner();
-  showToast(isCredit?'賒帳完成！':'結帳完成！','ok');
+  showToast(isCredit?'ชำระเป็นเชื่อเรียบร้อย!':'ชำระเงินเรียบร้อย!','ok');
+  if(isCredit){
+    // auto screenshot then clear member
+    setTimeout(async()=>{
+      await takeScreenshot();
+      clearMember();
+    }, 700);
+  }
 }
 
 function showReceipt(tx,isCredit){
@@ -854,7 +861,7 @@ function showReceipt(tx,isCredit){
   document.getElementById('rcpt-id').textContent='# '+tx.id;
   const memEl=document.getElementById('rcpt-member');
   if(isCredit&&tx.memberName){
-    memEl.textContent='👤 會員：'+tx.memberName+' ('+tx.memberId+')';
+    memEl.textContent='👤 สมาชิก / 會員：'+tx.memberName+' ('+tx.memberId+')';
     memEl.style.display='inline-block';
   }else{memEl.style.display='none';}
   document.getElementById('rcpt-items').innerHTML=tx.items.map(i=>`
@@ -994,9 +1001,39 @@ function delMember(id){
   showToast('已刪除會員：'+m.name,'ok');
 }
 
-// ═══════════════════════════════
-//  商品管理
-// ═══════════════════════════════
+function exportMembers(){
+  const members=getMembers();
+  if(!members.length){showToast('ไม่มีข้อมูลสมาชิก / 無會員資料','err');return;}
+  const rows=[['รหัสสมาชิก/會員編號','ชื่อ/姓名']];
+  members.forEach(m=>rows.push([m.id,m.name]));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  downloadFile('\uFEFF'+csv,'members_'+dateStamp()+'.csv','text/csv;charset=utf-8');
+  showToast('ส่งออกข้อมูลสมาชิกแล้ว / 已匯出會員資料','ok');
+}
+function importMembers(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const text=ev.target.result.replace(/^\uFEFF/,'');
+      const lines=text.split(/\r?\n/).filter(l=>l.trim());
+      if(lines.length<2)throw 0;
+      const members=getMembers();
+      const existIds=new Set(members.map(m=>m.id));
+      let added=0;
+      lines.slice(1).forEach(line=>{
+        const cols=parseCsvRow(line);
+        if(cols.length>=2){
+          const id=cols[0].trim(),name=cols[1].trim();
+          if(id&&name&&!existIds.has(id)){members.push({id,name});existIds.add(id);added++;}
+        }
+      });
+      saveMembers(members);renderMemGrid();populateMemberDropdown();
+      showToast('นำเข้า '+added+' รายการ / 已匯入 '+added+' 位會員','ok');
+    }catch{showToast('ไฟล์ไม่ถูกต้อง / 檔案格式錯誤','err');}
+    e.target.value='';
+  };reader.readAsText(file,'UTF-8');
+}
 function renderProdGrid(){
   const prods=getProds();const keys=Object.keys(prods);
   document.getElementById('prod-count-lbl').textContent='共 '+keys.length+' 種商品';
@@ -1041,21 +1078,34 @@ function delProduct(bc){
   const prods=getProds();delete prods[bc];saveProds(prods);renderProdGrid();showToast('已刪除商品','ok');
 }
 function exportProducts(){
-  downloadFile(JSON.stringify(getProds(),null,2),'products_'+dateStamp()+'.json','application/json');
-  showToast('已匯出商品條碼資料','ok');
+  const prods=getProds();
+  const rows=[['บาร์โค้ด/條碼','ชื่อสินค้า/品項名稱','ราคา/單價（NT$）']];
+  Object.entries(prods).forEach(([bc,p])=>rows.push([bc,p.name,p.price]));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  downloadFile('\uFEFF'+csv,'products_'+dateStamp()+'.csv','text/csv;charset=utf-8');
+  showToast('ส่งออกข้อมูลสินค้าแล้ว / 已匯出商品資料','ok');
 }
 function importProducts(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=ev=>{
     try{
-      const data=JSON.parse(ev.target.result);if(typeof data!=='object'||Array.isArray(data))throw 0;
+      const text=ev.target.result.replace(/^\uFEFF/,'');
+      const lines=text.split(/\r?\n/).filter(l=>l.trim());
+      if(lines.length<2)throw 0;
       const prods=getProds();let count=0;
-      Object.entries(data).forEach(([bc,p])=>{if(p.name&&p.price!==undefined){prods[bc]=p;count++;}});
-      saveProds(prods);renderProdGrid();showToast('已匯入 '+count+' 筆商品','ok');
-    }catch{showToast('檔案格式錯誤','err');}
+      lines.slice(1).forEach(line=>{
+        const cols=parseCsvRow(line);
+        if(cols.length>=3){
+          const bc=cols[0].trim(),name=cols[1].trim(),price=parseFloat(cols[2]);
+          if(bc&&name&&!isNaN(price)){prods[bc]={name,price};count++;}
+        }
+      });
+      saveProds(prods);renderProdGrid();
+      showToast('นำเข้า '+count+' รายการ / 已匯入 '+count+' 筆商品','ok');
+    }catch{showToast('ไฟล์ไม่ถูกต้อง / 檔案格式錯誤','err');}
     e.target.value='';
-  };reader.readAsText(file);
+  };reader.readAsText(file,'UTF-8');
 }
 
 // ═══════════════════════════════
@@ -1210,6 +1260,16 @@ function playBeep(){try{const ctx=new(window.AudioContext||window.webkitAudioCon
 function fd(d){return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;}
 function fm(d){return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;}
 function dateStamp(){const n=new Date();return`${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}`;}
+function parseCsvRow(row){
+  const result=[];let cur='',inQ=false;
+  for(let i=0;i<row.length;i++){
+    const c=row[i];
+    if(c==='"'){if(inQ&&row[i+1]==='"'){cur+='"';i++;}else{inQ=!inQ;}}
+    else if(c===','&&!inQ){result.push(cur);cur='';}
+    else cur+=c;
+  }
+  result.push(cur);return result;
+}
 function downloadFile(content,filename,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=filename;a.click();URL.revokeObjectURL(a.href);}
 
 // ═══════════════════════════════
