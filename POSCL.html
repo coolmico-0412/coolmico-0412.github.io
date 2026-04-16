@@ -3,286 +3,279 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ระบบ POS / POS系統</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<title>POS SYSTEM</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#080b10;--surface:#0f1420;--surface2:#161d2e;--border:#242d42;--border2:#2e3a56;
-  --accent:#00d4ff;--accent2:#0099cc;--aglow:rgba(0,212,255,.13);
-  --gold:#f5c518;--gold2:#d4a200;--gold-glow:rgba(245,197,24,.2);
-  --green:#00e676;--red:#ff4444;--purple:#9c6bff;--orange:#ff9800;
-  --text:#dde4f0;--muted:#5a6680;--muted2:#3a4560;
-  --th:'Sarabun',sans-serif;--zh:'Noto Sans TC',sans-serif;--mono:'Space Mono',monospace;
+  --bg:#f1f5f9; --surface:#fff; --surface2:#f8fafc; --surface3:#f0f4f8;
+  --border:#e2e8f0; --border2:#cbd5e1;
+  --accent:#2563eb; --accent2:#1d4ed8; --aglow:rgba(37,99,235,.09);
+  --gold:#d97706; --gold2:#b45309;
+  --green:#059669; --red:#dc2626; --purple:#7c3aed;
+  --text:#0f172a; --text2:#334155; --muted:#64748b; --muted2:#94a3b8;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);
+  --sh-md:0 4px 16px rgba(0,0,0,.1);
+  --th:'Sarabun',sans-serif; --zh:'Noto Sans TC',sans-serif; --mono:'Space Mono',monospace;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:var(--th);min-height:100vh;overflow-x:hidden;font-size:14px;}
+body{background:var(--bg);color:var(--text);font-family:var(--th);min-height:100vh;font-size:14px;}
 ::-webkit-scrollbar{width:5px;height:5px;}
-::-webkit-scrollbar-track{background:var(--surface);}
+::-webkit-scrollbar-track{background:var(--surface2);}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
 
 /* ── NAV ── */
-nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--border);padding:0 18px;height:54px;position:sticky;top:0;z-index:100;gap:2px;}
-.brand{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:3px;margin-right:auto;}
-.nav-tab{padding:7px 13px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .2s;font-family:var(--th);line-height:1.2;text-align:center;}
-.nav-tab .zh{font-family:var(--zh);font-size:10px;display:block;opacity:.6;}
-.nav-tab:hover{color:var(--text);background:var(--surface2);}
+nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:54px;position:sticky;top:0;z-index:200;gap:3px;box-shadow:var(--sh);}
+.brand{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--accent);letter-spacing:3px;margin-right:auto;}
+.nav-tab{padding:7px 13px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .18s;font-family:var(--th);line-height:1.3;text-align:center;}
+.nav-tab .zh{font-family:var(--zh);font-size:10px;display:block;opacity:.7;}
+.nav-tab:hover{color:var(--text2);background:var(--surface2);}
 .nav-tab.active{color:var(--accent);background:var(--aglow);}
 
 /* ── PAGES ── */
-.page{display:none;padding:20px;max-width:1180px;margin:0 auto;}
-.page.active{display:block;animation:fadeIn .22s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.page{display:none;padding:18px 20px;max-width:1440px;margin:0 auto;}
+.page.active{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── POS GRID ── */
-.pos-grid{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start;}
+/* ── POS LANDSCAPE GRID ── */
+.pos-grid{display:grid;grid-template-columns:370px 1fr;gap:16px;align-items:start;}
 
 /* ── CARD ── */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.card-hd{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;}
-.card-hd .zh{font-family:var(--zh);font-size:11px;color:var(--muted);font-weight:400;margin-left:2px;}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;}
-.dot.green{background:var(--green);box-shadow:0 0 9px var(--green);}
-.dot.pulse{background:var(--accent);box-shadow:0 0 9px var(--accent);animation:blink 1.4s infinite;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh);overflow:hidden;}
+.card-hd{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;background:var(--surface);}
+.cht{font-size:14px;font-weight:600;color:var(--text);}
+.chz{font-family:var(--zh);font-size:11px;color:var(--muted);margin-left:2px;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted2);flex-shrink:0;}
+.dot.green{background:var(--green);box-shadow:0 0 8px rgba(5,150,105,.4);}
+.dot.pulse{background:var(--accent);box-shadow:0 0 8px rgba(37,99,235,.35);animation:blink 1.5s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
+/* ── LEFT COL ── */
+.left-col{display:flex;flex-direction:column;gap:14px;}
+
 /* ── SCANNER ── */
-.scanner-body{padding:18px;display:flex;flex-direction:column;gap:12px;}
-.video-wrap{position:relative;background:#000;border-radius:10px;overflow:hidden;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;border:1px solid var(--border2);}
+.scanner-body{padding:16px;display:flex;flex-direction:column;gap:11px;}
+.video-wrap{position:relative;background:#0f172a;border-radius:10px;overflow:hidden;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);}
 #preview{width:100%;height:100%;object-fit:cover;display:none;}
 .scan-overlay{position:absolute;inset:0;pointer-events:none;}
-.scan-line{position:absolute;left:14%;right:14%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanmove 2s ease-in-out infinite;box-shadow:0 0 10px var(--accent);}
-@keyframes scanmove{0%,100%{top:20%;opacity:0}10%,90%{opacity:1}50%{top:78%}}
-.sc{position:absolute;width:24px;height:24px;border-color:var(--accent);border-style:solid;opacity:.9;}
-.sc.tl{top:12%;left:12%;border-width:3px 0 0 3px}.sc.tr{top:12%;right:12%;border-width:3px 3px 0 0}
-.sc.bl{bottom:12%;left:12%;border-width:0 0 3px 3px}.sc.br{bottom:12%;right:12%;border-width:0 3px 3px 0}
-.cam-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:30px;color:var(--muted);font-size:13px;text-align:center;}
-.cam-ph .icon{font-size:38px;opacity:.22;}
-.cam-ph .hint{font-size:11px;opacity:.5;margin-top:2px;font-family:var(--zh);}
+.scan-line{position:absolute;left:12%;right:12%;height:2px;background:linear-gradient(90deg,transparent,#00d4ff,transparent);animation:scanmove 2s ease-in-out infinite;box-shadow:0 0 10px #00d4ff;}
+@keyframes scanmove{0%,100%{top:18%;opacity:0}10%,90%{opacity:1}50%{top:80%}}
+.sc{position:absolute;width:24px;height:24px;border-color:#00d4ff;border-style:solid;opacity:.9;}
+.sc.tl{top:10%;left:10%;border-width:3px 0 0 3px}.sc.tr{top:10%;right:10%;border-width:3px 3px 0 0}
+.sc.bl{bottom:10%;left:10%;border-width:0 0 3px 3px}.sc.br{bottom:10%;right:10%;border-width:0 3px 3px 0}
+.cam-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:28px;color:#94a3b8;font-size:13px;text-align:center;}
+.cam-ph .icon{font-size:38px;opacity:.28;}
+.cam-ph .hint{font-size:11px;opacity:.55;margin-top:3px;}
 .scan-controls{display:flex;gap:8px;}
-.scan-st{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);font-family:var(--th);min-height:40px;display:flex;align-items:center;gap:7px;}
-.scan-st.ok{border-color:var(--green);color:var(--green);}
-.scan-st.err{border-color:var(--red);color:var(--red);}
-.scan-st.warn{border-color:var(--gold);color:var(--gold);}
-
-/* ── MEMBER SELECT ── */
-.member-row{display:flex;gap:8px;align-items:center;}
-.member-select{flex:1;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;font-family:var(--th);transition:border-color .2s;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a6680' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
-.member-select:focus{border-color:var(--accent);}
-.member-select option{background:var(--surface2);color:var(--text);}
-.member-badge{display:none;background:var(--aglow);border:1px solid var(--accent);color:var(--accent);padding:4px 10px;border-radius:6px;font-size:12px;font-family:var(--zh);white-space:nowrap;align-items:center;gap:5px;}
-.member-badge.show{display:flex;}
+.scan-st{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--muted);font-family:var(--th);min-height:40px;display:flex;align-items:center;gap:6px;line-height:1.4;}
+.scan-st.ok{border-color:#bbf7d0;background:#f0fdf4;color:var(--green);}
+.scan-st.err{border-color:#fecaca;background:#fef2f2;color:var(--red);}
+.scan-st.warn{border-color:#fde68a;background:#fffbeb;color:var(--gold);}
 
 /* ── BUTTONS ── */
-.btn{padding:10px 16px;border-radius:8px;border:none;font-family:var(--th);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:5px;}
-.btn .zh{font-family:var(--zh);font-size:11px;}
-.btn-accent{background:var(--accent);color:#000;}
-.btn-accent:hover{background:var(--accent2);transform:translateY(-1px);}
-.btn-accent:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;transform:none;}
-.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text);}
-.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
-.btn-ghost:disabled{opacity:.38;cursor:not-allowed;}
-.btn-danger{background:transparent;border:1px solid var(--border2);color:var(--muted);}
-.btn-danger:hover{border-color:var(--red);color:var(--red);background:rgba(255,68,68,.07);}
-.btn-green{background:transparent;border:1px solid var(--border2);color:var(--muted);}
-.btn-green:hover{border-color:var(--green);color:var(--green);background:rgba(0,230,118,.07);}
-.btn-orange{background:var(--orange);color:#000;}
-.btn-orange:hover{background:#e68900;transform:translateY(-1px);}
-.btn-orange:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;transform:none;}
+.btn{padding:10px 16px;border-radius:8px;border:none;font-family:var(--th);font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.btn-accent{background:var(--accent);color:#fff;}
+.btn-accent:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,.28);}
+.btn-accent:disabled{background:var(--border);color:var(--muted2);cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-ghost{background:transparent;border:1.5px solid var(--border2);color:var(--text2);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);background:var(--aglow);}
+.btn-ghost:disabled{opacity:.4;cursor:not-allowed;}
+.btn-green{background:transparent;border:1.5px solid var(--border2);color:var(--muted);}
+.btn-green:hover{border-color:var(--green);color:var(--green);background:#f0fdf4;}
+.btn-danger{background:transparent;border:1.5px solid var(--border2);color:var(--muted);}
+.btn-danger:hover{border-color:var(--red);color:var(--red);background:#fef2f2;}
 
-/* ── INP ── */
-.inp{flex:1;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border-color .2s;}
-.inp:focus{border-color:var(--accent);}
-.inp::placeholder{color:var(--muted);}
-
-/* ── CART TABLE ── */
-.cart-wrap{margin-top:16px;}
-.sec-lbl{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:7px;}
-.sec-lbl .zh{font-family:var(--zh);font-weight:400;font-size:11px;letter-spacing:0;text-transform:none;}
-.count-badge{background:var(--accent);color:#000;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:var(--mono);}
-.tbl{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-.t-head{display:grid;grid-template-columns:28px 1fr 110px 80px 90px 34px;padding:9px 14px;border-bottom:1px solid var(--border);font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
-.t-head .zh{font-family:var(--zh);font-weight:400;letter-spacing:0;text-transform:none;font-size:10px;}
-.t-row{display:grid;grid-template-columns:28px 1fr 110px 80px 90px 34px;padding:12px 14px;border-bottom:1px solid var(--border);align-items:center;transition:background .15s;animation:rowIn .2s ease;}
-.t-row:last-child{border-bottom:none;}
-.t-row:hover{background:var(--surface2);}
-@keyframes rowIn{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:translateX(0)}}
-.t-num{font-family:var(--mono);font-size:11px;color:var(--muted);}
-.t-name{font-weight:500;line-height:1.3;}
-.t-bc-sm{display:block;font-family:var(--mono);font-size:10px;color:var(--muted2);margin-top:1px;}
-.t-bc-col{font-family:var(--mono);font-size:10px;color:var(--muted2);}
-.t-price{font-family:var(--mono);font-size:12px;color:var(--muted);}
-.qty-ctrl{display:flex;align-items:center;gap:5px;}
-.qty-btn{width:22px;height:22px;border-radius:5px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
-.qty-btn:hover{border-color:var(--accent);color:var(--accent);}
-.qty-n{font-family:var(--mono);font-size:13px;min-width:18px;text-align:center;}
-.del-btn{width:28px;height:28px;border-radius:6px;background:transparent;border:1px solid transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;}
-.del-btn:hover{border-color:var(--red);color:var(--red);background:rgba(255,68,68,.08);}
-.empty-st{padding:40px 20px;text-align:center;color:var(--muted);}
-.empty-st .ei{font-size:28px;margin-bottom:9px;opacity:.22;}
-.empty-st .zh{font-family:var(--zh);font-size:12px;margin-top:3px;}
+/* ── NO-BARCODE BUTTON ── */
+.btn-nobc{width:100%;padding:10px;background:transparent;border:1.5px dashed var(--border2);color:var(--muted);font-size:13px;border-radius:8px;cursor:pointer;font-family:var(--th);transition:all .18s;}
+.btn-nobc:hover{border-color:var(--purple);color:var(--purple);background:#faf5ff;}
 
 /* ── CHECKOUT PANEL ── */
-.co-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:sticky;top:72px;}
-.totals{padding:16px 18px;display:flex;flex-direction:column;gap:10px;}
+.co-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh);overflow:hidden;}
+.totals{padding:15px 18px;display:flex;flex-direction:column;gap:9px;}
 .tot-row{display:flex;justify-content:space-between;align-items:center;}
-.tot-row .lbl{color:var(--muted);}
-.tot-row .lbl .zh{font-family:var(--zh);font-size:11px;}
-.tot-row .val{font-family:var(--mono);font-weight:700;}
-.grand{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:var(--surface2);border-top:1px solid var(--border);}
-.grand .glbl{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
-.grand .glbl .zh{font-family:var(--zh);font-size:10px;letter-spacing:0;text-transform:none;display:block;font-weight:400;margin-top:1px;}
-.grand .gamt{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--gold);}
+.tot-lbl{color:var(--muted);font-size:13px;}
+.tot-val{font-family:var(--mono);font-weight:700;color:var(--text2);font-size:13px;}
+.grand{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:linear-gradient(135deg,#1e3a8a,#2563eb);}
+.glbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);}
+.glbl .zh{font-family:var(--zh);font-size:10px;letter-spacing:0;text-transform:none;display:block;margin-top:1px;font-weight:400;}
+.gamt{font-family:var(--mono);font-size:24px;font-weight:700;color:#fff;}
 .co-actions{padding:13px 18px;display:flex;flex-direction:column;gap:8px;}
-.btn-checkout{width:100%;padding:13px;background:var(--gold);color:#000;font-weight:700;font-size:15px;border:none;border-radius:10px;cursor:pointer;font-family:var(--th);transition:all .2s;}
-.btn-checkout:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 8px 24px var(--gold-glow);}
-.btn-checkout:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;transform:none;box-shadow:none;}
-.btn-credit{width:100%;padding:13px;background:var(--orange);color:#000;font-weight:700;font-size:15px;border:none;border-radius:10px;cursor:pointer;font-family:var(--th);transition:all .2s;}
-.btn-credit:hover{background:#e68900;transform:translateY(-1px);box-shadow:0 8px 24px rgba(255,152,0,.25);}
-.btn-credit:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;transform:none;box-shadow:none;}
-.credit-note{font-family:var(--zh);font-size:11px;color:var(--muted);text-align:center;padding:0 4px;}
-.selected-member-strip{background:rgba(0,212,255,.07);border:1px solid var(--accent);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:12px;display:none;}
-.selected-member-strip.show{display:flex;}
-.selected-member-strip .mem-icon{font-size:16px;}
-.selected-member-strip .mem-info{flex:1;font-family:var(--zh);}
-.selected-member-strip .mem-id{font-family:var(--mono);font-size:10px;color:var(--accent);}
+.btn-checkout{width:100%;padding:14px;background:var(--gold);color:#fff;font-weight:700;font-size:15px;border:none;border-radius:10px;cursor:pointer;font-family:var(--th);transition:all .2s;box-shadow:0 2px 8px rgba(217,119,6,.2);}
+.btn-checkout:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 6px 16px rgba(217,119,6,.32);}
+.btn-checkout:disabled{background:var(--border);color:var(--muted2);cursor:not-allowed;transform:none;box-shadow:none;}
 
-/* ── REPORT ── */
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
-.stat-lbl{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
-.stat-lbl .zh{font-family:var(--zh);font-weight:400;letter-spacing:0;text-transform:none;margin-left:3px;font-size:11px;}
-.stat-val{font-family:var(--mono);font-size:22px;font-weight:700;}
-.stat-val.hi{color:var(--gold);}
-.stat-sub{font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--zh);}
-.report-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
-.r-tabs{display:flex;gap:3px;}
-.r-tab{padding:7px 13px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--th);transition:all .2s;}
-.r-tab .zh{font-family:var(--zh);font-size:10px;display:block;}
-.r-tab:hover{color:var(--text);border-color:var(--border2);}
-.r-tab.active{background:var(--aglow);border-color:var(--accent);color:var(--accent);}
-.export-grp{display:flex;gap:6px;flex-wrap:wrap;}
-.r-table{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-.r-table-row{display:grid;padding:13px 14px;border-bottom:1px solid var(--border);font-size:13px;align-items:center;transition:background .15s;cursor:pointer;}
-.r-table-row:last-child{border-bottom:none;}
-.r-table-row:hover{background:var(--surface2);}
-.r-table-row .arrow{color:var(--muted);font-size:11px;text-align:right;}
-.r-table-row:hover .arrow{color:var(--accent);}
-
-/* ── MEMBERS PAGE ── */
-.mem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-.mem-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:7px;transition:border-color .2s;}
-.mem-card:hover{border-color:var(--border2);}
-.mem-card-id{font-family:var(--mono);font-size:11px;color:var(--purple);}
-.mem-card-name{font-size:15px;font-weight:600;font-family:var(--zh);}
-.mem-card-acts{display:flex;gap:6px;margin-top:4px;}
+/* ── RIGHT COL / CART ── */
+.right-col{display:flex;flex-direction:column;gap:0;}
+.sec-lbl{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:7px;}
+.sec-lbl .zh{font-family:var(--zh);font-weight:400;font-size:11px;letter-spacing:0;text-transform:none;}
+.count-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:var(--mono);}
+.tbl{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--sh);overflow:hidden;}
+.t-head{display:grid;grid-template-columns:30px 1fr 120px 80px 110px 34px;padding:10px 16px;border-bottom:2px solid var(--border);font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;background:var(--surface2);}
+.t-head .zh{font-family:var(--zh);font-weight:600;letter-spacing:0;text-transform:none;font-size:10px;}
+.t-row{display:grid;grid-template-columns:30px 1fr 120px 80px 110px 34px;padding:13px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background .12s;animation:rowIn .18s ease;}
+.t-row:last-child{border-bottom:none;}
+.t-row:hover{background:var(--surface2);}
+@keyframes rowIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:translateX(0)}}
+.t-num{font-family:var(--mono);font-size:11px;color:var(--muted2);}
+.t-name{font-weight:500;color:var(--text);line-height:1.3;font-family:var(--zh);}
+.t-bc-sm{display:block;font-family:var(--mono);font-size:9px;color:var(--muted2);margin-top:2px;}
+.t-bc-col{font-family:var(--mono);font-size:10px;color:var(--muted2);}
+.t-price{font-family:var(--mono);font-size:12px;color:var(--muted);}
+.qty-ctrl{display:flex;align-items:center;gap:6px;}
+.qty-btn{width:24px;height:24px;border-radius:6px;background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.qty-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--aglow);}
+.qty-n{font-family:var(--mono);font-size:14px;min-width:20px;text-align:center;font-weight:700;}
+.del-btn{width:28px;height:28px;border-radius:6px;background:transparent;border:1.5px solid transparent;color:var(--muted2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .12s;}
+.del-btn:hover{border-color:var(--red);color:var(--red);background:#fef2f2;}
+.empty-st{padding:52px 20px;text-align:center;color:var(--muted);}
+.empty-st .ei{font-size:34px;margin-bottom:11px;opacity:.25;}
+.empty-st .zh{font-family:var(--zh);font-size:12px;margin-top:4px;}
 
 /* ── PRODUCTS PAGE ── */
-.prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-.prod-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:7px;transition:border-color .2s;}
-.prod-card:hover{border-color:var(--border2);}
-.prod-bc{font-family:var(--mono);font-size:11px;color:var(--accent);}
-.prod-name{font-size:14px;font-weight:600;font-family:var(--zh);}
-.prod-price{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--gold);}
-.prod-acts{display:flex;gap:6px;margin-top:3px;}
-
-/* ── PAGE HEADER ── */
-.page-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
-.page-hd-title{font-size:18px;font-weight:700;}
+.page-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.page-hd-title{font-size:20px;font-weight:700;color:var(--text);}
 .page-hd-title .zh{font-family:var(--zh);font-size:13px;color:var(--muted);font-weight:400;margin-left:6px;}
 .page-hd-sub{font-size:12px;color:var(--muted);margin-top:3px;font-family:var(--zh);}
 .btn-row{display:flex;gap:7px;flex-wrap:wrap;}
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;}
+.prod-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--sh);transition:all .18s;}
+.prod-card:hover{border-color:var(--border2);box-shadow:var(--sh-md);transform:translateY(-1px);}
+.prod-bc{font-family:var(--mono);font-size:11px;color:var(--accent);}
+.prod-name{font-size:15px;font-weight:600;color:var(--text);font-family:var(--zh);}
+.prod-price{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--gold);}
+.prod-acts{display:flex;gap:6px;margin-top:4px;}
 
-/* ── TOAST ── */
-#toast{position:fixed;bottom:20px;right:20px;z-index:9999;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:13px;transform:translateY(70px);opacity:0;transition:all .3s;max-width:320px;pointer-events:none;font-family:var(--zh);}
-#toast.show{transform:translateY(0);opacity:1;}
-#toast.ok{border-color:var(--green);color:var(--green);}
-#toast.err{border-color:var(--red);color:var(--red);}
+/* ── REPORT PAGE ── */
+.report-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.stat-row{display:flex;gap:12px;flex-wrap:wrap;}
+.stat-chip{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;box-shadow:var(--sh);}
+.stat-chip .slbl{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-family:var(--zh);}
+.stat-chip .sval{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text);margin-top:4px;}
+.stat-chip .sval.hi{color:var(--gold);}
+.stat-chip .ssub{font-size:11px;color:var(--muted);font-family:var(--zh);margin-top:2px;}
+
+.report-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.report-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh);overflow:hidden;display:flex;flex-direction:column;}
+.rp-hd{padding:13px 18px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.rp-hd-title{font-size:13px;font-weight:700;color:var(--text);}
+.rp-hd-title .zh{font-family:var(--zh);font-size:11px;color:var(--muted);font-weight:400;margin-left:4px;}
+.r-list{max-height:calc(100vh - 280px);overflow-y:auto;}
+.r-row{display:flex;align-items:center;padding:13px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;gap:12px;}
+.r-row:last-child{border-bottom:none;}
+.r-row:hover{background:var(--surface2);}
+.rdate{font-family:var(--mono);font-size:12px;color:var(--muted);flex-shrink:0;width:115px;}
+.ramt{font-family:var(--mono);font-weight:700;color:var(--text);flex:1;}
+.rcnt{font-size:11px;color:var(--muted2);font-family:var(--zh);flex-shrink:0;}
+.rarrow{color:var(--muted2);font-size:13px;flex-shrink:0;transition:color .12s;}
+.r-row:hover .rarrow{color:var(--accent);}
+
+/* ── CHECKOUT REVIEW OVERLAY ── */
+.review-overlay{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;transform:translateX(30px);}
+.review-overlay.open{opacity:1;pointer-events:all;transform:translateX(0);}
+.review-nav{display:flex;align-items:center;gap:14px;padding:0 24px;height:56px;border-bottom:1px solid var(--border);background:var(--surface);box-shadow:var(--sh);flex-shrink:0;}
+.back-btn{display:flex;align-items:center;gap:6px;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:var(--th);padding:8px 0;}
+.back-btn:hover{color:var(--accent2);}
+.rv-title{font-size:16px;font-weight:700;color:var(--text);}
+.rv-title .zh{font-family:var(--zh);font-size:12px;color:var(--muted);font-weight:400;display:block;}
+.review-body{flex:1;overflow-y:auto;padding:24px;max-width:780px;margin:0 auto;width:100%;}
+.review-footer{padding:18px 24px;border-top:1px solid var(--border);background:var(--surface);box-shadow:0 -2px 8px rgba(0,0,0,.07);flex-shrink:0;}
+.rv-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.rv-total-row .rtl{font-size:16px;font-weight:700;color:var(--text);font-family:var(--th);}
+.rv-total-row .rtl .zh{font-family:var(--zh);font-size:12px;color:var(--muted);font-weight:400;display:block;}
+.rv-total-row .rta{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--gold);}
+.btn-confirm{width:100%;padding:16px;background:var(--green);color:#fff;font-weight:700;font-size:16px;border:none;border-radius:12px;cursor:pointer;font-family:var(--th);transition:all .2s;}
+.btn-confirm:hover{background:#047857;transform:translateY(-1px);box-shadow:0 6px 16px rgba(5,150,105,.28);}
+
+.rv-table{width:100%;border-collapse:collapse;margin-bottom:16px;background:var(--surface);border-radius:12px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh);}
+.rv-table th{padding:11px 14px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--border);text-align:left;background:var(--surface2);font-family:var(--zh);}
+.rv-table td{padding:14px 14px;font-size:14px;border-bottom:1px solid var(--border);font-family:var(--zh);color:var(--text);}
+.rv-table tr:last-child td{border-bottom:none;}
+.rv-table .num{font-family:var(--mono);text-align:right;}
+.rv-table .sub{font-family:var(--mono);font-weight:700;text-align:right;color:var(--gold);}
+.nobc-tag{font-size:10px;color:var(--purple);font-family:var(--mono);background:#faf5ff;border:1px solid #e9d5ff;padding:1px 5px;border-radius:3px;margin-left:6px;}
 
 /* ── MODALS ── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s;}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:400;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s;backdrop-filter:blur(2px);}
 .overlay.open{opacity:1;pointer-events:all;}
-.mbox{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:26px;width:440px;max-width:94vw;transform:scale(.93);transition:transform .22s;max-height:90vh;overflow-y:auto;}
+.mbox{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px;width:440px;max-width:94vw;transform:scale(.93);transition:transform .22s;max-height:90vh;overflow-y:auto;box-shadow:var(--sh-md);}
 .overlay.open .mbox{transform:scale(1);}
-.m-title{font-size:17px;font-weight:700;margin-bottom:4px;font-family:var(--th);}
+.m-title{font-size:17px;font-weight:700;margin-bottom:4px;color:var(--text);}
 .m-title .zh{font-family:var(--zh);font-size:12px;color:var(--muted);font-weight:400;display:block;margin-top:2px;}
-.m-sub{font-size:12px;color:var(--muted);margin-bottom:16px;font-family:var(--mono);}
+.m-sub{font-size:12px;color:var(--muted);margin-bottom:16px;font-family:var(--mono);background:var(--surface2);padding:8px 12px;border-radius:6px;border:1px solid var(--border);}
 .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:13px;}
-.fg label{font-size:12px;color:var(--muted);font-family:var(--zh);}
-.fi{padding:10px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:14px;outline:none;transition:border-color .2s;font-family:var(--zh);width:100%;}
-.fi:focus{border-color:var(--accent);}
+.fg label{font-size:12px;color:var(--muted);font-family:var(--zh);font-weight:600;}
+.fi{padding:10px 14px;background:var(--surface2);border:1.5px solid var(--border2);border-radius:8px;color:var(--text);font-size:14px;outline:none;transition:all .18s;font-family:var(--zh);width:100%;}
+.fi:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--aglow);}
 .m-acts{display:flex;gap:8px;margin-top:18px;}
 
 /* ── RECEIPT ── */
-.rcpt-wrap{width:340px;}
-#rcpt-content{padding:4px;}
+.rcpt-wrap{width:360px;}
 .rcpt-hd{text-align:center;margin-bottom:16px;}
-.rcpt-logo{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--accent);letter-spacing:3px;}
+.rcpt-logo{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);letter-spacing:4px;}
 .rcpt-date{font-size:11px;color:var(--muted);margin-top:4px;font-family:var(--mono);}
 .rcpt-id{font-size:10px;color:var(--purple);margin-top:2px;font-family:var(--mono);}
-.rcpt-member{font-size:12px;color:var(--accent);margin-top:4px;font-family:var(--zh);background:var(--aglow);padding:4px 10px;border-radius:5px;display:inline-block;}
 .rdiv{border:none;border-top:1px dashed var(--border2);margin:12px 0;}
-.rcpt-item{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;font-size:13px;}
-.rcpt-iname{flex:1;font-family:var(--zh);}
+.rcpt-item{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px;font-size:13px;}
+.rcpt-iname{flex:1;font-family:var(--zh);color:var(--text);}
 .rcpt-qty{color:var(--muted);font-size:11px;margin:0 8px;white-space:nowrap;}
-.rcpt-iprice{font-family:var(--mono);font-weight:700;}
-.rcpt-total{display:flex;justify-content:space-between;align-items:center;}
-.rcpt-total .rl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-family:var(--zh);}
-.rcpt-total .ra{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--gold);}
-.credit-tag{background:rgba(255,152,0,.15);border:1px solid var(--orange);color:var(--orange);font-size:11px;padding:4px 10px;border-radius:5px;font-family:var(--zh);text-align:center;margin-top:8px;}
+.rcpt-iprice{font-family:var(--mono);font-weight:700;color:var(--text);}
+.rcpt-total-row{display:flex;justify-content:space-between;align-items:center;}
+.rcpt-total-row .rl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-family:var(--zh);}
+.rcpt-total-row .ra{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--gold);}
 .rcpt-ft{text-align:center;font-size:11px;color:var(--muted);margin-top:14px;font-family:var(--zh);}
 
-/* ── DRILLDOWN MODAL ── */
-.drill-table{width:100%;border-collapse:collapse;margin-top:12px;}
-.drill-table th{padding:8px 10px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);text-align:left;font-family:var(--zh);}
-.drill-table td{padding:10px 10px;font-size:13px;border-bottom:1px solid var(--border);font-family:var(--zh);}
+/* ── DRILL-DOWN ── */
+.drill-table{width:100%;border-collapse:collapse;margin-top:10px;}
+.drill-table th{padding:9px 10px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);text-align:left;font-family:var(--zh);background:var(--surface2);}
+.drill-table td{padding:11px 10px;font-size:13px;border-bottom:1px solid var(--border);font-family:var(--zh);color:var(--text);}
 .drill-table tr:last-child td{border-bottom:none;}
 .drill-table .num{font-family:var(--mono);text-align:right;}
-.drill-total{display:flex;justify-content:space-between;align-items:center;padding:12px 0 0;margin-top:4px;border-top:1px solid var(--border2);}
-.drill-total .dl{font-size:12px;color:var(--muted);font-family:var(--zh);}
-.drill-total .dr{font-family:var(--mono);font-weight:700;color:var(--gold);font-size:16px;}
+.drill-total{display:flex;justify-content:space-between;padding:12px 0 0;margin-top:4px;border-top:2px solid var(--border);}
+.drill-total .dl{font-size:13px;color:var(--muted);font-family:var(--zh);font-weight:600;}
+.drill-total .dr{font-family:var(--mono);font-weight:700;color:var(--gold);font-size:17px;}
 
-@media(max-width:768px){
+/* ── TOAST ── */
+#toast{position:fixed;bottom:22px;right:22px;z-index:9999;background:var(--text);color:#fff;border-radius:10px;padding:12px 18px;font-size:13px;transform:translateY(70px);opacity:0;transition:all .28s;max-width:320px;pointer-events:none;font-family:var(--zh);box-shadow:var(--sh-md);}
+#toast.show{transform:translateY(0);opacity:1;}
+#toast.ok{background:#064e3b;}
+#toast.err{background:#7f1d1d;}
+
+@media(max-width:900px){
   .pos-grid{grid-template-columns:1fr;}
-  .stat-grid{grid-template-columns:1fr;}
-  .t-head,.t-row{grid-template-columns:24px 1fr 80px 80px 32px;}
+  .report-cols{grid-template-columns:1fr;}
+  .t-head,.t-row{grid-template-columns:26px 1fr 80px 80px 32px;}
   .t-head>:nth-child(3),.t-row>:nth-child(3){display:none;}
-  .co-panel{position:static;}
-  .mem-grid,.prod-grid{grid-template-columns:1fr 1fr;}
 }
 </style>
 </head>
 <body>
 
 <nav>
-  <div class="brand">POS<span style="color:var(--muted);font-weight:400"> SYSTEM</span></div>
+  <div class="brand">POS SYSTEM</div>
   <button class="nav-tab active" onclick="showPage('pos',this)">🏪 แคชเชียร์<span class="zh">收銀台</span></button>
-  <button class="nav-tab" onclick="showPage('members',this)">👥 สมาชิก<span class="zh">會員管理</span></button>
   <button class="nav-tab" onclick="showPage('products',this)">📦 สินค้า<span class="zh">商品管理</span></button>
   <button class="nav-tab" onclick="showPage('report',this)">📊 รายงาน<span class="zh">銷售報表</span></button>
 </nav>
 
-<!-- ═══════════════════════════════════════
-     收銀台
-════════════════════════════════════════ -->
+<!-- ═══ 收銀台 ═══ -->
 <div class="page active" id="page-pos">
   <div class="pos-grid">
 
-    <!-- LEFT: scanner + cart -->
-    <div>
+    <!-- LEFT: Scanner + Checkout -->
+    <div class="left-col">
+
+      <!-- Scanner -->
       <div class="card">
         <div class="card-hd">
           <div class="dot" id="cam-dot"></div>
-          <span id="cam-status">สแกนบาร์โค้ด</span>
-          <span class="zh">條碼掃描器</span>
+          <span class="cht" id="cam-status">สแกนบาร์โค้ด</span>
+          <span class="chz">條碼掃描器</span>
         </div>
         <div class="scanner-body">
-          <!-- VIDEO -->
           <div class="video-wrap">
             <div class="cam-ph" id="cam-ph">
               <div class="icon">📷</div>
               <div>กดปุ่ม "เริ่มสแกน" เพื่อเปิดกล้อง</div>
-              <div class="hint">รองรับ EAN-13 / QR Code / Code128</div>
+              <div class="hint">รองรับเฉพาะ EAN-13 เท่านั้น</div>
             </div>
             <video id="preview" autoplay muted playsinline></video>
             <div class="scan-overlay" id="scan-ol" style="display:none">
@@ -291,80 +284,65 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
               <div class="sc bl"></div><div class="sc br"></div>
             </div>
           </div>
-          <!-- CONTROLS -->
           <div class="scan-controls">
             <button class="btn btn-accent" style="flex:1" id="btn-start" onclick="startScanner()">▶ เริ่มสแกน / 開始掃描</button>
             <button class="btn btn-ghost" id="btn-stop" onclick="stopScanner()" disabled>■ หยุด / 停止</button>
           </div>
-          <!-- MEMBER SELECT -->
-          <div class="member-row">
-            <select class="member-select" id="member-select" onchange="onMemberChange()">
-              <option value="">── เลือกสมาชิก / 選擇會員（賒帳用）──</option>
-            </select>
-          </div>
-          <!-- SCAN STATUS (Chinese only) -->
           <div class="scan-st" id="scan-st">รอสแกน...</div>
+          <button class="btn-nobc" onclick="openModal('m-nobc')">+ สินค้าไม่มีบาร์โค้ด / 無條碼商品</button>
         </div>
       </div>
 
-      <!-- CART -->
-      <div class="cart-wrap">
-        <div class="sec-lbl">ตะกร้า <span class="zh">購物車</span> <span class="count-badge" id="item-count">0</span></div>
-        <div class="tbl">
-          <div class="t-head">
-            <div>#</div>
-            <div>สินค้า <span class="zh">品項</span></div>
-            <div>บาร์โค้ด <span class="zh">條碼</span></div>
-            <div>ราคา <span class="zh">單價</span></div>
-            <div>จำนวน <span class="zh">數量</span></div>
-            <div></div>
-          </div>
-          <div id="cart-body">
-            <div class="empty-st"><div class="ei">🛒</div><div>สแกนบาร์โค้ดเพื่อเพิ่มสินค้า</div><div class="zh">尚無商品，請掃描條碼</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT: checkout -->
-    <div>
+      <!-- Checkout -->
       <div class="co-panel">
         <div class="card-hd">
           <div class="dot pulse"></div>
-          <span>รายการชำระเงิน</span>
-          <span class="zh">結帳明細</span>
+          <span class="cht">รายการชำระเงิน</span>
+          <span class="chz">結帳明細</span>
         </div>
-
-        <!-- Selected member strip -->
-        <div class="selected-member-strip" id="sel-member-strip" style="margin:12px 18px 0;">
-          <span class="mem-icon">👤</span>
-          <div class="mem-info">
-            <div id="sel-member-name" style="font-weight:600"></div>
-            <div class="mem-id" id="sel-member-id"></div>
-          </div>
-          <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px" onclick="clearMember()">นำออก / 移除</button>
-        </div>
-
         <div class="totals">
           <div class="tot-row">
-            <span class="lbl">จำนวนชิ้น <span class="zh">商品數量</span></span>
-            <span class="val" id="total-qty">0 件</span>
+            <span class="tot-lbl">จำนวนชิ้น / 商品數量</span>
+            <span class="tot-val" id="total-qty">0 ชิ้น</span>
           </div>
           <div class="tot-row">
-            <span class="lbl">ยอดรวม <span class="zh">合計</span></span>
-            <span class="val" id="subtotal">NT$ 0</span>
+            <span class="tot-lbl">ยอดรวม / 合計</span>
+            <span class="tot-val" id="subtotal">NT$ 0</span>
           </div>
         </div>
-
         <div class="grand">
-          <div class="glbl">ยอดรวมทั้งหมด <span class="zh">總計</span></div>
+          <div class="glbl">ยอดรวมทั้งหมด<span class="zh">總計</span></div>
           <div class="gamt" id="grand-total">NT$ 0</div>
         </div>
-
         <div class="co-actions">
-          <button class="btn-checkout" id="btn-checkout" onclick="checkout(false)" disabled>ชำระเงิน / 結帳</button>
-          <button class="btn-credit" id="btn-credit" onclick="checkout(true)" disabled title="ต้องเลือกสมาชิกเพื่อชำระเป็นเชื่อ">ชำระเป็นเชื่อ (+10%) <span style="font-size:12px;font-weight:400">ต้องเลือกสมาชิก</span></button>
+          <button class="btn-checkout" id="btn-checkout" onclick="openReview()" disabled>ชำระเงิน / 結帳</button>
           <button class="btn btn-danger" style="width:100%" onclick="clearCart()">ล้างตะกร้า / 清除購物車</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Cart list -->
+    <div class="right-col">
+      <div class="sec-lbl">
+        ตะกร้าสินค้า <span class="zh">購物車</span>
+        <span class="count-badge" id="item-count">0</span>
+      </div>
+      <div class="tbl">
+        <div class="t-head">
+          <div>#</div>
+          <div>สินค้า <span class="zh">品項</span></div>
+          <div>บาร์โค้ด <span class="zh">條碼</span></div>
+          <div>ราคา <span class="zh">單價</span></div>
+          <div>จำนวน <span class="zh">數量</span></div>
+          <div></div>
+        </div>
+        <div id="cart-body">
+          <div class="empty-st">
+            <div class="ei">🛒</div>
+            <div>สแกนบาร์โค้ดเพื่อเพิ่มสินค้า</div>
+            <div class="zh">尚無商品，請掃描條碼或新增無條碼商品</div>
+          </div>
         </div>
       </div>
     </div>
@@ -372,28 +350,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     會員管理
-════════════════════════════════════════ -->
-<div class="page" id="page-members">
-  <div class="page-hd">
-    <div>
-      <div class="page-hd-title">สมาชิก <span class="zh">會員管理</span></div>
-      <div class="page-hd-sub" id="mem-count-lbl"></div>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-accent" onclick="openAddMember()">+ เพิ่มสมาชิก / 新增會員</button>
-      <button class="btn btn-green" onclick="exportMembers()">⬇ ส่งออก CSV / 匯出會員</button>
-      <button class="btn btn-ghost" onclick="document.getElementById('imp-mem').click()">⬆ นำเข้า CSV / 匯入會員</button>
-      <input type="file" id="imp-mem" accept=".csv" style="display:none" onchange="importMembers(event)">
-    </div>
-  </div>
-  <div class="mem-grid" id="mem-grid"></div>
-</div>
-
-<!-- ═══════════════════════════════════════
-     商品管理
-════════════════════════════════════════ -->
+<!-- ═══ 商品管理 ═══ -->
 <div class="page" id="page-products">
   <div class="page-hd">
     <div>
@@ -401,49 +358,87 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
       <div class="page-hd-sub" id="prod-count-lbl"></div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-accent" onclick="openAddProduct()">+ เพิ่มสินค้า / 新增商品</button>
-      <button class="btn btn-green" onclick="exportProducts()">⬇ ส่งออก CSV / 匯出條碼</button>
-      <button class="btn btn-ghost" onclick="document.getElementById('imp-prod').click()">⬆ นำเข้า CSV / 匯入條碼</button>
+      <button class="btn btn-accent" onclick="openModal('m-addprod')">+ เพิ่มสินค้า / 新增商品</button>
+      <button class="btn btn-green" onclick="exportProducts()">⬇ CSV / 匯出條碼</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('imp-prod').click()">⬆ CSV / 匯入條碼</button>
       <input type="file" id="imp-prod" accept=".csv" style="display:none" onchange="importProducts(event)">
     </div>
   </div>
   <div class="prod-grid" id="prod-grid"></div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     銷售報表
-════════════════════════════════════════ -->
+<!-- ═══ 銷售報表 ═══ -->
 <div class="page" id="page-report">
-  <div class="stat-grid">
-    <div class="stat-card">
-      <div class="stat-lbl">ยอดขายวันนี้ <span class="zh">今日銷售</span></div>
-      <div class="stat-val hi" id="stat-today">NT$ 0</div>
-      <div class="stat-sub"><span id="stat-today-count">0</span> 筆交易</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-lbl">ยอดขายเดือนนี้ <span class="zh">本月銷售</span></div>
-      <div class="stat-val" id="stat-month">NT$ 0</div>
-      <div class="stat-sub"><span id="stat-month-count">0</span> 筆交易</div>
-    </div>
-  </div>
-
   <div class="report-top">
-    <div class="r-tabs">
-      <button class="r-tab active" onclick="switchReport('daily',this)">รายวัน <span class="zh">每日報表</span></button>
-      <button class="r-tab" onclick="switchReport('monthly',this)">รายเดือน <span class="zh">每月報表</span></button>
+    <div class="stat-row">
+      <div class="stat-chip">
+        <div class="slbl">ยอดขายวันนี้ / 今日銷售</div>
+        <div class="sval hi" id="stat-today">NT$ 0</div>
+        <div class="ssub"><span id="stat-today-count">0</span> รายการ / 筆交易</div>
+      </div>
+      <div class="stat-chip">
+        <div class="slbl">ยอดขายเดือนนี้ / 本月銷售</div>
+        <div class="sval" id="stat-month">NT$ 0</div>
+        <div class="ssub"><span id="stat-month-count">0</span> รายการ / 筆交易</div>
+      </div>
     </div>
-    <div class="export-grp">
+    <div class="btn-row">
       <button class="btn btn-green" style="font-size:12px;padding:7px 12px" onclick="exportCSV()">⬇ ส่งออก CSV / 匯出報表</button>
-      <button class="btn btn-ghost" style="font-size:12px;padding:7px 12px" onclick="document.getElementById('imp-report').click()">⬆ นำเข้า / 匯入報表</button>
+      <button class="btn btn-ghost" style="font-size:12px;padding:7px 12px" onclick="document.getElementById('imp-report').click()">⬆ นำเข้า / 匯入</button>
       <input type="file" id="imp-report" accept=".json" style="display:none" onchange="importReport(event)">
-      <button class="btn btn-danger" style="font-size:12px;padding:7px 12px" onclick="clearAllData()">🗑 ลบทั้งหมด / 清除資料</button>
+      <button class="btn btn-danger" style="font-size:12px;padding:7px 12px" onclick="clearAllData()">🗑 ลบทั้งหมด / 清除</button>
     </div>
   </div>
-
-  <div class="r-table" id="report-table">
-    <div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>
+  <div class="report-cols">
+    <!-- Monthly -->
+    <div class="report-panel">
+      <div class="rp-hd">
+        <div class="rp-hd-title">รายเดือน <span class="zh">每月報表</span></div>
+      </div>
+      <div class="r-list" id="monthly-list">
+        <div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>
+      </div>
+    </div>
+    <!-- Daily -->
+    <div class="report-panel">
+      <div class="rp-hd">
+        <div class="rp-hd-title">รายวัน <span class="zh">每日報表</span></div>
+      </div>
+      <div class="r-list" id="daily-list">
+        <div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>
+      </div>
+    </div>
   </div>
-  <div style="font-size:11px;color:var(--muted);margin-top:10px;font-family:var(--zh);text-align:right">💡 點擊列項查看當期銷售明細</div>
+  <div style="font-size:11px;color:var(--muted);margin-top:10px;font-family:var(--zh);text-align:right">💡 點擊各列項查看當期品項銷售明細</div>
+</div>
+
+<!-- ═══ Checkout Review Overlay ═══ -->
+<div class="review-overlay" id="review-overlay">
+  <div class="review-nav">
+    <button class="back-btn" onclick="closeReview()">‹ กลับ / 返回收銀台</button>
+    <div class="rv-title">ยืนยันรายการสั่งซื้อ<span class="zh">確認購買清單</span></div>
+  </div>
+  <div class="review-body">
+    <table class="rv-table">
+      <thead>
+        <tr>
+          <th style="width:36px">#</th>
+          <th>สินค้า / 品項</th>
+          <th class="num" style="width:100px">ราคา / 單價</th>
+          <th class="num" style="width:80px">จำนวน / 數量</th>
+          <th class="sub" style="width:110px">รวม / 小計</th>
+        </tr>
+      </thead>
+      <tbody id="review-body"></tbody>
+    </table>
+  </div>
+  <div class="review-footer">
+    <div class="rv-total-row">
+      <div class="rtl">ยอดรวมทั้งหมด<span class="zh">總計金額</span></div>
+      <div class="rta" id="review-total-amt">NT$ 0</div>
+    </div>
+    <button class="btn-confirm" onclick="confirmCheckout()">✓ ยืนยันการชำระเงิน / 確定結帳</button>
+  </div>
 </div>
 
 <!-- ═══ Modal: 新條碼 ═══ -->
@@ -455,7 +450,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
     <div class="fg"><label>單價（NT$）*</label><input class="fi" id="np-price" type="number" min="0" step="1" placeholder="0"></div>
     <div class="m-acts">
       <button class="btn btn-accent" style="flex:1" onclick="saveNewProduct()">✓ 儲存並加入購物車</button>
-      <button class="btn btn-ghost" onclick="closeM('m-newprod')">取消</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-newprod')">取消</button>
     </div>
   </div>
 </div>
@@ -469,46 +464,35 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
     <div class="fg"><label>單價（NT$）*</label><input class="fi" id="ep-price" type="number" min="0" step="1"></div>
     <div class="m-acts">
       <button class="btn btn-accent" style="flex:1" onclick="saveEditProduct()">儲存</button>
-      <button class="btn btn-ghost" onclick="closeM('m-editprod')">取消</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-editprod')">取消</button>
     </div>
   </div>
 </div>
 
-<!-- ═══ Modal: 手動新增商品 ═══ -->
+<!-- ═══ Modal: 新增商品 ═══ -->
 <div class="overlay" id="m-addprod">
   <div class="mbox">
     <div class="m-title">+ เพิ่มสินค้า<span class="zh">新增商品</span></div>
-    <div class="fg"><label>條碼 *</label><input class="fi" id="ap-bc" type="text" placeholder="輸入條碼" style="font-family:var(--mono)"></div>
+    <div class="fg"><label>條碼（EAN-13，13位數）*</label><input class="fi" id="ap-bc" type="text" placeholder="輸入 13 碼條碼" style="font-family:var(--mono)" maxlength="13"></div>
     <div class="fg"><label>品項名稱 *</label><input class="fi" id="ap-name" type="text" placeholder="例如：礦泉水"></div>
     <div class="fg"><label>單價（NT$）*</label><input class="fi" id="ap-price" type="number" min="0" step="1" placeholder="0"></div>
     <div class="m-acts">
       <button class="btn btn-accent" style="flex:1" onclick="saveAddProduct()">儲存</button>
-      <button class="btn btn-ghost" onclick="closeM('m-addprod')">取消</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-addprod')">取消</button>
     </div>
   </div>
 </div>
 
-<!-- ═══ Modal: 新增會員 ═══ -->
-<div class="overlay" id="m-addmem">
+<!-- ═══ Modal: 無條碼商品 ═══ -->
+<div class="overlay" id="m-nobc">
   <div class="mbox">
-    <div class="m-title">+ เพิ่มสมาชิก<span class="zh">新增會員</span></div>
-    <div class="fg"><label>會員名稱 *</label><input class="fi" id="am-name" type="text" placeholder="輸入姓名"></div>
+    <div class="m-title">+ สินค้าไม่มีบาร์โค้ด<span class="zh">無條碼商品</span></div>
+    <div class="fg"><label>品項名稱 *</label><input class="fi" id="nobc-name" type="text" placeholder="例如：雜費、服務費、特定商品..."></div>
+    <div class="fg"><label>單價（NT$）*</label><input class="fi" id="nobc-price" type="number" min="0" step="1" placeholder="0"></div>
+    <div class="fg"><label>數量</label><input class="fi" id="nobc-qty" type="number" min="1" step="1" value="1"></div>
     <div class="m-acts">
-      <button class="btn btn-accent" style="flex:1" onclick="saveAddMember()">儲存</button>
-      <button class="btn btn-ghost" onclick="closeM('m-addmem')">取消</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ Modal: 編輯會員 ═══ -->
-<div class="overlay" id="m-editmem">
-  <div class="mbox">
-    <div class="m-title">✏ แก้ไขสมาชิก<span class="zh">編輯會員</span></div>
-    <div class="m-sub" id="em-id-lbl"></div>
-    <div class="fg"><label>會員名稱 *</label><input class="fi" id="em-name" type="text"></div>
-    <div class="m-acts">
-      <button class="btn btn-accent" style="flex:1" onclick="saveEditMember()">儲存</button>
-      <button class="btn btn-ghost" onclick="closeM('m-editmem')">取消</button>
+      <button class="btn btn-accent" style="flex:1" onclick="saveNobcItem()">เพิ่มในตะกร้า / 加入購物車</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-nobc')">取消</button>
     </div>
   </div>
 </div>
@@ -521,22 +505,19 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
         <div class="rcpt-logo">POS SYSTEM</div>
         <div class="rcpt-date" id="rcpt-date"></div>
         <div class="rcpt-id" id="rcpt-id"></div>
-        <div class="rcpt-member" id="rcpt-member" style="display:none"></div>
       </div>
       <hr class="rdiv">
       <div id="rcpt-items"></div>
       <hr class="rdiv">
-      <div class="rcpt-total">
+      <div class="rcpt-total-row">
         <div class="rl">ยอดรวมทั้งหมด / 總計金額</div>
         <div class="ra" id="rcpt-total-amt"></div>
       </div>
-      <div class="credit-tag" id="rcpt-credit-tag" style="display:none">⚠ ชำระเป็นเชื่อ / 此筆為賒帳交易（含 10% 加收）</div>
       <div class="rcpt-ft">ขอบคุณที่ใช้บริการ / 感謝您的惠顧 ♥</div>
     </div>
     <div class="m-acts" style="margin-top:16px">
-      <button class="btn btn-accent" style="flex:1" onclick="closeM('m-receipt')">確認</button>
-      <button class="btn btn-ghost" id="btn-screenshot" onclick="takeScreenshot()" style="display:none">📸 截圖</button>
-      <button class="btn btn-ghost" onclick="closeM('m-receipt');showPage('report',null)">查看報表</button>
+      <button class="btn btn-accent" style="flex:1" onclick="closeModal('m-receipt')">ตกลง / 確認</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-receipt');showPage('report',null)">รายงาน / 報表</button>
     </div>
   </div>
 </div>
@@ -544,9 +525,9 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 <!-- ═══ Modal: 報表明細 ═══ -->
 <div class="overlay" id="m-drill">
   <div class="mbox">
-    <div class="m-title" id="drill-title">銷售明細<span class="zh"></span></div>
+    <div class="m-title" id="drill-title">銷售明細</div>
     <div class="m-sub" id="drill-sub"></div>
-    <table class="drill-table" id="drill-table">
+    <table class="drill-table">
       <thead><tr><th>品項名稱</th><th class="num">銷售數量</th><th class="num">小計</th></tr></thead>
       <tbody id="drill-body"></tbody>
     </table>
@@ -555,7 +536,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
       <div class="dr" id="drill-total-amt"></div>
     </div>
     <div class="m-acts" style="margin-top:14px">
-      <button class="btn btn-accent" style="flex:1" onclick="closeM('m-drill')">關閉</button>
+      <button class="btn btn-accent" style="flex:1" onclick="closeModal('m-drill')">關閉</button>
     </div>
   </div>
 </div>
@@ -563,23 +544,19 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 <div id="toast"></div>
 
 <script>
-// ═══════════════════════════════
-//  ZXing 動態載入
-// ═══════════════════════════════
+// ═══ ZXing 載入 ═══
 (function(){
-  const s = document.createElement('script');
-  s.src = 'https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js';
-  s.onerror = () => {
-    const s2 = document.createElement('script');
-    s2.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.19.2/umd/index.min.js';
+  const s=document.createElement('script');
+  s.src='https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js';
+  s.onerror=()=>{
+    const s2=document.createElement('script');
+    s2.src='https://cdn.jsdelivr.net/npm/@zxing/library@0.19.2/umd/index.min.js';
     document.head.appendChild(s2);
   };
   document.head.appendChild(s);
 })();
 
-// ═══════════════════════════════
-//  資料存取
-// ═══════════════════════════════
+// ═══ 資料層 ═══
 const DEFAULT_PRODUCTS = {
   '4710088001001':{name:'統一麥香奶茶',price:25},
   '4710088001002':{name:'光泉鮮乳',price:65},
@@ -587,58 +564,71 @@ const DEFAULT_PRODUCTS = {
   '4719854210008':{name:'義美小泡芙',price:39},
   '4710085081026':{name:'統一布丁',price:15},
   '4710438001234':{name:'御茶園煎茶',price:25},
-  '4901340000003':{name:'Pocky 巧克力',price:45},
+  '4901340000003':{name:'Pocky巧克力',price:45},
   '4710088002003':{name:'統一罐裝咖啡',price:30},
   '4712345678900':{name:'農夫山泉礦泉水',price:15},
   '4711234000001':{name:'小美冰淇淋',price:25},
 };
-function getProds(){try{const s=localStorage.getItem('pos_products');if(s)return JSON.parse(s);}catch(e){}localStorage.setItem('pos_products',JSON.stringify(DEFAULT_PRODUCTS));return{...DEFAULT_PRODUCTS};}
+function getProds(){
+  try{const s=localStorage.getItem('pos_products');if(s)return JSON.parse(s);}catch(e){}
+  localStorage.setItem('pos_products',JSON.stringify(DEFAULT_PRODUCTS));
+  return{...DEFAULT_PRODUCTS};
+}
 function saveProds(o){localStorage.setItem('pos_products',JSON.stringify(o));}
-function getMembers(){try{const s=localStorage.getItem('pos_members');if(s)return JSON.parse(s);}catch(e){}return[];}
-function saveMembers(a){localStorage.setItem('pos_members',JSON.stringify(a));}
 function getTx(){try{return JSON.parse(localStorage.getItem('pos_transactions')||'[]');}catch(e){return[];}}
 function saveTx(a){localStorage.setItem('pos_transactions',JSON.stringify(a));}
 
-// ═══════════════════════════════
-//  全域狀態
-// ═══════════════════════════════
+// ═══ 全域狀態 ═══
 let cart=[], scanning=false, codeReader=null;
-let pendingBC=null, editingBC=null, editingMemId=null;
+let pendingBC=null, editingBC=null;
 let lastCode='', lastCodeTime=0;
-let selectedMember=null; // {id, name}
+const DEBOUNCE=2000; // 2秒防重複
 
-// ═══════════════════════════════
-//  掃描器
-// ═══════════════════════════════
+// ═══ EAN-13 驗證 ═══
+function isEAN13(code){
+  code=(code||'').trim();
+  if(!/^\d{13}$/.test(code))return false;
+  // checksum verification
+  let sum=0;
+  for(let i=0;i<12;i++) sum+=parseInt(code[i])*(i%2===0?1:3);
+  const check=(10-(sum%10))%10;
+  return check===parseInt(code[12]);
+}
+
+// ═══ 掃描器 ═══
 async function startScanner(){
   try{
-    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
-    const v = document.getElementById('preview');
-    v.srcObject = stream;
-    v.style.display = 'block';
-    document.getElementById('cam-ph').style.display = 'none';
-    document.getElementById('scan-ol').style.display = 'block';
+    const stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}
+    });
+    const v=document.getElementById('preview');
+    v.srcObject=stream;
+    v.style.display='block';
+    document.getElementById('cam-ph').style.display='none';
+    document.getElementById('scan-ol').style.display='block';
     await new Promise((res,rej)=>{
       v.onloadedmetadata=()=>v.play().then(res).catch(rej);
       v.onerror=rej;
-      setTimeout(rej,6000);
+      setTimeout(rej,7000);
     });
     document.getElementById('btn-start').disabled=true;
     document.getElementById('btn-stop').disabled=false;
     document.getElementById('cam-dot').className='dot green';
-    document.getElementById('cam-status').textContent='กำลังสแกน...';
+    document.getElementById('cam-status').textContent='กำลังสแกน EAN-13...';
     scanning=true;
     startDecodeLoop(v);
   }catch(e){
-    setSt('ไม่สามารถเข้าถึงกล้อง: '+(e.message||'กรุณาอนุญาตการเข้าถึงกล้อง'), 'err');
-    showToast('กล้องไม่สามารถเริ่มได้ กรุณาอนุญาตสิทธิ์กล้อง', 'err');
+    setSt('ไม่สามารถเข้าถึงกล้อง: '+(e.message||'กรุณาอนุญาตสิทธิ์กล้อง'),'err');
+    showToast('กล้องไม่สามารถเริ่มได้','err');
   }
 }
 
 function startDecodeLoop(v){
-  if('BarcodeDetector' in window){ useNative(v); }
-  else if(typeof ZXing!=='undefined'){ useZXing(v); }
-  else{
+  if('BarcodeDetector' in window){
+    useNative(v);
+  } else if(typeof ZXing!=='undefined'){
+    useZXing(v);
+  } else {
     let r=0;
     const t=setInterval(()=>{
       r++;
@@ -647,38 +637,65 @@ function startDecodeLoop(v){
     },300);
   }
 }
+
 async function useNative(v){
   let det;
-  try{det=new BarcodeDetector({formats:['ean_13','ean_8','qr_code','code_128','upc_a','upc_e','code_39']});}
-  catch(e){det=new BarcodeDetector();}
+  try{ det=new BarcodeDetector({formats:['ean_13']}); }
+  catch(e){ det=new BarcodeDetector(); } // fallback to all formats, filter in onCode
   const loop=async()=>{
     if(!scanning)return;
-    try{if(v.readyState>=2){const bs=await det.detect(v);if(bs.length)onCode(bs[0].rawValue);}}catch(e){}
+    try{
+      if(v.readyState>=2){
+        const bs=await det.detect(v);
+        if(bs.length)onCode(bs[0].rawValue);
+      }
+    }catch(e){}
     if(scanning)requestAnimationFrame(loop);
-  };loop();
+  };
+  loop();
 }
+
 function useZXing(v){
   try{
     codeReader=new ZXing.BrowserMultiFormatReader();
-    codeReader.decodeFromVideoElement(v,(r)=>{if(scanning&&r)onCode(r.getText());});
-  }catch(e){useZXingCanvas(v);}
+    codeReader.decodeFromVideoElement(v,(r)=>{
+      if(scanning&&r)onCode(r.getText());
+    });
+  }catch(e){ useZXingCanvas(v); }
 }
+
 function useZXingCanvas(v){
-  const c=document.createElement('canvas');const ctx=c.getContext('2d');
+  const c=document.createElement('canvas');
+  const ctx=c.getContext('2d');
   const reader=new ZXing.BrowserMultiFormatReader();
   const loop=async()=>{
     if(!scanning)return;
-    try{if(v.readyState>=2&&v.videoWidth>0){c.width=v.videoWidth;c.height=v.videoHeight;ctx.drawImage(v,0,0);const r=await reader.decodeFromCanvas(c);if(r)onCode(r.getText());}}catch(e){}
+    try{
+      if(v.readyState>=2&&v.videoWidth>0){
+        c.width=v.videoWidth; c.height=v.videoHeight;
+        ctx.drawImage(v,0,0);
+        const r=await reader.decodeFromCanvas(c);
+        if(r)onCode(r.getText());
+      }
+    }catch(e){}
     if(scanning)setTimeout(loop,150);
-  };loop();
+  };
+  loop();
 }
-function onCode(code){
-  if(!code)return;
+
+// ─── 掃描結果：只接受 EAN-13，2秒防重複 ───
+function onCode(raw){
+  const code=(raw||'').trim();
+  if(!isEAN13(code)){
+    // 靜默略過非 EAN-13
+    return;
+  }
   const now=Date.now();
-  if(code===lastCode&&now-lastCodeTime<2500)return;
-  lastCode=code;lastCodeTime=now;
-  addByBarcode(code,true);
+  if(code===lastCode && now-lastCodeTime<DEBOUNCE)return;
+  lastCode=code; lastCodeTime=now;
+  addByBarcode(code);
 }
+
 function stopScanner(){
   scanning=false;
   const v=document.getElementById('preview');
@@ -695,64 +712,64 @@ function stopScanner(){
   setSt('หยุดสแกนแล้ว');
 }
 
-// ═══════════════════════════════
-//  商品查找 & 加入
-// ═══════════════════════════════
+// ═══ 商品查找 ═══
 function addByBarcode(code){
-  code=(code||'').trim();if(!code)return;
   const prods=getProds();
   if(!prods[code]){
     pendingBC=code;
     document.getElementById('np-bc').textContent='條碼：'+code;
     document.getElementById('np-name').value='';
     document.getElementById('np-price').value='';
-    openM('m-newprod');
-    setSt('⚠ ไม่พบบาร์โค้ด: '+code+' กรุณาเพิ่มข้อมูลสินค้า','warn');
+    openModal('m-newprod');
+    setSt('⚠ ไม่พบสินค้า: '+code+' — กรุณาเพิ่มข้อมูล','warn');
     return;
   }
   const p=prods[code];
-  addToCart(code,p);
-  setSt('✓ เพิ่มแล้ว: '+p.name+' NT$ '+p.price,'ok');
+  addToCart(code,p.name,p.price);
+  setSt('✓ เพิ่มแล้ว: '+p.name+' — NT$ '+p.price,'ok');
   playBeep();
 }
+
 function saveNewProduct(){
   const name=document.getElementById('np-name').value.trim();
   const price=parseFloat(document.getElementById('np-price').value);
   if(!name){showToast('請輸入品項名稱','err');return;}
   if(isNaN(price)||price<0){showToast('請輸入正確價格','err');return;}
-  const prods=getProds();prods[pendingBC]={name,price};saveProds(prods);
-  closeM('m-newprod');
-  addToCart(pendingBC,{name,price});
-  setSt('✓ บันทึกและเพิ่มแล้ว: '+name+' NT$ '+price,'ok');
-  playBeep();renderProdGrid();
+  const prods=getProds();
+  prods[pendingBC]={name,price};
+  saveProds(prods);
+  closeModal('m-newprod');
+  addToCart(pendingBC,name,price);
+  setSt('✓ บันทึกและเพิ่มแล้ว: '+name,'ok');
+  playBeep(); renderProdGrid();
   showToast('已新增商品：'+name,'ok');
   pendingBC=null;
 }
 
-// ═══════════════════════════════
-//  購物車
-// ═══════════════════════════════
-function addToCart(bc,p){
+// ═══ 購物車 ═══
+function addToCart(bc,name,price,qty=1){
   const ex=cart.find(i=>i.barcode===bc);
-  if(ex)ex.qty++;else cart.push({barcode:bc,name:p.name,price:p.price,qty:1});
+  if(ex){ ex.qty+=qty; }
+  else { cart.push({barcode:bc,name,price,qty,noBarcode:bc.startsWith('NOBC-')}); }
   renderCart();
 }
 function changeQty(bc,d){
-  const item=cart.find(i=>i.barcode===bc);if(!item)return;
-  item.qty+=d;if(item.qty<=0)cart=cart.filter(i=>i.barcode!==bc);
+  const item=cart.find(i=>i.barcode===bc);
+  if(!item)return;
+  item.qty+=d;
+  if(item.qty<=0)cart=cart.filter(i=>i.barcode!==bc);
   renderCart();
 }
-function removeItem(bc){cart=cart.filter(i=>i.barcode!==bc);renderCart();}
-function clearCart(){cart=[];renderCart();}
+function removeItem(bc){ cart=cart.filter(i=>i.barcode!==bc); renderCart(); }
+function clearCart(){ cart=[]; renderCart(); }
 
 function renderCart(){
   const body=document.getElementById('cart-body');
   if(!cart.length){
-    body.innerHTML=`<div class="empty-st"><div class="ei">🛒</div><div>สแกนบาร์โค้ดเพื่อเพิ่มสินค้า</div><div class="zh">尚無商品，請掃描條碼</div></div>`;
+    body.innerHTML=`<div class="empty-st"><div class="ei">🛒</div><div>สแกนบาร์โค้ดเพื่อเพิ่มสินค้า</div><div class="zh">尚無商品，請掃描條碼或新增無條碼商品</div></div>`;
     updateTotals(0,0);
     document.getElementById('item-count').textContent='0';
     document.getElementById('btn-checkout').disabled=true;
-    updateCreditBtn();
     return;
   }
   const totalQty=cart.reduce((s,i)=>s+i.qty,0);
@@ -760,8 +777,12 @@ function renderCart(){
   body.innerHTML=cart.map((item,idx)=>`
     <div class="t-row">
       <div class="t-num">${idx+1}</div>
-      <div class="t-name">${item.name}<span class="t-bc-sm">${item.barcode}</span></div>
-      <div class="t-bc-col">${item.barcode}</div>
+      <div class="t-name">
+        ${item.name}
+        ${item.noBarcode?'<span class="nobc-tag">無條碼</span>':''}
+        <span class="t-bc-sm">${item.noBarcode?'—':item.barcode}</span>
+      </div>
+      <div class="t-bc-col">${item.noBarcode?'—':item.barcode}</div>
       <div class="t-price">NT$ ${item.price}</div>
       <div class="qty-ctrl">
         <button class="qty-btn" onclick="changeQty('${item.barcode}',-1)">−</button>
@@ -773,97 +794,73 @@ function renderCart(){
   document.getElementById('item-count').textContent=totalQty;
   document.getElementById('btn-checkout').disabled=false;
   updateTotals(sub,totalQty);
-  updateCreditBtn();
 }
 
 function updateTotals(sub,qty){
-  document.getElementById('total-qty').textContent=qty+' 件';
+  document.getElementById('total-qty').textContent=qty+' ชิ้น / 件';
   document.getElementById('subtotal').textContent='NT$ '+sub;
   document.getElementById('grand-total').textContent='NT$ '+sub;
 }
-function updateCreditBtn(){
-  const hasItems=cart.length>0;
-  const hasMember=!!selectedMember;
-  const btn=document.getElementById('btn-credit');
-  btn.disabled=!(hasItems&&hasMember);
+
+// ═══ 無條碼商品 ═══
+function saveNobcItem(){
+  const name=document.getElementById('nobc-name').value.trim();
+  const price=parseFloat(document.getElementById('nobc-price').value);
+  const qty=Math.max(1,parseInt(document.getElementById('nobc-qty').value)||1);
+  if(!name){showToast('請輸入品項名稱','err');return;}
+  if(isNaN(price)||price<0){showToast('請輸入正確價格','err');return;}
+  const bc='NOBC-'+Date.now();
+  cart.push({barcode:bc,name,price,qty,noBarcode:true});
+  renderCart();
+  closeModal('m-nobc');
+  document.getElementById('nobc-name').value='';
+  document.getElementById('nobc-price').value='';
+  document.getElementById('nobc-qty').value='1';
+  showToast('已加入：'+name,'ok');
+  playBeep();
 }
 
-// ═══════════════════════════════
-//  會員選擇
-// ═══════════════════════════════
-function populateMemberDropdown(){
-  const members=getMembers();
-  const sel=document.getElementById('member-select');
-  const cur=sel.value;
-  sel.innerHTML='<option value="">── เลือกสมาชิก / 選擇會員（賒帳用）──</option>'+
-    members.map(m=>`<option value="${m.id}">${m.id} - ${m.name}</option>`).join('');
-  if(cur)sel.value=cur;
-}
-function onMemberChange(){
-  const sel=document.getElementById('member-select');
-  const id=sel.value;
-  const members=getMembers();
-  const m=members.find(x=>x.id===id);
-  if(m){
-    selectedMember={id:m.id,name:m.name};
-    const strip=document.getElementById('sel-member-strip');
-    strip.classList.add('show');
-    document.getElementById('sel-member-name').textContent=m.name;
-    document.getElementById('sel-member-id').textContent=m.id;
-  }else{
-    selectedMember=null;
-    document.getElementById('sel-member-strip').classList.remove('show');
-  }
-  updateCreditBtn();
-}
-function clearMember(){
-  selectedMember=null;
-  document.getElementById('member-select').value='';
-  document.getElementById('sel-member-strip').classList.remove('show');
-  updateCreditBtn();
-}
-
-// ═══════════════════════════════
-//  結帳 & 賒帳
-// ═══════════════════════════════
-function checkout(isCredit){
+// ═══ 結帳流程 ═══
+function openReview(){
   if(!cart.length)return;
-  if(isCredit&&!selectedMember){showToast('賒帳需選擇會員','err');return;}
+  let total=0;
+  const tbody=document.getElementById('review-body');
+  tbody.innerHTML=cart.map((item,i)=>{
+    const sub=item.price*item.qty; total+=sub;
+    return`<tr>
+      <td class="num" style="color:var(--muted2)">${i+1}</td>
+      <td>${item.name}${item.noBarcode?'<span class="nobc-tag">無條碼</span>':''}</td>
+      <td class="num">NT$ ${item.price}</td>
+      <td class="num">${item.qty}</td>
+      <td class="sub">NT$ ${sub}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('review-total-amt').textContent='NT$ '+total;
+  document.getElementById('review-overlay').classList.add('open');
+}
+function closeReview(){
+  document.getElementById('review-overlay').classList.remove('open');
+}
+function confirmCheckout(){
+  closeReview();
   const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
-  const total=isCredit?Math.round(sub*1.1):sub;
   const now=new Date();
   const tx={
     id:'TX'+now.getTime().toString(36).toUpperCase(),
     date:now.toISOString(),
     items:JSON.parse(JSON.stringify(cart)),
-    subtotal:sub, total,
-    isCredit, memberId:isCredit?selectedMember.id:null,
-    memberName:isCredit?selectedMember.name:null
+    subtotal:sub, total:sub
   };
-  const txList=getTx();txList.push(tx);saveTx(txList);
-  showReceipt(tx,isCredit);
-  cart=[];
-  renderCart();
-  if(!isCredit)stopScanner();
-  showToast(isCredit?'ชำระเป็นเชื่อเรียบร้อย!':'ชำระเงินเรียบร้อย!','ok');
-  if(isCredit){
-    // auto screenshot then clear member
-    setTimeout(async()=>{
-      await takeScreenshot();
-      clearMember();
-    }, 700);
-  }
+  const txList=getTx(); txList.push(tx); saveTx(txList);
+  showReceipt(tx);
+  cart=[]; renderCart(); stopScanner();
+  showToast('ชำระเงินเรียบร้อย! / 結帳完成！','ok');
 }
 
-function showReceipt(tx,isCredit){
+function showReceipt(tx){
   const d=new Date(tx.date);
   document.getElementById('rcpt-date').textContent=d.toLocaleString('zh-TW');
   document.getElementById('rcpt-id').textContent='# '+tx.id;
-  const memEl=document.getElementById('rcpt-member');
-  if(isCredit&&tx.memberName){
-    memEl.textContent='👤 สมาชิก / 會員：'+tx.memberName+' ('+tx.memberId+')';
-    memEl.style.display='inline-block';
-  }else{memEl.style.display='none';}
   document.getElementById('rcpt-items').innerHTML=tx.items.map(i=>`
     <div class="rcpt-item">
       <div class="rcpt-iname">${i.name}</div>
@@ -871,211 +868,60 @@ function showReceipt(tx,isCredit){
       <div class="rcpt-iprice">NT$ ${i.price*i.qty}</div>
     </div>`).join('');
   document.getElementById('rcpt-total-amt').textContent='NT$ '+tx.total;
-  const ctag=document.getElementById('rcpt-credit-tag');
-  ctag.style.display=isCredit?'block':'none';
-  // 截圖按鈕只在賒帳時顯示
-  document.getElementById('btn-screenshot').style.display=isCredit?'':'none';
-  openM('m-receipt');
+  openModal('m-receipt');
 }
 
-// ═══════════════════════════════
-//  截圖功能
-// ═══════════════════════════════
-async function takeScreenshot(){
-  const el=document.getElementById('rcpt-content');
-  try{
-    const canvas=await html2canvas(el,{
-      backgroundColor:'#0f1420',
-      scale:2,
-      useCORS:true,
-      logging:false
-    });
-    const link=document.createElement('a');
-    link.download='receipt_'+dateStamp()+'.png';
-    link.href=canvas.toDataURL('image/png');
-    link.click();
-    showToast('收據截圖已儲存','ok');
-  }catch(e){
-    // html2canvas 失敗時，用 canvas 手繪簡單版
-    fallbackScreenshot();
-  }
-}
-function fallbackScreenshot(){
-  const tx=getTx().slice(-1)[0];if(!tx)return;
-  const canvas=document.createElement('canvas');
-  canvas.width=680;canvas.height=Math.max(400,tx.items.length*44+260);
-  const ctx=canvas.getContext('2d');
-  ctx.fillStyle='#0f1420';ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle='#00d4ff';ctx.font='bold 22px monospace';ctx.textAlign='center';
-  ctx.fillText('POS SYSTEM',canvas.width/2,50);
-  ctx.fillStyle='#5a6680';ctx.font='14px monospace';
-  ctx.fillText(new Date(tx.date).toLocaleString('zh-TW'),canvas.width/2,78);
-  ctx.fillText('# '+tx.id,canvas.width/2,98);
-  if(tx.memberName){ctx.fillStyle='#00d4ff';ctx.fillText('👤 '+tx.memberName,canvas.width/2,120);}
-  ctx.fillStyle='#2e3a56';ctx.fillRect(40,130,canvas.width-80,1);
-  ctx.textAlign='left';let y=160;
-  tx.items.forEach(item=>{
-    ctx.fillStyle='#dde4f0';ctx.font='15px "Noto Sans TC",sans-serif';
-    ctx.fillText(item.name,50,y);
-    ctx.fillStyle='#5a6680';ctx.font='13px monospace';
-    ctx.fillText('x'+item.qty,ctx.measureText(item.name).width+70,y);
-    ctx.textAlign='right';ctx.fillStyle='#f5c518';ctx.font='bold 15px monospace';
-    ctx.fillText('NT$ '+(item.price*item.qty),canvas.width-50,y);
-    ctx.textAlign='left';y+=40;
-  });
-  ctx.fillStyle='#2e3a56';ctx.fillRect(40,y,canvas.width-80,1);y+=20;
-  if(tx.isCredit){ctx.fillStyle='#ff9800';ctx.font='13px "Noto Sans TC",sans-serif';ctx.textAlign='center';ctx.fillText('⚠ 賒帳交易（含 10% 加收）',canvas.width/2,y);y+=30;}
-  ctx.fillStyle='#5a6680';ctx.font='13px monospace';ctx.textAlign='left';ctx.fillText('合計',50,y+10);
-  ctx.fillStyle='#f5c518';ctx.font='bold 26px monospace';ctx.textAlign='right';
-  ctx.fillText('NT$ '+tx.total,canvas.width-50,y+12);
-  const link=document.createElement('a');
-  link.download='receipt_'+dateStamp()+'.png';
-  link.href=canvas.toDataURL('image/png');link.click();
-  showToast('收據截圖已儲存','ok');
-}
-
-// ═══════════════════════════════
-//  會員管理
-// ═══════════════════════════════
-function genMemberId(){
-  const members=getMembers();
-  let n=members.length+1;
-  while(members.find(m=>m.id==='M'+String(n).padStart(4,'0')))n++;
-  return 'M'+String(n).padStart(4,'0');
-}
-function renderMemGrid(){
-  const members=getMembers();
-  document.getElementById('mem-count-lbl').textContent='共 '+members.length+' 位會員';
-  const grid=document.getElementById('mem-grid');
-  if(!members.length){
-    grid.innerHTML=`<div class="empty-st" style="grid-column:1/-1"><div class="ei">👥</div><div class="zh">尚無會員資料</div></div>`;
-    return;
-  }
-  grid.innerHTML=members.map(m=>`
-    <div class="mem-card">
-      <div class="mem-card-id">${m.id}</div>
-      <div class="mem-card-name">${m.name}</div>
-      <div class="mem-card-acts">
-        <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;font-family:var(--zh)" onclick="openEditMember('${m.id}')">✏ 編輯</button>
-        <button class="btn btn-danger" style="font-size:12px;padding:6px 10px;font-family:var(--zh)" onclick="delMember('${m.id}')">🗑 刪除</button>
-      </div>
-    </div>`).join('');
-}
-function openAddMember(){
-  document.getElementById('am-name').value='';
-  openM('m-addmem');
-}
-function saveAddMember(){
-  const name=document.getElementById('am-name').value.trim();
-  if(!name){showToast('請輸入會員名稱','err');return;}
-  const members=getMembers();
-  members.push({id:genMemberId(),name});
-  saveMembers(members);
-  closeM('m-addmem');
-  renderMemGrid();
-  populateMemberDropdown();
-  showToast('已新增會員：'+name,'ok');
-}
-function openEditMember(id){
-  const m=getMembers().find(x=>x.id===id);if(!m)return;
-  editingMemId=id;
-  document.getElementById('em-id-lbl').textContent='會員編號：'+id;
-  document.getElementById('em-name').value=m.name;
-  openM('m-editmem');
-}
-function saveEditMember(){
-  const name=document.getElementById('em-name').value.trim();
-  if(!name){showToast('請輸入會員名稱','err');return;}
-  const members=getMembers();
-  const m=members.find(x=>x.id===editingMemId);if(!m)return;
-  m.name=name;saveMembers(members);
-  closeM('m-editmem');renderMemGrid();populateMemberDropdown();
-  showToast('已更新：'+name,'ok');editingMemId=null;
-}
-function delMember(id){
-  const m=getMembers().find(x=>x.id===id);
-  if(!confirm('確定刪除會員「'+m.name+'」（'+id+'）？\n此操作無法復原。'))return;
-  const members=getMembers().filter(x=>x.id!==id);
-  saveMembers(members);renderMemGrid();populateMemberDropdown();
-  if(selectedMember&&selectedMember.id===id)clearMember();
-  showToast('已刪除會員：'+m.name,'ok');
-}
-
-function exportMembers(){
-  const members=getMembers();
-  if(!members.length){showToast('ไม่มีข้อมูลสมาชิก / 無會員資料','err');return;}
-  const rows=[['รหัสสมาชิก/會員編號','ชื่อ/姓名']];
-  members.forEach(m=>rows.push([m.id,m.name]));
-  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
-  downloadFile('\uFEFF'+csv,'members_'+dateStamp()+'.csv','text/csv;charset=utf-8');
-  showToast('ส่งออกข้อมูลสมาชิกแล้ว / 已匯出會員資料','ok');
-}
-function importMembers(e){
-  const file=e.target.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    try{
-      const text=ev.target.result.replace(/^\uFEFF/,'');
-      const lines=text.split(/\r?\n/).filter(l=>l.trim());
-      if(lines.length<2)throw 0;
-      const members=getMembers();
-      const existIds=new Set(members.map(m=>m.id));
-      let added=0;
-      lines.slice(1).forEach(line=>{
-        const cols=parseCsvRow(line);
-        if(cols.length>=2){
-          const id=cols[0].trim(),name=cols[1].trim();
-          if(id&&name&&!existIds.has(id)){members.push({id,name});existIds.add(id);added++;}
-        }
-      });
-      saveMembers(members);renderMemGrid();populateMemberDropdown();
-      showToast('นำเข้า '+added+' รายการ / 已匯入 '+added+' 位會員','ok');
-    }catch{showToast('ไฟล์ไม่ถูกต้อง / 檔案格式錯誤','err');}
-    e.target.value='';
-  };reader.readAsText(file,'UTF-8');
-}
+// ═══ 商品管理 ═══
 function renderProdGrid(){
-  const prods=getProds();const keys=Object.keys(prods);
+  const prods=getProds(); const keys=Object.keys(prods);
   document.getElementById('prod-count-lbl').textContent='共 '+keys.length+' 種商品';
   const grid=document.getElementById('prod-grid');
-  if(!keys.length){grid.innerHTML=`<div class="empty-st" style="grid-column:1/-1"><div class="ei">📦</div><div class="zh">尚無商品資料</div></div>`;return;}
+  if(!keys.length){
+    grid.innerHTML=`<div class="empty-st" style="grid-column:1/-1"><div class="ei">📦</div><div class="zh">尚無商品資料</div></div>`;
+    return;
+  }
   grid.innerHTML=keys.map(bc=>{const p=prods[bc];return`
     <div class="prod-card">
       <div class="prod-bc">${bc}</div>
       <div class="prod-name">${p.name}</div>
       <div class="prod-price">NT$ ${p.price}</div>
       <div class="prod-acts">
-        <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;font-family:var(--zh)" onclick="openEditProduct('${bc}')">✏ 編輯</button>
-        <button class="btn btn-danger" style="font-size:12px;padding:6px 10px;font-family:var(--zh)" onclick="delProduct('${bc}')">🗑 刪除</button>
+        <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;font-family:var(--zh)" onclick="openEditProd('${bc}')">✏ 編輯</button>
+        <button class="btn btn-danger" style="font-size:12px;padding:6px 10px;font-family:var(--zh)" onclick="delProduct('${bc}')">🗑</button>
       </div>
     </div>`;}).join('');
 }
-function openAddProduct(){['ap-bc','ap-name','ap-price'].forEach(id=>document.getElementById(id).value='');openM('m-addprod');}
+
 function saveAddProduct(){
   const bc=document.getElementById('ap-bc').value.trim();
   const name=document.getElementById('ap-name').value.trim();
   const price=parseFloat(document.getElementById('ap-price').value);
-  if(!bc){showToast('請輸入條碼','err');return;}
+  if(!isEAN13(bc)){showToast('條碼格式不正確，需為有效的 EAN-13（13位數）','err');return;}
   if(!name){showToast('請輸入品項名稱','err');return;}
   if(isNaN(price)||price<0){showToast('請輸入正確價格','err');return;}
-  const prods=getProds();prods[bc]={name,price};saveProds(prods);
-  closeM('m-addprod');renderProdGrid();showToast('已新增：'+name,'ok');
+  const prods=getProds(); prods[bc]={name,price}; saveProds(prods);
+  closeModal('m-addprod'); renderProdGrid();
+  showToast('已新增：'+name,'ok');
 }
-function openEditProduct(bc){
-  const p=getProds()[bc];if(!p)return;editingBC=bc;
+function openEditProd(bc){
+  const p=getProds()[bc]; if(!p)return; editingBC=bc;
   document.getElementById('ep-bc').textContent='條碼：'+bc;
-  document.getElementById('ep-name').value=p.name;document.getElementById('ep-price').value=p.price;
-  openM('m-editprod');
+  document.getElementById('ep-name').value=p.name;
+  document.getElementById('ep-price').value=p.price;
+  openModal('m-editprod');
 }
 function saveEditProduct(){
-  const name=document.getElementById('ep-name').value.trim();const price=parseFloat(document.getElementById('ep-price').value);
+  const name=document.getElementById('ep-name').value.trim();
+  const price=parseFloat(document.getElementById('ep-price').value);
   if(!name||isNaN(price)){showToast('請填寫完整資料','err');return;}
-  const prods=getProds();prods[editingBC]={name,price};saveProds(prods);
-  closeM('m-editprod');renderProdGrid();showToast('已更新：'+name,'ok');editingBC=null;
+  const prods=getProds(); prods[editingBC]={name,price}; saveProds(prods);
+  closeModal('m-editprod'); renderProdGrid();
+  showToast('已更新：'+name,'ok'); editingBC=null;
 }
 function delProduct(bc){
   if(!confirm('確定刪除此商品？'))return;
-  const prods=getProds();delete prods[bc];saveProds(prods);renderProdGrid();showToast('已刪除商品','ok');
+  const prods=getProds(); delete prods[bc]; saveProds(prods);
+  renderProdGrid(); showToast('已刪除商品','ok');
 }
 function exportProducts(){
   const prods=getProds();
@@ -1083,17 +929,17 @@ function exportProducts(){
   Object.entries(prods).forEach(([bc,p])=>rows.push([bc,p.name,p.price]));
   const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
   downloadFile('\uFEFF'+csv,'products_'+dateStamp()+'.csv','text/csv;charset=utf-8');
-  showToast('ส่งออกข้อมูลสินค้าแล้ว / 已匯出商品資料','ok');
+  showToast('已匯出商品條碼 CSV','ok');
 }
 function importProducts(e){
-  const file=e.target.files[0];if(!file)return;
+  const file=e.target.files[0]; if(!file)return;
   const reader=new FileReader();
   reader.onload=ev=>{
     try{
       const text=ev.target.result.replace(/^\uFEFF/,'');
       const lines=text.split(/\r?\n/).filter(l=>l.trim());
       if(lines.length<2)throw 0;
-      const prods=getProds();let count=0;
+      const prods=getProds(); let count=0;
       lines.slice(1).forEach(line=>{
         const cols=parseCsvRow(line);
         if(cols.length>=3){
@@ -1101,26 +947,18 @@ function importProducts(e){
           if(bc&&name&&!isNaN(price)){prods[bc]={name,price};count++;}
         }
       });
-      saveProds(prods);renderProdGrid();
-      showToast('นำเข้า '+count+' รายการ / 已匯入 '+count+' 筆商品','ok');
-    }catch{showToast('ไฟล์ไม่ถูกต้อง / 檔案格式錯誤','err');}
+      saveProds(prods); renderProdGrid();
+      showToast('已匯入 '+count+' 筆商品資料','ok');
+    }catch{showToast('檔案格式錯誤','err');}
     e.target.value='';
-  };reader.readAsText(file,'UTF-8');
+  };
+  reader.readAsText(file,'UTF-8');
 }
 
-// ═══════════════════════════════
-//  報表
-// ═══════════════════════════════
-let reportMode='daily';
-function switchReport(mode,btn){
-  reportMode=mode;
-  document.querySelectorAll('.r-tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
-  renderReport();
-}
+// ═══ 報表 ═══
 function renderStats(){
-  const txList=getTx();const now=new Date();
-  const today=fd(now),month=fm(now);
+  const txList=getTx(); const now=new Date();
+  const today=fd(now), month=fm(now);
   let tT=0,tC=0,mT=0,mC=0;
   txList.forEach(tx=>{
     const d=new Date(tx.date);
@@ -1132,44 +970,51 @@ function renderStats(){
   document.getElementById('stat-month').textContent='NT$ '+mT;
   document.getElementById('stat-month-count').textContent=mC;
 }
-function renderReport(){
-  const txList=getTx();
-  const table=document.getElementById('report-table');
-  const grouped={};
+
+function renderMonthly(){
+  const txList=getTx(); const grouped={};
   txList.forEach(tx=>{
-    const d=new Date(tx.date);
-    const key=reportMode==='daily'?fd(d):fm(d);
-    if(!grouped[key])grouped[key]={total:0,count:0,items:0};
-    grouped[key].total+=tx.total;grouped[key].count++;
-    grouped[key].items+=tx.items.reduce((s,i)=>s+i.qty,0);
+    const k=fm(new Date(tx.date));
+    if(!grouped[k])grouped[k]={total:0,count:0};
+    grouped[k].total+=tx.total; grouped[k].count++;
   });
   const keys=Object.keys(grouped).sort().reverse();
-  if(!keys.length){table.innerHTML=`<div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>`;return;}
-  const colLabel=reportMode==='daily'?'日期':'月份';
-  const cols='155px 1fr 130px 80px 32px';
-  table.innerHTML=`
-    <div style="display:grid;grid-template-columns:${cols};padding:9px 14px;border-bottom:1px solid var(--border);font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:var(--zh)">
-      <div>${colLabel}</div><div>商品件數</div><div>銷售金額</div><div>筆數</div><div></div>
-    </div>`+keys.map(k=>`
-    <div class="r-table-row" style="grid-template-columns:${cols}" onclick="showDrilldown('${k}','${reportMode}')">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">${k}</div>
-      <div style="font-size:12px;color:var(--muted);font-family:var(--zh)">${grouped[k].items} 件</div>
-      <div style="font-family:var(--mono);font-weight:700;color:var(--gold)">NT$ ${grouped[k].total}</div>
-      <div style="font-family:var(--mono);font-size:12px;color:var(--muted)">${grouped[k].count} 筆</div>
-      <div class="arrow">›</div>
+  const el=document.getElementById('monthly-list');
+  if(!keys.length){el.innerHTML=`<div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>`;return;}
+  el.innerHTML=keys.map(k=>`
+    <div class="r-row" onclick="showDrilldown('${k}','monthly')">
+      <div class="rdate">${k}</div>
+      <div class="ramt">NT$ ${grouped[k].total}</div>
+      <div class="rcnt">${grouped[k].count} 筆</div>
+      <div class="rarrow">›</div>
     </div>`).join('');
 }
 
-// ═══════════════════════════════
-//  報表明細 Drill-down
-// ═══════════════════════════════
-function showDrilldown(key, mode){
+function renderDaily(){
+  const txList=getTx(); const grouped={};
+  txList.forEach(tx=>{
+    const k=fd(new Date(tx.date));
+    if(!grouped[k])grouped[k]={total:0,count:0};
+    grouped[k].total+=tx.total; grouped[k].count++;
+  });
+  const keys=Object.keys(grouped).sort().reverse();
+  const el=document.getElementById('daily-list');
+  if(!keys.length){el.innerHTML=`<div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>`;return;}
+  el.innerHTML=keys.map(k=>`
+    <div class="r-row" onclick="showDrilldown('${k}','daily')">
+      <div class="rdate">${k}</div>
+      <div class="ramt">NT$ ${grouped[k].total}</div>
+      <div class="rcnt">${grouped[k].count} 筆</div>
+      <div class="rarrow">›</div>
+    </div>`).join('');
+}
+
+function showDrilldown(key,mode){
   const txList=getTx();
   const filtered=txList.filter(tx=>{
     const d=new Date(tx.date);
     return (mode==='daily'?fd(d):fm(d))===key;
   });
-  // 彙整品項
   const itemMap={};
   filtered.forEach(tx=>{
     tx.items.forEach(item=>{
@@ -1179,128 +1024,141 @@ function showDrilldown(key, mode){
     });
   });
   const items=Object.entries(itemMap).sort((a,b)=>b[1].total-a[1].total);
-  const grandTotal=items.reduce((s,[,v])=>s+v.total,0);
-  // 標題
+  const grand=items.reduce((s,[,v])=>s+v.total,0);
   document.getElementById('drill-title').textContent=(mode==='daily'?'每日':'每月')+'銷售明細';
   document.getElementById('drill-sub').textContent=key+'　共 '+filtered.length+' 筆交易';
-  // 填表
   document.getElementById('drill-body').innerHTML=items.map(([name,v])=>`
     <tr>
       <td>${name}</td>
       <td class="num">${v.qty} 件</td>
       <td class="num" style="color:var(--gold);font-weight:700">NT$ ${v.total}</td>
     </tr>`).join('');
-  document.getElementById('drill-total-amt').textContent='NT$ '+grandTotal;
-  openM('m-drill');
+  document.getElementById('drill-total-amt').textContent='NT$ '+grand;
+  openModal('m-drill');
 }
 
-// ═══════════════════════════════
-//  CSV 匯出
-// ═══════════════════════════════
 function exportCSV(){
   const txList=getTx();
   if(!txList.length){showToast('無資料可匯出','err');return;}
-  const rows=[['交易編號','日期時間','品項摘要','合計','是否賒帳','會員編號','會員名稱']];
+  const rows=[['交易編號','日期時間','品項摘要','合計']];
   txList.forEach(tx=>{
     const items=tx.items.map(i=>`${i.name}x${i.qty}`).join('; ');
-    rows.push([tx.id,tx.date,items,tx.total,tx.isCredit?'是':'否',tx.memberId||'',tx.memberName||'']);
+    rows.push([tx.id,tx.date,items,tx.total]);
   });
   const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
   downloadFile('\uFEFF'+csv,'transactions_'+dateStamp()+'.csv','text/csv;charset=utf-8');
-  showToast('已匯出 CSV 報表（可用 Excel 開啟）','ok');
+  showToast('已匯出 CSV 報表','ok');
 }
 function importReport(e){
-  const file=e.target.files[0];if(!file)return;
+  const file=e.target.files[0]; if(!file)return;
   const reader=new FileReader();
   reader.onload=ev=>{
     try{
-      const data=JSON.parse(ev.target.result);if(!Array.isArray(data))throw 0;
-      const existing=getTx();const ids=new Set(existing.map(t=>t.id));let added=0;
+      const data=JSON.parse(ev.target.result);
+      if(!Array.isArray(data))throw 0;
+      const existing=getTx(); const ids=new Set(existing.map(t=>t.id));
+      let added=0;
       data.forEach(tx=>{if(!ids.has(tx.id)){existing.push(tx);added++;}});
-      existing.sort((a,b)=>new Date(a.date)-new Date(b.date));saveTx(existing);
-      renderStats();renderReport();showToast('已匯入 '+added+' 筆交易紀錄','ok');
+      existing.sort((a,b)=>new Date(a.date)-new Date(b.date));
+      saveTx(existing); renderStats(); renderMonthly(); renderDaily();
+      showToast('已匯入 '+added+' 筆交易紀錄','ok');
     }catch{showToast('檔案格式錯誤','err');}
     e.target.value='';
-  };reader.readAsText(file);
+  };
+  reader.readAsText(file);
 }
 function clearAllData(){
   if(!confirm('確定清除所有銷售資料？此操作無法復原。'))return;
   localStorage.removeItem('pos_transactions');
-  renderStats();renderReport();showToast('已清除所有資料','ok');
+  renderStats(); renderMonthly(); renderDaily();
+  showToast('已清除所有資料','ok');
 }
 
-// ═══════════════════════════════
-//  頁面切換
-// ═══════════════════════════════
+// ═══ 頁面切換 ═══
 function showPage(id,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(btn)btn.classList.add('active');
-  if(id==='report'){renderStats();renderReport();}
+  if(id==='report'){renderStats();renderMonthly();renderDaily();}
   if(id==='products')renderProdGrid();
-  if(id==='members')renderMemGrid();
 }
 
-// ═══════════════════════════════
-//  Modal 輔助
-// ═══════════════════════════════
-function openM(id){document.getElementById(id).classList.add('open');}
-function closeM(id){document.getElementById(id).classList.remove('open');}
+// ═══ Modal 輔助 ═══
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.overlay').forEach(ol=>{
   ol.addEventListener('click',e=>{if(e.target===ol)ol.classList.remove('open');});
 });
 
-// ═══════════════════════════════
-//  工具函式
-// ═══════════════════════════════
-function setSt(msg,type=''){const el=document.getElementById('scan-st');el.textContent=msg;el.className='scan-st'+(type?' '+type:'');}
-function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='show '+type;clearTimeout(t._t);t._t=setTimeout(()=>t.className='',3000);}
-function playBeep(){try{const ctx=new(window.AudioContext||window.webkitAudioContext)();const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=960;o.type='sine';g.gain.setValueAtTime(.2,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.1);o.start();o.stop(ctx.currentTime+.1);}catch(e){}}
+// ═══ 工具函式 ═══
+function setSt(msg,type=''){
+  const el=document.getElementById('scan-st');
+  el.textContent=msg; el.className='scan-st'+(type?' '+type:'');
+}
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show '+type;
+  clearTimeout(t._t); t._t=setTimeout(()=>t.className='',3000);
+}
+function playBeep(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value=960; o.type='sine';
+    g.gain.setValueAtTime(.18,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.1);
+    o.start(); o.stop(ctx.currentTime+.1);
+  }catch(e){}
+}
 function fd(d){return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;}
 function fm(d){return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;}
 function dateStamp(){const n=new Date();return`${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}`;}
+function downloadFile(content,filename,type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type}));
+  a.download=filename; a.click(); URL.revokeObjectURL(a.href);
+}
 function parseCsvRow(row){
-  const result=[];let cur='',inQ=false;
+  const result=[]; let cur='',inQ=false;
   for(let i=0;i<row.length;i++){
     const c=row[i];
     if(c==='"'){if(inQ&&row[i+1]==='"'){cur+='"';i++;}else{inQ=!inQ;}}
     else if(c===','&&!inQ){result.push(cur);cur='';}
     else cur+=c;
   }
-  result.push(cur);return result;
+  result.push(cur); return result;
 }
-function downloadFile(content,filename,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=filename;a.click();URL.revokeObjectURL(a.href);}
 
-// ═══════════════════════════════
-//  示範資料
-// ═══════════════════════════════
+// ═══ 示範資料 ═══
 function seedDemo(){
   if(getTx().length)return;
-  const prods=getProds();const pkeys=Object.keys(prods);const txs=[];const now=new Date();
+  const prods=getProds(); const pkeys=Object.keys(prods);
+  const txs=[]; const now=new Date();
   for(let i=30;i>=0;i--){
-    const d=new Date(now);d.setDate(d.getDate()-i);
+    const d=new Date(now); d.setDate(d.getDate()-i);
     for(let j=0;j<Math.floor(Math.random()*6)+1;j++){
       d.setHours(9+Math.floor(Math.random()*12),Math.floor(Math.random()*60));
       const items=[];
       for(let k=0;k<Math.floor(Math.random()*4)+1;k++){
-        const bc=pkeys[Math.floor(Math.random()*pkeys.length)];const p=prods[bc];
+        const bc=pkeys[Math.floor(Math.random()*pkeys.length)];
+        const p=prods[bc];
         const ex=items.find(x=>x.barcode===bc);
-        if(ex)ex.qty++;else items.push({barcode:bc,name:p.name,price:p.price,qty:1});
+        if(ex)ex.qty++; else items.push({barcode:bc,name:p.name,price:p.price,qty:1});
       }
       const sub=items.reduce((s,i)=>s+i.price*i.qty,0);
-      txs.push({id:'TX'+d.getTime().toString(36).toUpperCase(),date:d.toISOString(),items,subtotal:sub,total:sub,isCredit:false,memberId:null,memberName:null});
+      txs.push({
+        id:'TX'+d.getTime().toString(36).toUpperCase(),
+        date:d.toISOString(), items, subtotal:sub, total:sub
+      });
     }
   }
   saveTx(txs);
 }
 
-// ═══════════════════════════════
-//  初始化
-// ═══════════════════════════════
 seedDemo();
 renderCart();
-populateMemberDropdown();
 </script>
 </body>
 </html>
