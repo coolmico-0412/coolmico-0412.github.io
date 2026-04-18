@@ -90,14 +90,10 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 
 /* ── CHECKOUT PANEL ── */
 .co-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh);overflow:hidden;}
-.totals{padding:15px 18px;display:flex;flex-direction:column;gap:9px;}
-.tot-row{display:flex;justify-content:space-between;align-items:center;}
-.tot-lbl{color:var(--muted);font-size:13px;}
-.tot-val{font-family:var(--mono);font-weight:700;color:var(--text2);font-size:13px;}
-.grand{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:linear-gradient(135deg,#1e3a8a,#2563eb);}
+.grand{display:flex;justify-content:space-between;align-items:center;padding:18px;background:linear-gradient(135deg,#1e3a8a,#2563eb);}
 .glbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);}
 .glbl .zh{font-family:var(--zh);font-size:10px;letter-spacing:0;text-transform:none;display:block;margin-top:1px;font-weight:400;}
-.gamt{font-family:var(--mono);font-size:24px;font-weight:700;color:#fff;}
+.gamt{font-family:var(--mono);font-size:26px;font-weight:700;color:#fff;}
 .co-actions{padding:13px 18px;display:flex;flex-direction:column;gap:8px;}
 .btn-checkout{width:100%;padding:14px;background:var(--gold);color:#fff;font-weight:700;font-size:15px;border:none;border-radius:10px;cursor:pointer;font-family:var(--th);transition:all .2s;box-shadow:0 2px 8px rgba(217,119,6,.2);}
 .btn-checkout:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 6px 16px rgba(217,119,6,.32);}
@@ -109,9 +105,19 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .sec-lbl .zh{font-family:var(--zh);font-weight:400;font-size:11px;letter-spacing:0;text-transform:none;}
 .count-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:var(--mono);}
 .tbl{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--sh);overflow:hidden;}
-.t-head{display:grid;grid-template-columns:30px 1fr 120px 80px 110px 34px;padding:10px 16px;border-bottom:2px solid var(--border);font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;background:var(--surface2);}
+.t-head{display:grid;grid-template-columns:30px 1fr 90px 120px 34px;padding:10px 16px;border-bottom:2px solid var(--border);font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;background:var(--surface2);}
 .t-head .zh{font-family:var(--zh);font-weight:600;letter-spacing:0;text-transform:none;font-size:10px;}
-.t-row{display:grid;grid-template-columns:30px 1fr 120px 80px 110px 34px;padding:13px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background .12s;animation:rowIn .18s ease;}
+.t-row{display:grid;grid-template-columns:30px 1fr 90px 120px 34px;padding:13px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background .12s;animation:rowIn .18s ease;}
+/* ── NOBC LIST ── */
+.nobc-list-item{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);transition:background .12s;}
+.nobc-list-item:last-child{border-bottom:none;}
+.nobc-list-item:hover{background:var(--surface2);}
+.nobc-list-name{flex:1;font-weight:500;font-family:var(--zh);color:var(--text);}
+.nobc-list-price{font-family:var(--mono);font-weight:700;color:var(--gold);font-size:14px;flex-shrink:0;}
+.nobc-list-add{padding:5px 12px;font-size:12px;border-radius:6px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;font-family:var(--zh);font-weight:600;transition:all .15s;flex-shrink:0;}
+.nobc-list-add:hover{background:var(--accent);color:#fff;}
+.nobc-temp-bar{display:flex;align-items:center;padding:12px 16px;border-bottom:2px solid var(--border);background:var(--surface2);gap:10px;}
+.nobc-temp-bar .tbl{font-size:12px;color:var(--muted);font-family:var(--zh);flex:1;}
 .t-row:last-child{border-bottom:none;}
 .t-row:hover{background:var(--surface2);}
 @keyframes rowIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:translateX(0)}}
@@ -242,8 +248,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 @media(max-width:900px){
   .pos-grid{grid-template-columns:1fr;}
   .report-cols{grid-template-columns:1fr;}
-  .t-head,.t-row{grid-template-columns:26px 1fr 80px 80px 32px;}
-  .t-head>:nth-child(3),.t-row>:nth-child(3){display:none;}
+  .t-head,.t-row{grid-template-columns:26px 1fr 80px 34px;}
 }
 </style>
 </head>
@@ -289,7 +294,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
             <button class="btn btn-ghost" id="btn-stop" onclick="stopScanner()" disabled>■ หยุด / 停止</button>
           </div>
           <div class="scan-st" id="scan-st">รอสแกน...</div>
-          <button class="btn-nobc" onclick="openModal('m-nobc')">+ สินค้าไม่มีบาร์โค้ด / 無條碼商品</button>
+          <button class="btn-nobc" onclick="openNobcList()">+ สินค้าไม่มีบาร์โค้ด / 無條碼商品</button>
         </div>
       </div>
 
@@ -300,23 +305,12 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
           <span class="cht">รายการชำระเงิน</span>
           <span class="chz">結帳明細</span>
         </div>
-        <div class="totals">
-          <div class="tot-row">
-            <span class="tot-lbl">จำนวนชิ้น / 商品數量</span>
-            <span class="tot-val" id="total-qty">0 ชิ้น</span>
-          </div>
-          <div class="tot-row">
-            <span class="tot-lbl">ยอดรวม / 合計</span>
-            <span class="tot-val" id="subtotal">NT$ 0</span>
-          </div>
-        </div>
         <div class="grand">
           <div class="glbl">ยอดรวมทั้งหมด<span class="zh">總計</span></div>
           <div class="gamt" id="grand-total">NT$ 0</div>
         </div>
         <div class="co-actions">
           <button class="btn-checkout" id="btn-checkout" onclick="openReview()" disabled>ชำระเงิน / 結帳</button>
-          <button class="btn btn-danger" style="width:100%" onclick="clearCart()">ล้างตะกร้า / 清除購物車</button>
         </div>
       </div>
 
@@ -327,12 +321,12 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
       <div class="sec-lbl">
         ตะกร้าสินค้า <span class="zh">購物車</span>
         <span class="count-badge" id="item-count">0</span>
+        <button class="btn btn-danger" style="margin-left:auto;font-size:12px;padding:5px 11px" onclick="clearCart()">ล้างตะกร้า / 清除購物車</button>
       </div>
       <div class="tbl">
         <div class="t-head">
           <div>#</div>
           <div>สินค้า <span class="zh">品項</span></div>
-          <div>บาร์โค้ด <span class="zh">條碼</span></div>
           <div>ราคา <span class="zh">單價</span></div>
           <div>จำนวน <span class="zh">數量</span></div>
           <div></div>
@@ -358,11 +352,21 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
       <div class="page-hd-sub" id="prod-count-lbl"></div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-accent" onclick="openModal('m-addprod')">+ เพิ่มสินค้า / 新增商品</button>
+      <button class="btn btn-accent" onclick="openModal('m-addprod')">+ เพิ่มสินค้า / 新增條碼商品</button>
+      <button class="btn btn-ghost" style="border-color:var(--purple);color:var(--purple)" onclick="openModal('m-addnobc')">+ สินค้าไม่มีบาร์โค้ด / 新增無條碼商品</button>
       <button class="btn btn-green" onclick="exportProducts()">⬇ CSV / 匯出條碼</button>
       <button class="btn btn-ghost" onclick="document.getElementById('imp-prod').click()">⬆ CSV / 匯入條碼</button>
       <input type="file" id="imp-prod" accept=".csv" style="display:none" onchange="importProducts(event)">
     </div>
+  </div>
+  <!-- 無條碼商品區 -->
+  <div style="margin-bottom:10px;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--purple);font-family:var(--zh);display:flex;align-items:center;gap:8px">
+    無條碼商品 <span id="nobc-count-lbl" style="font-weight:400;font-size:11px;letter-spacing:0;text-transform:none;color:var(--muted)"></span>
+  </div>
+  <div class="prod-grid" id="nobc-prod-grid" style="margin-bottom:20px"></div>
+  <!-- 一般條碼商品區 -->
+  <div style="margin-bottom:10px;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent);font-family:var(--zh);display:flex;align-items:center;gap:8px">
+    條碼商品 <span id="bc-count-lbl" style="font-weight:400;font-size:11px;letter-spacing:0;text-transform:none;color:var(--muted)"></span>
   </div>
   <div class="prod-grid" id="prod-grid"></div>
 </div>
@@ -483,16 +487,45 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   </div>
 </div>
 
-<!-- ═══ Modal: 無條碼商品 ═══ -->
-<div class="overlay" id="m-nobc">
+<!-- ═══ Modal: 無條碼商品清單 ═══ -->
+<div class="overlay" id="m-nobc-list">
+  <div class="mbox" style="width:500px;padding:0;overflow:hidden">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div class="m-title" style="margin:0">สินค้าไม่มีบาร์โค้ด<span class="zh">無條碼商品</span></div>
+      </div>
+      <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;border-style:dashed;color:var(--purple);border-color:var(--purple)" onclick="openTempNobc()">⚡ 暫時增加商品</button>
+    </div>
+    <div id="nobc-list-body" style="max-height:400px;overflow-y:auto"></div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('m-nobc-list')">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Modal: 暫時增加商品（只要金額+數量）═══ -->
+<div class="overlay" id="m-temp-nobc">
   <div class="mbox">
-    <div class="m-title">+ สินค้าไม่มีบาร์โค้ด<span class="zh">無條碼商品</span></div>
-    <div class="fg"><label>品項名稱 *</label><input class="fi" id="nobc-name" type="text" placeholder="例如：雜費、服務費、特定商品..."></div>
-    <div class="fg"><label>單價（NT$）*</label><input class="fi" id="nobc-price" type="number" min="0" step="1" placeholder="0"></div>
-    <div class="fg"><label>數量</label><input class="fi" id="nobc-qty" type="number" min="1" step="1" value="1"></div>
+    <div class="m-title">⚡ เพิ่มสินค้าชั่วคราว<span class="zh">暫時增加商品</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;font-family:var(--zh)">不儲存商品資料，直接加入購物車</div>
+    <div class="fg"><label>金額（NT$）*</label><input class="fi" id="temp-price" type="number" min="0" step="1" placeholder="0"></div>
+    <div class="fg"><label>數量</label><input class="fi" id="temp-qty" type="number" min="1" step="1" value="1"></div>
     <div class="m-acts">
-      <button class="btn btn-accent" style="flex:1" onclick="saveNobcItem()">เพิ่มในตะกร้า / 加入購物車</button>
-      <button class="btn btn-ghost" onclick="closeModal('m-nobc')">取消</button>
+      <button class="btn btn-accent" style="flex:1" onclick="saveTempNobc()">เพิ่มในตะกร้า / 加入購物車</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-temp-nobc')">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Modal: 商品管理新增無條碼商品 ═══ -->
+<div class="overlay" id="m-addnobc">
+  <div class="mbox">
+    <div class="m-title">+ สินค้าไม่มีบาร์โค้ด<span class="zh">新增無條碼商品</span></div>
+    <div class="fg"><label>品項名稱 *</label><input class="fi" id="addnobc-name" type="text" placeholder="例如：服務費、雜費、特製商品..."></div>
+    <div class="fg"><label>單價（NT$）*</label><input class="fi" id="addnobc-price" type="number" min="0" step="1" placeholder="0"></div>
+    <div class="m-acts">
+      <button class="btn btn-accent" style="flex:1" onclick="savePermNobcProduct()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-addnobc')">取消</button>
     </div>
   </div>
 </div>
@@ -575,6 +608,8 @@ function getProds(){
   return{...DEFAULT_PRODUCTS};
 }
 function saveProds(o){localStorage.setItem('pos_products',JSON.stringify(o));}
+function getNobcProds(){try{return JSON.parse(localStorage.getItem('pos_nobc_products')||'[]');}catch(e){return[];}}
+function saveNobcProds(a){localStorage.setItem('pos_nobc_products',JSON.stringify(a));}
 function getTx(){try{return JSON.parse(localStorage.getItem('pos_transactions')||'[]');}catch(e){return[];}}
 function saveTx(a){localStorage.setItem('pos_transactions',JSON.stringify(a));}
 
@@ -767,8 +802,8 @@ function renderCart(){
   const body=document.getElementById('cart-body');
   if(!cart.length){
     body.innerHTML=`<div class="empty-st"><div class="ei">🛒</div><div>สแกนบาร์โค้ดเพื่อเพิ่มสินค้า</div><div class="zh">尚無商品，請掃描條碼或新增無條碼商品</div></div>`;
-    updateTotals(0,0);
     document.getElementById('item-count').textContent='0';
+    document.getElementById('grand-total').textContent='NT$ 0';
     document.getElementById('btn-checkout').disabled=true;
     return;
   }
@@ -780,9 +815,7 @@ function renderCart(){
       <div class="t-name">
         ${item.name}
         ${item.noBarcode?'<span class="nobc-tag">無條碼</span>':''}
-        <span class="t-bc-sm">${item.noBarcode?'—':item.barcode}</span>
       </div>
-      <div class="t-bc-col">${item.noBarcode?'—':item.barcode}</div>
       <div class="t-price">NT$ ${item.price}</div>
       <div class="qty-ctrl">
         <button class="qty-btn" onclick="changeQty('${item.barcode}',-1)">−</button>
@@ -793,31 +826,83 @@ function renderCart(){
     </div>`).join('');
   document.getElementById('item-count').textContent=totalQty;
   document.getElementById('btn-checkout').disabled=false;
-  updateTotals(sub,totalQty);
-}
-
-function updateTotals(sub,qty){
-  document.getElementById('total-qty').textContent=qty+' ชิ้น / 件';
-  document.getElementById('subtotal').textContent='NT$ '+sub;
   document.getElementById('grand-total').textContent='NT$ '+sub;
 }
 
-// ═══ 無條碼商品 ═══
-function saveNobcItem(){
-  const name=document.getElementById('nobc-name').value.trim();
-  const price=parseFloat(document.getElementById('nobc-price').value);
-  const qty=Math.max(1,parseInt(document.getElementById('nobc-qty').value)||1);
+// ═══ 無條碼商品清單 & 暫時商品 ═══
+function openNobcList(){
+  renderNobcListModal();
+  openModal('m-nobc-list');
+}
+function renderNobcListModal(){
+  const prods=getNobcProds();
+  const body=document.getElementById('nobc-list-body');
+  if(!prods.length){
+    body.innerHTML=`<div class="empty-st" style="padding:32px 20px"><div class="ei" style="font-size:26px">🏷</div><div class="zh">尚無已儲存的無條碼商品</div><div style="font-size:12px;color:var(--muted);margin-top:6px;font-family:var(--zh)">請至商品管理頁新增，或使用上方「暫時增加商品」</div></div>`;
+    return;
+  }
+  body.innerHTML=prods.map((p,i)=>`
+    <div class="nobc-list-item">
+      <div class="nobc-list-name">${p.name}</div>
+      <div class="nobc-list-price">NT$ ${p.price}</div>
+      <button class="nobc-list-add" onclick="addNobcProdToCart(${i})">+ 加入</button>
+    </div>`).join('');
+}
+function addNobcProdToCart(idx){
+  const p=getNobcProds()[idx]; if(!p)return;
+  const bc='NOBC-'+Date.now()+'-'+idx;
+  cart.push({barcode:bc,name:p.name,price:p.price,qty:1,noBarcode:true});
+  renderCart(); playBeep();
+  setSt('✓ เพิ่มแล้ว: '+p.name+' — NT$ '+p.price,'ok');
+  showToast('已加入：'+p.name,'ok');
+  closeModal('m-nobc-list');
+}
+function openTempNobc(){
+  closeModal('m-nobc-list');
+  document.getElementById('temp-price').value='';
+  document.getElementById('temp-qty').value='1';
+  openModal('m-temp-nobc');
+}
+function saveTempNobc(){
+  const price=parseFloat(document.getElementById('temp-price').value);
+  const qty=Math.max(1,parseInt(document.getElementById('temp-qty').value)||1);
+  if(isNaN(price)||price<0){showToast('請輸入正確金額','err');return;}
+  const bc='NOBC-'+Date.now();
+  const name='特殊商品 NT$'+price;
+  cart.push({barcode:bc,name,price,qty,noBarcode:true});
+  renderCart(); playBeep();
+  closeModal('m-temp-nobc');
+  showToast('已加入暫時商品 NT$ '+price,'ok');
+}
+// 商品管理頁 - 新增無條碼商品（永久儲存）
+function savePermNobcProduct(){
+  const name=document.getElementById('addnobc-name').value.trim();
+  const price=parseFloat(document.getElementById('addnobc-price').value);
   if(!name){showToast('請輸入品項名稱','err');return;}
   if(isNaN(price)||price<0){showToast('請輸入正確價格','err');return;}
-  const bc='NOBC-'+Date.now();
-  cart.push({barcode:bc,name,price,qty,noBarcode:true});
-  renderCart();
-  closeModal('m-nobc');
-  document.getElementById('nobc-name').value='';
-  document.getElementById('nobc-price').value='';
-  document.getElementById('nobc-qty').value='1';
-  showToast('已加入：'+name,'ok');
-  playBeep();
+  const prods=getNobcProds();
+  prods.push({id:'NB'+Date.now(),name,price});
+  saveNobcProds(prods);
+  closeModal('m-addnobc');
+  renderProdGrid();
+  showToast('已新增無條碼商品：'+name,'ok');
+  document.getElementById('addnobc-name').value='';
+  document.getElementById('addnobc-price').value='';
+}
+function editNobcProd(idx){
+  const prods=getNobcProds(); const p=prods[idx]; if(!p)return;
+  const newName=prompt('品項名稱：',p.name);if(newName===null)return;
+  const newPrice=parseFloat(prompt('單價（NT$）：',p.price));
+  if(!newName.trim()||isNaN(newPrice)||newPrice<0){showToast('資料有誤','err');return;}
+  prods[idx]={...p,name:newName.trim(),price:newPrice};
+  saveNobcProds(prods); renderProdGrid();
+  showToast('已更新：'+newName,'ok');
+}
+function delNobcProd(idx){
+  if(!confirm('確定刪除此無條碼商品？'))return;
+  const prods=getNobcProds(); prods.splice(idx,1);
+  saveNobcProds(prods); renderProdGrid();
+  showToast('已刪除無條碼商品','ok');
 }
 
 // ═══ 結帳流程 ═══
@@ -873,23 +958,51 @@ function showReceipt(tx){
 
 // ═══ 商品管理 ═══
 function renderProdGrid(){
+  // 條碼商品
   const prods=getProds(); const keys=Object.keys(prods);
-  document.getElementById('prod-count-lbl').textContent='共 '+keys.length+' 種商品';
+  const bcLbl=document.getElementById('bc-count-lbl');
+  if(bcLbl) bcLbl.textContent='共 '+keys.length+' 種';
+  // 舊的 prod-count-lbl (fallback)
+  const oldLbl=document.getElementById('prod-count-lbl');
+  if(oldLbl) oldLbl.textContent='';
   const grid=document.getElementById('prod-grid');
-  if(!keys.length){
-    grid.innerHTML=`<div class="empty-st" style="grid-column:1/-1"><div class="ei">📦</div><div class="zh">尚無商品資料</div></div>`;
-    return;
+  if(grid){
+    if(!keys.length){
+      grid.innerHTML=`<div class="empty-st" style="grid-column:1/-1"><div class="ei">📦</div><div class="zh">尚無條碼商品</div></div>`;
+    }else{
+      grid.innerHTML=keys.map(bc=>{const p=prods[bc];return`
+        <div class="prod-card">
+          <div class="prod-bc">${bc}</div>
+          <div class="prod-name">${p.name}</div>
+          <div class="prod-price">NT$ ${p.price}</div>
+          <div class="prod-acts">
+            <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;font-family:var(--zh)" onclick="openEditProd('${bc}')">✏ 編輯</button>
+            <button class="btn btn-danger" style="font-size:12px;padding:6px 10px;font-family:var(--zh)" onclick="delProduct('${bc}')">🗑</button>
+          </div>
+        </div>`;}).join('');
+    }
   }
-  grid.innerHTML=keys.map(bc=>{const p=prods[bc];return`
-    <div class="prod-card">
-      <div class="prod-bc">${bc}</div>
-      <div class="prod-name">${p.name}</div>
-      <div class="prod-price">NT$ ${p.price}</div>
-      <div class="prod-acts">
-        <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;font-family:var(--zh)" onclick="openEditProd('${bc}')">✏ 編輯</button>
-        <button class="btn btn-danger" style="font-size:12px;padding:6px 10px;font-family:var(--zh)" onclick="delProduct('${bc}')">🗑</button>
-      </div>
-    </div>`;}).join('');
+  // 無條碼商品
+  const nobcProds=getNobcProds();
+  const nobcLbl=document.getElementById('nobc-count-lbl');
+  if(nobcLbl) nobcLbl.textContent='共 '+nobcProds.length+' 種';
+  const nobcGrid=document.getElementById('nobc-prod-grid');
+  if(nobcGrid){
+    if(!nobcProds.length){
+      nobcGrid.innerHTML=`<div class="empty-st" style="grid-column:1/-1;padding:28px"><div class="ei" style="font-size:24px">🏷</div><div class="zh">尚無無條碼商品，請點擊「新增無條碼商品」</div></div>`;
+    }else{
+      nobcGrid.innerHTML=nobcProds.map((p,i)=>`
+        <div class="prod-card" style="border-color:#e9d5ff">
+          <div class="prod-bc" style="color:var(--purple)">無條碼</div>
+          <div class="prod-name">${p.name}</div>
+          <div class="prod-price">NT$ ${p.price}</div>
+          <div class="prod-acts">
+            <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;font-family:var(--zh);border-color:var(--purple);color:var(--purple)" onclick="editNobcProd(${i})">✏ 編輯</button>
+            <button class="btn btn-danger" style="font-size:12px;padding:6px 10px;font-family:var(--zh)" onclick="delNobcProd(${i})">🗑</button>
+          </div>
+        </div>`).join('');
+    }
+  }
 }
 
 function saveAddProduct(){
