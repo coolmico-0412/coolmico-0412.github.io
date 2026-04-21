@@ -270,11 +270,6 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 
       <!-- Scanner -->
       <div class="card">
-        <div class="card-hd">
-          <div class="dot" id="cam-dot"></div>
-          <span class="cht" id="cam-status">สแกนบาร์โค้ด</span>
-          <span class="chz">條碼掃描器</span>
-        </div>
         <div class="scanner-body">
           <div class="video-wrap">
             <div class="cam-ph" id="cam-ph">
@@ -300,11 +295,6 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 
       <!-- Checkout -->
       <div class="co-panel">
-        <div class="card-hd">
-          <div class="dot pulse"></div>
-          <span class="cht">รายการชำระเงิน</span>
-          <span class="chz">結帳明細</span>
-        </div>
         <div class="grand">
           <div class="glbl">ยอดรวมทั้งหมด<span class="zh">總計</span></div>
           <div class="gamt" id="grand-total">NT$ 0</div>
@@ -351,11 +341,19 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
       <div class="page-hd-title">สินค้า <span class="zh">商品管理</span></div>
       <div class="page-hd-sub" id="prod-count-lbl"></div>
     </div>
-    <div class="btn-row">
+    <div class="btn-row" style="align-items:center">
+      <!-- 新條碼開關 -->
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:9px;margin-right:4px">
+        <span style="font-size:12px;font-family:var(--zh);color:var(--text2);white-space:nowrap">新條碼自動新增</span>
+        <button id="toggle-new-bc" onclick="toggleNewBcMode()" style="position:relative;width:42px;height:24px;border-radius:12px;border:none;cursor:pointer;transition:background .2s;background:var(--green);flex-shrink:0" title="ON：掃到未知條碼時彈出新增視窗 / OFF：靜默忽略">
+          <span id="toggle-knob" style="position:absolute;top:3px;left:21px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span>
+        </button>
+        <span id="toggle-label" style="font-size:11px;font-family:var(--mono);color:var(--green);font-weight:700">ON</span>
+      </div>
       <button class="btn btn-accent" onclick="openModal('m-addprod')">+ เพิ่มสินค้า / 新增條碼商品</button>
       <button class="btn btn-ghost" style="border-color:var(--purple);color:var(--purple)" onclick="openModal('m-addnobc')">+ สินค้าไม่มีบาร์โค้ด / 新增無條碼商品</button>
-      <button class="btn btn-green" onclick="exportProducts()">⬇ CSV / 匯出條碼</button>
-      <button class="btn btn-ghost" onclick="document.getElementById('imp-prod').click()">⬆ CSV / 匯入條碼</button>
+      <button class="btn btn-green" onclick="exportProducts()">⬇ CSV / 匯出全部商品</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('imp-prod').click()">⬆ CSV / 匯入商品</button>
       <input type="file" id="imp-prod" accept=".csv" style="display:none" onchange="importProducts(event)">
     </div>
   </div>
@@ -618,6 +616,7 @@ let cart=[], scanning=false, codeReader=null;
 let pendingBC=null, editingBC=null;
 let lastCode='', lastCodeTime=0;
 const DEBOUNCE=2000; // 2秒防重複
+let allowNewBc=true; // 新條碼開關
 
 // ═══ EAN-13 驗證 ═══
 function isEAN13(code){
@@ -633,9 +632,26 @@ function isEAN13(code){
 // ═══ 掃描器 ═══
 async function startScanner(){
   try{
-    const stream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}
-    });
+    // 針對 Android 平板優化：請求連續自動對焦 + 較高解析度
+    const constraints={
+      video:{
+        facingMode:{ideal:'environment'},
+        width:{ideal:1920,min:1280},
+        height:{ideal:1080,min:720},
+        // 連續對焦（Android Chrome 支援）
+        focusMode:'continuous',
+        advanced:[{focusMode:'continuous'}]
+      }
+    };
+    let stream;
+    try{
+      stream=await navigator.mediaDevices.getUserMedia(constraints);
+    }catch(e){
+      // 若進階約束不支援，回退基本設定
+      stream=await navigator.mediaDevices.getUserMedia({
+        video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}
+      });
+    }
     const v=document.getElementById('preview');
     v.srcObject=stream;
     v.style.display='block';
@@ -646,10 +662,20 @@ async function startScanner(){
       v.onerror=rej;
       setTimeout(rej,7000);
     });
+    // 嘗試啟用連續對焦（Android ImageCapture API）
+    try{
+      const track=stream.getVideoTracks()[0];
+      const caps=track.getCapabilities&&track.getCapabilities();
+      if(caps&&caps.focusMode&&caps.focusMode.includes('continuous')){
+        await track.applyConstraints({advanced:[{focusMode:'continuous'}]});
+      }
+    }catch(e){}
     document.getElementById('btn-start').disabled=true;
     document.getElementById('btn-stop').disabled=false;
-    document.getElementById('cam-dot').className='dot green';
-    document.getElementById('cam-status').textContent='กำลังสแกน EAN-13...';
+    const dot=document.getElementById('cam-dot');
+    const st=document.getElementById('cam-status');
+    if(dot)dot.className='dot green';
+    if(st)st.textContent='กำลังสแกน EAN-13...';
     scanning=true;
     startDecodeLoop(v);
   }catch(e){
@@ -676,7 +702,9 @@ function startDecodeLoop(v){
 async function useNative(v){
   let det;
   try{ det=new BarcodeDetector({formats:['ean_13']}); }
-  catch(e){ det=new BarcodeDetector(); } // fallback to all formats, filter in onCode
+  catch(e){ det=new BarcodeDetector(); }
+  // 平板對焦較慢：每 80ms 偵測一次（而非每幀），給鏡頭時間對焦
+  const POLL=80;
   const loop=async()=>{
     if(!scanning)return;
     try{
@@ -685,7 +713,7 @@ async function useNative(v){
         if(bs.length)onCode(bs[0].rawValue);
       }
     }catch(e){}
-    if(scanning)requestAnimationFrame(loop);
+    if(scanning)setTimeout(loop,POLL);
   };
   loop();
 }
@@ -703,6 +731,7 @@ function useZXingCanvas(v){
   const c=document.createElement('canvas');
   const ctx=c.getContext('2d');
   const reader=new ZXing.BrowserMultiFormatReader();
+  // 平板對焦慢：250ms 間隔，讓鏡頭有時間對焦後再截圖解碼
   const loop=async()=>{
     if(!scanning)return;
     try{
@@ -713,7 +742,7 @@ function useZXingCanvas(v){
         if(r)onCode(r.getText());
       }
     }catch(e){}
-    if(scanning)setTimeout(loop,150);
+    if(scanning)setTimeout(loop,250);
   };
   loop();
 }
@@ -740,8 +769,10 @@ function stopScanner(){
   document.getElementById('scan-ol').style.display='none';
   document.getElementById('btn-start').disabled=false;
   document.getElementById('btn-stop').disabled=true;
-  document.getElementById('cam-dot').className='dot';
-  document.getElementById('cam-status').textContent='สแกนบาร์โค้ด';
+  const dot2=document.getElementById('cam-dot');
+  const st2=document.getElementById('cam-status');
+  if(dot2)dot2.className='dot';
+  if(st2)st2.textContent='สแกนบาร์โค้ด';
   if(codeReader){try{codeReader.reset();}catch(e){}codeReader=null;}
   lastCode='';
   setSt('หยุดสแกนแล้ว');
@@ -751,12 +782,16 @@ function stopScanner(){
 function addByBarcode(code){
   const prods=getProds();
   if(!prods[code]){
-    pendingBC=code;
-    document.getElementById('np-bc').textContent='條碼：'+code;
-    document.getElementById('np-name').value='';
-    document.getElementById('np-price').value='';
-    openModal('m-newprod');
-    setSt('⚠ ไม่พบสินค้า: '+code+' — กรุณาเพิ่มข้อมูล','warn');
+    if(allowNewBc){
+      pendingBC=code;
+      document.getElementById('np-bc').textContent='條碼：'+code;
+      document.getElementById('np-name').value='';
+      document.getElementById('np-price').value='';
+      openModal('m-newprod');
+      setSt('⚠ ไม่พบสินค้า: '+code+' — กรุณาเพิ่มข้อมูล','warn');
+    }else{
+      setSt('⚠ ไม่พบสินค้า: '+code+' (ปิดการเพิ่มใหม่)','warn');
+    }
     return;
   }
   const p=prods[code];
@@ -956,6 +991,25 @@ function showReceipt(tx){
   openModal('m-receipt');
 }
 
+// ═══ 新條碼開關 ═══
+function toggleNewBcMode(){
+  allowNewBc=!allowNewBc;
+  const btn=document.getElementById('toggle-new-bc');
+  const knob=document.getElementById('toggle-knob');
+  const lbl=document.getElementById('toggle-label');
+  if(allowNewBc){
+    btn.style.background='var(--green)';
+    knob.style.left='21px';
+    lbl.style.color='var(--green)';
+    lbl.textContent='ON';
+  }else{
+    btn.style.background='var(--muted2)';
+    knob.style.left='3px';
+    lbl.style.color='var(--muted)';
+    lbl.textContent='OFF';
+  }
+}
+
 // ═══ 商品管理 ═══
 function renderProdGrid(){
   // 條碼商品
@@ -1037,12 +1091,17 @@ function delProduct(bc){
   renderProdGrid(); showToast('已刪除商品','ok');
 }
 function exportProducts(){
+  // 合併條碼商品 + 無條碼商品到同一個 CSV
   const prods=getProds();
-  const rows=[['บาร์โค้ด/條碼','ชื่อสินค้า/品項名稱','ราคา/單價（NT$）']];
-  Object.entries(prods).forEach(([bc,p])=>rows.push([bc,p.name,p.price]));
+  const nobcProds=getNobcProds();
+  const rows=[['類型/Type','條碼/Barcode','品項名稱/Name','單價/Price（NT$）']];
+  // 條碼商品
+  Object.entries(prods).forEach(([bc,p])=>rows.push(['barcode',bc,p.name,p.price]));
+  // 無條碼商品
+  nobcProds.forEach(p=>rows.push(['nobarcode','',p.name,p.price]));
   const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
-  downloadFile('\uFEFF'+csv,'products_'+dateStamp()+'.csv','text/csv;charset=utf-8');
-  showToast('已匯出商品條碼 CSV','ok');
+  downloadFile('\uFEFF'+csv,'products_all_'+dateStamp()+'.csv','text/csv;charset=utf-8');
+  showToast('已匯出全部商品（條碼 + 無條碼）CSV','ok');
 }
 function importProducts(e){
   const file=e.target.files[0]; if(!file)return;
@@ -1052,16 +1111,36 @@ function importProducts(e){
       const text=ev.target.result.replace(/^\uFEFF/,'');
       const lines=text.split(/\r?\n/).filter(l=>l.trim());
       if(lines.length<2)throw 0;
-      const prods=getProds(); let count=0;
+      const prods=getProds();
+      const nobcList=getNobcProds();
+      const existNobcNames=new Set(nobcList.map(p=>p.name));
+      let bcCount=0,nobcCount=0;
       lines.slice(1).forEach(line=>{
         const cols=parseCsvRow(line);
-        if(cols.length>=3){
-          const bc=cols[0].trim(),name=cols[1].trim(),price=parseFloat(cols[2]);
-          if(bc&&name&&!isNaN(price)){prods[bc]={name,price};count++;}
+        if(cols.length<3)return;
+        const type=cols[0].trim().toLowerCase();
+        if(type==='nobarcode'||type==='無條碼'){
+          // 無條碼商品（第2欄為空）
+          const name=cols[2].trim(), price=parseFloat(cols[3]);
+          if(name&&!isNaN(price)&&!existNobcNames.has(name)){
+            nobcList.push({id:'NB'+Date.now()+nobcCount,name,price});
+            existNobcNames.add(name); nobcCount++;
+          }
+        } else {
+          // 條碼商品（相容舊格式：無 type 欄位時 cols[0]=barcode）
+          let bc,name,price;
+          if(type==='barcode'||type==='條碼'){
+            bc=cols[1].trim(); name=cols[2].trim(); price=parseFloat(cols[3]);
+          } else {
+            // 舊格式 CSV（3欄）
+            bc=cols[0].trim(); name=cols[1].trim(); price=parseFloat(cols[2]);
+          }
+          if(bc&&name&&!isNaN(price)){prods[bc]={name,price};bcCount++;}
         }
       });
-      saveProds(prods); renderProdGrid();
-      showToast('已匯入 '+count+' 筆商品資料','ok');
+      saveProds(prods); saveNobcProds(nobcList);
+      renderProdGrid();
+      showToast('已匯入 '+bcCount+' 筆條碼 + '+nobcCount+' 筆無條碼商品','ok');
     }catch{showToast('檔案格式錯誤','err');}
     e.target.value='';
   };
