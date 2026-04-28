@@ -94,7 +94,12 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .glbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);white-space:nowrap;}
 .glbl .zh{font-family:var(--zh);font-size:10px;letter-spacing:0;text-transform:none;display:block;margin-top:1px;font-weight:400;}
 .gamt{font-family:var(--mono);font-size:26px;font-weight:700;color:#fff;white-space:nowrap;}
-.change-hint{font-size:12px;color:rgba(255,255,255,.65);font-family:var(--zh);display:none;white-space:nowrap;margin-left:auto;background:rgba(255,255,255,.12);padding:4px 10px;border-radius:6px;}
+.change-hint{display:none;margin-left:auto;flex-shrink:0;}
+.change-hint-box{background:rgba(255,255,255,.13);border-radius:8px;padding:7px 13px;display:flex;flex-direction:column;gap:3px;font-size:11px;color:rgba(255,255,255,.88);font-family:var(--zh);line-height:1.8;}
+.change-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:rgba(255,255,255,.85);}
+.change-row .denom{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.55);white-space:nowrap;}
+.change-row .chg{font-family:var(--mono);font-weight:700;font-size:13px;color:#fff;white-space:nowrap;}
+.change-row.zero .chg{color:#86efac;}
 .co-actions{padding:13px 18px;display:flex;flex-direction:column;gap:8px;}
 .btn-checkout{width:100%;padding:14px;background:var(--gold);color:#fff;font-weight:700;font-size:15px;border:none;border-radius:10px;cursor:pointer;font-family:var(--th);transition:all .2s;box-shadow:0 2px 8px rgba(217,119,6,.2);}
 .btn-checkout:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 6px 16px rgba(217,119,6,.32);}
@@ -188,7 +193,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .rv-total-row .rtl{font-size:16px;font-weight:700;color:var(--text);font-family:var(--th);white-space:nowrap;}
 .rv-total-row .rtl .zh{font-family:var(--zh);font-size:12px;color:var(--muted);font-weight:400;display:block;}
 .rv-total-row .rta{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--gold);white-space:nowrap;}
-.rv-change-hint{font-size:13px;color:var(--green);font-family:var(--zh);display:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:5px 12px;border-radius:8px;margin-left:auto;white-space:nowrap;}
+.rv-change-hint{font-size:12px;color:var(--green);font-family:var(--zh);display:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:7px 13px;border-radius:8px;margin-left:auto;line-height:1.8;}
 .btn-confirm{width:100%;padding:16px;background:var(--green);color:#fff;font-weight:700;font-size:16px;border:none;border-radius:12px;cursor:pointer;font-family:var(--th);transition:all .2s;}
 .btn-confirm:hover{background:#047857;transform:translateY(-1px);box-shadow:0 6px 16px rgba(5,150,105,.28);}
 
@@ -299,7 +304,6 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
         <div class="grand">
           <div class="glbl">ยอดรวมทั้งหมด<span class="zh">總計</span></div>
           <div class="gamt" id="grand-total">NT$ 0</div>
-          <div class="change-hint" id="change-hint"></div>
         </div>
         <div class="co-actions">
           <button class="btn-checkout" id="btn-checkout" onclick="openReview()" disabled>ชำระเงิน / 結帳</button>
@@ -839,20 +843,7 @@ function setQty(bc, input){
   document.getElementById('btn-checkout').disabled=cart.length===0;
 }
 function updateChangeHint(sub){
-  const hint=document.getElementById('change-hint');
-  if(!hint)return;
-  if(sub>0){
-    const rem=sub%1000;
-    hint.style.display='block';
-    if(rem===0){
-      hint.textContent='ครบพอดี / 剛好整千 ✓';
-    }else{
-      const change=1000-rem;
-      hint.textContent='ทอน NT$ '+change+' / 找零 NT$ '+change;
-    }
-  }else{
-    hint.style.display='none';
-  }
+  // 找零只在結帳頁顯示，此處不作動
 }
 function addToCart(bc,name,price,qty=1){
   const ex=cart.find(i=>i.barcode===bc);
@@ -1001,14 +992,11 @@ function openReview(){
   const rh=document.getElementById('rv-change-hint');
   if(rh){
     if(total>0){
-      const rem=total%1000;
+      function chgRv(denom){const pay=Math.ceil(total/denom)*denom;return{pay,c:pay-total};}
+      function rowRv(icon,d){return d.c===0?`${icon} NT$${d.pay} ครบพอดี / 剛好 ✓`:`${icon} NT$${d.pay} → ทอน / 找零 NT$${d.c}`;}
+      const d1=chgRv(1000),d5=chgRv(500),d1c=chgRv(100);
       rh.style.display='block';
-      if(rem===0){
-        rh.textContent='ครบพอดี / 剛好整千 ✓';
-      }else{
-        const change=1000-rem;
-        rh.textContent='ทอน NT$ '+change+' / 找零 NT$ '+change;
-      }
+      rh.innerHTML=rowRv('💵',d1)+'<br>'+rowRv('💴',d5)+'<br>'+rowRv('🪙',d1c);
     }else{rh.style.display='none';}
   }
   document.getElementById('review-overlay').classList.add('open');
