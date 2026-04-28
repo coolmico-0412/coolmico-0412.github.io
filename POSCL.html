@@ -90,10 +90,11 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 
 /* ── CHECKOUT PANEL ── */
 .co-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh);overflow:hidden;}
-.grand{display:flex;justify-content:space-between;align-items:center;padding:18px;background:linear-gradient(135deg,#1e3a8a,#2563eb);}
-.glbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);}
+.grand{display:flex;align-items:center;padding:18px;background:linear-gradient(135deg,#1e3a8a,#2563eb);gap:14px;flex-wrap:wrap;}
+.glbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);white-space:nowrap;}
 .glbl .zh{font-family:var(--zh);font-size:10px;letter-spacing:0;text-transform:none;display:block;margin-top:1px;font-weight:400;}
-.gamt{font-family:var(--mono);font-size:26px;font-weight:700;color:#fff;}
+.gamt{font-family:var(--mono);font-size:26px;font-weight:700;color:#fff;white-space:nowrap;}
+.change-hint{font-size:12px;color:rgba(255,255,255,.65);font-family:var(--zh);display:none;white-space:nowrap;margin-left:auto;background:rgba(255,255,255,.12);padding:4px 10px;border-radius:6px;}
 .co-actions{padding:13px 18px;display:flex;flex-direction:column;gap:8px;}
 .btn-checkout{width:100%;padding:14px;background:var(--gold);color:#fff;font-weight:700;font-size:15px;border:none;border-radius:10px;cursor:pointer;font-family:var(--th);transition:all .2s;box-shadow:0 2px 8px rgba(217,119,6,.2);}
 .btn-checkout:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 6px 16px rgba(217,119,6,.32);}
@@ -112,8 +113,8 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .nobc-list-item{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);transition:background .12s;}
 .nobc-list-item:last-child{border-bottom:none;}
 .nobc-list-item:hover{background:var(--surface2);}
-.nobc-list-name{flex:1;font-weight:500;font-family:var(--zh);color:var(--text);}
-.nobc-list-price{font-family:var(--mono);font-weight:700;color:var(--gold);font-size:14px;flex-shrink:0;}
+.nobc-list-name{flex:1;font-weight:600;font-family:var(--zh);color:var(--text);font-size:28px;}
+.nobc-list-price{font-family:var(--mono);font-weight:700;color:var(--gold);font-size:28px;flex-shrink:0;}
 .nobc-list-add{padding:5px 12px;font-size:12px;border-radius:6px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;font-family:var(--zh);font-weight:600;transition:all .15s;flex-shrink:0;}
 .nobc-list-add:hover{background:var(--accent);color:#fff;}
 .nobc-temp-bar{display:flex;align-items:center;padding:12px 16px;border-bottom:2px solid var(--border);background:var(--surface2);gap:10px;}
@@ -126,10 +127,9 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .t-bc-sm{display:block;font-family:var(--mono);font-size:9px;color:var(--muted2);margin-top:2px;}
 .t-bc-col{font-family:var(--mono);font-size:10px;color:var(--muted2);}
 .t-price{font-family:var(--mono);font-size:12px;color:var(--muted);}
-.qty-ctrl{display:flex;align-items:center;gap:6px;}
-.qty-btn{width:24px;height:24px;border-radius:6px;background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;}
-.qty-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--aglow);}
-.qty-n{font-family:var(--mono);font-size:14px;min-width:20px;text-align:center;font-weight:700;}
+.qty-input{width:58px;padding:6px 8px;font-family:var(--mono);font-size:15px;font-weight:700;text-align:center;border:1.5px solid var(--border2);border-radius:7px;background:var(--surface2);color:var(--text);outline:none;cursor:pointer;-moz-appearance:textfield;}
+.qty-input::-webkit-inner-spin-button,.qty-input::-webkit-outer-spin-button{-webkit-appearance:none;}
+.qty-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--aglow);}
 .del-btn{width:28px;height:28px;border-radius:6px;background:transparent;border:1.5px solid transparent;color:var(--muted2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .12s;}
 .del-btn:hover{border-color:var(--red);color:var(--red);background:#fef2f2;}
 .empty-st{padding:52px 20px;text-align:center;color:var(--muted);}
@@ -184,10 +184,11 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .rv-title .zh{font-family:var(--zh);font-size:12px;color:var(--muted);font-weight:400;display:block;}
 .review-body{flex:1;overflow-y:auto;padding:24px;max-width:780px;margin:0 auto;width:100%;}
 .review-footer{padding:18px 24px;border-top:1px solid var(--border);background:var(--surface);box-shadow:0 -2px 8px rgba(0,0,0,.07);flex-shrink:0;}
-.rv-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
-.rv-total-row .rtl{font-size:16px;font-weight:700;color:var(--text);font-family:var(--th);}
+.rv-total-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
+.rv-total-row .rtl{font-size:16px;font-weight:700;color:var(--text);font-family:var(--th);white-space:nowrap;}
 .rv-total-row .rtl .zh{font-family:var(--zh);font-size:12px;color:var(--muted);font-weight:400;display:block;}
-.rv-total-row .rta{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--gold);}
+.rv-total-row .rta{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--gold);white-space:nowrap;}
+.rv-change-hint{font-size:13px;color:var(--green);font-family:var(--zh);display:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:5px 12px;border-radius:8px;margin-left:auto;white-space:nowrap;}
 .btn-confirm{width:100%;padding:16px;background:var(--green);color:#fff;font-weight:700;font-size:16px;border:none;border-radius:12px;cursor:pointer;font-family:var(--th);transition:all .2s;}
 .btn-confirm:hover{background:#047857;transform:translateY(-1px);box-shadow:0 6px 16px rgba(5,150,105,.28);}
 
@@ -298,6 +299,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
         <div class="grand">
           <div class="glbl">ยอดรวมทั้งหมด<span class="zh">總計</span></div>
           <div class="gamt" id="grand-total">NT$ 0</div>
+          <div class="change-hint" id="change-hint"></div>
         </div>
         <div class="co-actions">
           <button class="btn-checkout" id="btn-checkout" onclick="openReview()" disabled>ชำระเงิน / 結帳</button>
@@ -439,6 +441,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
     <div class="rv-total-row">
       <div class="rtl">ยอดรวมทั้งหมด<span class="zh">總計金額</span></div>
       <div class="rta" id="review-total-amt">NT$ 0</div>
+      <div class="rv-change-hint" id="rv-change-hint"></div>
     </div>
     <button class="btn-confirm" onclick="confirmCheckout()">✓ ยืนยันการชำระเงิน / 確定結帳</button>
   </div>
@@ -493,7 +496,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
       <div>
         <div class="m-title" style="margin:0">สินค้าไม่มีบาร์โค้ด<span class="zh">無條碼商品</span></div>
       </div>
-      <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;border-style:dashed;color:var(--purple);border-color:var(--purple)" onclick="openTempNobc()">⚡ 暫時增加商品</button>
+      <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;border-style:dashed;color:var(--purple);border-color:var(--purple)" onclick="openTempNobc()">⚡ เพิ่มสินค้าชั่วคราว / 暫時增加商品</button>
     </div>
     <div id="nobc-list-body" style="max-height:400px;overflow-y:auto"></div>
     <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
@@ -818,6 +821,36 @@ function saveNewProduct(){
 }
 
 // ═══ 購物車 ═══
+function setQty(bc, input){
+  const val=parseInt(input.value);
+  if(isNaN(val)||val<1){
+    const item=cart.find(i=>i.barcode===bc);
+    if(item)input.value=item.qty;
+    return;
+  }
+  const item=cart.find(i=>i.barcode===bc);
+  if(!item)return;
+  item.qty=val;
+  const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const totalQty=cart.reduce((s,i)=>s+i.qty,0);
+  document.getElementById('item-count').textContent=totalQty;
+  document.getElementById('grand-total').textContent='NT$ '+sub;
+  updateChangeHint(sub);
+  document.getElementById('btn-checkout').disabled=cart.length===0;
+}
+function updateChangeHint(sub){
+  const hint=document.getElementById('change-hint');
+  if(!hint)return;
+  if(sub>0){
+    const change=1000-sub;
+    hint.style.display='block';
+    if(change>0) hint.textContent='找零 NT$ '+change;
+    else if(change===0) hint.textContent='剛好 NT$ 1000 ✓';
+    else hint.textContent='超過1000，需 NT$ '+sub;
+  }else{
+    hint.style.display='none';
+  }
+}
 function addToCart(bc,name,price,qty=1){
   const ex=cart.find(i=>i.barcode===bc);
   if(ex){ ex.qty+=qty; }
@@ -840,6 +873,7 @@ function renderCart(){
     body.innerHTML=`<div class="empty-st"><div class="ei">🛒</div><div>สแกนบาร์โค้ดเพื่อเพิ่มสินค้า</div><div class="zh">尚無商品，請掃描條碼或新增無條碼商品</div></div>`;
     document.getElementById('item-count').textContent='0';
     document.getElementById('grand-total').textContent='NT$ 0';
+    updateChangeHint(0);
     document.getElementById('btn-checkout').disabled=true;
     return;
   }
@@ -854,15 +888,18 @@ function renderCart(){
       </div>
       <div class="t-price">NT$ ${item.price}</div>
       <div class="qty-ctrl">
-        <button class="qty-btn" onclick="changeQty('${item.barcode}',-1)">−</button>
-        <span class="qty-n">${item.qty}</span>
-        <button class="qty-btn" onclick="changeQty('${item.barcode}',1)">+</button>
+        <input type="number" class="qty-input" value="${item.qty}" min="1"
+          onclick="this.select()"
+          onchange="setQty('${item.barcode}',this)"
+          onkeydown="if(event.key==='Enter')this.blur()"
+          inputmode="numeric" pattern="[0-9]*">
       </div>
       <button class="del-btn" onclick="removeItem('${item.barcode}')">×</button>
     </div>`).join('');
   document.getElementById('item-count').textContent=totalQty;
   document.getElementById('btn-checkout').disabled=false;
   document.getElementById('grand-total').textContent='NT$ '+sub;
+  updateChangeHint(sub);
 }
 
 // ═══ 無條碼商品清單 & 暫時商品 ═══
@@ -957,6 +994,17 @@ function openReview(){
     </tr>`;
   }).join('');
   document.getElementById('review-total-amt').textContent='NT$ '+total;
+  // change hint
+  const rh=document.getElementById('rv-change-hint');
+  if(rh){
+    if(total>0){
+      const change=1000-total;
+      rh.style.display='block';
+      if(change>0) rh.textContent='找零 NT$ '+change;
+      else if(change===0) rh.textContent='剛好 NT$ 1000 ✓';
+      else rh.textContent='超過1000，需 NT$ '+total;
+    }else{rh.style.display='none';}
+  }
   document.getElementById('review-overlay').classList.add('open');
 }
 function closeReview(){
