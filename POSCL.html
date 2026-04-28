@@ -842,11 +842,14 @@ function updateChangeHint(sub){
   const hint=document.getElementById('change-hint');
   if(!hint)return;
   if(sub>0){
-    const change=1000-sub;
+    const rem=sub%1000;
     hint.style.display='block';
-    if(change>0) hint.textContent='找零 NT$ '+change;
-    else if(change===0) hint.textContent='剛好 NT$ 1000 ✓';
-    else hint.textContent='超過1000，需 NT$ '+sub;
+    if(rem===0){
+      hint.textContent='ครบพอดี / 剛好整千 ✓';
+    }else{
+      const change=1000-rem;
+      hint.textContent='ทอน NT$ '+change+' / 找零 NT$ '+change;
+    }
   }else{
     hint.style.display='none';
   }
@@ -998,11 +1001,14 @@ function openReview(){
   const rh=document.getElementById('rv-change-hint');
   if(rh){
     if(total>0){
-      const change=1000-total;
+      const rem=total%1000;
       rh.style.display='block';
-      if(change>0) rh.textContent='找零 NT$ '+change;
-      else if(change===0) rh.textContent='剛好 NT$ 1000 ✓';
-      else rh.textContent='超過1000，需 NT$ '+total;
+      if(rem===0){
+        rh.textContent='ครบพอดี / 剛好整千 ✓';
+      }else{
+        const change=1000-rem;
+        rh.textContent='ทอน NT$ '+change+' / 找零 NT$ '+change;
+      }
     }else{rh.style.display='none';}
   }
   document.getElementById('review-overlay').classList.add('open');
