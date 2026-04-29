@@ -348,6 +348,16 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
       <div class="page-hd-sub" id="prod-count-lbl"></div>
     </div>
     <div class="btn-row" style="align-items:center">
+      <!-- 相機切換開關 -->
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:9px;margin-right:4px">
+        <span style="font-size:18px;line-height:1">📷</span>
+        <span style="font-size:12px;font-family:var(--zh);color:var(--text2);white-space:nowrap">後鏡頭</span>
+        <button id="toggle-cam" onclick="toggleCamera()" style="position:relative;width:42px;height:24px;border-radius:12px;border:none;cursor:pointer;transition:background .2s;background:var(--muted2);flex-shrink:0" title="後鏡頭 / 前鏡頭切換">
+          <span id="toggle-cam-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span>
+        </button>
+        <span style="font-size:12px;font-family:var(--zh);color:var(--text2);white-space:nowrap">前鏡頭</span>
+        <span id="toggle-cam-label" style="font-size:11px;font-family:var(--mono);color:var(--muted);font-weight:700;min-width:28px">後</span>
+      </div>
       <!-- 新條碼開關 -->
       <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:9px;margin-right:4px">
         <span style="font-size:12px;font-family:var(--zh);color:var(--text2);white-space:nowrap">新條碼自動新增</span>
@@ -625,6 +635,7 @@ let pendingBC=null, editingBC=null;
 let lastCode='', lastCodeTime=0;
 const DEBOUNCE=2000; // 2秒防重複
 let allowNewBc=false; // 新條碼開關（預設 OFF）
+let useFrontCam=false; // 相機方向（預設後鏡頭）
 
 // ═══ EAN-13 驗證 ═══
 function isEAN13(code){
@@ -640,13 +651,12 @@ function isEAN13(code){
 // ═══ 掃描器 ═══
 async function startScanner(){
   try{
-    // 針對 Android 平板優化：請求連續自動對焦 + 較高解析度
+    const facing=useFrontCam?'user':'environment';
     const constraints={
       video:{
-        facingMode:{ideal:'environment'},
+        facingMode:{ideal:facing},
         width:{ideal:1920,min:1280},
         height:{ideal:1080,min:720},
-        // 連續對焦（Android Chrome 支援）
         focusMode:'continuous',
         advanced:[{focusMode:'continuous'}]
       }
@@ -655,9 +665,8 @@ async function startScanner(){
     try{
       stream=await navigator.mediaDevices.getUserMedia(constraints);
     }catch(e){
-      // 若進階約束不支援，回退基本設定
       stream=await navigator.mediaDevices.getUserMedia({
-        video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}
+        video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:720}}
       });
     }
     const v=document.getElementById('preview');
@@ -1031,6 +1040,28 @@ function showReceipt(tx){
     </div>`).join('');
   document.getElementById('rcpt-total-amt').textContent='NT$ '+tx.total;
   openModal('m-receipt');
+}
+
+// ═══ 相機切換 ═══
+function toggleCamera(){
+  useFrontCam=!useFrontCam;
+  const btn=document.getElementById('toggle-cam');
+  const knob=document.getElementById('toggle-cam-knob');
+  const lbl=document.getElementById('toggle-cam-label');
+  if(useFrontCam){
+    btn.style.background='var(--accent)';
+    knob.style.left='21px';
+    lbl.textContent='前';
+  }else{
+    btn.style.background='var(--muted2)';
+    knob.style.left='3px';
+    lbl.textContent='後';
+  }
+  // 若掃描中，重新啟動以套用新相機
+  if(scanning){
+    stopScanner();
+    setTimeout(startScanner, 300);
+  }
 }
 
 // ═══ 新條碼開關 ═══
