@@ -256,6 +256,10 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   .report-cols{grid-template-columns:1fr;}
   .t-head,.t-row{grid-template-columns:26px 1fr 80px 34px;}
 }
+#file-status:hover{border-color:var(--accent);color:var(--accent);background:var(--aglow);}
+#file-status.linked{border-color:var(--green);color:var(--green);background:#f0fdf4;}
+#file-status.saving{border-color:var(--gold);color:var(--gold);background:#fffbeb;}
+#file-status.error{border-color:var(--red);color:var(--red);background:#fef2f2;}
 </style>
 </head>
 <body>
@@ -265,6 +269,10 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   <button class="nav-tab active" onclick="showPage('pos',this)">🏪 แคชเชียร์<span class="zh">收銀台</span></button>
   <button class="nav-tab" onclick="showPage('products',this)">📦 สินค้า<span class="zh">商品管理</span></button>
   <button class="nav-tab" onclick="showPage('report',this)">📊 รายงาน<span class="zh">銷售報表</span></button>
+  <div id="file-status" onclick="pickDataFile()" title="點擊選擇資料檔案" style="margin-left:auto;display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--zh);border:1.5px solid var(--border2);background:var(--surface2);color:var(--muted);transition:all .18s;white-space:nowrap;">
+    <span id="file-icon">💾</span>
+    <span id="file-label">點擊選擇資料檔案</span>
+  </div>
 </nav>
 
 <!-- ═══ 收銀台 ═══ -->
@@ -618,16 +626,214 @@ const DEFAULT_PRODUCTS = {
   '4712345678900':{name:'農夫山泉礦泉水',price:15},
   '4711234000001':{name:'小美冰淇淋',price:25},
 };
+// ═══════════════════════════════════════════════════════
+//  持久化引擎（File System Access API + IndexedDB + localStorage）
+// ═══════════════════════════════════════════════════════
+let _fileHandle = null;   // FileSystemFileHandle
+let _saveTimer  = null;   // debounce timer
+const IDB_NAME  = 'pos_fsa';
+const IDB_STORE = 'handles';
+const IDB_KEY   = 'dataFile';
+
+// ── IndexedDB 操作（儲存 FileSystemFileHandle）──
+function _openIDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(IDB_NAME,1);
+    req.onupgradeneeded=e=>e.target.result.createObjectStore(IDB_STORE);
+    req.onsuccess=e=>res(e.target.result);
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+async function _getSavedHandle(){
+  try{
+    const db=await _openIDB();
+    return new Promise((res,rej)=>{
+      const tx=db.transaction(IDB_STORE,'readonly');
+      const req=tx.objectStore(IDB_STORE).get(IDB_KEY);
+      req.onsuccess=e=>res(e.target.result||null);
+      req.onerror=e=>rej(e.target.error);
+    });
+  }catch(e){return null;}
+}
+async function _saveHandle(handle){
+  try{
+    const db=await _openIDB();
+    return new Promise((res,rej)=>{
+      const tx=db.transaction(IDB_STORE,'readwrite');
+      tx.objectStore(IDB_STORE).put(handle,IDB_KEY);
+      tx.oncomplete=res; tx.onerror=rej;
+    });
+  }catch(e){}
+}
+async function _clearHandle(){
+  try{
+    const db=await _openIDB();
+    return new Promise((res)=>{
+      const tx=db.transaction(IDB_STORE,'readwrite');
+      tx.objectStore(IDB_STORE).delete(IDB_KEY);
+      tx.oncomplete=res;
+    });
+  }catch(e){}
+}
+
+// ── 檔案讀寫 ──
+async function _readFile(handle){
+  const file=await handle.getFile();
+  const text=await file.text();
+  return JSON.parse(text);
+}
+async function _writeFile(handle,data){
+  const writable=await handle.createWritable();
+  await writable.write(JSON.stringify(data,null,2));
+  await writable.close();
+}
+
+// ── 從檔案載入資料到 localStorage ──
+async function _loadFromFile(){
+  if(!_fileHandle)return;
+  try{
+    const data=await _readFile(_fileHandle);
+    if(data.products)     localStorage.setItem('pos_products',       JSON.stringify(data.products));
+    if(data.nobc_products)localStorage.setItem('pos_nobc_products',  JSON.stringify(data.nobc_products));
+    if(data.transactions) localStorage.setItem('pos_transactions',   JSON.stringify(data.transactions));
+    console.log('[POS] 資料從檔案載入成功');
+  }catch(e){
+    console.warn('[POS] 讀取資料檔案失敗：',e.message);
+    setFileStatus('error','⚠ 讀取失敗');
+  }
+}
+
+// ── 將所有 localStorage 資料寫入檔案（防抖 800ms）──
+function _scheduleSave(){
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(async()=>{
+    if(!_fileHandle)return;
+    setFileStatus('saving','⏳ 儲存中...');
+    try{
+      await _writeFile(_fileHandle,{
+        version:1,
+        savedAt:new Date().toISOString(),
+        products:     getProds(),
+        nobc_products:getNobcProds(),
+        transactions: getTx(),
+      });
+      setFileStatus('linked','✓ 已儲存');
+      setTimeout(()=>setFileStatus('linked','✓ '+(_fileHandle.name||'資料檔案')),1500);
+    }catch(e){
+      console.error('[POS] 寫入失敗：',e.message);
+      setFileStatus('error','⚠ 儲存失敗，請重新選擇檔案');
+    }
+  },800);
+}
+
+// ── UI 狀態 ──
+function setFileStatus(cls,label){
+  const el=document.getElementById('file-status');
+  const lb=document.getElementById('file-label');
+  if(!el||!lb)return;
+  el.className='';el.classList.add(cls);
+  lb.textContent=label;
+}
+
+// ── 初始化：嘗試從 IndexedDB 取回上次的檔案 ──
+async function initPersistence(){
+  if(!('showOpenFilePicker' in window)){
+    // File System Access API 不支援，僅使用 localStorage
+    document.getElementById('file-status').title='此瀏覽器不支援自動儲存，請定期匯出備份';
+    document.getElementById('file-label').textContent='localStorage 模式';
+    return;
+  }
+  const saved=await _getSavedHandle();
+  if(!saved){
+    setFileStatus('','點擊選擇資料檔案');
+    return;
+  }
+  _fileHandle=saved;
+  try{
+    // 嘗試查詢現有權限
+    let perm=await _fileHandle.queryPermission({mode:'readwrite'});
+    if(perm==='prompt'){
+      // 需要使用者手勢才能請求，稍後點擊時再處理
+      setFileStatus('','🔑 點擊重新授權存取');
+      return;
+    }
+    if(perm==='granted'){
+      await _loadFromFile();
+      setFileStatus('linked','✓ '+(_fileHandle.name||'資料檔案'));
+      return;
+    }
+  }catch(e){}
+  setFileStatus('','🔑 點擊重新授權存取');
+}
+
+// ── 使用者點擊選擇/授權檔案 ──
+async function pickDataFile(){
+  if(!('showOpenFilePicker' in window)){
+    showToast('此瀏覽器不支援自動儲存，請使用 Chrome 或 Edge','err');
+    return;
+  }
+  // 如果已有 handle，先嘗試重新取得權限
+  if(_fileHandle){
+    try{
+      const perm=await _fileHandle.requestPermission({mode:'readwrite'});
+      if(perm==='granted'){
+        await _loadFromFile();
+        setFileStatus('linked','✓ '+(_fileHandle.name||'資料檔案'));
+        showToast('已重新連結：'+_fileHandle.name,'ok');
+        return;
+      }
+    }catch(e){}
+  }
+  // 顯示選擇對話框
+  const choice=confirm(
+    '請選擇資料儲存方式：\n\n'+
+    '【確定】選擇現有的 pos_data.json 檔案（載入並同步）\n'+
+    '【取消】建立全新的資料檔案'
+  );
+  try{
+    if(choice){
+      // 開啟現有檔案
+      [_fileHandle]=await window.showOpenFilePicker({
+        types:[{description:'POS 資料',accept:{'application/json':['.json']}}],
+        multiple:false
+      });
+      await _saveHandle(_fileHandle);
+      await _loadFromFile();
+      setFileStatus('linked','✓ '+_fileHandle.name);
+      showToast('已載入：'+_fileHandle.name,'ok');
+      // 重新渲染所有頁面資料
+      renderProdGrid();
+      renderStats(); renderMonthly(); renderDaily();
+    }else{
+      // 建立新檔案
+      _fileHandle=await window.showSaveFilePicker({
+        suggestedName:'pos_data.json',
+        types:[{description:'POS 資料',accept:{'application/json':['.json']}}]
+      });
+      await _saveHandle(_fileHandle);
+      await _writeFile(_fileHandle,{
+        version:1,savedAt:new Date().toISOString(),
+        products:getProds(),nobc_products:getNobcProds(),transactions:getTx()
+      });
+      setFileStatus('linked','✓ '+_fileHandle.name);
+      showToast('已建立新資料檔案：'+_fileHandle.name,'ok');
+    }
+  }catch(e){
+    if(e.name!=='AbortError') showToast('操作取消或失敗','err');
+  }
+}
+
+// ═══ 資料層（所有 save 函式都觸發自動存檔）═══
 function getProds(){
   try{const s=localStorage.getItem('pos_products');if(s)return JSON.parse(s);}catch(e){}
   localStorage.setItem('pos_products',JSON.stringify(DEFAULT_PRODUCTS));
   return{...DEFAULT_PRODUCTS};
 }
-function saveProds(o){localStorage.setItem('pos_products',JSON.stringify(o));}
+function saveProds(o){localStorage.setItem('pos_products',JSON.stringify(o));_scheduleSave();}
 function getNobcProds(){try{return JSON.parse(localStorage.getItem('pos_nobc_products')||'[]');}catch(e){return[];}}
-function saveNobcProds(a){localStorage.setItem('pos_nobc_products',JSON.stringify(a));}
+function saveNobcProds(a){localStorage.setItem('pos_nobc_products',JSON.stringify(a));_scheduleSave();}
 function getTx(){try{return JSON.parse(localStorage.getItem('pos_transactions')||'[]');}catch(e){return[];}}
-function saveTx(a){localStorage.setItem('pos_transactions',JSON.stringify(a));}
+function saveTx(a){localStorage.setItem('pos_transactions',JSON.stringify(a));_scheduleSave();}
 
 // ═══ 全域狀態 ═══
 let cart=[], scanning=false, codeReader=null;
@@ -1444,6 +1650,8 @@ function seedDemo(){
 
 seedDemo();
 renderCart();
+// 啟動持久化引擎（非同步，不阻塞畫面）
+initPersistence();
 </script>
 </body>
 </html>
