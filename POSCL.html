@@ -110,14 +110,15 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .t-row{display:grid;grid-template-columns:30px 1fr 90px 120px 34px;padding:13px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background .12s;animation:rowIn .18s ease;}
 
 /* ── NOBC CATEGORY GRID (in POS modal) ── */
-.nobc-cat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:18px;}
-.nobc-cat-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;cursor:pointer;transition:all .18s;font-family:var(--zh);text-align:center;}
-.nobc-cat-btn:hover{border-color:var(--purple);background:#faf5ff;transform:translateY(-1px);box-shadow:var(--sh);}
-.nobc-cat-btn .cat-icon{font-size:26px;line-height:1;}
-.nobc-cat-btn .cat-th{font-size:11px;color:var(--muted);font-family:var(--th);line-height:1.3;}
-.nobc-cat-btn .cat-zh{font-size:13px;font-weight:700;color:var(--text);}
-.nobc-cat-btn .cat-count{font-size:10px;color:var(--muted2);font-family:var(--mono);background:var(--surface3);border-radius:8px;padding:1px 7px;margin-top:2px;}
-.nobc-cat-btn.empty{opacity:.45;pointer-events:none;}
+.nobc-cat-grid{display:flex;flex-direction:column;gap:0;}
+.nobc-cat-btn{display:flex;flex-direction:row;align-items:center;gap:14px;padding:14px 20px;background:var(--surface);border:none;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;font-family:var(--zh);text-align:left;width:100%;}
+.nobc-cat-btn:last-child{border-bottom:none;}
+.nobc-cat-btn:hover{background:var(--surface2);}
+.nobc-cat-btn.empty{opacity:.4;pointer-events:none;}
+.nobc-cat-btn .cat-icon{font-size:22px;line-height:1;flex-shrink:0;}
+.nobc-cat-btn .cat-th{font-size:12px;color:var(--muted);font-family:var(--th);line-height:1.3;}
+.nobc-cat-btn .cat-zh{font-size:14px;font-weight:700;color:var(--text);flex:1;}
+.nobc-cat-btn .cat-count{font-size:11px;color:var(--muted2);font-family:var(--mono);background:var(--surface3);border-radius:8px;padding:2px 9px;flex-shrink:0;}
 
 /* ── NOBC LIST (in POS modal after category select) ── */
 .nobc-list-item{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);transition:background .12s;}
@@ -153,13 +154,23 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 /* ── CATEGORY TAG ── */
 .cat-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:1px 7px;border-radius:10px;font-family:var(--zh);font-weight:600;background:var(--surface3);color:var(--muted);border:1px solid var(--border);white-space:nowrap;}
 
-/* ── PRODUCTS PAGE ── */
+/* ── PRODUCTS TWO-COLUMN LAYOUT ── */
+.prod-two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;}
+.prod-col{display:flex;flex-direction:column;gap:0;}
+.cat-section{margin-bottom:16px;}
+.cat-section-hd{display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--text2);font-family:var(--zh);}
+.cat-section-hd .cs-icon{font-size:16px;line-height:1;}
+.cat-section-hd .cs-th{font-size:11px;color:var(--muted);font-family:var(--th);font-weight:400;}
+.cat-section-hd .cs-count{font-family:var(--mono);font-size:10px;color:var(--muted2);margin-left:auto;background:var(--surface3);padding:1px 7px;border-radius:6px;}
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+
+@media(max-width:1100px){.prod-two-col{grid-template-columns:1fr;}}
+
 .page-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
 .page-hd-title{font-size:20px;font-weight:700;color:var(--text);}
 .page-hd-title .zh{font-family:var(--zh);font-size:13px;color:var(--muted);font-weight:400;margin-left:6px;}
 .page-hd-sub{font-size:12px;color:var(--muted);margin-top:3px;font-family:var(--zh);}
 .btn-row{display:flex;gap:7px;flex-wrap:wrap;}
-.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;}
 .prod-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--sh);transition:all .18s;}
 .prod-card:hover{border-color:var(--border2);box-shadow:var(--sh-md);transform:translateY(-1px);}
 .prod-bc{font-family:var(--mono);font-size:11px;color:var(--accent);}
@@ -289,7 +300,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   .pos-grid{grid-template-columns:1fr;}
   .report-cols{grid-template-columns:1fr;}
   .t-head,.t-row{grid-template-columns:26px 1fr 80px 34px;}
-  .nobc-cat-grid{grid-template-columns:repeat(2,1fr);}
+  .nobc-cat-grid{}
 }
 </style>
 </head>
@@ -438,12 +449,20 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   <div style="margin-bottom:10px;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--purple);font-family:var(--zh);display:flex;align-items:center;gap:8px">
     無條碼商品 <span id="nobc-count-lbl" style="font-weight:400;font-size:11px;letter-spacing:0;text-transform:none;color:var(--muted)"></span>
   </div>
-  <div class="prod-grid" id="nobc-prod-grid" style="margin-bottom:20px"></div>
-  <!-- 一般條碼商品區 -->
-  <div style="margin-bottom:10px;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent);font-family:var(--zh);display:flex;align-items:center;gap:8px">
-    條碼商品 <span id="bc-count-lbl" style="font-weight:400;font-size:11px;letter-spacing:0;text-transform:none;color:var(--muted)"></span>
+  <!-- 兩欄並排：左邊無條碼，右邊條碼 -->
+  <div class="prod-two-col" id="prod-two-col">
+    <!-- 左：無條碼 -->
+    <div class="prod-col" id="nobc-col">
+      <div id="nobc-prod-area"></div>
+    </div>
+    <!-- 右：條碼 -->
+    <div class="prod-col" id="bc-col">
+      <div style="margin-bottom:10px;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent);font-family:var(--zh);display:flex;align-items:center;gap:8px">
+        條碼商品 <span id="bc-count-lbl" style="font-weight:400;font-size:11px;letter-spacing:0;text-transform:none;color:var(--muted)"></span>
+      </div>
+      <div id="bc-prod-area"></div>
+    </div>
   </div>
-  <div class="prod-grid" id="prod-grid"></div>
 </div>
 
 <!-- ═══ 銷售報表 ═══ -->
@@ -575,19 +594,21 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 
 <!-- ═══ Modal: 無條碼商品清單（分類選擇 + 商品清單）═══ -->
 <div class="overlay" id="m-nobc-list">
-  <div class="mbox" style="width:520px;padding:0;overflow:hidden">
+  <div class="mbox" style="width:520px;padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:90vh;">
     <!-- 標題列 -->
-    <div style="padding:16px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);">
+    <div style="padding:16px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);flex-shrink:0;">
       <div>
         <div class="m-title" style="margin:0" id="nobc-modal-title">สินค้าไม่มีบาร์โค้ด<span class="zh">無條碼商品</span></div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;border-style:dashed;color:var(--purple);border-color:var(--purple)" onclick="openTempNobc()">⚡ 暫時增加商品</button>
+        <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;border-style:dashed;color:var(--purple);border-color:var(--purple)" onclick="openTempNobc()">⚡ เพิ่มสินค้าชั่วคราว / 暫時增加商品</button>
       </div>
     </div>
-    <!-- 動態內容區（分類格 or 商品列表）-->
-    <div id="nobc-list-body" style="max-height:420px;overflow-y:auto"></div>
-    <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;background:var(--surface2)">
+    <!-- 置頂 header（返回分類列，只在商品列表頁顯示）-->
+    <div id="nobc-sticky-header" style="flex-shrink:0;display:none;"></div>
+    <!-- 動態內容區（分類列表 or 商品列表，不含 header）-->
+    <div id="nobc-list-body" style="flex:1;overflow-y:auto;min-height:0;"></div>
+    <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;background:var(--surface2);flex-shrink:0;">
       <button class="btn btn-ghost" onclick="closeModal('m-nobc-list')">關閉</button>
     </div>
   </div>
@@ -996,51 +1017,60 @@ function renderCart(){
 // ═══ 無條碼商品清單（分類選擇 → 商品清單）═══
 function openNobcList(){
   nobcSelectedCat=null;
+  const stickyHd=document.getElementById('nobc-sticky-header');
+  if(stickyHd){stickyHd.style.display='none';stickyHd.innerHTML='';}
   renderNobcListModal();
   openModal('m-nobc-list');
 }
 
 function renderNobcListModal(){
   const body=document.getElementById('nobc-list-body');
+  const stickyHd=document.getElementById('nobc-sticky-header');
   const titleEl=document.getElementById('nobc-modal-title');
 
   if(nobcSelectedCat===null){
-    // 第一頁：分類格
+    // 第一頁：分類列表
     titleEl.innerHTML='สินค้าไม่มีบาร์โค้ด<span class="zh">無條碼商品 — 選擇分類</span>';
+    stickyHd.style.display='none';
+    stickyHd.innerHTML='';
+
     const prods=getNobcProds();
     const countMap={};
     prods.forEach(p=>{const c=p.category||'other';countMap[c]=(countMap[c]||0)+1;});
     const totalCount=prods.length;
 
-    // 加一個「全部」按鈕
-    const allBtn=`<div style="padding:12px 18px 0;"><button onclick="nobcSelectedCat='__all__';renderNobcListModal()" style="width:100%;padding:10px;background:var(--aglow);border:1.5px solid var(--accent);border-radius:10px;font-family:var(--zh);font-size:13px;font-weight:700;color:var(--accent);cursor:pointer;transition:all .15s;" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--aglow)';this.style.color='var(--accent)'">
-      📋 全部商品 All &nbsp;<span style="font-family:var(--mono);font-size:11px;opacity:.7">(${totalCount})</span>
-    </button></div>`;
+    // 全部商品 — 長條形，與分類項目相同樣式
+    const allBtn=`<div class="nobc-cat-btn" style="background:var(--aglow);border-bottom:2px solid var(--border)" onclick="nobcSelectedCat='__all__';renderNobcListModal()">
+      <div class="cat-icon">📋</div>
+      <div class="cat-zh" style="color:var(--accent)">ทั้งหมด 全部商品</div>
+      <div class="cat-count" style="background:var(--aglow);color:var(--accent);border:1px solid var(--accent)">${totalCount} 種</div>
+    </div>`;
 
     if(!totalCount){
       body.innerHTML=allBtn+`<div class="empty-st" style="padding:28px 20px"><div class="ei" style="font-size:26px">🏷</div><div class="zh">尚無已儲存的無條碼商品</div><div style="font-size:12px;color:var(--muted);margin-top:6px;font-family:var(--zh)">請至商品管理頁新增，或使用「暫時增加商品」</div></div>`;
       return;
     }
 
-    const catGrid=CATEGORIES.map(c=>{
+    const catBtns=CATEGORIES.map(c=>{
       const cnt=countMap[c.id]||0;
       return`<div class="nobc-cat-btn${cnt===0?' empty':''}" onclick="nobcSelectedCat='${c.id}';renderNobcListModal()">
         <div class="cat-icon">${c.icon}</div>
-        <div class="cat-th">${c.th}</div>
-        <div class="cat-zh">${c.zh}</div>
+        <div style="flex:1">
+          <div class="cat-th">${c.th}</div>
+          <div class="cat-zh">${c.zh}</div>
+        </div>
         <div class="cat-count">${cnt} 種</div>
       </div>`;
     }).join('');
 
-    body.innerHTML=allBtn+`<div class="nobc-cat-grid">${catGrid}</div>`;
+    body.innerHTML=`<div class="nobc-cat-grid">${allBtn}${catBtns}</div>`;
   } else {
-    // 第二頁：商品列表
+    // 第二頁：商品列表 — 返回列置頂，商品捲動
     const prods=getNobcProds();
-    let filtered;
-    let catLabel;
+    let filtered, catLabel;
     if(nobcSelectedCat==='__all__'){
       filtered=prods.map((p,i)=>({...p,_idx:i}));
-      catLabel='📋 全部商品';
+      catLabel='📋 ทั้งหมด 全部商品';
     }else{
       filtered=prods.map((p,i)=>({...p,_idx:i})).filter(p=>(p.category||'other')===nobcSelectedCat);
       const cat=CATEGORIES.find(c=>c.id===nobcSelectedCat);
@@ -1048,16 +1078,18 @@ function renderNobcListModal(){
     }
     titleEl.innerHTML='สินค้าไม่มีบาร์โค้ด<span class="zh">無條碼商品</span>';
 
-    const header=`<div class="nobc-cat-header">
+    // 返回列渲染到 sticky div（不隨商品捲動）
+    stickyHd.style.display='block';
+    stickyHd.innerHTML=`<div class="nobc-cat-header">
       <button class="nobc-cat-back" onclick="nobcSelectedCat=null;renderNobcListModal()">‹ กลับ / 返回分類</button>
       <div class="nobc-cat-title">${catLabel} <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">(${filtered.length})</span></div>
     </div>`;
 
     if(!filtered.length){
-      body.innerHTML=header+`<div class="empty-st" style="padding:32px 20px"><div class="ei" style="font-size:26px">🏷</div><div class="zh">此分類尚無商品</div></div>`;
+      body.innerHTML=`<div class="empty-st" style="padding:32px 20px"><div class="ei" style="font-size:26px">🏷</div><div class="zh">此分類尚無商品</div></div>`;
       return;
     }
-    body.innerHTML=header+filtered.map(p=>`
+    body.innerHTML=filtered.map(p=>`
       <div class="nobc-list-item">
         <div style="flex:1">
           <div class="nobc-list-name">${p.name}</div>
@@ -1182,50 +1214,70 @@ function toggleNewBcMode(){
 
 // ═══ 商品管理 ═══
 function renderProdGrid(){
-  const prods=getProds();const keys=Object.keys(prods);
-  const bcLbl=document.getElementById('bc-count-lbl');
-  if(bcLbl)bcLbl.textContent='共 '+keys.length+' 種';
-  const grid=document.getElementById('prod-grid');
-  if(grid){
-    if(!keys.length){
-      grid.innerHTML=`<div class="empty-st" style="grid-column:1/-1"><div class="ei">📦</div><div class="zh">尚無條碼商品</div></div>`;
-    }else{
-      grid.innerHTML=keys.map(bc=>{const p=prods[bc];const catLabel=getCatLabel(p.category);const catIcon=getCatIcon(p.category);return`
-        <div class="prod-card">
-          <div class="prod-bc">${bc}</div>
-          <div class="prod-name">${p.name}</div>
-          <div class="prod-price">NT$ ${p.price}</div>
-          ${p.category?`<div><span class="cat-tag">${catIcon} ${catLabel}</span></div>`:''}
-          <div class="prod-acts">
-            <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;font-family:var(--zh)" onclick="openEditProd('${bc}')">✏ 編輯</button>
-            <button class="btn btn-danger" style="font-size:12px;padding:6px 10px;font-family:var(--zh)" onclick="delProduct('${bc}')">🗑</button>
-          </div>
-        </div>`;}).join('');
-    }
-  }
+  const prods=getProds();
   const nobcProds=getNobcProds();
+  const bcKeys=Object.keys(prods);
+
+  const bcLbl=document.getElementById('bc-count-lbl');
+  if(bcLbl)bcLbl.textContent='共 '+bcKeys.length+' 種';
   const nobcLbl=document.getElementById('nobc-count-lbl');
   if(nobcLbl)nobcLbl.textContent='共 '+nobcProds.length+' 種';
-  const nobcGrid=document.getElementById('nobc-prod-grid');
-  if(nobcGrid){
-    if(!nobcProds.length){
-      nobcGrid.innerHTML=`<div class="empty-st" style="grid-column:1/-1;padding:28px"><div class="ei" style="font-size:24px">🏷</div><div class="zh">尚無無條碼商品，請點擊「新增無條碼商品」</div></div>`;
-    }else{
-      nobcGrid.innerHTML=nobcProds.map((p,i)=>{const catLabel=getCatLabel(p.category);const catIcon=getCatIcon(p.category);return`
-        <div class="prod-card" style="border-color:#e9d5ff">
-          <div class="prod-bc" style="color:var(--purple)">無條碼</div>
-          <div class="prod-name">${p.name}</div>
-          <div class="prod-price">NT$ ${p.price}</div>
-          ${p.category?`<div><span class="cat-tag" style="color:var(--purple);border-color:#e9d5ff;background:#faf5ff">${catIcon} ${catLabel}</span></div>`:''}
-          <div class="prod-acts">
-            <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;font-family:var(--zh);border-color:var(--purple);color:var(--purple)" onclick="editNobcProd(${i})">✏ 編輯</button>
-            <button class="btn btn-danger" style="font-size:12px;padding:6px 10px;font-family:var(--zh)" onclick="delNobcProd(${i})">🗑</button>
-          </div>
-        </div>`;}).join('');
-    }
-  }
-}
 
+  function renderCatSections(items,isNobc){
+    if(!items.length){
+      const msg=isNobc?'尚無無條碼商品，請點擊「新增無條碼商品」':'尚無條碼商品';
+      const ico=isNobc?'🏷':'📦';
+      return`<div class="empty-st" style="padding:32px 20px"><div class="ei">${ico}</div><div class="zh">${msg}</div></div>`;
+    }
+    const groups={};
+    items.forEach(item=>{const c=item.category||'other';if(!groups[c])groups[c]=[];groups[c].push(item);});
+    return CATEGORIES.filter(c=>groups[c.id]&&groups[c.id].length).map(c=>{
+      const list=groups[c.id];
+      const cards=list.map(item=>{
+        if(isNobc){
+          const i=item._idx;
+          return`<div class="prod-card" style="border-color:#e9d5ff">
+            <div class="prod-bc" style="color:var(--purple)">無條碼</div>
+            <div class="prod-name">${item.name}</div>
+            <div class="prod-price">NT$ ${item.price}</div>
+            <div class="prod-acts">
+              <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;font-family:var(--zh);border-color:var(--purple);color:var(--purple)" onclick="editNobcProd(${i})">✏ 編輯</button>
+              <button class="btn btn-danger" style="font-size:12px;padding:6px 10px" onclick="delNobcProd(${i})">🗑</button>
+            </div>
+          </div>`;
+        }else{
+          const bc=item.bc,p=item.p;
+          return`<div class="prod-card">
+            <div class="prod-bc">${bc}</div>
+            <div class="prod-name">${p.name}</div>
+            <div class="prod-price">NT$ ${p.price}</div>
+            <div class="prod-acts">
+              <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;font-family:var(--zh)" onclick="openEditProd('${bc}')">✏ 編輯</button>
+              <button class="btn btn-danger" style="font-size:12px;padding:6px 10px" onclick="delProduct('${bc}')">🗑</button>
+            </div>
+          </div>`;
+        }
+      }).join('');
+      return`<div class="cat-section">
+        <div class="cat-section-hd">
+          <span class="cs-icon">${c.icon}</span>
+          <span class="cs-th">${c.th}</span>
+          <span style="font-size:13px;font-weight:700;color:var(--text)">${c.zh}</span>
+          <span class="cs-count">${list.length} 種</span>
+        </div>
+        <div class="prod-grid">${cards}</div>
+      </div>`;
+    }).join('');
+  }
+
+  const nobcItems=nobcProds.map((p,i)=>({...p,_idx:i}));
+  const bcItems=bcKeys.map(bc=>({bc,p:prods[bc],category:prods[bc].category||'other'}));
+
+  const nobcArea=document.getElementById('nobc-prod-area');
+  if(nobcArea)nobcArea.innerHTML=renderCatSections(nobcItems,true);
+  const bcArea=document.getElementById('bc-prod-area');
+  if(bcArea)bcArea.innerHTML=renderCatSections(bcItems,false);
+}
 function saveAddProduct(){
   const bc=document.getElementById('ap-bc').value.trim();
   const name=document.getElementById('ap-name').value.trim();
