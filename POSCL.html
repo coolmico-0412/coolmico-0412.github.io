@@ -269,6 +269,22 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 #toast.ok{background:#064e3b;}
 #toast.err{background:#7f1d1d;}
 
+/* ── PHYSICAL SCANNER INPUT ── */
+.scanner-hw-wrap{position:relative;display:flex;gap:8px;align-items:center;}
+.scanner-hw-input{flex:1;padding:11px 44px 11px 14px;font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:2px;background:var(--surface2);border:2px solid var(--border2);border-radius:9px;color:var(--text);outline:none;transition:all .18s;}
+.scanner-hw-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--aglow);}
+.scanner-hw-input.flash-ok{border-color:var(--green);background:#f0fdf4;animation:flashOk .4s ease;}
+.scanner-hw-input.flash-err{border-color:var(--red);background:#fef2f2;animation:flashErr .4s ease;}
+@keyframes flashOk{0%{box-shadow:0 0 0 0 rgba(5,150,105,.5)}100%{box-shadow:0 0 0 8px rgba(5,150,105,0)}}
+@keyframes flashErr{0%{box-shadow:0 0 0 0 rgba(220,38,38,.5)}100%{box-shadow:0 0 0 8px rgba(220,38,38,0)}}
+.scanner-hw-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none;opacity:.5;}
+.hw-mode-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(90deg,#f0fdf4,#f8fafc);border:1.5px solid #bbf7d0;border-radius:10px;font-size:12px;color:var(--green);font-family:var(--zh);}
+.hw-mode-bar .hw-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(5,150,105,.6);animation:blink 1.2s infinite;flex-shrink:0;}
+.scan-mode-tabs{display:flex;gap:0;border:1.5px solid var(--border2);border-radius:9px;overflow:hidden;background:var(--surface2);}
+.scan-mode-tab{flex:1;padding:8px 10px;border:none;background:transparent;font-family:var(--zh);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.scan-mode-tab.active{background:var(--accent);color:#fff;}
+.scan-mode-tab:not(.active):hover{background:var(--aglow);color:var(--accent);}
+
 @media(max-width:900px){
   .pos-grid{grid-template-columns:1fr;}
   .report-cols{grid-template-columns:1fr;}
@@ -296,24 +312,62 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
       <!-- Scanner -->
       <div class="card">
         <div class="scanner-body">
-          <div class="video-wrap">
-            <div class="cam-ph" id="cam-ph">
-              <div class="icon">📷</div>
-              <div>กดปุ่ม "เริ่มสแกน" เพื่อเปิดกล้อง</div>
-              <div class="hint">รองรับเฉพาะ EAN-13 เท่านั้น</div>
+
+          <!-- Mode Tabs -->
+          <div class="scan-mode-tabs">
+            <button class="scan-mode-tab" id="tab-hw" onclick="switchScanMode('hw')">🔌 เครื่องสแกน / 掃描器</button>
+            <button class="scan-mode-tab active" id="tab-cam" onclick="switchScanMode('cam')">📷 กล้อง / 相機</button>
+          </div>
+
+          <!-- HW Scanner Panel -->
+          <div id="panel-hw" style="display:none;flex-direction:column;gap:10px;">
+            <div class="hw-mode-bar">
+              <div class="hw-dot"></div>
+              <span>เชื่อมต่อเครื่องสแกนบาร์โค้ด — สแกนได้เลย！/ 已連接條碼掃描器，直接掃描即可！</span>
             </div>
-            <video id="preview" autoplay muted playsinline></video>
-            <div class="scan-overlay" id="scan-ol" style="display:none">
-              <div class="scan-line"></div>
-              <div class="sc tl"></div><div class="sc tr"></div>
-              <div class="sc bl"></div><div class="sc br"></div>
+            <div class="scanner-hw-wrap">
+              <input
+                id="hw-input"
+                class="scanner-hw-input"
+                type="text"
+                inputmode="none"
+                autocomplete="off"
+                autocorrect="off"
+                spellcheck="false"
+                placeholder="สแกนหรือพิมพ์บาร์โค้ด... / 掃描或輸入條碼..."
+                onkeydown="onHwKeydown(event)"
+                oninput="onHwInput(this)"
+              >
+              <span class="scanner-hw-icon">📦</span>
+            </div>
+            <div style="font-size:11px;color:var(--muted);font-family:var(--zh);line-height:1.7;background:var(--surface2);padding:8px 12px;border-radius:8px;border:1px solid var(--border)">
+              💡 掃描器自動輸入條碼並按 Enter 確認 &nbsp;|&nbsp; 亦可手動輸入 13 碼後按 Enter<br>
+              支援 EAN-13 條碼 &nbsp;|&nbsp; 頁面任意位置掃描皆可被偵測
             </div>
           </div>
-          <div class="scan-controls">
-            <button class="btn btn-accent" style="flex:1" id="btn-start" onclick="startScanner()">▶ เริ่มสแกน / 開始掃描</button>
-            <button class="btn btn-ghost" id="btn-stop" onclick="stopScanner()" disabled>■ หยุด / 停止</button>
+
+          <!-- Camera Panel -->
+          <div id="panel-cam" style="display:flex;flex-direction:column;gap:10px;">
+            <div class="video-wrap">
+              <div class="cam-ph" id="cam-ph">
+                <div class="icon">📷</div>
+                <div>กดปุ่ม "เริ่มสแกน" เพื่อเปิดกล้อง</div>
+                <div class="hint">รองรับเฉพาะ EAN-13 เท่านั้น</div>
+              </div>
+              <video id="preview" autoplay muted playsinline></video>
+              <div class="scan-overlay" id="scan-ol" style="display:none">
+                <div class="scan-line"></div>
+                <div class="sc tl"></div><div class="sc tr"></div>
+                <div class="sc bl"></div><div class="sc br"></div>
+              </div>
+            </div>
+            <div class="scan-controls">
+              <button class="btn btn-accent" style="flex:1" id="btn-start" onclick="startScanner()">▶ เริ่มสแกน / 開始掃描</button>
+              <button class="btn btn-ghost" id="btn-stop" onclick="stopScanner()" disabled>■ หยุด / 停止</button>
+            </div>
           </div>
-          <div class="scan-st" id="scan-st">รอสแกน...</div>
+
+          <div class="scan-st" id="scan-st">รอสแกน... / 等待掃描</div>
           <button class="btn-nobc" onclick="openNobcList()">+ สินค้าไม่มีบาร์โค้ด / 無條碼商品</button>
         </div>
       </div>
@@ -1391,9 +1445,150 @@ function seedDemo(){
   saveTx(txs);
 }
 
+// ═══ 掃描模式切換 ═══
+let scanMode = 'cam'; // 'cam' | 'hw'
+
+function switchScanMode(mode){
+  scanMode = mode;
+  // tabs
+  document.getElementById('tab-hw').classList.toggle('active', mode==='hw');
+  document.getElementById('tab-cam').classList.toggle('active', mode==='cam');
+  // panels
+  document.getElementById('panel-hw').style.display = mode==='hw' ? 'flex' : 'none';
+  document.getElementById('panel-cam').style.display = mode==='cam' ? 'flex' : 'none';
+  // stop camera if switching away
+  if(mode==='hw' && scanning) stopScanner();
+  // focus hw input
+  if(mode==='hw'){
+    setTimeout(()=>{
+      const inp=document.getElementById('hw-input');
+      if(inp) inp.focus();
+    },80);
+  }
+  setSt(mode==='hw' ? '🔌 พร้อมรับข้อมูลจากเครื่องสแกน / 等待掃描器輸入' : 'รอสแกน... / 等待掃描', '');
+}
+
+// ═══ 條碼掃描器（HID Keyboard）輸入處理 ═══
+// 掃描器行為：快速送出字元（每字元 < 50ms），最後送 Enter
+// 策略：
+//   1. hw-input 框專門接收掃描器輸入（Enter 觸發）
+//   2. 全域監聽：當焦點不在任何 input/select/textarea 時，
+//      自動截取掃描器字元並在背景緩衝，Enter 後處理
+let _globalBuf = '';
+let _globalTimer = null;
+const HW_TIMEOUT = 120; // ms — 超過此時間無輸入則清除緩衝（避免手動打字累積）
+
+// 全域鍵盤監聽（收銀台頁在任意位置掃描皆可）
+document.addEventListener('keydown', function(e){
+  // 只在收銀台頁 & 掃描器模式 & 沒有 overlay 開啟
+  if(!document.getElementById('page-pos').classList.contains('active')) return;
+  if(document.querySelector('.overlay.open') || document.querySelector('.review-overlay.open')) return;
+  const tag = document.activeElement ? document.activeElement.tagName : '';
+  // 若焦點在 hw-input，讓 onkeydown 自己處理
+  if(document.activeElement && document.activeElement.id==='hw-input') return;
+  // 若焦點在其他 input/select/textarea，不攔截
+  if(tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA') return;
+
+  if(e.key==='Enter'){
+    if(_globalBuf.length>=8){ // 至少8碼才處理
+      const code=_globalBuf.replace(/\D/g,'');
+      _globalBuf='';
+      clearTimeout(_globalTimer);
+      handleHwCode(code);
+    }else{
+      _globalBuf='';
+    }
+    return;
+  }
+  // 只接受數字（EAN 條碼為純數字）
+  if(e.key.length===1 && /\d/.test(e.key)){
+    _globalBuf += e.key;
+    clearTimeout(_globalTimer);
+    _globalTimer = setTimeout(()=>{_globalBuf='';},HW_TIMEOUT*3);
+  }
+});
+
+// hw-input 框的 keydown（Enter 送出）
+function onHwKeydown(e){
+  if(e.key==='Enter'){
+    e.preventDefault();
+    const val=(e.target.value||'').replace(/\D/g,'').trim();
+    e.target.value='';
+    if(val) handleHwCode(val);
+  }
+}
+
+// hw-input 的 oninput（防止非數字，自動截斷 13 碼後送出）
+function onHwInput(inp){
+  // 移除非數字
+  inp.value = inp.value.replace(/\D/g,'');
+  // 超過 13 碼，自動送出（部分掃描器不送 Enter）
+  if(inp.value.length >= 13){
+    const val = inp.value.slice(0,13);
+    inp.value = '';
+    handleHwCode(val);
+  }
+}
+
+// 處理掃描器輸入的條碼
+function handleHwCode(raw){
+  const code = (raw||'').trim();
+  // EAN-13 驗證
+  if(isEAN13(code)){
+    const now=Date.now();
+    if(code===lastCode && now-lastCodeTime<DEBOUNCE) return;
+    lastCode=code; lastCodeTime=now;
+    addByBarcode(code);
+    flashHwInput('ok');
+    // 確保 hw-input 重新聚焦
+    if(scanMode==='hw'){
+      const inp=document.getElementById('hw-input');
+      if(inp){inp.value='';setTimeout(()=>inp.focus(),50);}
+    }
+  } else if(code.length > 0){
+    setSt('⚠ 條碼格式錯誤（需 EAN-13 13碼）：'+code, 'err');
+    flashHwInput('err');
+    if(scanMode==='hw'){
+      const inp=document.getElementById('hw-input');
+      if(inp){inp.value='';setTimeout(()=>inp.focus(),50);}
+    }
+  }
+}
+
+function flashHwInput(type){
+  const inp=document.getElementById('hw-input');
+  if(!inp)return;
+  inp.classList.remove('flash-ok','flash-err');
+  void inp.offsetWidth; // reflow
+  inp.classList.add(type==='ok'?'flash-ok':'flash-err');
+  setTimeout(()=>inp.classList.remove('flash-ok','flash-err'),500);
+}
+
+// 收銀台頁面顯示時，若在掃描器模式則自動聚焦
+function focusHwIfNeeded(){
+  if(scanMode==='hw' && document.getElementById('page-pos').classList.contains('active')){
+    const inp=document.getElementById('hw-input');
+    if(inp) inp.focus();
+  }
+}
+// 點擊收銀台空白區域時重新聚焦輸入框
+document.getElementById('page-pos').addEventListener('click', function(e){
+  const tag=(e.target||{}).tagName||'';
+  if(tag!=='INPUT'&&tag!=='BUTTON'&&tag!=='SELECT'&&tag!=='TEXTAREA'){
+    focusHwIfNeeded();
+  }
+});
+
 seedDemo();
 renderCart();
 initPersistence();
+// 頁面切換時若切回收銀台，自動聚焦掃描器輸入框
+const _origShowPage = showPage;
+window.showPage = function(id, btn){
+  _origShowPage(id, btn);
+  if(id==='pos') setTimeout(focusHwIfNeeded, 150);
+};
+
 </script>
 </body>
 </html>
