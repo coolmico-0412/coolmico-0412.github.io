@@ -315,16 +315,12 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 
           <!-- Mode Tabs -->
           <div class="scan-mode-tabs">
-            <button class="scan-mode-tab" id="tab-hw" onclick="switchScanMode('hw')">🔌 เครื่องสแกน / 掃描器</button>
-            <button class="scan-mode-tab active" id="tab-cam" onclick="switchScanMode('cam')">📷 กล้อง / 相機</button>
+            <button class="scan-mode-tab active" id="tab-hw" onclick="switchScanMode('hw')">🔌 เครื่องสแกน / 掃描器</button>
+            <button class="scan-mode-tab" id="tab-cam" onclick="switchScanMode('cam')">📷 กล้อง / 相機</button>
           </div>
 
           <!-- HW Scanner Panel -->
-          <div id="panel-hw" style="display:none;flex-direction:column;gap:10px;">
-            <div class="hw-mode-bar">
-              <div class="hw-dot"></div>
-              <span>เชื่อมต่อเครื่องสแกนบาร์โค้ด — สแกนได้เลย！/ 已連接條碼掃描器，直接掃描即可！</span>
-            </div>
+          <div id="panel-hw" style="display:flex;flex-direction:column;gap:10px;">
             <div class="scanner-hw-wrap">
               <input
                 id="hw-input"
@@ -340,14 +336,10 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
               >
               <span class="scanner-hw-icon">📦</span>
             </div>
-            <div style="font-size:11px;color:var(--muted);font-family:var(--zh);line-height:1.7;background:var(--surface2);padding:8px 12px;border-radius:8px;border:1px solid var(--border)">
-              💡 掃描器自動輸入條碼並按 Enter 確認 &nbsp;|&nbsp; 亦可手動輸入 13 碼後按 Enter<br>
-              支援 EAN-13 條碼 &nbsp;|&nbsp; 頁面任意位置掃描皆可被偵測
-            </div>
           </div>
 
           <!-- Camera Panel -->
-          <div id="panel-cam" style="display:flex;flex-direction:column;gap:10px;">
+          <div id="panel-cam" style="display:none;flex-direction:column;gap:10px;">
             <div class="video-wrap">
               <div class="cam-ph" id="cam-ph">
                 <div class="icon">📷</div>
@@ -1446,7 +1438,7 @@ function seedDemo(){
 }
 
 // ═══ 掃描模式切換 ═══
-let scanMode = 'cam'; // 'cam' | 'hw'
+let scanMode = 'hw'; // 'cam' | 'hw'
 
 function switchScanMode(mode){
   scanMode = mode;
