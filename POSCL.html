@@ -85,7 +85,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .btn-danger:hover{border-color:var(--red);color:var(--red);background:#fef2f2;}
 
 /* ── NO-BARCODE BUTTON ── */
-.btn-nobc{width:100%;padding:10px;background:transparent;border:1.5px dashed var(--border2);color:var(--muted);font-size:13px;border-radius:8px;cursor:pointer;font-family:var(--th);transition:all .18s;}
+.btn-nobc{width:100%;padding:10px;background:transparent;border:1.5px dashed var(--border2);color:var(--muted);font-size:20px;border-radius:8px;cursor:pointer;font-family:var(--th);transition:all .18s;}
 .btn-nobc:hover{border-color:var(--purple);color:var(--purple);background:#faf5ff;}
 
 /* ── CHECKOUT PANEL ── */
@@ -111,27 +111,27 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 
 /* ── NOBC CATEGORY GRID (in POS modal) ── */
 .nobc-cat-grid{display:flex;flex-direction:column;gap:0;}
-.nobc-cat-btn{display:flex;flex-direction:row;align-items:center;gap:14px;padding:14px 20px;background:var(--surface);border:none;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;font-family:var(--zh);text-align:left;width:100%;}
+.nobc-cat-btn{display:flex;flex-direction:row;align-items:center;gap:14px;padding:18px 20px;background:var(--surface);border:none;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;font-family:var(--zh);text-align:left;width:100%;}
 .nobc-cat-btn:last-child{border-bottom:none;}
 .nobc-cat-btn:hover{background:var(--surface2);}
 .nobc-cat-btn.empty{opacity:.4;pointer-events:none;}
-.nobc-cat-btn .cat-icon{font-size:22px;line-height:1;flex-shrink:0;}
-.nobc-cat-btn .cat-th{font-size:12px;color:var(--muted);font-family:var(--th);line-height:1.3;}
-.nobc-cat-btn .cat-zh{font-size:14px;font-weight:700;color:var(--text);flex:1;}
-.nobc-cat-btn .cat-count{font-size:11px;color:var(--muted2);font-family:var(--mono);background:var(--surface3);border-radius:8px;padding:2px 9px;flex-shrink:0;}
+.nobc-cat-btn .cat-icon{font-size:33px;line-height:1;flex-shrink:0;}
+.nobc-cat-btn .cat-th{font-size:18px;color:var(--muted);font-family:var(--th);line-height:1.3;}
+.nobc-cat-btn .cat-zh{font-size:21px;font-weight:700;color:var(--text);flex:1;}
+.nobc-cat-btn .cat-count{font-size:17px;color:var(--muted2);font-family:var(--mono);background:var(--surface3);border-radius:8px;padding:3px 12px;flex-shrink:0;}
 
 /* ── NOBC LIST (in POS modal after category select) ── */
-.nobc-list-item{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);transition:background .12s;}
+.nobc-list-item{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);transition:background .12s;}
 .nobc-list-item:last-child{border-bottom:none;}
 .nobc-list-item:hover{background:var(--surface2);}
-.nobc-list-name{flex:1;font-weight:600;font-family:var(--zh);color:var(--text);font-size:15px;}
-.nobc-list-price{font-family:var(--mono);font-weight:700;color:var(--gold);font-size:15px;flex-shrink:0;}
-.nobc-list-add{padding:5px 12px;font-size:12px;border-radius:6px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;font-family:var(--zh);font-weight:600;transition:all .15s;flex-shrink:0;}
+.nobc-list-name{flex:1;font-weight:600;font-family:var(--zh);color:var(--text);font-size:23px;}
+.nobc-list-price{font-family:var(--mono);font-weight:700;color:var(--gold);font-size:23px;flex-shrink:0;}
+.nobc-list-add{padding:8px 18px;font-size:18px;border-radius:6px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;font-family:var(--zh);font-weight:600;transition:all .15s;flex-shrink:0;}
 .nobc-list-add:hover{background:var(--accent);color:#fff;}
 .nobc-cat-header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:2px solid var(--border);background:var(--surface2);}
-.nobc-cat-back{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--accent);font-weight:600;cursor:pointer;border:none;background:transparent;font-family:var(--zh);padding:4px 0;}
+.nobc-cat-back{display:flex;align-items:center;gap:5px;font-size:20px;color:var(--accent);font-weight:600;cursor:pointer;border:none;background:transparent;font-family:var(--zh);padding:4px 0;}
 .nobc-cat-back:hover{color:var(--accent2);}
-.nobc-cat-title{font-size:14px;font-weight:700;color:var(--text);font-family:var(--zh);}
+.nobc-cat-title{font-size:21px;font-weight:700;color:var(--text);font-family:var(--zh);}
 
 .nobc-temp-bar{display:flex;align-items:center;padding:12px 16px;border-bottom:2px solid var(--border);background:var(--surface2);gap:10px;}
 .t-row:last-child{border-bottom:none;}
@@ -193,12 +193,13 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .page-hd-title .zh{font-family:var(--zh);font-size:13px;color:var(--muted);font-weight:400;margin-left:6px;}
 .page-hd-sub{font-size:12px;color:var(--muted);margin-top:3px;font-family:var(--zh);}
 .btn-row{display:flex;gap:7px;flex-wrap:wrap;}
-.prod-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--sh);transition:all .18s;}
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;}
+.prod-card{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:5px;box-shadow:var(--sh);transition:all .18s;}
 .prod-card:hover{border-color:var(--border2);box-shadow:var(--sh-md);transform:translateY(-1px);}
-.prod-bc{font-family:var(--mono);font-size:11px;color:var(--accent);}
-.prod-name{font-size:15px;font-weight:600;color:var(--text);font-family:var(--zh);}
-.prod-price{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--gold);}
-.prod-acts{display:flex;gap:6px;margin-top:4px;}
+.prod-bc{font-family:var(--mono);font-size:9px;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.prod-name{font-size:11px;font-weight:600;color:var(--text);font-family:var(--zh);line-height:1.3;}
+.prod-price{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--gold);}
+.prod-acts{display:flex;gap:4px;margin-top:2px;}
 
 /* ── FILE STATUS BUTTON (in products page) ── */
 #file-status-prod{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:9px;cursor:pointer;font-size:12px;font-family:var(--zh);color:var(--muted);transition:all .18s;white-space:nowrap;}
@@ -605,10 +606,10 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
     <!-- 標題列 -->
     <div style="padding:16px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);flex-shrink:0;">
       <div>
-        <div class="m-title" style="margin:0" id="nobc-modal-title">สินค้าไม่มีบาร์โค้ด<span class="zh">無條碼商品</span></div>
+        <div class="m-title" style="margin:0;font-size:25px" id="nobc-modal-title">สินค้าไม่มีบาร์โค้ด<span class="zh" style="font-size:18px">無條碼商品</span></div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;border-style:dashed;color:var(--purple);border-color:var(--purple)" onclick="openTempNobc()">⚡ เพิ่มสินค้าชั่วคราว / 暫時增加商品</button>
+        <button class="btn btn-ghost" style="font-size:18px;padding:9px 16px;border-style:dashed;color:var(--purple);border-color:var(--purple)" onclick="openTempNobc()">⚡ เพิ่มสินค้าชั่วคราว / 暫時增加商品</button>
       </div>
     </div>
     <!-- 置頂 header（返回分類列，只在商品列表頁顯示）-->
@@ -1306,8 +1307,8 @@ function renderProdGrid(){
           <div class="prod-name">${p.name}</div>
           <div class="prod-price">NT$ ${p.price}</div>
           <div class="prod-acts">
-            <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;font-family:var(--zh);border-color:var(--purple);color:var(--purple)" onclick="editNobcProd(${p._idx})">✏ 編輯</button>
-            <button class="btn btn-danger" style="font-size:12px;padding:6px 10px" onclick="delNobcProd(${p._idx})">🗑</button>
+            <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh);border-color:var(--purple);color:var(--purple)" onclick="editNobcProd(${p._idx})">✏</button>
+            <button class="btn btn-danger" style="font-size:10px;padding:4px 7px" onclick="delNobcProd(${p._idx})">🗑</button>
           </div>
         </div>`).join('')
       : `<div class="empty-st" style="padding:28px 16px"><div class="ei" style="font-size:24px">🏷</div><div class="zh">此分類無無條碼商品</div></div>`;
@@ -1319,8 +1320,8 @@ function renderProdGrid(){
           <div class="prod-name">${p.name}</div>
           <div class="prod-price">NT$ ${p.price}</div>
           <div class="prod-acts">
-            <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;font-family:var(--zh)" onclick="openEditProd('${bc}')">✏ 編輯</button>
-            <button class="btn btn-danger" style="font-size:12px;padding:6px 10px" onclick="delProduct('${bc}')">🗑</button>
+            <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh)" onclick="openEditProd('${bc}')">✏</button>
+            <button class="btn btn-danger" style="font-size:10px;padding:4px 7px" onclick="delProduct('${bc}')">🗑</button>
           </div>
         </div>`).join('')
       : `<div class="empty-st" style="padding:28px 16px"><div class="ei" style="font-size:24px">📦</div><div class="zh">此分類無條碼商品</div></div>`;
