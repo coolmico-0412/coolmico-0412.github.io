@@ -445,7 +445,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
     </div>
     <div class="btn-row" style="align-items:center">
       <!-- 資料檔案 -->
-      <div id="file-status-prod" onclick="pickDataFile()" title="點擊選擇資料檔案">
+      <div id="file-status-prod" onclick="pickDataFile()" title="點擊選擇或更換資料檔案">
         <span id="file-icon-prod">💾</span>
         <span id="file-label-prod">點擊選擇資料檔案</span>
       </div>
@@ -805,37 +805,75 @@ async function initPersistence(){
     if(el)el.textContent='localStorage 模式';
     return;
   }
+  // 嘗試恢復上次的檔案 handle
   const saved=await _getSavedHandle();
-  if(!saved){setFileStatus('','點擊選擇資料檔案');return;}
-  _fileHandle=saved;
-  try{
-    let perm=await _fileHandle.queryPermission({mode:'readwrite'});
-    if(perm==='granted'){await _loadFromFile();setFileStatus('linked','✓ '+(_fileHandle.name||'資料檔案'));return;}
-  }catch(e){}
-  setFileStatus('','🔑 點擊重新授權存取');
+  if(saved){
+    _fileHandle=saved;
+    try{
+      let perm=await _fileHandle.queryPermission({mode:'readwrite'});
+      if(perm==='granted'){
+        await _loadFromFile();
+        setFileStatus('linked','✓ '+(_fileHandle.name||'pos_data.json'));
+        return;
+      }
+      if(perm==='prompt'){
+        // 需要使用者手勢才能 requestPermission，等點擊時再處理
+        setFileStatus('','🔑 點擊重新授權存取');
+        return;
+      }
+    }catch(e){}
+  }
+  // 沒有已儲存的 handle → 自動嘗試建立 pos_data.json
+  // 注意：showSaveFilePicker 需要使用者手勢，這裡只能等點擊
+  setFileStatus('','💾 點擊選擇資料檔案');
 }
 
 async function pickDataFile(){
   if(!('showOpenFilePicker' in window)){showToast('此瀏覽器不支援自動儲存，請使用 Chrome 或 Edge','err');return;}
+  // 若已有 handle 且需重新授權
   if(_fileHandle){
     try{
       const perm=await _fileHandle.requestPermission({mode:'readwrite'});
-      if(perm==='granted'){await _loadFromFile();setFileStatus('linked','✓ '+(_fileHandle.name||'資料檔案'));showToast('已重新連結：'+_fileHandle.name,'ok');renderProdGrid();renderStats();renderMonthly();renderDaily();return;}
+      if(perm==='granted'){
+        await _loadFromFile();
+        setFileStatus('linked','✓ '+(_fileHandle.name||'pos_data.json'));
+        showToast('已重新連結：'+_fileHandle.name,'ok');
+        renderProdGrid();renderStats();renderMonthly();renderDaily();
+        return;
+      }
     }catch(e){}
   }
-  const choice=confirm('請選擇資料儲存方式：\n\n【確定】選擇現有的 pos_data.json 檔案（載入並同步）\n【取消】建立全新的資料檔案');
+  // 直接開啟檔案選擇器（選擇現有檔案 或 建立新檔案）
+  // 使用 showOpenFilePicker，讓使用者自行選擇；若想建立新檔則選擇不存在的路徑
   try{
-    if(choice){
-      [_fileHandle]=await window.showOpenFilePicker({types:[{description:'POS 資料',accept:{'application/json':['.json']}}],multiple:false});
-      await _saveHandle(_fileHandle);await _loadFromFile();setFileStatus('linked','✓ '+_fileHandle.name);showToast('已載入：'+_fileHandle.name,'ok');
-      renderProdGrid();renderStats();renderMonthly();renderDaily();
-    }else{
-      _fileHandle=await window.showSaveFilePicker({suggestedName:'pos_data.json',types:[{description:'POS 資料',accept:{'application/json':['.json']}}]});
-      await _saveHandle(_fileHandle);
+    // 先問使用者是開啟舊檔還是建立新檔，用 showSaveFilePicker 可同時做兩件事
+    _fileHandle=await window.showSaveFilePicker({
+      suggestedName:'pos_data.json',
+      types:[{description:'POS 資料檔案',accept:{'application/json':['.json']}}]
+    });
+    await _saveHandle(_fileHandle);
+    // 嘗試讀取現有內容（使用者選了已存在的 json）
+    try{
+      const existing=await _readFile(_fileHandle);
+      if(existing && (existing.products||existing.transactions)){
+        if(existing.products)     localStorage.setItem('pos_products',      JSON.stringify(existing.products));
+        if(existing.nobc_products)localStorage.setItem('pos_nobc_products', JSON.stringify(existing.nobc_products));
+        if(existing.transactions) localStorage.setItem('pos_transactions',  JSON.stringify(existing.transactions));
+        setFileStatus('linked','✓ '+_fileHandle.name);
+        showToast('已載入現有資料：'+_fileHandle.name,'ok');
+      }else{
+        throw new Error('empty');
+      }
+    }catch(readErr){
+      // 檔案是空的或新建的，寫入目前資料
       await _writeFile(_fileHandle,{version:1,savedAt:new Date().toISOString(),products:getProds(),nobc_products:getNobcProds(),transactions:getTx()});
-      setFileStatus('linked','✓ '+_fileHandle.name);showToast('已建立新資料檔案：'+_fileHandle.name,'ok');
+      setFileStatus('linked','✓ '+_fileHandle.name);
+      showToast('已建立資料檔案：'+_fileHandle.name,'ok');
     }
-  }catch(e){if(e.name!=='AbortError')showToast('操作取消或失敗','err');}
+    renderProdGrid();renderStats();renderMonthly();renderDaily();
+  }catch(e){
+    if(e.name!=='AbortError') showToast('操作取消','err');
+  }
 }
 
 // ═══ 資料層 ═══
