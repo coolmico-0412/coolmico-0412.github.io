@@ -305,7 +305,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 
 /* ── PHYSICAL SCANNER INPUT ── */
 .scanner-hw-wrap{position:relative;display:flex;gap:8px;align-items:center;}
-.scanner-hw-input{flex:1;padding:11px 44px 11px 14px;font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:2px;background:var(--surface2);border:2px solid var(--border2);border-radius:9px;color:var(--text);outline:none;transition:all .18s;}
+.scanner-hw-input{flex:1;padding:11px 44px 11px 14px;font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:2px;background:var(--surface2);border:2px solid var(--border2);border-radius:9px;color:var(--text);outline:none;transition:all .18s;ime-mode:disabled;}
 .scanner-hw-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--aglow);}
 .scanner-hw-input.flash-ok{border-color:var(--green);background:#f0fdf4;animation:flashOk .4s ease;}
 .scanner-hw-input.flash-err{border-color:var(--red);background:#fef2f2;animation:flashErr .4s ease;}
@@ -360,13 +360,16 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
                 id="hw-input"
                 class="scanner-hw-input"
                 type="text"
-                inputmode="none"
+                inputmode="text"
                 autocomplete="off"
                 autocorrect="off"
+                autocapitalize="none"
                 spellcheck="false"
+                lang="en"
                 placeholder="สแกนหรือพิมพ์บาร์โค้ด... / 掃描或輸入條碼..."
                 onkeydown="onHwKeydown(event)"
                 oninput="onHwInput(this)"
+                oncompositionstart="onHwCompose(this)"
               >
               <span class="scanner-hw-icon">📦</span>
             </div>
@@ -378,7 +381,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
               <div class="cam-ph" id="cam-ph">
                 <div class="icon">📷</div>
                 <div>กดปุ่ม "เริ่มสแกน" เพื่อเปิดกล้อง</div>
-                <div class="hint">รองรับเฉพาะ EAN-13 เท่านั้น</div>
+                <div class="hint">รองรับ EAN / UPC / Code 128 / Code 39 และอื่นๆ</div>
               </div>
               <video id="preview" autoplay muted playsinline></video>
               <div class="scan-overlay" id="scan-ol" style="display:none">
@@ -586,7 +589,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 <div class="overlay" id="m-addprod">
   <div class="mbox">
     <div class="m-title">+ เพิ่มสินค้า<span class="zh">新增商品</span></div>
-    <div class="fg"><label>條碼（EAN-13，13位數）*</label><input class="fi" id="ap-bc" type="text" placeholder="輸入 13 碼條碼" style="font-family:var(--mono)" maxlength="13"></div>
+    <div class="fg"><label>條碼 *（EAN / UPC / Code 128 / Code 39 等）</label><input class="fi" id="ap-bc" type="text" placeholder="輸入或掃描條碼" style="font-family:var(--mono)"></div>
     <div class="fg"><label>品項名稱 *</label><input class="fi" id="ap-name" type="text" placeholder="例如：礦泉水"></div>
     <div class="fg"><label>單價（NT$）*</label><input class="fi" id="ap-price" type="number" min="0" step="1" placeholder="0"></div>
     <div class="fg">
@@ -857,14 +860,23 @@ const DEBOUNCE=2000;
 let allowNewBc=false;
 let nobcSelectedCat=null; // null=分類選擇頁, 'frozen'等=商品清單頁
 
-// ═══ EAN-13 驗證 ═══
-function isEAN13(code){
+// ═══ 條碼驗證（支援各種常用格式）═══
+// 支援：EAN-13, EAN-8, UPC-A, UPC-E, Code 39, Code 128, ITF, Codabar, QR Code 等
+function isValidBarcode(code){
   code=(code||'').trim();
+  if(code.length<3||code.length>80)return false;
+  // 允許英數字、空白及條碼常用特殊字元（- . / + % $ * 空格）
+  return /^[A-Za-z0-9\-\.\/\+\%\$\* ]+$/.test(code);
+}
+// 向下相容（舊呼叫點改用 isValidBarcode）
+const isEAN13 = isValidBarcode;
+
+// EAN-13 checksum 檢查（僅用於新增商品欄位的額外提示，非強制）
+function checkEAN13(code){
   if(!/^\d{13}$/.test(code))return false;
   let sum=0;
   for(let i=0;i<12;i++)sum+=parseInt(code[i])*(i%2===0?1:3);
-  const check=(10-(sum%10))%10;
-  return check===parseInt(code[12]);
+  return (10-(sum%10))%10===parseInt(code[12]);
 }
 
 // ═══ 掃描器 ═══
@@ -899,7 +911,8 @@ function startDecodeLoop(v){
   }
 }
 async function useNative(v){
-  let det;try{det=new BarcodeDetector({formats:['ean_13']});}catch(e){det=new BarcodeDetector();}
+  const BC_FORMATS=['ean_13','ean_8','upc_a','upc_e','code_39','code_128','itf','codabar','data_matrix','qr_code','pdf417','aztec'];
+  let det;try{det=new BarcodeDetector({formats:BC_FORMATS});}catch(e){try{det=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','code_128','code_39']});}catch(e2){det=new BarcodeDetector();}}
   const loop=async()=>{if(!scanning)return;try{if(v.readyState>=2){const bs=await det.detect(v);if(bs.length)onCode(bs[0].rawValue);}}catch(e){}if(scanning)setTimeout(loop,80);};loop();
 }
 function useZXing(v){
@@ -912,7 +925,7 @@ function useZXingCanvas(v){
 }
 function onCode(raw){
   const code=(raw||'').trim();
-  if(!isEAN13(code))return;
+  if(!isValidBarcode(code))return;
   const now=Date.now();
   if(code===lastCode&&now-lastCodeTime<DEBOUNCE)return;
   lastCode=code;lastCodeTime=now;
@@ -1352,7 +1365,7 @@ function saveAddProduct(){
   const name=document.getElementById('ap-name').value.trim();
   const price=parseFloat(document.getElementById('ap-price').value);
   const category=document.getElementById('ap-cat').value||'other';
-  if(!isEAN13(bc)){showToast('條碼格式不正確，需為有效的 EAN-13（13位數）','err');return;}
+  if(!isValidBarcode(bc)){showToast('條碼格式不正確（至少 3 碼，英數字）','err');return;}
   if(!name){showToast('請輸入品項名稱','err');return;}
   if(isNaN(price)||price<0){showToast('請輸入正確價格','err');return;}
   const prods=getProds();prods[bc]={name,price,category};saveProds(prods);
@@ -1571,11 +1584,20 @@ function switchScanMode(mode){
   document.getElementById('panel-cam').style.display = mode==='cam' ? 'flex' : 'none';
   // stop camera if switching away
   if(mode==='hw' && scanning) stopScanner();
-  // focus hw input
+  // focus hw input + attach composition guards
   if(mode==='hw'){
     setTimeout(()=>{
       const inp=document.getElementById('hw-input');
-      if(inp) inp.focus();
+      if(!inp) return;
+      inp.focus();
+      // 攔截 compositionend，避免 IME 候選字插入欄位
+      if(!inp._compGuard){
+        inp._compGuard = true;
+        inp.addEventListener('compositionend', function(){
+          // 丟棄所有非數字（中文候選字）
+          this.value = this.value.replace(/\D/g,'');
+        });
+      }
     },80);
   }
   setSt(mode==='hw' ? '🔌 พร้อมรับข้อมูลจากเครื่องสแกน / 等待掃描器輸入' : 'รอสแกน... / 等待掃描', '');
@@ -1603,8 +1625,8 @@ document.addEventListener('keydown', function(e){
   if(tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA') return;
 
   if(e.key==='Enter'){
-    if(_globalBuf.length>=8){ // 至少8碼才處理
-      const code=_globalBuf.replace(/\D/g,'');
+    if(_globalBuf.trim().length>=3){
+      const code=_globalBuf.trim();
       _globalBuf='';
       clearTimeout(_globalTimer);
       handleHwCode(code);
@@ -1613,8 +1635,8 @@ document.addEventListener('keydown', function(e){
     }
     return;
   }
-  // 只接受數字（EAN 條碼為純數字）
-  if(e.key.length===1 && /\d/.test(e.key)){
+  // 只接受 ASCII 可印字元（條碼可能含英數及部分符號）
+  if(e.key.length===1 && /[\x20-\x7E]/.test(e.key)){
     _globalBuf += e.key;
     clearTimeout(_globalTimer);
     _globalTimer = setTimeout(()=>{_globalBuf='';},HW_TIMEOUT*3);
@@ -1625,19 +1647,31 @@ document.addEventListener('keydown', function(e){
 function onHwKeydown(e){
   if(e.key==='Enter'){
     e.preventDefault();
-    const val=(e.target.value||'').replace(/\D/g,'').trim();
+    const val=(e.target.value||'').trim();
     e.target.value='';
     if(val) handleHwCode(val);
   }
 }
 
 // hw-input 的 oninput（防止非數字，自動截斷 13 碼後送出）
+let _hwComposing = false; // 追蹤是否正在 IME 組字中
+
+function onHwCompose(inp){
+  // 中文輸入法開始組字時，立刻清空並取消 composition
+  const saved = inp.value.replace(/[^\x20-\x7E]/g,''); // 只保留 ASCII 可印字元
+  inp.blur();
+  inp.value = saved;
+  inp.focus();
+  setTimeout(()=>{ inp.value = inp.value.replace(/[^\x20-\x7E]/g,''); }, 0);
+}
+
 function onHwInput(inp){
-  // 移除非數字
-  inp.value = inp.value.replace(/\D/g,'');
-  // 超過 13 碼，自動送出（部分掃描器不送 Enter）
-  if(inp.value.length >= 13){
-    const val = inp.value.slice(0,13);
+  // 移除非 ASCII 可印字元（中文等 IME 輸出）
+  const clean = inp.value.replace(/[^\x20-\x7E]/g,'');
+  if(inp.value !== clean) inp.value = clean;
+  // 超過 50 字元視為已完整輸入，自動送出
+  if(inp.value.trim().length >= 50){
+    const val = inp.value.trim();
     inp.value = '';
     handleHwCode(val);
   }
@@ -1646,20 +1680,18 @@ function onHwInput(inp){
 // 處理掃描器輸入的條碼
 function handleHwCode(raw){
   const code = (raw||'').trim();
-  // EAN-13 驗證
-  if(isEAN13(code)){
+  if(isValidBarcode(code)){
     const now=Date.now();
     if(code===lastCode && now-lastCodeTime<DEBOUNCE) return;
     lastCode=code; lastCodeTime=now;
     addByBarcode(code);
     flashHwInput('ok');
-    // 確保 hw-input 重新聚焦
     if(scanMode==='hw'){
       const inp=document.getElementById('hw-input');
       if(inp){inp.value='';setTimeout(()=>inp.focus(),50);}
     }
   } else if(code.length > 0){
-    setSt('⚠ 條碼格式錯誤（需 EAN-13 13碼）：'+code, 'err');
+    setSt('⚠ 條碼格式無法辨識：'+code, 'err');
     flashHwInput('err');
     if(scanMode==='hw'){
       const inp=document.getElementById('hw-input');
