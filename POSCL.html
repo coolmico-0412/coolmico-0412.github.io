@@ -303,7 +303,30 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 #toast.ok{background:#064e3b;}
 #toast.err{background:#7f1d1d;}
 
-/* ── PHYSICAL SCANNER INPUT ── */
+/* ── SCROLL TO TOP ── */
+.scroll-fab{position:fixed;right:22px;bottom:64px;width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(37,99,235,.35);opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:9990;transform:translateY(10px);}
+.scroll-fab.show{opacity:1;pointer-events:all;transform:translateY(0);}
+.scroll-fab:hover{background:var(--accent2);box-shadow:0 5px 16px rgba(37,99,235,.45);transform:translateY(-2px);}
+/* inner scroll-to-top: sticky button inside scrollable containers */
+.inner-scroll-wrap{position:relative;}
+.inner-fab{position:sticky;bottom:10px;float:right;margin-right:10px;margin-top:-36px;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(37,99,235,.3);opacity:0;pointer-events:none;transition:opacity .2s;z-index:10;flex-shrink:0;}
+.inner-fab.show{opacity:1;pointer-events:all;}
+.inner-fab:hover{background:var(--accent2);}
+
+.hold-bar{display:flex;gap:7px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--border);background:var(--surface2);}
+.hold-bar-empty{padding:10px 14px;border-top:1px solid var(--border);background:var(--surface2);font-size:11px;color:var(--muted2);font-family:var(--zh);text-align:center;}
+.hold-slot{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--surface);border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;transition:all .15s;min-width:0;}
+.hold-slot:hover{border-color:var(--gold);background:#fffbeb;}
+.hold-slot .hs-num{font-family:var(--mono);font-size:10px;color:var(--muted2);font-weight:700;flex-shrink:0;}
+.hold-slot .hs-info{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.hold-slot .hs-count{font-size:11px;color:var(--text);font-family:var(--zh);white-space:nowrap;}
+.hold-slot .hs-amt{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--gold);white-space:nowrap;}
+.hold-slot .hs-del{font-size:13px;color:var(--muted2);margin-left:4px;flex-shrink:0;line-height:1;padding:0 2px;}
+.hold-slot .hs-del:hover{color:var(--red);}
+.btn-hold{width:100%;padding:9px;background:transparent;border:1.5px solid var(--border2);color:var(--muted);font-size:13px;border-radius:8px;cursor:pointer;font-family:var(--th);transition:all .18s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-hold:hover{border-color:var(--gold);color:var(--gold);background:#fffbeb;}
+.btn-hold:disabled{opacity:.35;cursor:not-allowed;}
+
 .scanner-hw-wrap{position:relative;display:flex;gap:8px;align-items:center;}
 .scanner-hw-input{flex:1;padding:11px 44px 11px 14px;font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:2px;background:var(--surface2);border:2px solid var(--border2);border-radius:9px;color:var(--text);outline:none;transition:all .18s;ime-mode:disabled;}
 .scanner-hw-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--aglow);}
@@ -403,7 +426,10 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
         </div>
         <div class="co-actions">
           <button class="btn-checkout" id="btn-checkout" onclick="openReview()" disabled>ชำระเงิน / 結帳</button>
+          <button class="btn-hold" id="btn-hold" onclick="holdCart()" disabled>⏸ พักรายการลูกค้าคนนี้ไว้ก่อน / 暫存此客人購物車</button>
         </div>
+        <!-- 暫存列表 -->
+        <div id="hold-bar-wrap"></div>
       </div>
 
     </div>
@@ -693,6 +719,8 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
     </div>
   </div>
 </div>
+
+<button id="scroll-fab" class="scroll-fab" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到頂部 / กลับด้านบน">↑</button>
 
 <div id="toast"></div>
 
@@ -1041,6 +1069,7 @@ function renderCart(){
     document.getElementById('item-count').textContent='0';
     document.getElementById('grand-total').textContent='NT$ 0';
     document.getElementById('btn-checkout').disabled=true;
+    const bh=document.getElementById('btn-hold');if(bh)bh.disabled=true;
     return;
   }
   const totalQty=cart.reduce((s,i)=>s+i.qty,0);
@@ -1065,6 +1094,7 @@ function renderCart(){
   document.getElementById('item-count').textContent=totalQty;
   document.getElementById('btn-checkout').disabled=false;
   document.getElementById('grand-total').textContent='NT$ '+sub;
+  const bh=document.getElementById('btn-hold');if(bh)bh.disabled=false;
 }
 
 // ═══ 無條碼商品清單（分類選擇 → 商品清單）═══
@@ -1719,7 +1749,128 @@ document.getElementById('page-pos').addEventListener('click', function(e){
   }
 });
 
-seedDemo();
+// ═══ Scroll-to-top ═══
+// 1. 全頁 FAB（主頁面捲動）
+window.addEventListener('scroll', function(){
+  const fab=document.getElementById('scroll-fab');
+  if(fab) fab.classList.toggle('show', window.scrollY>200);
+}, {passive:true});
+
+// 2. 各可捲動容器內的置底 ↑ 按鈕
+function attachInnerScrollTop(el){
+  if(!el || el._fabAttached) return;
+  el._fabAttached = true;
+  const btn = document.createElement('button');
+  btn.className = 'inner-fab';
+  btn.textContent = '↑';
+  btn.title = '回到頂部';
+  btn.addEventListener('click', ()=>el.scrollTo({top:0,behavior:'smooth'}));
+  el.addEventListener('scroll', ()=>{
+    btn.classList.toggle('show', el.scrollTop > 80);
+  }, {passive:true});
+  // 放在容器最後，sticky bottom 會讓它浮在可見區底部
+  el.appendChild(btn);
+}
+
+// 靜態容器：報表列表、結帳 review
+function initStaticScrollTops(){
+  ['monthly-list','daily-list','review-body'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) attachInnerScrollTop(el);
+  });
+}
+
+// 動態容器：modal（每次開啟時附加）、nobc-list-body（renderNobcListModal 後）
+const _origOpenModal = openModal;
+window.openModal = function(id){
+  _origOpenModal(id);
+  // mbox 內容捲動
+  const overlay=document.getElementById(id);
+  if(overlay){
+    const mbox=overlay.querySelector('.mbox');
+    if(mbox) setTimeout(()=>attachInnerScrollTop(mbox), 50);
+    // nobc-list modal 的 nobc-list-body
+    const nb=overlay.querySelector('#nobc-list-body');
+    if(nb) setTimeout(()=>attachInnerScrollTop(nb), 50);
+  }
+};
+
+// nobc-list-body 在 renderNobcListModal 重建後重新附加
+const _origRenderNobc = renderNobcListModal;
+window.renderNobcListModal = function(){
+  _origRenderNobc();
+  const nb=document.getElementById('nobc-list-body');
+  if(nb){ nb._fabAttached=false; setTimeout(()=>attachInnerScrollTop(nb),30); }
+};
+
+// prod-main-area 在 renderProdGrid 重建後重新附加
+const _origRenderProd = renderProdGrid;
+window.renderProdGrid = function(){
+  _origRenderProd();
+  // prod-main-area 本身不 overflow，主頁面捲動，FAB 已覆蓋
+};
+
+document.addEventListener('DOMContentLoaded', initStaticScrollTops);
+setTimeout(initStaticScrollTops, 500);
+
+
+let heldCarts = []; // [{id, items, savedAt}]
+
+function holdCart(){
+  if(!cart.length) return;
+  const id = 'H' + Date.now();
+  heldCarts.push({ id, items: JSON.parse(JSON.stringify(cart)), savedAt: new Date() });
+  cart = [];
+  renderCart();
+  renderHoldBar();
+  showToast('已暫存購物車，可繼續服務下一位客人','ok');
+}
+
+function resumeHeld(id){
+  const idx = heldCarts.findIndex(h=>h.id===id);
+  if(idx===-1) return;
+  if(cart.length){
+    if(!confirm('目前購物車有商品，恢復暫存會取代目前內容，確定嗎？')) return;
+  }
+  cart = JSON.parse(JSON.stringify(heldCarts[idx].items));
+  heldCarts.splice(idx,1);
+  renderCart();
+  renderHoldBar();
+  showToast('已恢復暫存購物車','ok');
+}
+
+function deleteHeld(id, e){
+  e.stopPropagation();
+  heldCarts = heldCarts.filter(h=>h.id!==id);
+  renderHoldBar();
+  showToast('已刪除暫存購物車','ok');
+}
+
+function renderHoldBar(){
+  const wrap = document.getElementById('hold-bar-wrap');
+  if(!wrap) return;
+  if(!heldCarts.length){
+    wrap.innerHTML = '';
+    return;
+  }
+  const slots = heldCarts.map((h,i)=>{
+    const total = h.items.reduce((s,item)=>s+item.price*item.qty,0);
+    const count = h.items.reduce((s,item)=>s+item.qty,0);
+    const t = h.savedAt;
+    const timeStr = String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+    return `<div class="hold-slot" onclick="resumeHeld('${h.id}')" title="點擊恢復此購物車">
+      <div class="hs-num">${i+1}</div>
+      <div class="hs-info">
+        <div class="hs-count">${count} 件 · ${timeStr}</div>
+        <div class="hs-amt">NT$ ${total}</div>
+      </div>
+      <span class="hs-del" onclick="deleteHeld('${h.id}',event)" title="刪除">×</span>
+    </div>`;
+  }).join('');
+  wrap.innerHTML = `<div class="hold-bar">${slots}</div>`;
+}
+
+
 renderCart();
 initPersistence();
 // 頁面切換時若切回收銀台，自動聚焦掃描器輸入框
