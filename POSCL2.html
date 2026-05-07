@@ -305,7 +305,6 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 
 /* ── FIREBASE STATUS ── */
 #fb-status{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:9px;cursor:pointer;font-size:12px;font-family:var(--zh);color:var(--muted);transition:all .18s;white-space:nowrap;}
-#fb-status:hover{border-color:#f97316;color:#f97316;background:#fff7ed;}
 #fb-status.connected{border-color:var(--green);color:var(--green);background:#f0fdf4;}
 #fb-status.connecting{border-color:var(--gold);color:var(--gold);background:#fffbeb;}
 #fb-status.error{border-color:var(--red);color:var(--red);background:#fef2f2;}
@@ -360,8 +359,36 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   .nobc-cat-grid{}
 }
 </style>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+  import { getDatabase, ref, set, get, onValue, off } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyCXL_BPUqT5UA2Ufxo8Byulm6-ATNxTr4c",
+    authDomain:        "mico1-72831.firebaseapp.com",
+    databaseURL:       "https://mico1-72831-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId:         "mico1-72831",
+    storageBucket:     "mico1-72831.firebasestorage.app",
+    messagingSenderId: "706559929324",
+    appId:             "1:706559929324:web:05cf28d33b9f770d332ec9",
+    measurementId:     "G-X4E8H9KGV1"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  // 暴露給非 module 的主腳本使用
+  window._fbDb      = db;
+  window._fbRef     = (path) => ref(db, path);
+  window._fbSet     = (path, val) => set(ref(db, path), val);
+  window._fbGet     = (path) => get(ref(db, path));
+  window._fbOnValue = (path, cb, errCb) => onValue(ref(db, path), cb, errCb);
+  window._fbOff     = (refObj) => off(refObj);
+
+  // 通知主腳本 Firebase 已就緒
+  window._fbReady = true;
+  document.dispatchEvent(new Event('firebase-ready'));
+</script>
 </head>
 <body>
 
@@ -501,7 +528,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
         <span id="file-icon-prod">💾</span>
         <span id="file-label-prod">點擊選擇資料檔案</span>
       </div>
-      <div id="fb-status" class="off" onclick="openModal('m-firebase')" title="Firebase 雲端同步設定">
+      <div id="fb-status" class="off" style="cursor:default" title="Firebase 雲端同步狀態">
         <span id="fb-icon">☁️</span>
         <span id="fb-label">Firebase 未連線</span>
       </div>
@@ -750,31 +777,6 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   </div>
 </div>
 
-<!-- ═══ Modal: Firebase 設定 ═══ -->
-<div class="overlay" id="m-firebase">
-  <div class="mbox" style="width:500px">
-    <div class="m-title">☁️ Firebase 雲端同步設定<span class="zh">Realtime Database</span></div>
-    <div class="fb-cfg-note">
-      1. 前往 <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> 建立專案<br>
-      2. 新增 Web 應用程式，複製設定值貼到下方<br>
-      3. 左側選單 → Build → Realtime Database → 建立資料庫（測試模式）<br>
-      4. 儲存後自動連線並同步所有資料 ✓
-    </div>
-    <div class="fb-cfg-grid">
-      <div class="fg"><label>API Key</label><input class="fi" id="fb-apiKey" type="text" placeholder="AIzaSy..."></div>
-      <div class="fg"><label>Auth Domain</label><input class="fi" id="fb-authDomain" type="text" placeholder="your-project.firebaseapp.com"></div>
-      <div class="fg"><label>Database URL <span style="color:var(--red)">*</span></label><input class="fi" id="fb-dbUrl" type="text" placeholder="https://your-project-default-rtdb.firebaseio.com"></div>
-      <div class="fg"><label>Project ID</label><input class="fi" id="fb-projectId" type="text" placeholder="your-project"></div>
-      <div class="fg"><label>App ID</label><input class="fi" id="fb-appId" type="text" placeholder="1:123456789:web:abc..."></div>
-    </div>
-    <div id="fb-modal-status" style="font-size:12px;color:var(--muted);font-family:var(--zh);padding:8px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);margin-bottom:4px;display:none;"></div>
-    <div class="m-acts">
-      <button class="btn btn-accent" style="flex:1" onclick="saveFirebaseConfig()">連線 / เชื่อมต่อ</button>
-      <button class="btn btn-ghost" onclick="clearFirebaseConfig()" style="color:var(--red);border-color:var(--red)">清除設定</button>
-      <button class="btn btn-ghost" onclick="closeModal('m-firebase')">取消</button>
-    </div>
-  </div>
-</div>
 
 <button id="scroll-fab" class="scroll-fab" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到頂部 / กลับด้านบน">↑</button>
 
@@ -2033,135 +2035,132 @@ function renderHoldBar(){
 // ═══════════════════════════════════════════════════════
 //  Firebase Realtime Database 整合
 // ═══════════════════════════════════════════════════════
-const FB_CFG_KEY = 'pos_firebase_cfg';
-let _fbApp = null, _fbDb = null, _fbConnected = false, _fbListeners = {};
+// ═══ Firebase v12 模組化整合 ═══
+// 設定已硬寫在 <script type="module"> 區塊
+// 此處透過 window._fb* 使用已初始化的 db
 
-function setFbStatus(cls,label){
-  const el=document.getElementById('fb-status'),lb=document.getElementById('fb-label');
-  if(!el||!lb)return; el.className=cls; lb.textContent=label;
+let _fbConnected = false;
+let _fbListeners = {}; // path -> unsubscribe fn
+let _fbSaveTimer = null;
+
+function setFbStatus(cls, label){
+  const el=document.getElementById('fb-status'), lb=document.getElementById('fb-label');
+  if(!el||!lb) return;
+  el.className=cls; lb.textContent=label;
 }
-function setFbModalStatus(msg,color='var(--muted)'){
-  const el=document.getElementById('fb-modal-status');
-  if(!el)return; el.style.display='block'; el.style.color=color; el.textContent=msg;
+
+// ── 等待 firebase-ready 事件後啟動 ──
+function waitFbReady(cb){
+  if(window._fbReady){ cb(); return; }
+  document.addEventListener('firebase-ready', cb, {once:true});
+  // 逾時保護：若 10 秒未就緒顯示錯誤
+  setTimeout(()=>{
+    if(!window._fbReady) setFbStatus('error','☁ Firebase 載入超時');
+  }, 10000);
 }
-function loadFbConfigToModal(){
-  try{
-    const cfg=JSON.parse(localStorage.getItem(FB_CFG_KEY)||'null'); if(!cfg)return;
-    ['apiKey','authDomain','dbUrl','projectId','appId'].forEach(k=>{const el=document.getElementById('fb-'+k);if(el)el.value=cfg[k]||'';});
-  }catch(e){}
-}
-async function saveFirebaseConfig(){
-  const cfg={
-    apiKey:     (document.getElementById('fb-apiKey')?.value||'').trim(),
-    authDomain: (document.getElementById('fb-authDomain')?.value||'').trim(),
-    dbUrl:      (document.getElementById('fb-dbUrl')?.value||'').trim(),
-    projectId:  (document.getElementById('fb-projectId')?.value||'').trim(),
-    appId:      (document.getElementById('fb-appId')?.value||'').trim(),
-  };
-  if(!cfg.dbUrl){setFbModalStatus('⚠ 請填寫 Database URL（必填）','var(--red)');return;}
-  localStorage.setItem(FB_CFG_KEY,JSON.stringify(cfg));
-  setFbModalStatus('⏳ 連線中...','var(--gold)');
-  const ok=await initFirebase(cfg);
-  if(ok){setFbModalStatus('✓ 連線成功！資料同步中...','var(--green)');setTimeout(()=>closeModal('m-firebase'),1200);}
-}
-function clearFirebaseConfig(){
-  if(!confirm('確定清除 Firebase 設定並斷線？'))return;
-  localStorage.removeItem(FB_CFG_KEY); disconnectFirebase();
-  setFbStatus('off','Firebase 未連線'); closeModal('m-firebase');
-  showToast('已清除 Firebase 設定','ok');
-}
-function disconnectFirebase(){
-  Object.values(_fbListeners).forEach(r=>{try{r.off();}catch(e){}});
-  _fbListeners={}; _fbConnected=false; _fbApp=null; _fbDb=null;
-}
-async function initFirebase(cfg){
-  try{
-    if(_fbApp){try{await _fbApp.delete();}catch(e){} _fbApp=null; _fbDb=null; _fbConnected=false;}
-    _fbApp=firebase.initializeApp({
-      apiKey:cfg.apiKey, authDomain:cfg.authDomain, databaseURL:cfg.dbUrl,
-      projectId:cfg.projectId, appId:cfg.appId,
-    },'pos-'+Date.now());
-    _fbDb=firebase.database(_fbApp);
-    // 連線測試
-    await new Promise((res,rej)=>{
-      const ref=_fbDb.ref('.info/connected'), t=setTimeout(()=>{ref.off();rej(new Error('timeout'));},8000);
-      ref.once('value',s=>{clearTimeout(t);ref.off();res(s.val());},e=>{clearTimeout(t);ref.off();rej(e);});
-    });
-    _fbConnected=true; setFbStatus('connected','☁ Firebase 已連線');
-    showToast('Firebase 連線成功！','ok');
-    await fbPullAll(); fbListenAll(); return true;
-  }catch(err){
-    console.error('[Firebase]',err);
-    setFbStatus('error','☁ Firebase 連線失敗');
-    setFbModalStatus('⚠ 連線失敗：'+(err.message||err),'var(--red)');
-    _fbConnected=false; return false;
-  }
-}
+
+// ── 從 Firebase 拉取所有資料 ──
 async function fbPullAll(){
-  if(!_fbDb)return;
+  if(!window._fbDb) return;
   try{
     setFbStatus('connecting','☁ 同步中...');
-    const snap=await _fbDb.ref('pos').once('value'); const data=snap.val()||{};
-    if(data.products)     localStorage.setItem('pos_products',      JSON.stringify(data.products));
-    if(data.nobc_products)localStorage.setItem('pos_nobc_products', JSON.stringify(data.nobc_products));
+    const snap = await window._fbGet('pos');
+    const data = snap.val() || {};
+    if(data.products)
+      localStorage.setItem('pos_products', JSON.stringify(data.products));
+    if(data.nobc_products)
+      localStorage.setItem('pos_nobc_products', JSON.stringify(data.nobc_products));
     if(data.transactions){
-      const txArr=Array.isArray(data.transactions)?data.transactions:Object.values(data.transactions);
-      localStorage.setItem('pos_transactions',JSON.stringify(txArr));
+      const arr = Array.isArray(data.transactions)
+        ? data.transactions
+        : Object.values(data.transactions);
+      localStorage.setItem('pos_transactions', JSON.stringify(arr));
     }
     setFbStatus('connected','☁ Firebase 已連線');
     renderProdGrid(); renderStats(); renderMonthly(); renderDaily();
     showToast('Firebase 資料同步完成','ok');
-  }catch(e){console.error('[Firebase pull]',e); setFbStatus('error','☁ 同步失敗');}
-}
-function fbListenAll(){
-  if(!_fbDb)return;
-  [['pos/products','pos_products',0],['pos/nobc_products','pos_nobc_products',1],['pos/transactions','pos_transactions',2]].forEach(([path,lsKey,i])=>{
-    if(_fbListeners[path])try{_fbListeners[path].off();}catch(e){}
-    const ref=_fbDb.ref(path);
-    ref.on('value',snap=>{
-      const val=snap.val(); if(val===null)return;
-      const toStore=i===2?(Array.isArray(val)?val:Object.values(val)):val;
-      localStorage.setItem(lsKey,JSON.stringify(toStore));
-      if(i<2)renderProdGrid(); else{renderStats();renderMonthly();renderDaily();}
-    },err=>console.warn('[Firebase listen]',err));
-    _fbListeners[path]=ref;
-  });
-}
-let _fbSaveTimer=null;
-function fbScheduleSave(){
-  if(!_fbConnected||!_fbDb)return;
-  clearTimeout(_fbSaveTimer);
-  _fbSaveTimer=setTimeout(async()=>{
-    setFbStatus('connecting','☁ 儲存中...');
-    try{
-      await _fbDb.ref('pos').set({updatedAt:new Date().toISOString(),products:getProds(),nobc_products:getNobcProds(),transactions:getTx()});
-      setFbStatus('connected','☁ Firebase 已連線');
-    }catch(e){console.error('[Firebase save]',e);setFbStatus('error','☁ 儲存失敗，請檢查連線');}
-  },600);
-}
-// 覆寫 save 函式加入 Firebase 同步
-const _origSaveProds2=saveProds, _origSaveNobcProds2=saveNobcProds, _origSaveTx2=saveTx;
-window.saveProds=function(o){_origSaveProds2(o);fbScheduleSave();};
-window.saveNobcProds=function(a){_origSaveNobcProds2(a);fbScheduleSave();};
-window.saveTx=function(a){_origSaveTx2(a);fbScheduleSave();};
-// openModal 加入 Firebase modal 處理
-const _origOpenModalForFb=openModal;
-window.openModal=function(id){
-  _origOpenModalForFb(id);
-  if(id==='m-firebase'){loadFbConfigToModal();const ms=document.getElementById('fb-modal-status');if(ms)ms.style.display='none';}
-};
-async function initFirebaseAuto(){
-  try{
-    const cfg=JSON.parse(localStorage.getItem(FB_CFG_KEY)||'null');
-    if(!cfg||!cfg.dbUrl)return;
-    setFbStatus('connecting','☁ 重新連線中...');
-    await initFirebase(cfg);
-  }catch(e){setFbStatus('error','☁ 自動連線失敗');}
+  }catch(e){
+    console.error('[Firebase pull]',e);
+    setFbStatus('error','☁ 同步失敗：'+e.message);
+  }
 }
 
-renderCart();
-initPersistence();
-initFirebaseAuto();
+// ── 即時監聽（其他裝置更新時自動同步）──
+function fbListenAll(){
+  if(!window._fbOnValue) return;
+  const targets = [
+    ['pos/products',       'pos_products',       0],
+    ['pos/nobc_products',  'pos_nobc_products',  1],
+    ['pos/transactions',   'pos_transactions',   2],
+  ];
+  targets.forEach(([path, lsKey, type])=>{
+    if(_fbListeners[path]) try{_fbListeners[path]();}catch(e){}
+    const unsub = window._fbOnValue(path, snap=>{
+      const val = snap.val(); if(val===null) return;
+      const toStore = type===2
+        ? (Array.isArray(val)?val:Object.values(val))
+        : val;
+      localStorage.setItem(lsKey, JSON.stringify(toStore));
+      if(type<2) renderProdGrid();
+      else { renderStats(); renderMonthly(); renderDaily(); }
+    }, err=>console.warn('[Firebase listen]', err));
+    _fbListeners[path] = unsub;
+  });
+}
+
+// ── 寫入 Firebase（防抖 600ms）──
+function fbScheduleSave(){
+  if(!_fbConnected || !window._fbSet) return;
+  clearTimeout(_fbSaveTimer);
+  _fbSaveTimer = setTimeout(async()=>{
+    setFbStatus('connecting','☁ 儲存中...');
+    try{
+      await window._fbSet('pos',{
+        updatedAt:     new Date().toISOString(),
+        products:      getProds(),
+        nobc_products: getNobcProds(),
+        transactions:  getTx(),
+      });
+      setFbStatus('connected','☁ Firebase 已連線');
+    }catch(e){
+      console.error('[Firebase save]',e);
+      setFbStatus('error','☁ 儲存失敗：'+e.message);
+    }
+  },600);
+}
+
+// ── 覆寫 save 函式，加入 Firebase 同步 ──
+const _origSaveProds2    = saveProds;
+const _origSaveNobcProds2= saveNobcProds;
+const _origSaveTx2       = saveTx;
+window.saveProds     = function(o){ _origSaveProds2(o);     fbScheduleSave(); };
+window.saveNobcProds = function(a){ _origSaveNobcProds2(a); fbScheduleSave(); };
+window.saveTx        = function(a){ _origSaveTx2(a);        fbScheduleSave(); };
+
+// ── 自動初始化：等 Firebase module 就緒後連線 ──
+waitFbReady(async()=>{
+  setFbStatus('connecting','☁ 連線中...');
+  try{
+    // 測試連線
+    await new Promise((resolve,reject)=>{
+      const t = setTimeout(()=>reject(new Error('timeout')), 8000);
+      const unsub = window._fbOnValue('.info/connected', snap=>{
+        clearTimeout(t);
+        unsub();
+        resolve(snap.val());
+      }, err=>{ clearTimeout(t); reject(err); });
+    });
+    _fbConnected = true;
+    setFbStatus('connected','☁ Firebase 已連線');
+    await fbPullAll();
+    fbListenAll();
+  }catch(e){
+    console.error('[Firebase init]',e);
+    setFbStatus('error','☁ 連線失敗：'+e.message);
+    showToast('Firebase 連線失敗，使用本地資料','err');
+  }
+});
+
 // 頁面切換時若切回收銀台，自動聚焦掃描器輸入框
 const _origShowPage = showPage;
 window.showPage = function(id, btn){
