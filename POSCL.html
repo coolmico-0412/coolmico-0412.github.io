@@ -329,7 +329,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 
 .scanner-hw-wrap{position:relative;display:flex;gap:8px;align-items:center;}
 .scanner-hw-input{flex:1;padding:11px 44px 11px 14px;font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:2px;background:var(--surface2);border:2px solid var(--border2);border-radius:9px;color:var(--text);outline:none;transition:all .18s;ime-mode:disabled;}
-.scanner-hw-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--aglow);}
+.scanner-hw-input:focus,.scanner-hw-input.active{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--aglow);}
 .scanner-hw-input.flash-ok{border-color:var(--green);background:#f0fdf4;animation:flashOk .4s ease;}
 .scanner-hw-input.flash-err{border-color:var(--red);background:#fef2f2;animation:flashErr .4s ease;}
 @keyframes flashOk{0%{box-shadow:0 0 0 0 rgba(5,150,105,.5)}100%{box-shadow:0 0 0 8px rgba(5,150,105,0)}}
@@ -379,6 +379,18 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
           <!-- HW Scanner Panel -->
           <div id="panel-hw" style="display:flex;flex-direction:column;gap:10px;">
             <div class="scanner-hw-wrap">
+              <!-- 隱藏的真實輸入框（type=password 讓 IME 無法介入） -->
+              <input
+                id="hw-capture"
+                type="password"
+                autocomplete="new-password"
+                autocorrect="off"
+                autocapitalize="none"
+                spellcheck="false"
+                style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none;font-size:1px;"
+                tabindex="-1"
+              >
+              <!-- 顯示用（readonly，不觸發 IME）-->
               <input
                 id="hw-input"
                 class="scanner-hw-input"
@@ -387,6 +399,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
                 autocomplete="off"
                 spellcheck="false"
                 placeholder="สแกนหรือพิมพ์บาร์โค้ด... / 掃描或輸入條碼..."
+                onclick="focusHwCapture()"
               >
               <span class="scanner-hw-icon">📦</span>
             </div>
@@ -1646,19 +1659,115 @@ function switchScanMode(mode){
   document.getElementById('panel-cam').style.display = mode==='cam' ? 'flex' : 'none';
   // stop camera if switching away
   if(mode==='hw' && scanning) stopScanner();
-  // focus hw input + attach composition guards
+  // focus hw capture input + init event handlers
   if(mode==='hw'){
     setTimeout(()=>{
-      const inp=document.getElementById('hw-input');
-      if(inp) inp.focus();
+      initHwCapture();
+      focusHwCapture();
     },80);
   }
   setSt(mode==='hw' ? '🔌 พร้อมรับข้อมูลจากเครื่องสแกน / 等待掃描器輸入' : 'รอสแกน... / 等待掃描', '');
 }
 
 // ═══ 掃描器（HID Keyboard）輸入處理 ═══
-// 核心：hw-input 設為 readonly，透過 keydown 手動填入字元
-// readonly input 完全不觸發 IME，從根源解決中文輸入法問題
+// 雙輸入架構：
+//   hw-capture  type="password"  → 真正接收輸入，password 欄位在所有平台均不觸發 IME
+//   hw-input    readonly         → 僅顯示用，讓使用者看到目前緩衝的條碼字元
+//
+// 速度偵測：掃描器每字元間隔 < SCANNER_MAX_INTERVAL，否則視為人工打字並重置緩衝
+// e.code 備援：當 IME 把 e.key 改為 "Process" 時，用 e.code 還原實際按鍵
+//
+// 全域 keydown 也保留，讓頁面任意位置掃描皆有效
+
+const SCANNER_MAX_INTERVAL = 80;  // ms：掃描器相鄰字元最大間隔
+let _hwBuf = '';
+let _hwLastTime = 0;
+let _hwTimer = null;
+
+// code -> char 對照表（處理 e.key==='Process' 時的備援）
+const CODE_MAP = {};
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(k=>{ CODE_MAP['Key'+k]=k; });
+'0123456789'.split('').forEach(k=>{ CODE_MAP['Digit'+k]=k; CODE_MAP['Numpad'+k]=k; });
+const EXTRA={'Minus':'-','Period':'.','Slash':'/','Space':' ',
+  'NumpadAdd':'+','NumpadSubtract':'-','NumpadMultiply':'*','NumpadDecimal':'.'};
+Object.assign(CODE_MAP, EXTRA);
+
+function hwAppend(ch){
+  const now = Date.now();
+  // 若間隔太長，視為新一輪輸入，重置緩衝
+  if(now - _hwLastTime > SCANNER_MAX_INTERVAL * 4 && _hwBuf.length > 0){
+    _hwBuf = '';
+  }
+  _hwLastTime = now;
+  if(/[\x20-\x7E]/.test(ch)){
+    _hwBuf += ch;
+    // 同步顯示到可見欄位
+    const disp = document.getElementById('hw-input');
+    if(disp) disp.value = _hwBuf;
+  }
+  clearTimeout(_hwTimer);
+  _hwTimer = setTimeout(()=>{ _hwBuf=''; const d=document.getElementById('hw-input'); if(d)d.value=''; }, 2000);
+}
+
+function hwSubmit(){
+  clearTimeout(_hwTimer);
+  const code = _hwBuf.trim();
+  _hwBuf = '';
+  const disp = document.getElementById('hw-input');
+  if(disp) disp.value = '';
+  refocusCapture();
+  if(code.length >= 3) handleHwCode(code);
+}
+
+// ── hw-capture 事件：input（捕捉 IME 最終輸出）+ keydown（捕捉原始按鍵）──
+function initHwCapture(){
+  const cap = document.getElementById('hw-capture');
+  if(!cap || cap._hwInit) return;
+  cap._hwInit = true;
+
+  cap.addEventListener('focus', ()=>{
+    const d=document.getElementById('hw-input'); if(d)d.classList.add('active');
+  });
+  cap.addEventListener('blur', ()=>{
+    const d=document.getElementById('hw-input'); if(d)d.classList.remove('active');
+    // 短暫離焦後若仍在掃描器模式，重新聚焦
+    setTimeout(()=>{ if(scanMode==='hw' && document.getElementById('page-pos').classList.contains('active')) focusHwCapture(); },200);
+  });
+
+  // keydown：掃描器通常走這裡（e.key 是正確的 ASCII 字元）
+  cap.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); hwSubmit(); return; }
+    if(e.key === 'Backspace'){ e.preventDefault(); _hwBuf=_hwBuf.slice(0,-1); const d=document.getElementById('hw-input'); if(d)d.value=_hwBuf; return; }
+
+    let ch = '';
+    if(e.key.length===1 && /[\x20-\x7E]/.test(e.key) && !e.ctrlKey && !e.metaKey){
+      ch = e.key;
+    } else if(e.key==='Process'||e.key==='Unidentified'){
+      // IME 介入：用 e.code 還原實際按鍵（掃描器仍有正確的 code）
+      ch = CODE_MAP[e.code] || '';
+    }
+    if(ch){ e.preventDefault(); hwAppend(ch); }
+  });
+
+  // input：compositionend 後的最終 IME 輸出（Thai/Chinese 字元）
+  // 過濾掉非 ASCII，只留掃描器真正送出的字元
+  cap.addEventListener('input', function(){
+    const raw = cap.value || '';
+    cap.value = '';          // 清空，避免累積
+    const clean = raw.replace(/[^\x20-\x7E]/g,'');  // 去除泰文/中文等
+    if(clean){
+      // 把乾淨字元逐一加入緩衝（可能多個字元一次送來）
+      for(const ch of clean) hwAppend(ch);
+    }
+  });
+
+  // compositionend：直接清除組字結果（IME 候選字不應進入條碼）
+  cap.addEventListener('compositionend', function(){
+    cap.value = '';
+  });
+}
+
+// 全域 keydown：頁面任意位置掃描（焦點不在任何輸入框時）
 let _globalBuf = '';
 let _globalTimer = null;
 const HW_TIMEOUT = 120;
@@ -1667,61 +1776,67 @@ document.addEventListener('keydown', function(e){
   if(!document.getElementById('page-pos').classList.contains('active')) return;
   if(document.querySelector('.overlay.open') || document.querySelector('.review-overlay.open')) return;
 
-  const activeId = document.activeElement ? document.activeElement.id : '';
-  const tag = document.activeElement ? document.activeElement.tagName : '';
-  const inOtherInput = (tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA') && activeId!=='hw-input';
-  if(inOtherInput) return;
-
-  const inp = document.getElementById('hw-input');
+  const activeId  = document.activeElement ? document.activeElement.id : '';
+  const tag       = document.activeElement ? document.activeElement.tagName : '';
+  // hw-capture 自己的 keydown 已處理
+  if(activeId==='hw-capture') return;
+  // 其他真實輸入框，不攔截
+  if((tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA') && activeId!=='hw-input') return;
 
   if(e.key==='Enter'){
     e.preventDefault();
-    const buf = (activeId==='hw-input')
-      ? (inp ? inp.value : '').trim()
-      : _globalBuf.trim();
-    if(inp) inp.value='';
+    const buf = _globalBuf.trim();
     _globalBuf=''; clearTimeout(_globalTimer);
     if(buf.length>=3) handleHwCode(buf);
     return;
   }
+  if(e.key==='Backspace'){ _globalBuf=_globalBuf.slice(0,-1); return; }
 
-  if(e.key==='Backspace'){
-    e.preventDefault();
-    if(activeId==='hw-input' && inp){ inp.value=inp.value.slice(0,-1); }
-    else { _globalBuf=_globalBuf.slice(0,-1); }
-    return;
-  }
-
+  let ch='';
   if(e.key.length===1 && /[\x20-\x7E]/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey){
+    ch=e.key;
+  } else if(e.key==='Process'||e.key==='Unidentified'){
+    ch=CODE_MAP[e.code]||'';
+  }
+  if(ch){
     e.preventDefault();
-    if(activeId==='hw-input' && inp){
-      inp.value += e.key;
-      if(inp.value.trim().length>=50){ const val=inp.value.trim(); inp.value=''; handleHwCode(val); }
-    } else {
-      _globalBuf += e.key;
-      clearTimeout(_globalTimer);
-      _globalTimer = setTimeout(()=>{_globalBuf='';}, HW_TIMEOUT*3);
-    }
+    _globalBuf+=ch;
+    clearTimeout(_globalTimer);
+    _globalTimer=setTimeout(()=>{_globalBuf='';},HW_TIMEOUT*3);
   }
 });
 
-// 舊函式保留為空（HTML 屬性殘留呼叫不報錯）
+// 舊函式（HTML 屬性殘留）
 function onHwKeydown(e){}
 function onHwInput(inp){}
 function onHwCompose(inp){}
 
+function focusHwCapture(){
+  const cap=document.getElementById('hw-capture');
+  if(cap){ cap.value=''; cap.focus(); }
+}
+
+function refocusCapture(){
+  setTimeout(()=>{
+    const cap=document.getElementById('hw-capture');
+    if(cap){ cap.value=''; cap.focus(); }
+  },30);
+}
+
 function handleHwCode(raw){
-  const code = (raw||'').trim();
+  const code=(raw||'').trim();
   if(isValidBarcode(code)){
     addByBarcode(code);
     flashHwInput('ok');
-    const inp=document.getElementById('hw-input');
-    if(inp){inp.value='';setTimeout(()=>inp.focus(),30);}
+    const disp=document.getElementById('hw-input');
+    if(disp) disp.value='';
+    refocusCapture();
   } else if(code.length>0){
     setSt('⚠ 條碼格式無法辨識：'+code,'err');
     flashHwInput('err');
-    const inp=document.getElementById('hw-input');
-    if(inp){inp.value='';setTimeout(()=>inp.focus(),30);}
+    const disp=document.getElementById('hw-input');
+    if(disp) disp.value='';
+    refocusCapture();
   }
 }
 
@@ -1737,8 +1852,8 @@ function flashHwInput(type){
 
 function focusHwIfNeeded(){
   if(scanMode==='hw' && document.getElementById('page-pos').classList.contains('active')){
-    const inp=document.getElementById('hw-input');
-    if(inp) inp.focus();
+    initHwCapture();
+    focusHwCapture();
   }
 }
 // 點擊收銀台空白區域時重新聚焦輸入框
