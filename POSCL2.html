@@ -988,7 +988,7 @@ function saveTx(a){localStorage.setItem('pos_transactions',JSON.stringify(a));_s
 let cart=[], scanning=false, codeReader=null;
 let pendingBC=null, editingBC=null;
 let lastCode='', lastCodeTime=0;
-const DEBOUNCE=0; // 無限制，允許連續掃描相同條碼
+const DEBOUNCE=1000; // 1秒內同一條碼只接受一次
 let allowNewBc=false;
 let nobcSelectedCat=null; // null=分類選擇頁, 'frozen'等=商品清單頁
 
@@ -1156,9 +1156,9 @@ function renderCart(){
       <div class="t-price">NT$ ${item.price}</div>
       <div class="qty-ctrl">
         <input type="number" class="qty-input" value="${item.qty}" min="1"
-          onclick="this.select()"
+          onclick="blurHwInput();this.select()"
           onchange="setQty('${item.barcode}',this)"
-          onkeydown="if(event.key==='Enter')this.blur()"
+          onblur="setTimeout(focusHwIfNeeded,300)"
           inputmode="numeric" pattern="[0-9]*">
       </div>
       <button class="del-btn" onclick="removeItem('${item.barcode}')">×</button>
@@ -1860,15 +1860,19 @@ function focusHwCapture(){}
 function refocusCapture(){}
 
 function handleHwCode(raw){
-  const code = (raw || '').trim().replace(/[^\x20-\x7E]/g, ''); // 最終防線去非 ASCII
-  if(isValidBarcode(code)){
-    addByBarcode(code);
-    flashHwInput('ok');
-  } else if(code.length > 0){
-    setSt('⚠ 條碼格式無法辨識：' + code, 'err');
+  const code = (raw || '').trim().replace(/[^\x20-\x7E]/g, '');
+  if(!isValidBarcode(code)) {
+    if(code.length > 0) setSt('⚠ 條碼格式無法辨識：' + code, 'err');
     flashHwInput('err');
+    const inp = document.getElementById('hw-input');
+    if(inp) setTimeout(()=>inp.focus(), 30);
+    return;
   }
-  // 重新聚焦 hw-input
+  const now = Date.now();
+  if(code === lastCode && now - lastCodeTime < DEBOUNCE) return;
+  lastCode = code; lastCodeTime = now;
+  addByBarcode(code);
+  flashHwInput('ok');
   const inp = document.getElementById('hw-input');
   if(inp) setTimeout(()=>inp.focus(), 30);
 }
@@ -1889,6 +1893,11 @@ function focusHwIfNeeded(){
     const inp = document.getElementById('hw-input');
     if(inp) inp.focus();
   }
+}
+function blurHwInput(){
+  // 讓 hw-input 先失去焦點，Android 才會清除 inputmode=none 的鍵盤抑制狀態
+  const inp = document.getElementById('hw-input');
+  if(inp && document.activeElement === inp) inp.blur();
 }
 // 點擊收銀台空白區域時重新聚焦 hw-input
 document.getElementById('page-pos').addEventListener('click', function(e){
