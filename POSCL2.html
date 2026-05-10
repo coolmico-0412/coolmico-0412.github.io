@@ -142,9 +142,11 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .t-bc-sm{display:block;font-family:var(--mono);font-size:9px;color:var(--muted2);margin-top:2px;}
 .t-bc-col{font-family:var(--mono);font-size:10px;color:var(--muted2);}
 .t-price{font-family:var(--mono);font-size:12px;color:var(--muted);}
-.qty-input{width:58px;padding:6px 8px;font-family:var(--mono);font-size:15px;font-weight:700;text-align:center;border:1.5px solid var(--border2);border-radius:7px;background:var(--surface2);color:var(--text);outline:none;cursor:pointer;-moz-appearance:textfield;}
-.qty-input::-webkit-inner-spin-button,.qty-input::-webkit-outer-spin-button{-webkit-appearance:none;}
-.qty-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--aglow);}
+.qty-display{min-width:44px;padding:6px 8px;font-family:var(--mono);font-size:16px;font-weight:700;text-align:center;border:1.5px solid var(--border2);border-radius:7px;background:var(--surface2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;user-select:none;}
+.qty-display:hover,.qty-display:active{border-color:var(--accent);background:var(--aglow);color:var(--accent);}
+.qty-btn{width:32px;height:32px;border-radius:7px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;line-height:1;}
+.qty-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--aglow);}
+.qty-btn:active{transform:scale(.92);}
 .del-btn{width:28px;height:28px;border-radius:6px;background:transparent;border:1.5px solid transparent;color:var(--muted2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .12s;}
 .del-btn:hover{border-color:var(--red);color:var(--red);background:#fef2f2;}
 .empty-st{padding:52px 20px;text-align:center;color:var(--muted);}
@@ -303,6 +305,25 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 #toast.ok{background:#064e3b;}
 #toast.err{background:#7f1d1d;}
 
+/* ── CUSTOM NUMPAD ── */
+#numpad-overlay{position:fixed;inset:0;z-index:800;background:rgba(15,23,42,.45);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(2px);}
+#numpad-overlay.open{opacity:1;pointer-events:all;}
+#numpad-box{background:var(--surface);border-radius:20px 20px 0 0;padding:18px 18px 32px;width:100%;max-width:400px;transform:translateY(100%);transition:transform .25s cubic-bezier(.25,.8,.25,1);box-shadow:0 -4px 32px rgba(0,0,0,.18);}
+#numpad-overlay.open #numpad-box{transform:translateY(0);}
+.numpad-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.numpad-title{font-size:15px;font-weight:700;color:var(--text);font-family:var(--zh);}
+.numpad-close{font-size:22px;color:var(--muted);cursor:pointer;line-height:1;padding:4px 8px;border-radius:8px;background:var(--surface2);border:none;}
+.numpad-close:hover{color:var(--red);}
+.numpad-display{font-family:var(--mono);font-size:40px;font-weight:700;color:var(--accent);text-align:right;letter-spacing:2px;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:8px 18px;margin-bottom:14px;min-height:64px;display:flex;align-items:center;justify-content:flex-end;}
+.numpad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.npk{height:68px;border-radius:14px;border:none;font-size:26px;font-weight:700;font-family:var(--mono);cursor:pointer;transition:all .1s;background:var(--surface2);color:var(--text);box-shadow:var(--sh);-webkit-tap-highlight-color:transparent;}
+.npk:active{transform:scale(.91);box-shadow:none;background:var(--surface3);}
+.npk.del{background:#fef2f2;color:var(--red);font-size:22px;}
+.npk.del:active{background:#fecaca;}
+.npk.ok{background:var(--green);color:#fff;font-size:19px;font-family:var(--zh);font-weight:700;}
+.npk.ok:active{background:#047857;}
+.npk.zero{grid-column:span 2;}
+
 /* ── FIREBASE STATUS ── */
 #fb-status{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:9px;cursor:pointer;font-size:12px;font-family:var(--zh);color:var(--muted);transition:all .18s;white-space:nowrap;}
 #fb-status:hover{border-color:#f97316;color:#f97316;background:#fff7ed;}
@@ -422,13 +443,11 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
                 id="hw-input"
                 class="scanner-hw-input"
                 type="text"
-                inputmode="none"
+                readonly
+                tabindex="-1"
                 autocomplete="off"
-                autocorrect="off"
-                autocapitalize="none"
                 spellcheck="false"
                 placeholder="สแกนหรือพิมพ์บาร์โค้ด... / 掃描或輸入條碼..."
-                onfocus="this.select()"
               >
               <span class="scanner-hw-icon">📦</span>
             </div>
@@ -792,6 +811,31 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   </div>
 </div>
 
+<!-- ═══ Custom Numpad ═══ -->
+<div id="numpad-overlay" onclick="if(event.target===this)closeNumpad()">
+  <div id="numpad-box">
+    <div class="numpad-hd">
+      <div class="numpad-title" id="numpad-title">數量 / จำนวน</div>
+      <button class="numpad-close" onclick="closeNumpad()">×</button>
+    </div>
+    <div class="numpad-display" id="numpad-display">0</div>
+    <div class="numpad-grid">
+      <button class="npk" onclick="npKey('7')">7</button>
+      <button class="npk" onclick="npKey('8')">8</button>
+      <button class="npk" onclick="npKey('9')">9</button>
+      <button class="npk" onclick="npKey('4')">4</button>
+      <button class="npk" onclick="npKey('5')">5</button>
+      <button class="npk" onclick="npKey('6')">6</button>
+      <button class="npk" onclick="npKey('1')">1</button>
+      <button class="npk" onclick="npKey('2')">2</button>
+      <button class="npk" onclick="npKey('3')">3</button>
+      <button class="npk zero" onclick="npKey('0')">0</button>
+      <button class="npk del" onclick="npDel()">⌫</button>
+      <button class="npk ok" style="grid-column:1/-1" onclick="npConfirm()">✓ ยืนยัน / 確認</button>
+    </div>
+  </div>
+</div>
+
 <button id="scroll-fab" class="scroll-fab" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到頂部 / กลับด้านบน">↑</button>
 
 <div id="toast"></div>
@@ -1126,6 +1170,47 @@ function setQty(bc,input){
   document.getElementById('grand-total').textContent='NT$ '+sub;
   document.getElementById('btn-checkout').disabled=cart.length===0;
 }
+function changeQty(bc,d){
+  const item=cart.find(i=>i.barcode===bc);if(!item)return;
+  item.qty=Math.max(1,item.qty+d);
+  renderCart();
+}
+function editQty(bc){
+  const item=cart.find(i=>i.barcode===bc); if(!item)return;
+  openNumpad(bc, item.qty, item.name);
+}
+
+// ── Custom Numpad ──
+let _npBc=null, _npVal='';
+
+function openNumpad(bc, currentQty, itemName){
+  _npBc=bc;
+  _npVal=String(currentQty);
+  document.getElementById('numpad-title').textContent=(itemName||'') + ' — 數量 / จำนวน';
+  document.getElementById('numpad-display').textContent=_npVal;
+  document.getElementById('numpad-overlay').classList.add('open');
+}
+function closeNumpad(){
+  document.getElementById('numpad-overlay').classList.remove('open');
+  _npBc=null; _npVal='';
+}
+function npKey(k){
+  if(_npVal==='0') _npVal=k;
+  else if(_npVal.length<4) _npVal+=k;
+  document.getElementById('numpad-display').textContent=_npVal||'0';
+}
+function npDel(){
+  _npVal=_npVal.slice(0,-1)||'0';
+  document.getElementById('numpad-display').textContent=_npVal;
+}
+function npConfirm(){
+  const val=parseInt(_npVal);
+  if(!isNaN(val)&&val>=1&&_npBc){
+    const item=cart.find(i=>i.barcode===_npBc);
+    if(item){ item.qty=val; renderCart(); }
+  }
+  closeNumpad();
+}
 function addToCart(bc,name,price,qty=1){
   const ex=cart.find(i=>i.barcode===bc);
   if(ex){ex.qty+=qty;}else{cart.push({barcode:bc,name,price,qty,noBarcode:bc.startsWith('NOBC-')});}
@@ -1154,12 +1239,10 @@ function renderCart(){
         ${item.noBarcode?'<span class="nobc-tag">無條碼</span>':''}
       </div>
       <div class="t-price">NT$ ${item.price}</div>
-      <div class="qty-ctrl">
-        <input type="number" class="qty-input" value="${item.qty}" min="1"
-          onclick="blurHwInput();this.select()"
-          onchange="setQty('${item.barcode}',this)"
-          onblur="setTimeout(focusHwIfNeeded,300)"
-          inputmode="numeric" pattern="[0-9]*">
+      <div class="qty-ctrl" style="display:flex;align-items:center;gap:4px;">
+        <button class="qty-btn" onclick="changeQty('${item.barcode}',1)">＋</button>
+        <span class="qty-display" onclick="editQty('${item.barcode}')">${item.qty}</span>
+        <button class="qty-btn" onclick="changeQty('${item.barcode}',-1)">−</button>
       </div>
       <button class="del-btn" onclick="removeItem('${item.barcode}')">×</button>
     </div>`).join('');
@@ -1718,13 +1801,9 @@ function switchScanMode(mode){
   document.getElementById('panel-cam').style.display = mode==='cam' ? 'flex' : 'none';
   // stop camera if switching away
   if(mode==='hw' && scanning) stopScanner();
-  // 掃描器模式：聚焦 hw-input（inputmode=none，不會觸發 IME）
+  // 掃描器模式：不聚焦任何輸入框，HID 掃描器 keydown 直接送到 document
   if(mode==='hw'){
-    setTimeout(()=>{
-      initHwInput();
-      const inp = document.getElementById('hw-input');
-      if(inp) inp.focus();
-    }, 80);
+    setTimeout(()=>{ initHwInput(); }, 80);
   }
   setSt(mode==='hw' ? '🔌 พร้อมรับข้อมูลจากเครื่องสแกน / 等待掃描器輸入' : 'รอสแกน... / 等待掃描', '');
 }
@@ -1820,7 +1899,6 @@ function initHwInput(){
     const saved = inp.value.replace(/[^\x20-\x7E]/g, '');
     inp.blur();
     inp.value = saved;
-    setTimeout(()=>inp.focus(), 0);
   });
 }
 
@@ -1829,11 +1907,8 @@ document.addEventListener('keydown', function(e){
   if(!document.getElementById('page-pos').classList.contains('active')) return;
   if(document.querySelector('.overlay.open') || document.querySelector('.review-overlay.open')) return;
 
-  const activeId = document.activeElement ? document.activeElement.id : '';
-  // 有焦點在 hw-input，由 hw-input 自己的 keydown 處理，這裡跳過
-  if(activeId === 'hw-input') return;
-  // 焦點在其他真實輸入框，不攔截
   const tag = document.activeElement ? document.activeElement.tagName : '';
+  // 若有真實輸入框有焦點，交由該 input 自行處理（qty-input 有 qtyKeydown）
   if(tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
 
   if(e.key === 'Enter'){
@@ -1864,8 +1939,6 @@ function handleHwCode(raw){
   if(!isValidBarcode(code)) {
     if(code.length > 0) setSt('⚠ 條碼格式無法辨識：' + code, 'err');
     flashHwInput('err');
-    const inp = document.getElementById('hw-input');
-    if(inp) setTimeout(()=>inp.focus(), 30);
     return;
   }
   const now = Date.now();
@@ -1873,8 +1946,6 @@ function handleHwCode(raw){
   lastCode = code; lastCodeTime = now;
   addByBarcode(code);
   flashHwInput('ok');
-  const inp = document.getElementById('hw-input');
-  if(inp) setTimeout(()=>inp.focus(), 30);
 }
 
 function flashHwInput(type){
@@ -1888,24 +1959,14 @@ function flashHwInput(type){
 
 
 function focusHwIfNeeded(){
-  if(scanMode==='hw' && document.getElementById('page-pos').classList.contains('active')){
-    initHwInput();
-    const inp = document.getElementById('hw-input');
-    if(inp) inp.focus();
-  }
+  // HID 掃描器不需要任何 input 有焦點，global keydown 直接接收
 }
 function blurHwInput(){
-  // 讓 hw-input 先失去焦點，Android 才會清除 inputmode=none 的鍵盤抑制狀態
-  const inp = document.getElementById('hw-input');
-  if(inp && document.activeElement === inp) inp.blur();
+  // 不再需要，保留相容性
 }
-// 點擊收銀台空白區域時重新聚焦 hw-input
-document.getElementById('page-pos').addEventListener('click', function(e){
-  const tag=(e.target||{}).tagName||'';
-  if(tag!=='INPUT'&&tag!=='BUTTON'&&tag!=='SELECT'&&tag!=='TEXTAREA'){
-    focusHwIfNeeded();
-  }
-});
+
+// ── 數量欄掃描器偵測 ──
+// HID 掃描器不需要任何 input 有焦點，無需點擊重新聚焦處理
 
 // ═══ Scroll-to-top ═══
 // 1. 全頁 FAB（主頁面捲動）
@@ -1987,8 +2048,9 @@ function holdCart(){
 function resumeHeld(id){
   const idx = heldCarts.findIndex(h=>h.id===id);
   if(idx===-1) return;
+  // 若目前購物車有商品，自動先暫存，不詢問
   if(cart.length){
-    if(!confirm('目前購物車有商品，恢復暫存會取代目前內容，確定嗎？')) return;
+    heldCarts.push({id:'H'+Date.now(), items:JSON.parse(JSON.stringify(cart)), savedAt:new Date()});
   }
   cart = JSON.parse(JSON.stringify(heldCarts[idx].items));
   heldCarts.splice(idx,1);
