@@ -1159,11 +1159,13 @@ function renderCart(){
       <div class="qty-ctrl" style="display:flex;align-items:center;gap:4px;">
         <button class="qty-btn" ontouchstart="blurHwInput()" onclick="changeQty('${item.barcode}',-1)">−</button>
         <input type="number" inputmode="numeric" pattern="[0-9]*" class="qty-input" value="${item.qty}"
+          data-bc="${item.barcode}"
+          data-orig="${item.qty}"
           ontouchstart="blurHwInput()"
-          onfocus="this.select()"
+          onfocus="this.dataset.orig=this.value;this.select()"
           onchange="setQty('${item.barcode}',this)"
           onblur="setTimeout(focusHwIfNeeded,400)"
-          onkeydown="if(event.key==='Enter')this.blur()">
+          onkeydown="qtyKeydown(event,this)">
         <button class="qty-btn" ontouchstart="blurHwInput()" onclick="changeQty('${item.barcode}',1)">＋</button>
       </div>
       <button class="del-btn" onclick="removeItem('${item.barcode}')">×</button>
@@ -1900,10 +1902,56 @@ function focusHwIfNeeded(){
   }
 }
 function blurHwInput(){
-  // 在 ontouchstart 階段就讓 hw-input 失焦
-  // Android 才能正確為下一個聚焦的 input 顯示對應的鍵盤
   const inp = document.getElementById('hw-input');
   if(inp) inp.blur();
+}
+
+// ── 數量欄掃描器偵測 ──
+// 掃描器特徵：字元間隔 < 80ms，連續多個字元後送 Enter
+// 若偵測到掃描器輸入，恢復原本數量並把條碼送給掃描處理器
+let _qtyBuf = '';
+let _qtyLastTime = 0;
+let _qtyTimer = null;
+const QTY_SCAN_INTERVAL = 80; // ms
+
+function qtyKeydown(e, inp){
+  const now = Date.now();
+  const interval = now - _qtyLastTime;
+  _qtyLastTime = now;
+
+  if(e.key === 'Enter'){
+    // 若緩衝有字元且速度像掃描器 → 是條碼，不是數量確認
+    if(_qtyBuf.length >= 3){
+      e.preventDefault();
+      const code = _qtyBuf;
+      _qtyBuf = ''; clearTimeout(_qtyTimer);
+      // 恢復原本數量
+      inp.value = inp.dataset.orig || inp.value;
+      inp.blur();
+      handleHwCode(code);
+    } else {
+      // 正常 Enter：確認數量，失去焦點
+      _qtyBuf = ''; clearTimeout(_qtyTimer);
+      inp.blur();
+    }
+    return;
+  }
+
+  // 偵測掃描器速度（字元間隔 < QTY_SCAN_INTERVAL）
+  const isScannerSpeed = interval < QTY_SCAN_INTERVAL && e.key.length === 1;
+
+  if(isScannerSpeed && /[\x20-\x7E]/.test(e.key) && !e.ctrlKey && !e.metaKey){
+    // 累積條碼字元
+    _qtyBuf += e.key;
+    // 防止字元進入數量欄（讓數量保持原值）
+    e.preventDefault();
+    inp.value = inp.dataset.orig || inp.value;
+    clearTimeout(_qtyTimer);
+    _qtyTimer = setTimeout(()=>{ _qtyBuf = ''; }, 500);
+  } else {
+    // 慢速打字（人工輸入）→ 清除掃描緩衝，正常處理
+    _qtyBuf = ''; clearTimeout(_qtyTimer);
+  }
 }
 // 點擊收銀台空白區域時重新聚焦 hw-input
 document.getElementById('page-pos').addEventListener('click', function(e){
