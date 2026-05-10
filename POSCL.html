@@ -142,8 +142,8 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .t-bc-sm{display:block;font-family:var(--mono);font-size:9px;color:var(--muted2);margin-top:2px;}
 .t-bc-col{font-family:var(--mono);font-size:10px;color:var(--muted2);}
 .t-price{font-family:var(--mono);font-size:12px;color:var(--muted);}
-.qty-input{width:48px;padding:6px 4px;font-family:var(--mono);font-size:15px;font-weight:700;text-align:center;border:1.5px solid var(--border2);border-radius:7px;background:var(--surface2);color:var(--text);outline:none;cursor:pointer;}
-.qty-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--aglow);}
+.qty-display{min-width:44px;padding:6px 8px;font-family:var(--mono);font-size:16px;font-weight:700;text-align:center;border:1.5px solid var(--border2);border-radius:7px;background:var(--surface2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;user-select:none;}
+.qty-display:hover,.qty-display:active{border-color:var(--accent);background:var(--aglow);color:var(--accent);}
 .qty-btn{width:32px;height:32px;border-radius:7px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;line-height:1;}
 .qty-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--aglow);}
 .qty-btn:active{transform:scale(.92);}
@@ -1126,6 +1126,20 @@ function setQty(bc,input){
   document.getElementById('grand-total').textContent='NT$ '+sub;
   document.getElementById('btn-checkout').disabled=cart.length===0;
 }
+function changeQty(bc,d){
+  const item=cart.find(i=>i.barcode===bc);if(!item)return;
+  item.qty=Math.max(1,item.qty+d);
+  renderCart();
+}
+function editQty(bc,el){
+  const item=cart.find(i=>i.barcode===bc);if(!item)return;
+  const result=prompt('數量 / จำนวน：',item.qty);
+  if(result===null)return;
+  const val=parseInt(result);
+  if(isNaN(val)||val<1){return;}
+  item.qty=val;
+  renderCart();
+}
 function addToCart(bc,name,price,qty=1){
   const ex=cart.find(i=>i.barcode===bc);
   if(ex){ex.qty+=qty;}else{cart.push({barcode:bc,name,price,qty,noBarcode:bc.startsWith('NOBC-')});}
@@ -1156,12 +1170,7 @@ function renderCart(){
       <div class="t-price">NT$ ${item.price}</div>
       <div class="qty-ctrl" style="display:flex;align-items:center;gap:4px;">
         <button class="qty-btn" onclick="changeQty('${item.barcode}',-1)">−</button>
-        <input type="number" inputmode="numeric" pattern="[0-9]*" class="qty-input" value="${item.qty}"
-          data-bc="${item.barcode}"
-          data-orig="${item.qty}"
-          onfocus="this.dataset.orig=this.value;this.select()"
-          onchange="setQty('${item.barcode}',this)"
-          onkeydown="qtyKeydown(event,this)">
+        <span class="qty-display" onclick="editQty('${item.barcode}',this)">${item.qty}</span>
         <button class="qty-btn" onclick="changeQty('${item.barcode}',1)">＋</button>
       </div>
       <button class="del-btn" onclick="removeItem('${item.barcode}')">×</button>
@@ -1886,52 +1895,6 @@ function blurHwInput(){
 }
 
 // ── 數量欄掃描器偵測 ──
-// 掃描器特徵：字元間隔 < 80ms，連續多個字元後送 Enter
-// 若偵測到掃描器輸入，恢復原本數量並把條碼送給掃描處理器
-let _qtyBuf = '';
-let _qtyLastTime = 0;
-let _qtyTimer = null;
-const QTY_SCAN_INTERVAL = 80; // ms
-
-function qtyKeydown(e, inp){
-  const now = Date.now();
-  const interval = now - _qtyLastTime;
-  _qtyLastTime = now;
-
-  if(e.key === 'Enter'){
-    // 若緩衝有字元且速度像掃描器 → 是條碼，不是數量確認
-    if(_qtyBuf.length >= 3){
-      e.preventDefault();
-      const code = _qtyBuf;
-      _qtyBuf = ''; clearTimeout(_qtyTimer);
-      // 恢復原本數量
-      inp.value = inp.dataset.orig || inp.value;
-      inp.blur();
-      handleHwCode(code);
-    } else {
-      // 正常 Enter：確認數量，失去焦點
-      _qtyBuf = ''; clearTimeout(_qtyTimer);
-      inp.blur();
-    }
-    return;
-  }
-
-  // 偵測掃描器速度（字元間隔 < QTY_SCAN_INTERVAL）
-  const isScannerSpeed = interval < QTY_SCAN_INTERVAL && e.key.length === 1;
-
-  if(isScannerSpeed && /[\x20-\x7E]/.test(e.key) && !e.ctrlKey && !e.metaKey){
-    // 累積條碼字元
-    _qtyBuf += e.key;
-    // 防止字元進入數量欄（讓數量保持原值）
-    e.preventDefault();
-    inp.value = inp.dataset.orig || inp.value;
-    clearTimeout(_qtyTimer);
-    _qtyTimer = setTimeout(()=>{ _qtyBuf = ''; }, 500);
-  } else {
-    // 慢速打字（人工輸入）→ 清除掃描緩衝，正常處理
-    _qtyBuf = ''; clearTimeout(_qtyTimer);
-  }
-}
 // HID 掃描器不需要任何 input 有焦點，無需點擊重新聚焦處理
 
 // ═══ Scroll-to-top ═══
