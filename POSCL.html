@@ -142,9 +142,11 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .t-bc-sm{display:block;font-family:var(--mono);font-size:9px;color:var(--muted2);margin-top:2px;}
 .t-bc-col{font-family:var(--mono);font-size:10px;color:var(--muted2);}
 .t-price{font-family:var(--mono);font-size:12px;color:var(--muted);}
-.qty-input{width:58px;padding:6px 8px;font-family:var(--mono);font-size:15px;font-weight:700;text-align:center;border:1.5px solid var(--border2);border-radius:7px;background:var(--surface2);color:var(--text);outline:none;cursor:pointer;-moz-appearance:textfield;}
-.qty-input::-webkit-inner-spin-button,.qty-input::-webkit-outer-spin-button{-webkit-appearance:none;}
+.qty-input{width:48px;padding:6px 4px;font-family:var(--mono);font-size:15px;font-weight:700;text-align:center;border:1.5px solid var(--border2);border-radius:7px;background:var(--surface2);color:var(--text);outline:none;cursor:pointer;}
 .qty-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--aglow);}
+.qty-btn{width:32px;height:32px;border-radius:7px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;line-height:1;}
+.qty-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--aglow);}
+.qty-btn:active{transform:scale(.92);}
 .del-btn{width:28px;height:28px;border-radius:6px;background:transparent;border:1.5px solid transparent;color:var(--muted2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .12s;}
 .del-btn:hover{border-color:var(--red);color:var(--red);background:#fef2f2;}
 .empty-st{padding:52px 20px;text-align:center;color:var(--muted);}
@@ -303,7 +305,18 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 #toast.ok{background:#064e3b;}
 #toast.err{background:#7f1d1d;}
 
-/* ── SCROLL TO TOP ── */
+/* ── FIREBASE STATUS ── */
+#fb-status{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:9px;cursor:pointer;font-size:12px;font-family:var(--zh);color:var(--muted);transition:all .18s;white-space:nowrap;}
+#fb-status:hover{border-color:#f97316;color:#f97316;background:#fff7ed;}
+#fb-status.connected{border-color:var(--green);color:var(--green);background:#f0fdf4;}
+#fb-status.connecting{border-color:var(--gold);color:var(--gold);background:#fffbeb;}
+#fb-status.error{border-color:var(--red);color:var(--red);background:#fef2f2;}
+#fb-status.off{border-color:var(--border2);color:var(--muted);background:var(--surface);}
+.fb-cfg-grid{display:grid;grid-template-columns:1fr;gap:11px;margin-bottom:6px;}
+.fb-cfg-note{font-size:11px;color:var(--muted);font-family:var(--zh);line-height:1.7;background:var(--surface2);padding:10px 14px;border-radius:8px;border:1px solid var(--border);margin-bottom:14px;}
+.fb-cfg-note a{color:var(--accent);text-decoration:none;}
+.fb-cfg-note a:hover{text-decoration:underline;}
+
 .scroll-fab{position:fixed;right:22px;bottom:64px;width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(37,99,235,.35);opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:9990;transform:translateY(10px);}
 .scroll-fab.show{opacity:1;pointer-events:all;transform:translateY(0);}
 .scroll-fab:hover{background:var(--accent2);box-shadow:0 5px 16px rgba(37,99,235,.45);transform:translateY(-2px);}
@@ -349,6 +362,34 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   .nobc-cat-grid{}
 }
 </style>
+<script type="module">
+  // Firebase 設定從 localStorage 讀取，不寫死在程式碼中
+  // 避免 API Key 暴露於公開的 GitHub repository
+  const FB_CFG_KEY = 'pos_firebase_cfg';
+  let cfg;
+  try { cfg = JSON.parse(localStorage.getItem(FB_CFG_KEY) || 'null'); } catch(e) {}
+
+  if(!cfg || !cfg.databaseURL){
+    // 尚未設定，通知主腳本等待使用者輸入
+    window._fbNeedSetup = true;
+    document.dispatchEvent(new Event('firebase-ready'));
+  } else {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js");
+    const { getDatabase, ref, set, get, onValue, off } = await import("https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js");
+
+    const app = initializeApp(cfg, 'pos-app');
+    const db  = getDatabase(app);
+
+    window._fbDb      = db;
+    window._fbRef     = (path) => ref(db, path);
+    window._fbSet     = (path, val) => set(ref(db, path), val);
+    window._fbGet     = (path) => get(ref(db, path));
+    window._fbOnValue = (path, cb, errCb) => onValue(ref(db, path), cb, errCb);
+    window._fbOff     = (refObj) => off(refObj);
+    window._fbReady   = true;
+    document.dispatchEvent(new Event('firebase-ready'));
+  }
+</script>
 </head>
 <body>
 
@@ -379,27 +420,17 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
           <!-- HW Scanner Panel -->
           <div id="panel-hw" style="display:flex;flex-direction:column;gap:10px;">
             <div class="scanner-hw-wrap">
-              <!-- 隱藏的真實輸入框（type=password 讓 IME 無法介入） -->
-              <input
-                id="hw-capture"
-                type="password"
-                autocomplete="new-password"
-                autocorrect="off"
-                autocapitalize="none"
-                spellcheck="false"
-                style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none;font-size:1px;"
-                tabindex="-1"
-              >
-              <!-- 顯示用（readonly，不觸發 IME）-->
               <input
                 id="hw-input"
                 class="scanner-hw-input"
                 type="text"
-                readonly
+                inputmode="none"
                 autocomplete="off"
+                autocorrect="off"
+                autocapitalize="none"
                 spellcheck="false"
                 placeholder="สแกนหรือพิมพ์บาร์โค้ด... / 掃描或輸入條碼..."
-                onclick="focusHwCapture()"
+                onfocus="this.select()"
               >
               <span class="scanner-hw-icon">📦</span>
             </div>
@@ -487,6 +518,10 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
       <div id="file-status-prod" onclick="pickDataFile()" title="點擊選擇或更換資料檔案">
         <span id="file-icon-prod">💾</span>
         <span id="file-label-prod">點擊選擇資料檔案</span>
+      </div>
+      <div id="fb-status" class="off" style="cursor:default" title="Firebase 雲端同步狀態">
+        <span id="fb-icon">☁️</span>
+        <span id="fb-label">Firebase 未連線</span>
       </div>
       <!-- 新條碼開關 -->
       <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:9px;margin-right:4px">
@@ -733,6 +768,32 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   </div>
 </div>
 
+
+<!-- ═══ Modal: Firebase 設定 ═══ -->
+<div class="overlay" id="m-firebase">
+  <div class="mbox" style="width:500px">
+    <div class="m-title">☁️ Firebase 設定<span class="zh">雲端同步 Realtime Database</span></div>
+    <div class="fb-cfg-note">
+      1. 前往 <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → 專案設定 → Web 應用程式<br>
+      2. 複製各欄位值貼到下方（設定儲存在本機，不會上傳 GitHub）<br>
+      3. Build → Realtime Database → 確認已建立並設為測試模式 ✓
+    </div>
+    <div class="fb-cfg-grid">
+      <div class="fg"><label>API Key</label><input class="fi" id="fb-apiKey" type="text" placeholder="AIzaSy..."></div>
+      <div class="fg"><label>Auth Domain</label><input class="fi" id="fb-authDomain" type="text" placeholder="your-project.firebaseapp.com"></div>
+      <div class="fg"><label>Database URL <span style="color:var(--red)">*</span></label><input class="fi" id="fb-dbUrl" type="text" placeholder="https://your-project-default-rtdb.asia-southeast1.firebasedatabase.app"></div>
+      <div class="fg"><label>Project ID</label><input class="fi" id="fb-projectId" type="text" placeholder="your-project"></div>
+      <div class="fg"><label>App ID</label><input class="fi" id="fb-appId" type="text" placeholder="1:123456789:web:abc..."></div>
+    </div>
+    <div id="fb-modal-status" style="font-size:12px;color:var(--muted);font-family:var(--zh);padding:8px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);margin-bottom:4px;display:none;"></div>
+    <div class="m-acts">
+      <button class="btn btn-accent" style="flex:1" onclick="saveFirebaseConfig()">儲存並重新載入</button>
+      <button class="btn btn-ghost" onclick="clearFirebaseConfig()" style="color:var(--red);border-color:var(--red)">清除設定</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-firebase')">取消</button>
+    </div>
+  </div>
+</div>
+
 <button id="scroll-fab" class="scroll-fab" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到頂部 / กลับด้านบน">↑</button>
 
 <div id="toast"></div>
@@ -929,7 +990,7 @@ function saveTx(a){localStorage.setItem('pos_transactions',JSON.stringify(a));_s
 let cart=[], scanning=false, codeReader=null;
 let pendingBC=null, editingBC=null;
 let lastCode='', lastCodeTime=0;
-const DEBOUNCE=0; // 無限制，允許連續掃描相同條碼
+const DEBOUNCE=1000; // 1秒內同一條碼只接受一次
 let allowNewBc=false;
 let nobcSelectedCat=null; // null=分類選擇頁, 'frozen'等=商品清單頁
 
@@ -1095,12 +1156,15 @@ function renderCart(){
         ${item.noBarcode?'<span class="nobc-tag">無條碼</span>':''}
       </div>
       <div class="t-price">NT$ ${item.price}</div>
-      <div class="qty-ctrl">
-        <input type="number" class="qty-input" value="${item.qty}" min="1"
-          onclick="this.select()"
+      <div class="qty-ctrl" style="display:flex;align-items:center;gap:4px;">
+        <button class="qty-btn" ontouchstart="blurHwInput()" onclick="changeQty('${item.barcode}',-1)">−</button>
+        <input type="number" inputmode="numeric" pattern="[0-9]*" class="qty-input" value="${item.qty}"
+          ontouchstart="blurHwInput()"
+          onfocus="this.select()"
           onchange="setQty('${item.barcode}',this)"
-          onkeydown="if(event.key==='Enter')this.blur()"
-          inputmode="numeric" pattern="[0-9]*">
+          onblur="setTimeout(focusHwIfNeeded,400)"
+          onkeydown="if(event.key==='Enter')this.blur()">
+        <button class="qty-btn" ontouchstart="blurHwInput()" onclick="changeQty('${item.barcode}',1)">＋</button>
       </div>
       <button class="del-btn" onclick="removeItem('${item.barcode}')">×</button>
     </div>`).join('');
@@ -1659,204 +1723,189 @@ function switchScanMode(mode){
   document.getElementById('panel-cam').style.display = mode==='cam' ? 'flex' : 'none';
   // stop camera if switching away
   if(mode==='hw' && scanning) stopScanner();
-  // focus hw capture input + init event handlers
+  // 掃描器模式：聚焦 hw-input（inputmode=none，不會觸發 IME）
   if(mode==='hw'){
     setTimeout(()=>{
-      initHwCapture();
-      focusHwCapture();
-    },80);
+      initHwInput();
+      const inp = document.getElementById('hw-input');
+      if(inp) inp.focus();
+    }, 80);
   }
   setSt(mode==='hw' ? '🔌 พร้อมรับข้อมูลจากเครื่องสแกน / 等待掃描器輸入' : 'รอสแกน... / 等待掃描', '');
 }
 
 // ═══ 掃描器（HID Keyboard）輸入處理 ═══
-// 雙輸入架構：
-//   hw-capture  type="password"  → 真正接收輸入，password 欄位在所有平台均不觸發 IME
-//   hw-input    readonly         → 僅顯示用，讓使用者看到目前緩衝的條碼字元
 //
-// 速度偵測：掃描器每字元間隔 < SCANNER_MAX_INTERVAL，否則視為人工打字並重置緩衝
-// e.code 備援：當 IME 把 e.key 改為 "Process" 時，用 e.code 還原實際按鍵
+// 根本解法：hw-input 使用 inputmode="none"
+//   → Android 不啟動軟鍵盤，也不啟動任何 IME
+//   → 硬體 HID 掃描器的按鍵事件直接送達，e.key 是正確的 ASCII 字元
+//   → 不需要 type="password"，不會觸發密碼管理器
 //
-// 全域 keydown 也保留，讓頁面任意位置掃描皆有效
+// 雙層攔截：
+//   1. hw-input keydown（有焦點時，最可靠）
+//   2. document keydown（焦點不在 hw-input 時的保底）
 
-const SCANNER_MAX_INTERVAL = 80;  // ms：掃描器相鄰字元最大間隔
+const SCANNER_MAX_INTERVAL = 80;
 let _hwBuf = '';
 let _hwLastTime = 0;
 let _hwTimer = null;
 
-// code -> char 對照表（處理 e.key==='Process' 時的備援）
+// CODE_MAP：e.key==='Process' 時用 e.code 備援（部分 Android 裝置需要）
 const CODE_MAP = {};
-'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(k=>{ CODE_MAP['Key'+k]=k; });
-'0123456789'.split('').forEach(k=>{ CODE_MAP['Digit'+k]=k; CODE_MAP['Numpad'+k]=k; });
-const EXTRA={'Minus':'-','Period':'.','Slash':'/','Space':' ',
-  'NumpadAdd':'+','NumpadSubtract':'-','NumpadMultiply':'*','NumpadDecimal':'.'};
-Object.assign(CODE_MAP, EXTRA);
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(k => { CODE_MAP['Key'+k] = k; });
+'0123456789'.split('').forEach(k => { CODE_MAP['Digit'+k] = k; CODE_MAP['Numpad'+k] = k; });
+Object.assign(CODE_MAP, {
+  Minus:'-', Period:'.', Slash:'/', Space:' ',
+  NumpadAdd:'+', NumpadSubtract:'-', NumpadMultiply:'*', NumpadDecimal:'.'
+});
 
 function hwAppend(ch){
   const now = Date.now();
-  // 若間隔太長，視為新一輪輸入，重置緩衝
-  if(now - _hwLastTime > SCANNER_MAX_INTERVAL * 4 && _hwBuf.length > 0){
-    _hwBuf = '';
-  }
+  if(now - _hwLastTime > SCANNER_MAX_INTERVAL * 4 && _hwBuf.length > 0) _hwBuf = '';
   _hwLastTime = now;
   if(/[\x20-\x7E]/.test(ch)){
     _hwBuf += ch;
-    // 同步顯示到可見欄位
-    const disp = document.getElementById('hw-input');
-    if(disp) disp.value = _hwBuf;
+    const inp = document.getElementById('hw-input');
+    if(inp && inp !== document.activeElement) inp.value = _hwBuf; // 僅在非焦點時手動同步
   }
   clearTimeout(_hwTimer);
-  _hwTimer = setTimeout(()=>{ _hwBuf=''; const d=document.getElementById('hw-input'); if(d)d.value=''; }, 2000);
+  _hwTimer = setTimeout(()=>{
+    _hwBuf = '';
+    const inp = document.getElementById('hw-input');
+    if(inp) inp.value = '';
+  }, 3000);
 }
 
 function hwSubmit(){
   clearTimeout(_hwTimer);
-  const code = _hwBuf.trim();
+  // 優先取 hw-input.value（有焦點時瀏覽器直接寫入）
+  const inp = document.getElementById('hw-input');
+  const raw = inp ? inp.value.trim() : _hwBuf.trim();
   _hwBuf = '';
-  const disp = document.getElementById('hw-input');
-  if(disp) disp.value = '';
-  refocusCapture();
-  if(code.length >= 3) handleHwCode(code);
+  if(inp) inp.value = '';
+  if(raw.length >= 3) handleHwCode(raw);
 }
 
-// ── hw-capture 事件：input（捕捉 IME 最終輸出）+ keydown（捕捉原始按鍵）──
-function initHwCapture(){
-  const cap = document.getElementById('hw-capture');
-  if(!cap || cap._hwInit) return;
-  cap._hwInit = true;
+// ── hw-input 直接監聽（有焦點 + inputmode=none，IME 不會介入）──
+function initHwInput(){
+  const inp = document.getElementById('hw-input');
+  if(!inp || inp._hwInit) return;
+  inp._hwInit = true;
 
-  cap.addEventListener('focus', ()=>{
-    const d=document.getElementById('hw-input'); if(d)d.classList.add('active');
-  });
-  cap.addEventListener('blur', ()=>{
-    const d=document.getElementById('hw-input'); if(d)d.classList.remove('active');
-    // 短暫離焦後若仍在掃描器模式，重新聚焦
-    setTimeout(()=>{ if(scanMode==='hw' && document.getElementById('page-pos').classList.contains('active')) focusHwCapture(); },200);
-  });
-
-  // keydown：掃描器通常走這裡（e.key 是正確的 ASCII 字元）
-  cap.addEventListener('keydown', function(e){
+  inp.addEventListener('keydown', function(e){
     if(e.key === 'Enter'){ e.preventDefault(); hwSubmit(); return; }
-    if(e.key === 'Backspace'){ e.preventDefault(); _hwBuf=_hwBuf.slice(0,-1); const d=document.getElementById('hw-input'); if(d)d.value=_hwBuf; return; }
+    if(e.key === 'Backspace'){ e.preventDefault(); return; } // 讓瀏覽器自然處理退格
 
     let ch = '';
-    if(e.key.length===1 && /[\x20-\x7E]/.test(e.key) && !e.ctrlKey && !e.metaKey){
+    if(e.key.length === 1 && /[\x20-\x7E]/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey){
       ch = e.key;
-    } else if(e.key==='Process'||e.key==='Unidentified'){
-      // IME 介入：用 e.code 還原實際按鍵（掃描器仍有正確的 code）
+    } else if(e.key === 'Process' || e.key === 'Unidentified'){
+      // Android 上 e.code 可能也是空，直接忽略，等 input 事件
       ch = CODE_MAP[e.code] || '';
     }
-    if(ch){ e.preventDefault(); hwAppend(ch); }
+    // 不 preventDefault，讓字元自然進入 input.value（瀏覽器幫我們累積）
+    if(ch) _hwLastTime = Date.now(); // 更新時間戳，字元本身由 input 事件接收
   });
 
-  // input：compositionend 後的最終 IME 輸出（Thai/Chinese 字元）
-  // 過濾掉非 ASCII，只留掃描器真正送出的字元
-  cap.addEventListener('input', function(){
-    const raw = cap.value || '';
-    cap.value = '';          // 清空，避免累積
-    const clean = raw.replace(/[^\x20-\x7E]/g,'');  // 去除泰文/中文等
-    if(clean){
-      // 把乾淨字元逐一加入緩衝（可能多個字元一次送來）
-      for(const ch of clean) hwAppend(ch);
+  // input 事件：inputmode=none 下 IME 不會觸發，這裡接收的都是掃描器的真實字元
+  // 同時作為安全網：過濾任何非 ASCII 字元（萬一 IME 還是送來）
+  inp.addEventListener('input', function(){
+    const clean = inp.value.replace(/[^\x20-\x7E]/g, '');
+    if(inp.value !== clean) inp.value = clean;
+    // 超過 80 字元自動送出
+    if(inp.value.length >= 80){
+      const val = inp.value.trim();
+      inp.value = '';
+      handleHwCode(val);
     }
   });
 
-  // compositionend：直接清除組字結果（IME 候選字不應進入條碼）
-  cap.addEventListener('compositionend', function(){
-    cap.value = '';
+  // compositionstart：若 IME 還是啟動（極少數狀況），立刻 blur 再 focus 打斷
+  inp.addEventListener('compositionstart', function(){
+    const saved = inp.value.replace(/[^\x20-\x7E]/g, '');
+    inp.blur();
+    inp.value = saved;
+    setTimeout(()=>inp.focus(), 0);
   });
 }
 
-// 全域 keydown：頁面任意位置掃描（焦點不在任何輸入框時）
-let _globalBuf = '';
-let _globalTimer = null;
-const HW_TIMEOUT = 120;
-
+// ── document keydown 保底（焦點不在 hw-input 時）──
 document.addEventListener('keydown', function(e){
   if(!document.getElementById('page-pos').classList.contains('active')) return;
   if(document.querySelector('.overlay.open') || document.querySelector('.review-overlay.open')) return;
 
-  const activeId  = document.activeElement ? document.activeElement.id : '';
-  const tag       = document.activeElement ? document.activeElement.tagName : '';
-  // hw-capture 自己的 keydown 已處理
-  if(activeId==='hw-capture') return;
-  // 其他真實輸入框，不攔截
-  if((tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA') && activeId!=='hw-input') return;
+  const activeId = document.activeElement ? document.activeElement.id : '';
+  // 有焦點在 hw-input，由 hw-input 自己的 keydown 處理，這裡跳過
+  if(activeId === 'hw-input') return;
+  // 焦點在其他真實輸入框，不攔截
+  const tag = document.activeElement ? document.activeElement.tagName : '';
+  if(tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
 
-  if(e.key==='Enter'){
+  if(e.key === 'Enter'){
     e.preventDefault();
-    const buf = _globalBuf.trim();
-    _globalBuf=''; clearTimeout(_globalTimer);
-    if(buf.length>=3) handleHwCode(buf);
+    hwSubmit();
     return;
   }
-  if(e.key==='Backspace'){ _globalBuf=_globalBuf.slice(0,-1); return; }
 
-  let ch='';
-  if(e.key.length===1 && /[\x20-\x7E]/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey){
-    ch=e.key;
-  } else if(e.key==='Process'||e.key==='Unidentified'){
-    ch=CODE_MAP[e.code]||'';
+  let ch = '';
+  if(e.key.length === 1 && /[\x20-\x7E]/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey){
+    ch = e.key;
+  } else if(e.key === 'Process' || e.key === 'Unidentified'){
+    ch = CODE_MAP[e.code] || '';
   }
-  if(ch){
-    e.preventDefault();
-    _globalBuf+=ch;
-    clearTimeout(_globalTimer);
-    _globalTimer=setTimeout(()=>{_globalBuf='';},HW_TIMEOUT*3);
-  }
+  if(ch){ e.preventDefault(); hwAppend(ch); }
 });
 
-// 舊函式（HTML 屬性殘留）
+// 相容舊呼叫點
 function onHwKeydown(e){}
 function onHwInput(inp){}
 function onHwCompose(inp){}
-
-function focusHwCapture(){
-  const cap=document.getElementById('hw-capture');
-  if(cap){ cap.value=''; cap.focus(); }
-}
-
-function refocusCapture(){
-  setTimeout(()=>{
-    const cap=document.getElementById('hw-capture');
-    if(cap){ cap.value=''; cap.focus(); }
-  },30);
-}
+function initHwCapture(){}
+function focusHwCapture(){}
+function refocusCapture(){}
 
 function handleHwCode(raw){
-  const code=(raw||'').trim();
-  if(isValidBarcode(code)){
-    addByBarcode(code);
-    flashHwInput('ok');
-    const disp=document.getElementById('hw-input');
-    if(disp) disp.value='';
-    refocusCapture();
-  } else if(code.length>0){
-    setSt('⚠ 條碼格式無法辨識：'+code,'err');
+  const code = (raw || '').trim().replace(/[^\x20-\x7E]/g, '');
+  if(!isValidBarcode(code)) {
+    if(code.length > 0) setSt('⚠ 條碼格式無法辨識：' + code, 'err');
     flashHwInput('err');
-    const disp=document.getElementById('hw-input');
-    if(disp) disp.value='';
-    refocusCapture();
+    const inp = document.getElementById('hw-input');
+    if(inp) setTimeout(()=>inp.focus(), 30);
+    return;
   }
+  const now = Date.now();
+  if(code === lastCode && now - lastCodeTime < DEBOUNCE) return;
+  lastCode = code; lastCodeTime = now;
+  addByBarcode(code);
+  flashHwInput('ok');
+  const inp = document.getElementById('hw-input');
+  if(inp) setTimeout(()=>inp.focus(), 30);
 }
 
 function flashHwInput(type){
-  const inp=document.getElementById('hw-input');
-  if(!inp)return;
+  const inp = document.getElementById('hw-input');
+  if(!inp) return;
   inp.classList.remove('flash-ok','flash-err');
   void inp.offsetWidth;
-  inp.classList.add(type==='ok'?'flash-ok':'flash-err');
-  setTimeout(()=>inp.classList.remove('flash-ok','flash-err'),500);
+  inp.classList.add(type === 'ok' ? 'flash-ok' : 'flash-err');
+  setTimeout(()=>inp.classList.remove('flash-ok','flash-err'), 500);
 }
 
 
 function focusHwIfNeeded(){
   if(scanMode==='hw' && document.getElementById('page-pos').classList.contains('active')){
-    initHwCapture();
-    focusHwCapture();
+    initHwInput();
+    const inp = document.getElementById('hw-input');
+    if(inp) inp.focus();
   }
 }
-// 點擊收銀台空白區域時重新聚焦輸入框
+function blurHwInput(){
+  // 在 ontouchstart 階段就讓 hw-input 失焦
+  // Android 才能正確為下一個聚焦的 input 顯示對應的鍵盤
+  const inp = document.getElementById('hw-input');
+  if(inp) inp.blur();
+}
+// 點擊收銀台空白區域時重新聚焦 hw-input
 document.getElementById('page-pos').addEventListener('click', function(e){
   const tag=(e.target||{}).tagName||'';
   if(tag!=='INPUT'&&tag!=='BUTTON'&&tag!=='SELECT'&&tag!=='TEXTAREA'){
@@ -1985,6 +2034,168 @@ function renderHoldBar(){
   wrap.innerHTML = `<div class="hold-bar">${slots}</div>`;
 }
 
+// ═══ Firebase 整合（見上方）═══
+
+// ═══════════════════════════════════════════════════════
+//  Firebase Realtime Database 整合
+// ═══════════════════════════════════════════════════════
+// ═══ Firebase v12 模組化整合 ═══
+const FB_CFG_KEY = 'pos_firebase_cfg';
+let _fbConnected = false;
+let _fbListeners = {};
+let _fbSaveTimer = null;
+
+function setFbStatus(cls, label){
+  const el=document.getElementById('fb-status'), lb=document.getElementById('fb-label');
+  if(!el||!lb) return;
+  el.className=cls; lb.textContent=label;
+}
+function setFbModalStatus(msg, color='var(--muted)'){
+  const el=document.getElementById('fb-modal-status');
+  if(!el) return;
+  el.style.display='block'; el.style.color=color; el.textContent=msg;
+}
+
+// ── 設定 Modal ──
+function loadFbConfigToModal(){
+  try{
+    const cfg=JSON.parse(localStorage.getItem(FB_CFG_KEY)||'null'); if(!cfg)return;
+    const m={'apiKey':'fb-apiKey','authDomain':'fb-authDomain','databaseURL':'fb-dbUrl',
+             'projectId':'fb-projectId','appId':'fb-appId'};
+    Object.entries(m).forEach(([k,id])=>{ const el=document.getElementById(id); if(el)el.value=cfg[k]||''; });
+  }catch(e){}
+}
+async function saveFirebaseConfig(){
+  const cfg={
+    apiKey:       (document.getElementById('fb-apiKey')?.value||'').trim(),
+    authDomain:   (document.getElementById('fb-authDomain')?.value||'').trim(),
+    databaseURL:  (document.getElementById('fb-dbUrl')?.value||'').trim(),
+    projectId:    (document.getElementById('fb-projectId')?.value||'').trim(),
+    appId:        (document.getElementById('fb-appId')?.value||'').trim(),
+  };
+  if(!cfg.databaseURL){ setFbModalStatus('⚠ 請填寫 Database URL（必填）','var(--red)'); return; }
+  localStorage.setItem(FB_CFG_KEY, JSON.stringify(cfg));
+  setFbModalStatus('✓ 設定已儲存，重新載入頁面以連線...','var(--green)');
+  setTimeout(()=>location.reload(), 1200);
+}
+function clearFirebaseConfig(){
+  if(!confirm('確定清除 Firebase 設定？清除後需重新設定。')) return;
+  localStorage.removeItem(FB_CFG_KEY);
+  closeModal('m-firebase');
+  setFbStatus('off','Firebase 未設定');
+  showToast('已清除 Firebase 設定，請重新載入頁面','ok');
+}
+
+// ── 開啟 modal 時填入已儲存設定 ──
+const _origOpenModalForFb = openModal;
+window.openModal = function(id){
+  _origOpenModalForFb(id);
+  if(id==='m-firebase'){
+    loadFbConfigToModal();
+    const ms=document.getElementById('fb-modal-status'); if(ms) ms.style.display='none';
+  }
+};
+
+// ── 從 Firebase 拉取所有資料 ──
+async function fbPullAll(){
+  if(!window._fbGet) return;
+  try{
+    setFbStatus('connecting','☁ 同步中...');
+    const snap = await window._fbGet('pos');
+    const data = snap.val() || {};
+    if(data.products)      localStorage.setItem('pos_products',      JSON.stringify(data.products));
+    if(data.nobc_products) localStorage.setItem('pos_nobc_products', JSON.stringify(data.nobc_products));
+    if(data.transactions){
+      const arr = Array.isArray(data.transactions) ? data.transactions : Object.values(data.transactions);
+      localStorage.setItem('pos_transactions', JSON.stringify(arr));
+    }
+    setFbStatus('connected','☁ Firebase 已連線');
+    renderProdGrid(); renderStats(); renderMonthly(); renderDaily();
+    showToast('Firebase 資料同步完成','ok');
+  }catch(e){
+    console.error('[Firebase pull]',e);
+    setFbStatus('error','☁ 同步失敗：'+e.message);
+  }
+}
+
+// ── 即時監聽 ──
+function fbListenAll(){
+  if(!window._fbOnValue) return;
+  [['pos/products','pos_products',0],['pos/nobc_products','pos_nobc_products',1],['pos/transactions','pos_transactions',2]]
+  .forEach(([path,lsKey,type])=>{
+    if(_fbListeners[path]) try{_fbListeners[path]();}catch(e){}
+    const unsub = window._fbOnValue(path, snap=>{
+      const val=snap.val(); if(val===null) return;
+      const toStore = type===2 ? (Array.isArray(val)?val:Object.values(val)) : val;
+      localStorage.setItem(lsKey, JSON.stringify(toStore));
+      if(type<2) renderProdGrid(); else{ renderStats(); renderMonthly(); renderDaily(); }
+    }, err=>console.warn('[Firebase listen]',err));
+    _fbListeners[path]=unsub;
+  });
+}
+
+// ── 寫入 Firebase（防抖 600ms）──
+function fbScheduleSave(){
+  if(!_fbConnected||!window._fbSet) return;
+  clearTimeout(_fbSaveTimer);
+  _fbSaveTimer=setTimeout(async()=>{
+    setFbStatus('connecting','☁ 儲存中...');
+    try{
+      await window._fbSet('pos',{
+        updatedAt:new Date().toISOString(),
+        products:getProds(), nobc_products:getNobcProds(), transactions:getTx()
+      });
+      setFbStatus('connected','☁ Firebase 已連線');
+    }catch(e){
+      console.error('[Firebase save]',e);
+      setFbStatus('error','☁ 儲存失敗：'+e.message);
+    }
+  },600);
+}
+
+// ── 覆寫 save 函式 ──
+const _origSaveProds2=saveProds, _origSaveNobcProds2=saveNobcProds, _origSaveTx2=saveTx;
+window.saveProds     = function(o){ _origSaveProds2(o);     fbScheduleSave(); };
+window.saveNobcProds = function(a){ _origSaveNobcProds2(a); fbScheduleSave(); };
+window.saveTx        = function(a){ _origSaveTx2(a);        fbScheduleSave(); };
+
+// ── 等待 module 就緒後連線 ──
+function waitFbReady(cb){
+  if(window._fbReady||window._fbNeedSetup){ cb(); return; }
+  document.addEventListener('firebase-ready', cb, {once:true});
+  setTimeout(()=>{ if(!window._fbReady&&!window._fbNeedSetup) setFbStatus('error','☁ Firebase 載入超時'); },10000);
+}
+
+waitFbReady(async()=>{
+  if(window._fbNeedSetup){
+    setFbStatus('off','☁ 點擊設定 Firebase');
+    document.getElementById('fb-status').style.cursor='pointer';
+    document.getElementById('fb-status').onclick=()=>openModal('m-firebase');
+    return;
+  }
+  setFbStatus('connecting','☁ 連線中...');
+  try{
+    await new Promise((resolve,reject)=>{
+      const t=setTimeout(()=>reject(new Error('timeout')),8000);
+      const unsub=window._fbOnValue('.info/connected',snap=>{
+        clearTimeout(t); unsub(); resolve(snap.val());
+      },err=>{clearTimeout(t);reject(err);});
+    });
+    _fbConnected=true;
+    setFbStatus('connected','☁ Firebase 已連線');
+    await fbPullAll();
+    fbListenAll();
+    // 連線成功後點擊可開啟設定（供更換設定用）
+    document.getElementById('fb-status').style.cursor='pointer';
+    document.getElementById('fb-status').onclick=()=>openModal('m-firebase');
+  }catch(e){
+    console.error('[Firebase init]',e);
+    setFbStatus('error','☁ 連線失敗');
+    showToast('Firebase 連線失敗，使用本地資料','err');
+    document.getElementById('fb-status').style.cursor='pointer';
+    document.getElementById('fb-status').onclick=()=>openModal('m-firebase');
+  }
+});
 
 renderCart();
 initPersistence();
