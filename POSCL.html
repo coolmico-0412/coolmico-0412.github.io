@@ -424,13 +424,11 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
                 id="hw-input"
                 class="scanner-hw-input"
                 type="text"
-                inputmode="none"
+                readonly
+                tabindex="-1"
                 autocomplete="off"
-                autocorrect="off"
-                autocapitalize="none"
                 spellcheck="false"
                 placeholder="สแกนหรือพิมพ์บาร์โค้ด... / 掃描或輸入條碼..."
-                onfocus="this.select()"
               >
               <span class="scanner-hw-icon">📦</span>
             </div>
@@ -1157,16 +1155,14 @@ function renderCart(){
       </div>
       <div class="t-price">NT$ ${item.price}</div>
       <div class="qty-ctrl" style="display:flex;align-items:center;gap:4px;">
-        <button class="qty-btn" ontouchstart="blurHwInput()" onclick="changeQty('${item.barcode}',-1)">−</button>
+        <button class="qty-btn" onclick="changeQty('${item.barcode}',-1)">−</button>
         <input type="number" inputmode="numeric" pattern="[0-9]*" class="qty-input" value="${item.qty}"
           data-bc="${item.barcode}"
           data-orig="${item.qty}"
-          ontouchstart="blurHwInput()"
           onfocus="this.dataset.orig=this.value;this.select()"
           onchange="setQty('${item.barcode}',this)"
-          onblur="setTimeout(focusHwIfNeeded,400)"
           onkeydown="qtyKeydown(event,this)">
-        <button class="qty-btn" ontouchstart="blurHwInput()" onclick="changeQty('${item.barcode}',1)">＋</button>
+        <button class="qty-btn" onclick="changeQty('${item.barcode}',1)">＋</button>
       </div>
       <button class="del-btn" onclick="removeItem('${item.barcode}')">×</button>
     </div>`).join('');
@@ -1725,13 +1721,9 @@ function switchScanMode(mode){
   document.getElementById('panel-cam').style.display = mode==='cam' ? 'flex' : 'none';
   // stop camera if switching away
   if(mode==='hw' && scanning) stopScanner();
-  // 掃描器模式：聚焦 hw-input（inputmode=none，不會觸發 IME）
+  // 掃描器模式：不聚焦任何輸入框，HID 掃描器 keydown 直接送到 document
   if(mode==='hw'){
-    setTimeout(()=>{
-      initHwInput();
-      const inp = document.getElementById('hw-input');
-      if(inp) inp.focus();
-    }, 80);
+    setTimeout(()=>{ initHwInput(); }, 80);
   }
   setSt(mode==='hw' ? '🔌 พร้อมรับข้อมูลจากเครื่องสแกน / 等待掃描器輸入' : 'รอสแกน... / 等待掃描', '');
 }
@@ -1827,7 +1819,6 @@ function initHwInput(){
     const saved = inp.value.replace(/[^\x20-\x7E]/g, '');
     inp.blur();
     inp.value = saved;
-    setTimeout(()=>inp.focus(), 0);
   });
 }
 
@@ -1836,11 +1827,8 @@ document.addEventListener('keydown', function(e){
   if(!document.getElementById('page-pos').classList.contains('active')) return;
   if(document.querySelector('.overlay.open') || document.querySelector('.review-overlay.open')) return;
 
-  const activeId = document.activeElement ? document.activeElement.id : '';
-  // 有焦點在 hw-input，由 hw-input 自己的 keydown 處理，這裡跳過
-  if(activeId === 'hw-input') return;
-  // 焦點在其他真實輸入框，不攔截
   const tag = document.activeElement ? document.activeElement.tagName : '';
+  // 若有真實輸入框有焦點，交由該 input 自行處理（qty-input 有 qtyKeydown）
   if(tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
 
   if(e.key === 'Enter'){
@@ -1871,8 +1859,6 @@ function handleHwCode(raw){
   if(!isValidBarcode(code)) {
     if(code.length > 0) setSt('⚠ 條碼格式無法辨識：' + code, 'err');
     flashHwInput('err');
-    const inp = document.getElementById('hw-input');
-    if(inp) setTimeout(()=>inp.focus(), 30);
     return;
   }
   const now = Date.now();
@@ -1880,8 +1866,6 @@ function handleHwCode(raw){
   lastCode = code; lastCodeTime = now;
   addByBarcode(code);
   flashHwInput('ok');
-  const inp = document.getElementById('hw-input');
-  if(inp) setTimeout(()=>inp.focus(), 30);
 }
 
 function flashHwInput(type){
@@ -1895,15 +1879,10 @@ function flashHwInput(type){
 
 
 function focusHwIfNeeded(){
-  if(scanMode==='hw' && document.getElementById('page-pos').classList.contains('active')){
-    initHwInput();
-    const inp = document.getElementById('hw-input');
-    if(inp) inp.focus();
-  }
+  // HID 掃描器不需要任何 input 有焦點，global keydown 直接接收
 }
 function blurHwInput(){
-  const inp = document.getElementById('hw-input');
-  if(inp) inp.blur();
+  // 不再需要，保留相容性
 }
 
 // ── 數量欄掃描器偵測 ──
@@ -1953,13 +1932,7 @@ function qtyKeydown(e, inp){
     _qtyBuf = ''; clearTimeout(_qtyTimer);
   }
 }
-// 點擊收銀台空白區域時重新聚焦 hw-input
-document.getElementById('page-pos').addEventListener('click', function(e){
-  const tag=(e.target||{}).tagName||'';
-  if(tag!=='INPUT'&&tag!=='BUTTON'&&tag!=='SELECT'&&tag!=='TEXTAREA'){
-    focusHwIfNeeded();
-  }
-});
+// HID 掃描器不需要任何 input 有焦點，無需點擊重新聚焦處理
 
 // ═══ Scroll-to-top ═══
 // 1. 全頁 FAB（主頁面捲動）
