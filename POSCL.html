@@ -305,6 +305,25 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 #toast.ok{background:#064e3b;}
 #toast.err{background:#7f1d1d;}
 
+/* ── CUSTOM NUMPAD ── */
+#numpad-overlay{position:fixed;inset:0;z-index:800;background:rgba(15,23,42,.45);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(2px);}
+#numpad-overlay.open{opacity:1;pointer-events:all;}
+#numpad-box{background:var(--surface);border-radius:20px 20px 0 0;padding:18px 18px 32px;width:100%;max-width:400px;transform:translateY(100%);transition:transform .25s cubic-bezier(.25,.8,.25,1);box-shadow:0 -4px 32px rgba(0,0,0,.18);}
+#numpad-overlay.open #numpad-box{transform:translateY(0);}
+.numpad-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.numpad-title{font-size:15px;font-weight:700;color:var(--text);font-family:var(--zh);}
+.numpad-close{font-size:22px;color:var(--muted);cursor:pointer;line-height:1;padding:4px 8px;border-radius:8px;background:var(--surface2);border:none;}
+.numpad-close:hover{color:var(--red);}
+.numpad-display{font-family:var(--mono);font-size:40px;font-weight:700;color:var(--accent);text-align:right;letter-spacing:2px;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:8px 18px;margin-bottom:14px;min-height:64px;display:flex;align-items:center;justify-content:flex-end;}
+.numpad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.npk{height:68px;border-radius:14px;border:none;font-size:26px;font-weight:700;font-family:var(--mono);cursor:pointer;transition:all .1s;background:var(--surface2);color:var(--text);box-shadow:var(--sh);-webkit-tap-highlight-color:transparent;}
+.npk:active{transform:scale(.91);box-shadow:none;background:var(--surface3);}
+.npk.del{background:#fef2f2;color:var(--red);font-size:22px;}
+.npk.del:active{background:#fecaca;}
+.npk.ok{background:var(--green);color:#fff;font-size:19px;font-family:var(--zh);font-weight:700;}
+.npk.ok:active{background:#047857;}
+.npk.zero{grid-column:span 2;}
+
 /* ── FIREBASE STATUS ── */
 #fb-status{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:9px;cursor:pointer;font-size:12px;font-family:var(--zh);color:var(--muted);transition:all .18s;white-space:nowrap;}
 #fb-status:hover{border-color:#f97316;color:#f97316;background:#fff7ed;}
@@ -792,6 +811,31 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   </div>
 </div>
 
+<!-- ═══ Custom Numpad ═══ -->
+<div id="numpad-overlay" onclick="if(event.target===this)closeNumpad()">
+  <div id="numpad-box">
+    <div class="numpad-hd">
+      <div class="numpad-title" id="numpad-title">數量 / จำนวน</div>
+      <button class="numpad-close" onclick="closeNumpad()">×</button>
+    </div>
+    <div class="numpad-display" id="numpad-display">0</div>
+    <div class="numpad-grid">
+      <button class="npk" onclick="npKey('7')">7</button>
+      <button class="npk" onclick="npKey('8')">8</button>
+      <button class="npk" onclick="npKey('9')">9</button>
+      <button class="npk" onclick="npKey('4')">4</button>
+      <button class="npk" onclick="npKey('5')">5</button>
+      <button class="npk" onclick="npKey('6')">6</button>
+      <button class="npk" onclick="npKey('1')">1</button>
+      <button class="npk" onclick="npKey('2')">2</button>
+      <button class="npk" onclick="npKey('3')">3</button>
+      <button class="npk zero" onclick="npKey('0')">0</button>
+      <button class="npk del" onclick="npDel()">⌫</button>
+      <button class="npk ok" style="grid-column:1/-1" onclick="npConfirm()">✓ ยืนยัน / 確認</button>
+    </div>
+  </div>
+</div>
+
 <button id="scroll-fab" class="scroll-fab" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到頂部 / กลับด้านบน">↑</button>
 
 <div id="toast"></div>
@@ -1131,14 +1175,41 @@ function changeQty(bc,d){
   item.qty=Math.max(1,item.qty+d);
   renderCart();
 }
-function editQty(bc,el){
-  const item=cart.find(i=>i.barcode===bc);if(!item)return;
-  const result=prompt('數量 / จำนวน：',item.qty);
-  if(result===null)return;
-  const val=parseInt(result);
-  if(isNaN(val)||val<1){return;}
-  item.qty=val;
-  renderCart();
+function editQty(bc){
+  const item=cart.find(i=>i.barcode===bc); if(!item)return;
+  openNumpad(bc, item.qty, item.name);
+}
+
+// ── Custom Numpad ──
+let _npBc=null, _npVal='';
+
+function openNumpad(bc, currentQty, itemName){
+  _npBc=bc;
+  _npVal=String(currentQty);
+  document.getElementById('numpad-title').textContent=(itemName||'') + ' — 數量 / จำนวน';
+  document.getElementById('numpad-display').textContent=_npVal;
+  document.getElementById('numpad-overlay').classList.add('open');
+}
+function closeNumpad(){
+  document.getElementById('numpad-overlay').classList.remove('open');
+  _npBc=null; _npVal='';
+}
+function npKey(k){
+  if(_npVal==='0') _npVal=k;
+  else if(_npVal.length<4) _npVal+=k;
+  document.getElementById('numpad-display').textContent=_npVal||'0';
+}
+function npDel(){
+  _npVal=_npVal.slice(0,-1)||'0';
+  document.getElementById('numpad-display').textContent=_npVal;
+}
+function npConfirm(){
+  const val=parseInt(_npVal);
+  if(!isNaN(val)&&val>=1&&_npBc){
+    const item=cart.find(i=>i.barcode===_npBc);
+    if(item){ item.qty=val; renderCart(); }
+  }
+  closeNumpad();
 }
 function addToCart(bc,name,price,qty=1){
   const ex=cart.find(i=>i.barcode===bc);
@@ -1170,7 +1241,7 @@ function renderCart(){
       <div class="t-price">NT$ ${item.price}</div>
       <div class="qty-ctrl" style="display:flex;align-items:center;gap:4px;">
         <button class="qty-btn" onclick="changeQty('${item.barcode}',-1)">−</button>
-        <span class="qty-display" onclick="editQty('${item.barcode}',this)">${item.qty}</span>
+        <span class="qty-display" onclick="editQty('${item.barcode}')">${item.qty}</span>
         <button class="qty-btn" onclick="changeQty('${item.barcode}',1)">＋</button>
       </div>
       <button class="del-btn" onclick="removeItem('${item.barcode}')">×</button>
