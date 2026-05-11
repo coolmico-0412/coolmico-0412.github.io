@@ -2088,17 +2088,16 @@ if(window.speechSynthesis){
 function amountToThai(total){
   const u=['','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
   const t=['','สิบ','ยี่สิบ','สามสิบ','สี่สิบ','ห้าสิบ','หกสิบ','เจ็ดสิบ','แปดสิบ','เก้าสิบ'];
-  if(total===0)return'ศูนย์บาท';
+  if(total===0)return'ศูนย์';
   let n=Math.round(total),res='';
   if(n>=10000){res+=u[Math.floor(n/10000)]+'หมื่น';n%=10000;}
   if(n>=1000) {res+=u[Math.floor(n/1000)] +'พัน'; n%=1000;}
   if(n>=100)  {res+=u[Math.floor(n/100)]  +'ร้อย';n%=100;}
   if(n>=10)   {res+=t[Math.floor(n/10)];  n%=10;}
   if(n>0)     res+=u[n];
-  return res+'บาท';
+  return res;
 }
-
-let heldCarts = []; // [{id, items, savedAt}]
+ = []; // [{id, items, savedAt}]
 
 function holdCart(){
   if(!cart.length) return;
