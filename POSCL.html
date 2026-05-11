@@ -2099,7 +2099,7 @@ function amountToThai(total){
   if(n>0)     res+=u[n];
   return res;
 }
- = []; // [{id, items, savedAt}]
+let heldCarts = []; // [{id, items, savedAt}]
 
 function holdCart(){
   if(!cart.length) return;
