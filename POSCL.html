@@ -2,7 +2,11 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="POS SYSTEM">
 <title>POS SYSTEM</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -18,7 +22,8 @@
   --th:'Sarabun',sans-serif; --zh:'Noto Sans TC',sans-serif; --mono:'Space Mono',monospace;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:var(--th);min-height:100vh;font-size:14px;}
+html{overscroll-behavior:none;overscroll-behavior-y:none;}
+body{background:var(--bg);color:var(--text);font-family:var(--th);min-height:100vh;font-size:14px;overscroll-behavior:none;overscroll-behavior-y:none;touch-action:pan-x pan-y;}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:var(--surface2);}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
@@ -417,6 +422,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   <button class="nav-tab active" onclick="showPage('pos',this)">🏪 แคชเชียร์<span class="zh">收銀台</span></button>
   <button class="nav-tab" onclick="showPage('products',this)">📦 สินค้า<span class="zh">商品管理</span></button>
   <button class="nav-tab" onclick="showPage('report',this)">📊 รายงาน<span class="zh">銷售報表</span></button>
+  <button id="btn-fullscreen" onclick="toggleFullscreen()" title="全螢幕 / เต็มจอ" style="margin-left:auto;padding:7px 13px;border-radius:7px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;transition:all .18s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">⛶</button>
 </nav>
 
 <!-- ═══ 收銀台 ═══ -->
@@ -1240,9 +1246,9 @@ function renderCart(){
       </div>
       <div class="t-price">NT$ ${item.price}</div>
       <div class="qty-ctrl" style="display:flex;align-items:center;gap:4px;">
-        <button class="qty-btn" onclick="changeQty('${item.barcode}',-1)">−</button>
-        <span class="qty-display" onclick="editQty('${item.barcode}')">${item.qty}</span>
         <button class="qty-btn" onclick="changeQty('${item.barcode}',1)">＋</button>
+        <span class="qty-display" onclick="editQty('${item.barcode}')">${item.qty}</span>
+        <button class="qty-btn" onclick="changeQty('${item.barcode}',-1)">−</button>
       </div>
       <button class="del-btn" onclick="removeItem('${item.barcode}')">×</button>
     </div>`).join('');
@@ -1428,6 +1434,8 @@ function openReview(){
     rh.innerHTML=row('💵',chg(1000))+'<br>'+row('💴',chg(500))+'<br>'+row('🪙',chg(100));
   }else if(rh){rh.style.display='none';}
   document.getElementById('review-overlay').classList.add('open');
+  // 語音報價
+  speak('ยอดรวม '+amountToThai(total));
 }
 function closeReview(){document.getElementById('review-overlay').classList.remove('open');}
 function confirmCheckout(){
@@ -1438,6 +1446,8 @@ function confirmCheckout(){
   const txList=getTx();txList.push(tx);saveTx(txList);
   cart=[];renderCart();stopScanner();
   showToast('ชำระเงินเรียบร้อย! / 結帳完成 ✓','ok');
+  // 語音感謝
+  setTimeout(()=>speak('ขอบคุณที่ใช้บริการครับ'),300);
 }
 
 // ═══ 新條碼開關 ═══
@@ -2032,6 +2042,61 @@ window.renderProdGrid = function(){
 document.addEventListener('DOMContentLoaded', initStaticScrollTops);
 setTimeout(initStaticScrollTops, 500);
 
+// ═══ 全螢幕 ═══
+function toggleFullscreen(){
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen().catch(()=>{});
+  }else{
+    document.exitFullscreen().catch(()=>{});
+  }
+}
+document.addEventListener('fullscreenchange',()=>{
+  const btn=document.getElementById('btn-fullscreen');
+  if(!btn)return;
+  btn.textContent=document.fullscreenElement?'⛶':'⛶';
+  btn.title=document.fullscreenElement?'離開全螢幕 / ออกเต็มจอ':'全螢幕 / เต็มจอ';
+});
+// 第一次點擊頁面自動進入全螢幕
+document.addEventListener('click',function enterFs(){
+  if(!document.fullscreenElement)
+    document.documentElement.requestFullscreen().catch(()=>{});
+},{once:true,capture:true});
+
+// ═══ 防下拉刷新 ═══
+let _touchStartY=0;
+document.addEventListener('touchstart',e=>{_touchStartY=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchmove',e=>{
+  if(e.touches[0].clientY-_touchStartY>0 && window.scrollY===0 && e.cancelable)
+    e.preventDefault();
+},{passive:false});
+
+// ═══ TTS 語音合成 ═══
+function speak(text){
+  if(!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const utt=new SpeechSynthesisUtterance(text);
+  const voices=window.speechSynthesis.getVoices();
+  const thVoice=voices.find(v=>v.lang&&v.lang.startsWith('th'));
+  if(thVoice)utt.voice=thVoice;
+  utt.lang='th-TH'; utt.rate=0.92; utt.pitch=1;
+  window.speechSynthesis.speak(utt);
+}
+if(window.speechSynthesis){
+  window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
+  window.speechSynthesis.getVoices();
+}
+function amountToThai(total){
+  const u=['','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
+  const t=['','สิบ','ยี่สิบ','สามสิบ','สี่สิบ','ห้าสิบ','หกสิบ','เจ็ดสิบ','แปดสิบ','เก้าสิบ'];
+  if(total===0)return'ศูนย์บาท';
+  let n=Math.round(total),res='';
+  if(n>=10000){res+=u[Math.floor(n/10000)]+'หมื่น';n%=10000;}
+  if(n>=1000) {res+=u[Math.floor(n/1000)] +'พัน'; n%=1000;}
+  if(n>=100)  {res+=u[Math.floor(n/100)]  +'ร้อย';n%=100;}
+  if(n>=10)   {res+=t[Math.floor(n/10)];  n%=10;}
+  if(n>0)     res+=u[n];
+  return res+'บาท';
+}
 
 let heldCarts = []; // [{id, items, savedAt}]
 
@@ -2048,8 +2113,9 @@ function holdCart(){
 function resumeHeld(id){
   const idx = heldCarts.findIndex(h=>h.id===id);
   if(idx===-1) return;
+  // 若目前購物車有商品，自動先暫存，不詢問
   if(cart.length){
-    if(!confirm('目前購物車有商品，恢復暫存會取代目前內容，確定嗎？')) return;
+    heldCarts.push({id:'H'+Date.now(), items:JSON.parse(JSON.stringify(cart)), savedAt:new Date()});
   }
   cart = JSON.parse(JSON.stringify(heldCarts[idx].items));
   heldCarts.splice(idx,1);
