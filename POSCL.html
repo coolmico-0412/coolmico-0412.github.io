@@ -542,7 +542,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
         <span id="file-icon-prod">💾</span>
         <span id="file-label-prod">點擊選擇資料檔案</span>
       </div>
-      <div id="fb-status" class="off" style="cursor:default" title="Firebase 雲端同步狀態">
+      <div id="fb-status" class="off" onclick="openModal('m-firebase')" style="cursor:pointer" title="Firebase 雲端同步狀態">
         <span id="fb-icon">☁️</span>
         <span id="fb-label">Firebase 未連線</span>
       </div>
@@ -2058,9 +2058,11 @@ document.addEventListener('fullscreenchange',()=>{
 });
 // 第一次點擊頁面自動進入全螢幕
 document.addEventListener('click',function enterFs(){
-  if(!document.fullscreenElement)
-    document.documentElement.requestFullscreen().catch(()=>{});
-},{once:true,capture:true});
+  try{
+    if(!document.fullscreenElement && document.documentElement.requestFullscreen)
+      document.documentElement.requestFullscreen().catch(()=>{});
+  }catch(e){}
+},{once:true}); // 不用 capture，讓 nav tab 的 onclick 正常觸發
 
 // ═══ 防下拉刷新 ═══
 let _touchStartY=0;
@@ -2206,15 +2208,7 @@ function clearFirebaseConfig(){
   showToast('已清除 Firebase 設定，請重新載入頁面','ok');
 }
 
-// ── 開啟 modal 時填入已儲存設定 ──
-const _origOpenModalForFb = openModal;
-window.openModal = function(id){
-  _origOpenModalForFb(id);
-  if(id==='m-firebase'){
-    loadFbConfigToModal();
-    const ms=document.getElementById('fb-modal-status'); if(ms) ms.style.display='none';
-  }
-};
+// Firebase modal 已移除，不需要 openModal override
 
 // ── 從 Firebase 拉取所有資料 ──
 async function fbPullAll(){
