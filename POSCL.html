@@ -7,6 +7,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="POS SYSTEM">
+<!-- Thai flag favicon (SVG inline) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 20'%3E%3Crect width='30' height='20' fill='%23A51931'/%3E%3Crect y='3.33' width='30' height='13.34' fill='%23F4F5F8'/%3E%3Crect y='6.67' width='30' height='6.66' fill='%232D2A4A'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 80'%3E%3Crect width='120' height='80' fill='%23A51931'/%3E%3Crect y='13.3' width='120' height='53.4' fill='%23F4F5F8'/%3E%3Crect y='26.7' width='120' height='26.6' fill='%232D2A4A'/%3E%3C/svg%3E">
 <title>POS SYSTEM</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -223,7 +226,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .stat-chip .sval{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text);margin-top:4px;}
 .stat-chip .sval.hi{color:var(--gold);}
 .stat-chip .ssub{font-size:11px;color:var(--muted);font-family:var(--zh);margin-top:2px;}
-.report-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.report-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
 .report-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh);overflow:hidden;display:flex;flex-direction:column;}
 .rp-hd{padding:13px 18px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .rp-hd-title{font-size:13px;font-weight:700;color:var(--text);}
@@ -577,6 +580,11 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
         <div class="ssub"><span id="stat-today-count">0</span> รายการ / 筆交易</div>
       </div>
       <div class="stat-chip">
+        <div class="slbl">ยอดขายสัปดาห์นี้ / 本週銷售</div>
+        <div class="sval" id="stat-week">NT$ 0</div>
+        <div class="ssub"><span id="stat-week-count">0</span> รายการ / 筆交易</div>
+      </div>
+      <div class="stat-chip">
         <div class="slbl">ยอดขายเดือนนี้ / 本月銷售</div>
         <div class="sval" id="stat-month">NT$ 0</div>
         <div class="ssub"><span id="stat-month-count">0</span> รายการ / 筆交易</div>
@@ -595,6 +603,14 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
         <div class="rp-hd-title">รายเดือน <span class="zh">每月報表</span></div>
       </div>
       <div class="r-list" id="monthly-list">
+        <div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>
+      </div>
+    </div>
+    <div class="report-panel">
+      <div class="rp-hd">
+        <div class="rp-hd-title">รายสัปดาห์ <span class="zh">每週報表</span></div>
+      </div>
+      <div class="r-list" id="weekly-list">
         <div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>
       </div>
     </div>
@@ -988,7 +1004,7 @@ async function pickDataFile(){
         await _loadFromFile();
         setFileStatus('linked','✓ '+(_fileHandle.name||'pos_data.json'));
         showToast('已重新連結：'+_fileHandle.name,'ok');
-        renderProdGrid();renderStats();renderMonthly();renderDaily();
+        renderProdGrid();renderStats();renderMonthly();renderWeekly();renderDaily();
         return;
       }
     }catch(e){}
@@ -1020,7 +1036,7 @@ async function pickDataFile(){
       setFileStatus('linked','✓ '+_fileHandle.name);
       showToast('已建立資料檔案：'+_fileHandle.name,'ok');
     }
-    renderProdGrid();renderStats();renderMonthly();renderDaily();
+    renderProdGrid();renderStats();renderMonthly();renderWeekly();renderDaily();
   }catch(e){
     if(e.name!=='AbortError') showToast('操作取消','err');
   }
@@ -1677,13 +1693,22 @@ function clearAllProducts(){
 // ═══ 報表 ═══
 function renderStats(){
   const txList=getTx();const now=new Date();
-  const today=fd(now),month=fm(now);
-  let tT=0,tC=0,mT=0,mC=0;
-  txList.forEach(tx=>{const d=new Date(tx.date);if(fd(d)===today){tT+=tx.total;tC++;}if(fm(d)===month){mT+=tx.total;mC++;}});
+  const today=fd(now),month=fm(now),week=fweek(now);
+  let tT=0,tC=0,mT=0,mC=0,wT=0,wC=0;
+  txList.forEach(tx=>{
+    const d=new Date(tx.date);
+    if(fd(d)===today){tT+=tx.total;tC++;}
+    if(fm(d)===month){mT+=tx.total;mC++;}
+    if(fweek(d)===week){wT+=tx.total;wC++;}
+  });
   document.getElementById('stat-today').textContent='NT$ '+tT;
   document.getElementById('stat-today-count').textContent=tC;
   document.getElementById('stat-month').textContent='NT$ '+mT;
   document.getElementById('stat-month-count').textContent=mC;
+  const sw=document.getElementById('stat-week');
+  const swc=document.getElementById('stat-week-count');
+  if(sw)sw.textContent='NT$ '+wT;
+  if(swc)swc.textContent=wC;
 }
 function renderMonthly(){
   const txList=getTx();const grouped={};
@@ -1692,6 +1717,23 @@ function renderMonthly(){
   const el=document.getElementById('monthly-list');
   if(!keys.length){el.innerHTML=`<div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>`;return;}
   el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','monthly')"><div class="rdate">${k}</div><div class="ramt">NT$ ${grouped[k].total}</div><div class="rcnt">${grouped[k].count} 筆</div><div class="rarrow">›</div></div>`).join('');
+}
+function renderWeekly(){
+  const txList=getTx();const grouped={};
+  txList.forEach(tx=>{
+    const k=fweek(new Date(tx.date));
+    if(!grouped[k])grouped[k]={total:0,count:0,label:fweekLabel(new Date(tx.date))};
+    grouped[k].total+=tx.total;grouped[k].count++;
+  });
+  const keys=Object.keys(grouped).sort().reverse();
+  const el=document.getElementById('weekly-list');
+  if(!keys.length){el.innerHTML=`<div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>`;return;}
+  el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','weekly')">
+    <div class="rdate" style="width:auto;min-width:80px;font-size:11px">${grouped[k].label}</div>
+    <div class="ramt">NT$ ${grouped[k].total}</div>
+    <div class="rcnt">${grouped[k].count} 筆</div>
+    <div class="rarrow">›</div>
+  </div>`).join('');
 }
 function renderDaily(){
   const txList=getTx();const grouped={};
@@ -1703,13 +1745,20 @@ function renderDaily(){
 }
 function showDrilldown(key,mode){
   const txList=getTx();
-  const filtered=txList.filter(tx=>{const d=new Date(tx.date);return(mode==='daily'?fd(d):fm(d))===key;});
+  const filtered=txList.filter(tx=>{
+    const d=new Date(tx.date);
+    if(mode==='daily')  return fd(d)===key;
+    if(mode==='monthly')return fm(d)===key;
+    if(mode==='weekly') return fweek(d)===key;
+    return false;
+  });
   const itemMap={};
   filtered.forEach(tx=>{tx.items.forEach(item=>{if(!itemMap[item.name])itemMap[item.name]={qty:0,total:0};itemMap[item.name].qty+=item.qty;itemMap[item.name].total+=item.price*item.qty;});});
   const items=Object.entries(itemMap).sort((a,b)=>b[1].total-a[1].total);
   const grand=items.reduce((s,[,v])=>s+v.total,0);
-  document.getElementById('drill-title').textContent=(mode==='daily'?'每日':'每月')+'銷售明細';
-  document.getElementById('drill-sub').textContent=key+'　共 '+filtered.length+' 筆交易';
+  const modeLabel={daily:'每日',monthly:'每月',weekly:'每週'};
+  document.getElementById('drill-title').textContent=(modeLabel[mode]||mode)+'銷售明細';
+  document.getElementById('drill-sub').textContent=key.replace('~',' ~ ')+'　共 '+filtered.length+' 筆交易';
   document.getElementById('drill-body').innerHTML=items.map(([name,v])=>`<tr><td>${name}</td><td class="num">${v.qty} 件</td><td class="num" style="color:var(--gold);font-weight:700">NT$ ${v.total}</td></tr>`).join('');
   document.getElementById('drill-total-amt').textContent='NT$ '+grand;
   openModal('m-drill');
@@ -1731,7 +1780,7 @@ function importReport(e){
       const existing=getTx();const ids=new Set(existing.map(t=>t.id));let added=0;
       data.forEach(tx=>{if(!ids.has(tx.id)){existing.push(tx);added++;}});
       existing.sort((a,b)=>new Date(a.date)-new Date(b.date));
-      saveTx(existing);renderStats();renderMonthly();renderDaily();
+      saveTx(existing);renderStats();renderMonthly();renderWeekly();renderDaily();
       showToast('已匯入 '+added+' 筆交易紀錄','ok');
     }catch{showToast('檔案格式錯誤','err');}
     e.target.value='';
@@ -1741,7 +1790,7 @@ function importReport(e){
 function clearAllData(){
   if(!confirm('確定清除所有銷售資料？此操作無法復原。'))return;
   localStorage.removeItem('pos_transactions');
-  renderStats();renderMonthly();renderDaily();
+  renderStats();renderMonthly();renderWeekly();renderDaily();
   showToast('已清除所有資料','ok');
 }
 
@@ -1751,7 +1800,7 @@ function showPage(id,btn){
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(btn)btn.classList.add('active');
-  if(id==='report'){renderStats();renderMonthly();renderDaily();}
+  if(id==='report'){renderStats();renderMonthly();renderWeekly();renderDaily();}
   if(id==='products'){_resetProdCat();renderProdGrid();}
 }
 
@@ -1773,7 +1822,25 @@ function showToast(msg,type=''){const t=document.getElementById('toast');t.textC
 function playBeep(){try{const ctx=new(window.AudioContext||window.webkitAudioContext)();const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=960;o.type='sine';g.gain.setValueAtTime(.18,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.1);o.start();o.stop(ctx.currentTime+.1);}catch(e){}}
 function fd(d){return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;}
 function fm(d){return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;}
-function dateStamp(){const n=new Date();return`${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}`;}
+// 週鍵：以週一為第一天，取當週週一的日期作為唯一鍵
+function fweek(d){
+  const day=d.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  const diff=day===0?-6:1-day; // 距週一天數（週日往前6天）
+  const mon=new Date(d);
+  mon.setDate(d.getDate()+diff);
+  const sun=new Date(mon);
+  sun.setDate(mon.getDate()+6);
+  return fd(mon)+'~'+fd(sun); // 鍵格式：週一~週日
+}
+// 週顯示標籤
+function fweekLabel(d){
+  const day=d.getDay();
+  const diff=day===0?-6:1-day;
+  const mon=new Date(d);mon.setDate(d.getDate()+diff);
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  const fmt=x=>`${String(x.getMonth()+1).padStart(2,'0')}/${String(x.getDate()).padStart(2,'0')}`;
+  return`${mon.getFullYear()} ${fmt(mon)}~${fmt(sun)}`;
+}function dateStamp(){const n=new Date();return`${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}`;}
 function downloadFile(content,filename,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=filename;a.click();URL.revokeObjectURL(a.href);}
 function parseCsvRow(row){const result=[];let cur='',inQ=false;for(let i=0;i<row.length;i++){const c=row[i];if(c==='"'){if(inQ&&row[i+1]==='"'){cur+='"';i++;}else{inQ=!inQ;}}else if(c===','&&!inQ){result.push(cur);cur='';}else cur+=c;}result.push(cur);return result;}
 
