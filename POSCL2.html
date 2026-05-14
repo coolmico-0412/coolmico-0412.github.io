@@ -2,7 +2,14 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="POS SYSTEM">
+<!-- Thai flag favicon (SVG inline) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 20'%3E%3Crect width='30' height='20' fill='%23A51931'/%3E%3Crect y='3.33' width='30' height='13.34' fill='%23F4F5F8'/%3E%3Crect y='6.67' width='30' height='6.66' fill='%232D2A4A'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 80'%3E%3Crect width='120' height='80' fill='%23A51931'/%3E%3Crect y='13.3' width='120' height='53.4' fill='%23F4F5F8'/%3E%3Crect y='26.7' width='120' height='26.6' fill='%232D2A4A'/%3E%3C/svg%3E">
 <title>POS SYSTEM</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -18,7 +25,8 @@
   --th:'Sarabun',sans-serif; --zh:'Noto Sans TC',sans-serif; --mono:'Space Mono',monospace;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:var(--th);min-height:100vh;font-size:14px;}
+html{overscroll-behavior:none;overscroll-behavior-y:none;}
+body{background:var(--bg);color:var(--text);font-family:var(--th);min-height:100vh;font-size:14px;overscroll-behavior:none;overscroll-behavior-y:none;touch-action:pan-x pan-y;}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:var(--surface2);}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
@@ -121,13 +129,12 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .nobc-cat-btn .cat-count{font-size:17px;color:var(--muted2);font-family:var(--mono);background:var(--surface3);border-radius:8px;padding:3px 12px;flex-shrink:0;}
 
 /* ── NOBC LIST (in POS modal after category select) ── */
-.nobc-list-item{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);transition:background .12s;}
-.nobc-list-item:last-child{border-bottom:none;}
-.nobc-list-item:hover{background:var(--surface2);}
-.nobc-list-name{flex:1;font-weight:600;font-family:var(--zh);color:var(--text);font-size:23px;}
-.nobc-list-price{font-family:var(--mono);font-weight:700;color:var(--gold);font-size:23px;flex-shrink:0;}
-.nobc-list-add{padding:8px 18px;font-size:18px;border-radius:6px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;font-family:var(--zh);font-weight:600;transition:all .15s;flex-shrink:0;}
-.nobc-list-add:hover{background:var(--accent);color:#fff;}
+.nobc-product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:10px;background:var(--surface2);}
+.nobc-list-item{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:8px;min-height:86px;padding:12px 13px;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;transition:background .12s,border-color .12s,transform .12s;text-align:left;font-family:var(--zh);box-shadow:var(--sh);}
+.nobc-list-item:hover{background:#fff;border-color:var(--accent);transform:translateY(-1px);}
+.nobc-list-item:active{transform:scale(.98);}
+.nobc-list-name{font-weight:700;font-family:var(--zh);color:var(--text);font-size:21px;line-height:1.22;}
+.nobc-list-price{font-family:var(--mono);font-weight:700;color:var(--gold);font-size:21px;line-height:1;}
 .nobc-cat-header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:2px solid var(--border);background:var(--surface2);}
 .nobc-cat-back{display:flex;align-items:center;gap:5px;font-size:20px;color:var(--accent);font-weight:600;cursor:pointer;border:none;background:transparent;font-family:var(--zh);padding:4px 0;}
 .nobc-cat-back:hover{color:var(--accent2);}
@@ -201,7 +208,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .prod-bc{font-family:var(--mono);font-size:9px;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .prod-name{font-size:11px;font-weight:600;color:var(--text);font-family:var(--zh);line-height:1.3;}
 .prod-price{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--gold);}
-.prod-acts{display:flex;gap:4px;margin-top:2px;}
+.prod-acts{display:flex;gap:4px;margin-top:auto;flex-wrap:wrap;align-items:center;}
 
 /* ── FILE STATUS BUTTON (in products page) ── */
 #file-status-prod{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:9px;cursor:pointer;font-size:12px;font-family:var(--zh);color:var(--muted);transition:all .18s;white-space:nowrap;}
@@ -218,7 +225,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .stat-chip .sval{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text);margin-top:4px;}
 .stat-chip .sval.hi{color:var(--gold);}
 .stat-chip .ssub{font-size:11px;color:var(--muted);font-family:var(--zh);margin-top:2px;}
-.report-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.report-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
 .report-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh);overflow:hidden;display:flex;flex-direction:column;}
 .rp-hd{padding:13px 18px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .rp-hd-title{font-size:13px;font-weight:700;color:var(--text);}
@@ -374,11 +381,96 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .scan-mode-tab.active{background:var(--accent);color:#fff;}
 .scan-mode-tab:not(.active):hover{background:var(--aglow);color:var(--accent);}
 
+/* ── OPTIMIZED POLISH ── */
+body{line-height:1.45;}
+button,input,select{touch-action:manipulation;}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--aglow);outline-offset:2px;}
+nav{overflow-x:auto;scrollbar-width:none;}
+nav::-webkit-scrollbar{display:none;}
+.brand,.nav-tab{flex-shrink:0;}
+.pos-grid{grid-template-columns:minmax(320px,380px) minmax(0,1fr);}
+.right-col,.tbl,#cart-body,.t-row,.t-head{min-width:0;}
+.card,.co-panel,.tbl,.prod-cat-grid,.report-panel,.stat-chip,.rv-table{border-radius:8px;box-shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.04);}
+.mbox{border-radius:10px;}
+.video-wrap,.btn-checkout,.numpad-display,.scan-mode-tabs,#file-status-prod,#fb-status{border-radius:8px;}
+.t-head,.t-row{grid-template-columns:34px minmax(180px,1fr) 96px 128px 34px;column-gap:8px;}
+.t-name,.prod-name,.nobc-list-name{overflow-wrap:anywhere;}
+.qty-ctrl{justify-content:flex-start;}
+.btn,.btn-checkout,.btn-hold,.btn-nobc,.scan-mode-tab{min-height:40px;}
+.btn-nobc{font-size:18px;}
+.prod-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}
+.prod-card{border-radius:8px;min-height:96px;}
+.prod-card-top{display:flex;align-items:center;gap:6px;min-width:0;}
+.prod-card-top .prod-bc{flex:1;min-width:0;}
+.prod-order{display:flex;gap:4px;flex-shrink:0;margin-left:auto;}
+.prod-order-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer;font-family:var(--mono);font-size:13px;font-weight:700;line-height:1;transition:all .15s;}
+.prod-order-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--aglow);}
+.prod-order-btn:disabled{opacity:.32;cursor:not-allowed;border-color:var(--border);color:var(--muted2);background:var(--surface2);}
+.nobc-list-name,.nobc-list-price{font-size:21px;}
+.review-body{max-width:860px;}
+
+@media(min-width:641px) and (max-width:1100px){
+  .prod-cat-grid,.nobc-cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:8px;border:0;background:transparent;box-shadow:none;overflow:visible;}
+  .prod-cat-row,.nobc-cat-btn{position:relative;border:1px solid var(--border);border-radius:8px;padding:10px 12px;min-height:104px;background:var(--surface);box-shadow:var(--sh);}
+  .prod-cat-row{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;gap:6px 8px;align-items:start;}
+  .prod-cat-row.all-row{border:1px solid #bfdbfe;}
+  .prod-cat-row .pci{grid-row:1 / span 2;font-size:22px;}
+  .prod-cat-row .pct{min-width:0;}
+  .prod-cat-row .pct-th{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .prod-cat-row .pct-zh{font-size:15px;}
+  .prod-cat-row .pct-counts{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:5px;}
+  .pct-badge{font-size:10px;padding:2px 7px;}
+  .prod-cat-row .pct-arrow{position:absolute;right:9px;top:8px;}
+  .nobc-cat-btn{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 9px;align-items:start;border-bottom:1px solid var(--border)!important;}
+  .nobc-cat-btn .cat-icon{font-size:23px;}
+  .nobc-cat-btn .cat-th{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .nobc-cat-btn .cat-zh{font-size:16px;line-height:1.25;}
+  .nobc-cat-btn .cat-count{grid-column:1 / -1;justify-self:start;font-size:12px;padding:2px 8px;}
+  .nobc-product-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:8px;}
+  #m-nobc-list .mbox{width:min(720px,94vw)!important;}
+}
+
 @media(max-width:900px){
   .pos-grid{grid-template-columns:1fr;}
   .report-cols{grid-template-columns:1fr;}
-  .t-head,.t-row{grid-template-columns:26px 1fr 80px 34px;}
-  .nobc-cat-grid{}
+  .t-head,.t-row{grid-template-columns:28px minmax(0,1fr) 84px 118px 32px;}
+  .page{padding:14px 14px;}
+  .left-col{gap:12px;}
+}
+
+@media(max-width:640px){
+  body{font-size:13px;}
+  nav{height:auto;padding:8px 10px;gap:6px;}
+  .brand{font-size:12px;letter-spacing:2px;margin-right:4px;}
+  .nav-tab{min-width:84px;padding:7px 9px;font-size:12px;}
+  .page{padding:12px 10px;}
+  .scanner-body{padding:12px;}
+  .grand{padding:14px;justify-content:space-between;}
+  .gamt{font-size:22px;}
+  .sec-lbl{flex-wrap:wrap;letter-spacing:.8px;}
+  .sec-lbl .btn{width:100%;margin-left:0!important;}
+  .t-head{display:none;}
+  .t-row{grid-template-columns:24px minmax(0,1fr) 64px 104px 30px;gap:6px;padding:12px 10px;}
+  .t-price{font-size:11px;}
+  .qty-ctrl{gap:3px!important;}
+  .qty-btn{width:28px;height:28px;}
+  .qty-display{min-width:34px;font-size:14px;padding:5px 6px;}
+  .page-hd,.report-top{align-items:stretch;}
+  .btn-row{width:100%;}
+  #file-status-prod,#fb-status,.btn-row>div[style*="display:flex"],.btn-row .btn{flex:1 1 100%;justify-content:center;}
+  .prod-cat-row{padding:13px 14px;gap:12px;}
+  .prod-cat-row .pct-counts{flex-direction:column;align-items:flex-end;gap:4px;}
+  .nobc-cat-btn{padding:15px 14px;gap:10px;}
+  .nobc-cat-btn .cat-zh{font-size:18px;}
+  .nobc-product-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:7px;padding:8px;}
+  .nobc-list-item{min-height:82px;padding:11px 12px;}
+  .review-body{padding:14px;}
+  .review-footer{padding:14px;}
+  .rv-total-row .rta{font-size:24px;}
+  .rv-table th,.rv-table td{padding:9px 8px;font-size:12px;}
+  .stat-chip{flex:1 1 calc(50% - 8px);padding:10px 12px;}
+  .m-acts{flex-direction:column;}
+  #toast{left:12px;right:12px;bottom:14px;max-width:none;text-align:center;}
 }
 </style>
 <script type="module">
@@ -536,7 +628,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
         <span id="file-icon-prod">💾</span>
         <span id="file-label-prod">點擊選擇資料檔案</span>
       </div>
-      <div id="fb-status" class="off" style="cursor:default" title="Firebase 雲端同步狀態">
+      <div id="fb-status" class="off" onclick="openModal('m-firebase')" style="cursor:pointer" title="Firebase 雲端同步狀態">
         <span id="fb-icon">☁️</span>
         <span id="fb-label">Firebase 未連線</span>
       </div>
@@ -571,6 +663,11 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
         <div class="ssub"><span id="stat-today-count">0</span> รายการ / 筆交易</div>
       </div>
       <div class="stat-chip">
+        <div class="slbl">ยอดขายสัปดาห์นี้ / 本週銷售</div>
+        <div class="sval" id="stat-week">NT$ 0</div>
+        <div class="ssub"><span id="stat-week-count">0</span> รายการ / 筆交易</div>
+      </div>
+      <div class="stat-chip">
         <div class="slbl">ยอดขายเดือนนี้ / 本月銷售</div>
         <div class="sval" id="stat-month">NT$ 0</div>
         <div class="ssub"><span id="stat-month-count">0</span> รายการ / 筆交易</div>
@@ -589,6 +686,14 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
         <div class="rp-hd-title">รายเดือน <span class="zh">每月報表</span></div>
       </div>
       <div class="r-list" id="monthly-list">
+        <div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>
+      </div>
+    </div>
+    <div class="report-panel">
+      <div class="rp-hd">
+        <div class="rp-hd-title">รายสัปดาห์ <span class="zh">每週報表</span></div>
+      </div>
+      <div class="r-list" id="weekly-list">
         <div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>
       </div>
     </div>
@@ -892,6 +997,7 @@ const DEFAULT_PRODUCTS = {
   '4712345678900':{name:'農夫山泉礦泉水',price:15,category:'drink'},
   '4711234000001':{name:'小美冰淇淋',price:25,category:'frozen'},
 };
+const PROD_ORDER_KEY='pos_product_order';
 
 // ═══ 持久化（File System Access API + IndexedDB）═══
 let _fileHandle=null, _saveTimer=null;
@@ -918,6 +1024,7 @@ async function _loadFromFile(){
   try{
     const data=await _readFile(_fileHandle);
     if(data.products)     localStorage.setItem('pos_products',      JSON.stringify(data.products));
+    if(data.product_order)localStorage.setItem(PROD_ORDER_KEY,       JSON.stringify(Array.isArray(data.product_order)?data.product_order:Object.values(data.product_order)));
     if(data.nobc_products)localStorage.setItem('pos_nobc_products', JSON.stringify(data.nobc_products));
     if(data.transactions) localStorage.setItem('pos_transactions',  JSON.stringify(data.transactions));
   }catch(e){setFileStatus('error','⚠ 讀取失敗');}
@@ -928,7 +1035,7 @@ function _scheduleSave(){
     if(!_fileHandle)return;
     setFileStatus('saving','⏳ 儲存中...');
     try{
-      await _writeFile(_fileHandle,{version:1,savedAt:new Date().toISOString(),products:getProds(),nobc_products:getNobcProds(),transactions:getTx()});
+      await _writeFile(_fileHandle,{version:1,savedAt:new Date().toISOString(),products:getProds(),product_order:getProdOrder(getProds()),nobc_products:getNobcProds(),transactions:getTx()});
       setFileStatus('linked','✓ 已儲存');
       setTimeout(()=>setFileStatus('linked','✓ '+(_fileHandle.name||'資料檔案')),1500);
     }catch(e){setFileStatus('error','⚠ 儲存失敗，請重新選擇');}
@@ -939,7 +1046,8 @@ function setFileStatus(cls,label){
   const el=document.getElementById('file-status-prod');
   const lb=document.getElementById('file-label-prod');
   if(!el||!lb)return;
-  el.className=''; el.classList.add(cls);
+  el.classList.remove('linked','saving','error');
+  if(cls)el.classList.add(cls);
   lb.textContent=label;
 }
 
@@ -982,7 +1090,7 @@ async function pickDataFile(){
         await _loadFromFile();
         setFileStatus('linked','✓ '+(_fileHandle.name||'pos_data.json'));
         showToast('已重新連結：'+_fileHandle.name,'ok');
-        renderProdGrid();renderStats();renderMonthly();renderDaily();
+        renderProdGrid();renderStats();renderMonthly();renderWeekly();renderDaily();
         return;
       }
     }catch(e){}
@@ -1001,6 +1109,7 @@ async function pickDataFile(){
       const existing=await _readFile(_fileHandle);
       if(existing && (existing.products||existing.transactions)){
         if(existing.products)     localStorage.setItem('pos_products',      JSON.stringify(existing.products));
+        if(existing.product_order)localStorage.setItem(PROD_ORDER_KEY,       JSON.stringify(Array.isArray(existing.product_order)?existing.product_order:Object.values(existing.product_order)));
         if(existing.nobc_products)localStorage.setItem('pos_nobc_products', JSON.stringify(existing.nobc_products));
         if(existing.transactions) localStorage.setItem('pos_transactions',  JSON.stringify(existing.transactions));
         setFileStatus('linked','✓ '+_fileHandle.name);
@@ -1010,11 +1119,11 @@ async function pickDataFile(){
       }
     }catch(readErr){
       // 檔案是空的或新建的，寫入目前資料
-      await _writeFile(_fileHandle,{version:1,savedAt:new Date().toISOString(),products:getProds(),nobc_products:getNobcProds(),transactions:getTx()});
+      await _writeFile(_fileHandle,{version:1,savedAt:new Date().toISOString(),products:getProds(),product_order:getProdOrder(getProds()),nobc_products:getNobcProds(),transactions:getTx()});
       setFileStatus('linked','✓ '+_fileHandle.name);
       showToast('已建立資料檔案：'+_fileHandle.name,'ok');
     }
-    renderProdGrid();renderStats();renderMonthly();renderDaily();
+    renderProdGrid();renderStats();renderMonthly();renderWeekly();renderDaily();
   }catch(e){
     if(e.name!=='AbortError') showToast('操作取消','err');
   }
@@ -1022,7 +1131,18 @@ async function pickDataFile(){
 
 // ═══ 資料層 ═══
 function getProds(){try{const s=localStorage.getItem('pos_products');if(s)return JSON.parse(s);}catch(e){}localStorage.setItem('pos_products',JSON.stringify(DEFAULT_PRODUCTS));return{...DEFAULT_PRODUCTS};}
-function saveProds(o){localStorage.setItem('pos_products',JSON.stringify(o));_scheduleSave();}
+function getRawProdOrder(){try{const a=JSON.parse(localStorage.getItem(PROD_ORDER_KEY)||'[]');return Array.isArray(a)?a.map(String):[];}catch(e){return[];}}
+function getProdOrder(prods=getProds()){
+  const keys=Object.keys(prods);
+  const raw=getRawProdOrder();
+  const seen=new Set(), order=[];
+  raw.forEach(bc=>{if(Object.prototype.hasOwnProperty.call(prods,bc)&&!seen.has(bc)){seen.add(bc);order.push(bc);}});
+  keys.forEach(bc=>{if(!seen.has(bc)){seen.add(bc);order.push(bc);}});
+  if(order.length!==raw.length||order.length!==keys.length||order.some((bc,i)=>bc!==raw[i]))localStorage.setItem(PROD_ORDER_KEY,JSON.stringify(order));
+  return order;
+}
+function saveProdOrder(order){localStorage.setItem(PROD_ORDER_KEY,JSON.stringify(order));_scheduleSave();}
+function saveProds(o){localStorage.setItem('pos_products',JSON.stringify(o));getProdOrder(o);_scheduleSave();}
 function getNobcProds(){try{return JSON.parse(localStorage.getItem('pos_nobc_products')||'[]');}catch(e){return[];}}
 function saveNobcProds(a){localStorage.setItem('pos_nobc_products',JSON.stringify(a));_scheduleSave();}
 function getTx(){try{return JSON.parse(localStorage.getItem('pos_transactions')||'[]');}catch(e){return[];}}
@@ -1046,6 +1166,13 @@ function isValidBarcode(code){
 }
 // 向下相容（舊呼叫點改用 isValidBarcode）
 const isEAN13 = isValidBarcode;
+
+function h(value){
+  return String(value ?? '').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function jsArg(value){
+  return h(JSON.stringify(String(value ?? '')));
+}
 
 // EAN-13 checksum 檢查（僅用於新增商品欄位的額外提示，非強制）
 function checkEAN13(code){
@@ -1185,9 +1312,9 @@ let _npBc=null, _npVal='';
 
 function openNumpad(bc, currentQty, itemName){
   _npBc=bc;
-  _npVal=String(currentQty);
+  _npVal='0';
   document.getElementById('numpad-title').textContent=(itemName||'') + ' — 數量 / จำนวน';
-  document.getElementById('numpad-display').textContent=_npVal;
+  document.getElementById('numpad-display').textContent='0';
   document.getElementById('numpad-overlay').classList.add('open');
 }
 function closeNumpad(){
@@ -1235,16 +1362,16 @@ function renderCart(){
     <div class="t-row">
       <div class="t-num">${idx+1}</div>
       <div class="t-name">
-        ${item.name}
+        ${h(item.name)}
         ${item.noBarcode?'<span class="nobc-tag">無條碼</span>':''}
       </div>
       <div class="t-price">NT$ ${item.price}</div>
       <div class="qty-ctrl" style="display:flex;align-items:center;gap:4px;">
-        <button class="qty-btn" onclick="changeQty('${item.barcode}',1)">＋</button>
-        <span class="qty-display" onclick="editQty('${item.barcode}')">${item.qty}</span>
-        <button class="qty-btn" onclick="changeQty('${item.barcode}',-1)">−</button>
+        <button class="qty-btn" onclick="changeQty(${jsArg(item.barcode)},1)">＋</button>
+        <span class="qty-display" onclick="editQty(${jsArg(item.barcode)})">${item.qty}</span>
+        <button class="qty-btn" onclick="changeQty(${jsArg(item.barcode)},-1)">−</button>
       </div>
-      <button class="del-btn" onclick="removeItem('${item.barcode}')">×</button>
+      <button class="del-btn" onclick="removeItem(${jsArg(item.barcode)})">×</button>
     </div>`).join('');
   document.getElementById('item-count').textContent=totalQty;
   document.getElementById('btn-checkout').disabled=false;
@@ -1327,15 +1454,11 @@ function renderNobcListModal(){
       body.innerHTML=`<div class="empty-st" style="padding:32px 20px"><div class="ei" style="font-size:26px">🏷</div><div class="zh">此分類尚無商品</div></div>`;
       return;
     }
-    body.innerHTML=filtered.map(p=>`
-      <div class="nobc-list-item">
-        <div style="flex:1">
-          <div class="nobc-list-name">${p.name}</div>
-          ${p.category?`<div style="margin-top:3px"><span class="cat-tag">${getCatIcon(p.category)} ${getCatLabel(p.category)}</span></div>`:''}
-        </div>
+    body.innerHTML=`<div class="nobc-product-grid">${filtered.map(p=>`
+      <button type="button" class="nobc-list-item" onclick="addNobcProdToCart(${p._idx})" title="加入購物車">
+        <div class="nobc-list-name">${h(p.name)}</div>
         <div class="nobc-list-price">NT$ ${p.price}</div>
-        <button class="nobc-list-add" onclick="addNobcProdToCart(${p._idx})">+ 加入</button>
-      </div>`).join('');
+      </button>`).join('')}</div>`;
   }
 }
 
@@ -1404,6 +1527,21 @@ function delNobcProd(idx){
   showToast('已刪除無條碼商品','ok');
 }
 
+function moveNobcProd(idx,dir){
+  const prods=getNobcProds();
+  if(!prods[idx])return;
+  const inScope=p=>prodSelectedCat==='__all__'||prodSelectedCat===null||(p.category||'other')===prodSelectedCat;
+  let target=-1;
+  for(let i=idx+dir;i>=0&&i<prods.length;i+=dir){
+    if(inScope(prods[i])){target=i;break;}
+  }
+  if(target<0)return;
+  [prods[idx],prods[target]]=[prods[target],prods[idx]];
+  saveNobcProds(prods);
+  renderProdGrid();
+  showToast('已調整商品順序','ok');
+}
+
 // ═══ 結帳流程 ═══
 function openReview(){
   if(!cart.length)return;
@@ -1413,7 +1551,7 @@ function openReview(){
     const sub=item.price*item.qty;total+=sub;
     return`<tr>
       <td class="num" style="color:var(--muted2)">${i+1}</td>
-      <td>${item.name}${item.noBarcode?'<span class="nobc-tag">無條碼</span>':''}</td>
+      <td>${h(item.name)}${item.noBarcode?'<span class="nobc-tag">無條碼</span>':''}</td>
       <td class="num">NT$ ${item.price}</td>
       <td class="num">${item.qty}</td>
       <td class="sub">NT$ ${sub}</td>
@@ -1428,6 +1566,8 @@ function openReview(){
     rh.innerHTML=row('💵',chg(1000))+'<br>'+row('💴',chg(500))+'<br>'+row('🪙',chg(100));
   }else if(rh){rh.style.display='none';}
   document.getElementById('review-overlay').classList.add('open');
+  // 語音報價
+  speak('ยอดรวม '+amountToThai(total));
 }
 function closeReview(){document.getElementById('review-overlay').classList.remove('open');}
 function confirmCheckout(){
@@ -1438,6 +1578,8 @@ function confirmCheckout(){
   const txList=getTx();txList.push(tx);saveTx(txList);
   cart=[];renderCart();stopScanner();
   showToast('ชำระเงินเรียบร้อย! / 結帳完成 ✓','ok');
+  // 語音感謝
+  setTimeout(()=>speak('ขอบคุณที่ใช้บริการครับ'),300);
 }
 
 // ═══ 新條碼開關 ═══
@@ -1457,7 +1599,7 @@ let prodSelectedCat = null; // null=分類首頁, 'frozen'/...'__all__'=商品�
 function renderProdGrid(){
   const prods = getProds();
   const nobcProds = getNobcProds();
-  const bcKeys = Object.keys(prods);
+  const bcKeys = getProdOrder(prods);
 
   const mainArea = document.getElementById('prod-main-area');
   const stickyBar = document.getElementById('prod-cat-sticky');
@@ -1532,26 +1674,38 @@ function renderProdGrid(){
 
     // 無條碼商品卡片
     const nobcCards = filteredNobc.length
-      ? filteredNobc.map(p=>`<div class="prod-card" style="border-color:#e9d5ff">
-          <div class="prod-bc" style="color:var(--purple)">無條碼</div>
-          <div class="prod-name">${p.name}</div>
+      ? filteredNobc.map((p,pos)=>`<div class="prod-card" style="border-color:#e9d5ff">
+          <div class="prod-card-top">
+            <div class="prod-bc" style="color:var(--purple)">無條碼</div>
+          </div>
+          <div class="prod-name">${h(p.name)}</div>
           <div class="prod-price">NT$ ${p.price}</div>
           <div class="prod-acts">
             <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh);border-color:var(--purple);color:var(--purple)" onclick="editNobcProd(${p._idx})">✏</button>
             <button class="btn btn-danger" style="font-size:10px;padding:4px 7px" onclick="delNobcProd(${p._idx})">🗑</button>
+            <div class="prod-order">
+              <button class="prod-order-btn" title="上移" onclick="moveNobcProd(${p._idx},-1)" ${pos===0?'disabled':''}>↑</button>
+              <button class="prod-order-btn" title="下移" onclick="moveNobcProd(${p._idx},1)" ${pos===filteredNobc.length-1?'disabled':''}>↓</button>
+            </div>
           </div>
         </div>`).join('')
       : `<div class="empty-st" style="padding:28px 16px"><div class="ei" style="font-size:24px">🏷</div><div class="zh">此分類無無條碼商品</div></div>`;
 
     // 條碼商品卡片
     const bcCards = filteredBc.length
-      ? filteredBc.map(({bc,p})=>`<div class="prod-card">
-          <div class="prod-bc">${bc}</div>
-          <div class="prod-name">${p.name}</div>
+      ? filteredBc.map(({bc,p},pos)=>`<div class="prod-card">
+          <div class="prod-card-top">
+            <div class="prod-bc">${h(bc)}</div>
+          </div>
+          <div class="prod-name">${h(p.name)}</div>
           <div class="prod-price">NT$ ${p.price}</div>
           <div class="prod-acts">
-            <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh)" onclick="openEditProd('${bc}')">✏</button>
-            <button class="btn btn-danger" style="font-size:10px;padding:4px 7px" onclick="delProduct('${bc}')">🗑</button>
+            <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh)" onclick="openEditProd(${jsArg(bc)})">✏</button>
+            <button class="btn btn-danger" style="font-size:10px;padding:4px 7px" onclick="delProduct(${jsArg(bc)})">🗑</button>
+            <div class="prod-order">
+              <button class="prod-order-btn" title="上移" onclick="moveBarcodeProduct(${jsArg(bc)},-1)" ${pos===0?'disabled':''}>↑</button>
+              <button class="prod-order-btn" title="下移" onclick="moveBarcodeProduct(${jsArg(bc)},1)" ${pos===filteredBc.length-1?'disabled':''}>↓</button>
+            </div>
           </div>
         </div>`).join('')
       : `<div class="empty-st" style="padding:28px 16px"><div class="ei" style="font-size:24px">📦</div><div class="zh">此分類無條碼商品</div></div>`;
@@ -1611,6 +1765,23 @@ function delProduct(bc){
   const prods=getProds();delete prods[bc];saveProds(prods);
   renderProdGrid();showToast('已刪除商品','ok');
 }
+function moveBarcodeProduct(bc,dir){
+  const prods=getProds();
+  if(!prods[bc])return;
+  const order=getProdOrder(prods);
+  const idx=order.indexOf(String(bc));
+  if(idx<0)return;
+  const inScope=key=>prodSelectedCat==='__all__'||prodSelectedCat===null||(prods[key].category||'other')===prodSelectedCat;
+  let target=-1;
+  for(let i=idx+dir;i>=0&&i<order.length;i+=dir){
+    if(inScope(order[i])){target=i;break;}
+  }
+  if(target<0)return;
+  [order[idx],order[target]]=[order[target],order[idx]];
+  saveProdOrder(order);
+  renderProdGrid();
+  showToast('已調整商品順序','ok');
+}
 function exportProducts(){
   const prods=getProds();const nobcProds=getNobcProds();
   const rows=[['類型/Type','條碼/Barcode','品項名稱/Name','單價/Price（NT$）','分類ID/CategoryID','分類/Category']];
@@ -1667,13 +1838,22 @@ function clearAllProducts(){
 // ═══ 報表 ═══
 function renderStats(){
   const txList=getTx();const now=new Date();
-  const today=fd(now),month=fm(now);
-  let tT=0,tC=0,mT=0,mC=0;
-  txList.forEach(tx=>{const d=new Date(tx.date);if(fd(d)===today){tT+=tx.total;tC++;}if(fm(d)===month){mT+=tx.total;mC++;}});
+  const today=fd(now),month=fm(now),week=fweek(now);
+  let tT=0,tC=0,mT=0,mC=0,wT=0,wC=0;
+  txList.forEach(tx=>{
+    const d=new Date(tx.date);
+    if(fd(d)===today){tT+=tx.total;tC++;}
+    if(fm(d)===month){mT+=tx.total;mC++;}
+    if(fweek(d)===week){wT+=tx.total;wC++;}
+  });
   document.getElementById('stat-today').textContent='NT$ '+tT;
   document.getElementById('stat-today-count').textContent=tC;
   document.getElementById('stat-month').textContent='NT$ '+mT;
   document.getElementById('stat-month-count').textContent=mC;
+  const sw=document.getElementById('stat-week');
+  const swc=document.getElementById('stat-week-count');
+  if(sw)sw.textContent='NT$ '+wT;
+  if(swc)swc.textContent=wC;
 }
 function renderMonthly(){
   const txList=getTx();const grouped={};
@@ -1682,6 +1862,23 @@ function renderMonthly(){
   const el=document.getElementById('monthly-list');
   if(!keys.length){el.innerHTML=`<div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>`;return;}
   el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','monthly')"><div class="rdate">${k}</div><div class="ramt">NT$ ${grouped[k].total}</div><div class="rcnt">${grouped[k].count} 筆</div><div class="rarrow">›</div></div>`).join('');
+}
+function renderWeekly(){
+  const txList=getTx();const grouped={};
+  txList.forEach(tx=>{
+    const k=fweek(new Date(tx.date));
+    if(!grouped[k])grouped[k]={total:0,count:0,label:fweekLabel(new Date(tx.date))};
+    grouped[k].total+=tx.total;grouped[k].count++;
+  });
+  const keys=Object.keys(grouped).sort().reverse();
+  const el=document.getElementById('weekly-list');
+  if(!keys.length){el.innerHTML=`<div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>`;return;}
+  el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','weekly')">
+    <div class="rdate" style="width:auto;min-width:80px;font-size:11px">${grouped[k].label}</div>
+    <div class="ramt">NT$ ${grouped[k].total}</div>
+    <div class="rcnt">${grouped[k].count} 筆</div>
+    <div class="rarrow">›</div>
+  </div>`).join('');
 }
 function renderDaily(){
   const txList=getTx();const grouped={};
@@ -1693,14 +1890,21 @@ function renderDaily(){
 }
 function showDrilldown(key,mode){
   const txList=getTx();
-  const filtered=txList.filter(tx=>{const d=new Date(tx.date);return(mode==='daily'?fd(d):fm(d))===key;});
+  const filtered=txList.filter(tx=>{
+    const d=new Date(tx.date);
+    if(mode==='daily')  return fd(d)===key;
+    if(mode==='monthly')return fm(d)===key;
+    if(mode==='weekly') return fweek(d)===key;
+    return false;
+  });
   const itemMap={};
   filtered.forEach(tx=>{tx.items.forEach(item=>{if(!itemMap[item.name])itemMap[item.name]={qty:0,total:0};itemMap[item.name].qty+=item.qty;itemMap[item.name].total+=item.price*item.qty;});});
   const items=Object.entries(itemMap).sort((a,b)=>b[1].total-a[1].total);
   const grand=items.reduce((s,[,v])=>s+v.total,0);
-  document.getElementById('drill-title').textContent=(mode==='daily'?'每日':'每月')+'銷售明細';
-  document.getElementById('drill-sub').textContent=key+'　共 '+filtered.length+' 筆交易';
-  document.getElementById('drill-body').innerHTML=items.map(([name,v])=>`<tr><td>${name}</td><td class="num">${v.qty} 件</td><td class="num" style="color:var(--gold);font-weight:700">NT$ ${v.total}</td></tr>`).join('');
+  const modeLabel={daily:'每日',monthly:'每月',weekly:'每週'};
+  document.getElementById('drill-title').textContent=(modeLabel[mode]||mode)+'銷售明細';
+  document.getElementById('drill-sub').textContent=key.replace('~',' ~ ')+'　共 '+filtered.length+' 筆交易';
+  document.getElementById('drill-body').innerHTML=items.map(([name,v])=>`<tr><td>${h(name)}</td><td class="num">${v.qty} 件</td><td class="num" style="color:var(--gold);font-weight:700">NT$ ${v.total}</td></tr>`).join('');
   document.getElementById('drill-total-amt').textContent='NT$ '+grand;
   openModal('m-drill');
 }
@@ -1721,7 +1925,7 @@ function importReport(e){
       const existing=getTx();const ids=new Set(existing.map(t=>t.id));let added=0;
       data.forEach(tx=>{if(!ids.has(tx.id)){existing.push(tx);added++;}});
       existing.sort((a,b)=>new Date(a.date)-new Date(b.date));
-      saveTx(existing);renderStats();renderMonthly();renderDaily();
+      saveTx(existing);renderStats();renderMonthly();renderWeekly();renderDaily();
       showToast('已匯入 '+added+' 筆交易紀錄','ok');
     }catch{showToast('檔案格式錯誤','err');}
     e.target.value='';
@@ -1731,7 +1935,7 @@ function importReport(e){
 function clearAllData(){
   if(!confirm('確定清除所有銷售資料？此操作無法復原。'))return;
   localStorage.removeItem('pos_transactions');
-  renderStats();renderMonthly();renderDaily();
+  renderStats();renderMonthly();renderWeekly();renderDaily();
   showToast('已清除所有資料','ok');
 }
 
@@ -1741,7 +1945,7 @@ function showPage(id,btn){
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(btn)btn.classList.add('active');
-  if(id==='report'){renderStats();renderMonthly();renderDaily();}
+  if(id==='report'){renderStats();renderMonthly();renderWeekly();renderDaily();}
   if(id==='products'){_resetProdCat();renderProdGrid();}
 }
 
@@ -1763,7 +1967,25 @@ function showToast(msg,type=''){const t=document.getElementById('toast');t.textC
 function playBeep(){try{const ctx=new(window.AudioContext||window.webkitAudioContext)();const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=960;o.type='sine';g.gain.setValueAtTime(.18,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.1);o.start();o.stop(ctx.currentTime+.1);}catch(e){}}
 function fd(d){return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;}
 function fm(d){return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;}
-function dateStamp(){const n=new Date();return`${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}`;}
+// 週鍵：以週一為第一天，取當週週一的日期作為唯一鍵
+function fweek(d){
+  const day=d.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  const diff=day===0?-6:1-day; // 距週一天數（週日往前6天）
+  const mon=new Date(d);
+  mon.setDate(d.getDate()+diff);
+  const sun=new Date(mon);
+  sun.setDate(mon.getDate()+6);
+  return fd(mon)+'~'+fd(sun); // 鍵格式：週一~週日
+}
+// 週顯示標籤
+function fweekLabel(d){
+  const day=d.getDay();
+  const diff=day===0?-6:1-day;
+  const mon=new Date(d);mon.setDate(d.getDate()+diff);
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  const fmt=x=>`${String(x.getMonth()+1).padStart(2,'0')}/${String(x.getDate()).padStart(2,'0')}`;
+  return`${mon.getFullYear()} ${fmt(mon)}~${fmt(sun)}`;
+}function dateStamp(){const n=new Date();return`${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}`;}
 function downloadFile(content,filename,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=filename;a.click();URL.revokeObjectURL(a.href);}
 function parseCsvRow(row){const result=[];let cur='',inQ=false;for(let i=0;i<row.length;i++){const c=row[i];if(c==='"'){if(inQ&&row[i+1]==='"'){cur+='"';i++;}else{inQ=!inQ;}}else if(c===','&&!inQ){result.push(cur);cur='';}else cur+=c;}result.push(cur);return result;}
 
@@ -2033,6 +2255,58 @@ document.addEventListener('DOMContentLoaded', initStaticScrollTops);
 setTimeout(initStaticScrollTops, 500);
 
 
+// ═══ 防下拉刷新 ═══
+let _touchStartY=0;
+document.addEventListener('touchstart',e=>{_touchStartY=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchmove',e=>{
+  // 只在頁面頂部往下拉時才阻止（防 pull-to-refresh）
+  // 若觸控點在可捲動的子容器內，不攔截（讓容器正常捲動）
+  if(!e.cancelable) return;
+  const dy = e.touches[0].clientY - _touchStartY;
+  if(dy <= 0) return; // 往上滑不阻止
+  if(window.scrollY > 0) return; // 頁面本身已往下捲，不是 pull-to-refresh
+
+  // 檢查觸控目標是否在可捲動容器內
+  let el = e.target;
+  while(el && el !== document.body){
+    const st = el.scrollTop;
+    const sh = el.scrollHeight;
+    const ch = el.clientHeight;
+    // 容器可往上捲（未捲到頂部）→ 讓它正常捲動
+    if(sh > ch && st > 0){ return; }
+    el = el.parentElement;
+  }
+  // 確認是頁面頂部的下拉動作，阻止
+  e.preventDefault();
+},{passive:false});
+
+// ═══ TTS 語音合成 ═══
+function speak(text){
+  if(!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const utt=new SpeechSynthesisUtterance(text);
+  const voices=window.speechSynthesis.getVoices();
+  const thVoice=voices.find(v=>v.lang&&v.lang.startsWith('th'));
+  if(thVoice)utt.voice=thVoice;
+  utt.lang='th-TH'; utt.rate=0.92; utt.pitch=1;
+  window.speechSynthesis.speak(utt);
+}
+if(window.speechSynthesis){
+  window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
+  window.speechSynthesis.getVoices();
+}
+function amountToThai(total){
+  const u=['','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
+  const t=['','สิบ','ยี่สิบ','สามสิบ','สี่สิบ','ห้าสิบ','หกสิบ','เจ็ดสิบ','แปดสิบ','เก้าสิบ'];
+  if(total===0)return'ศูนย์';
+  let n=Math.round(total),res='';
+  if(n>=10000){res+=u[Math.floor(n/10000)]+'หมื่น';n%=10000;}
+  if(n>=1000) {res+=u[Math.floor(n/1000)] +'พัน'; n%=1000;}
+  if(n>=100)  {res+=u[Math.floor(n/100)]  +'ร้อย';n%=100;}
+  if(n>=10)   {res+=t[Math.floor(n/10)];  n%=10;}
+  if(n>0)     res+=u[n];
+  return res;
+}
 let heldCarts = []; // [{id, items, savedAt}]
 
 function holdCart(){
@@ -2142,15 +2416,7 @@ function clearFirebaseConfig(){
   showToast('已清除 Firebase 設定，請重新載入頁面','ok');
 }
 
-// ── 開啟 modal 時填入已儲存設定 ──
-const _origOpenModalForFb = openModal;
-window.openModal = function(id){
-  _origOpenModalForFb(id);
-  if(id==='m-firebase'){
-    loadFbConfigToModal();
-    const ms=document.getElementById('fb-modal-status'); if(ms) ms.style.display='none';
-  }
-};
+// Firebase modal 已移除，不需要 openModal override
 
 // ── 從 Firebase 拉取所有資料 ──
 async function fbPullAll(){
@@ -2160,6 +2426,7 @@ async function fbPullAll(){
     const snap = await window._fbGet('pos');
     const data = snap.val() || {};
     if(data.products)      localStorage.setItem('pos_products',      JSON.stringify(data.products));
+    if(data.product_order) localStorage.setItem(PROD_ORDER_KEY,       JSON.stringify(Array.isArray(data.product_order)?data.product_order:Object.values(data.product_order)));
     if(data.nobc_products) localStorage.setItem('pos_nobc_products', JSON.stringify(data.nobc_products));
     if(data.transactions){
       const arr = Array.isArray(data.transactions) ? data.transactions : Object.values(data.transactions);
@@ -2177,14 +2444,15 @@ async function fbPullAll(){
 // ── 即時監聽 ──
 function fbListenAll(){
   if(!window._fbOnValue) return;
-  [['pos/products','pos_products',0],['pos/nobc_products','pos_nobc_products',1],['pos/transactions','pos_transactions',2]]
+  [['pos/products','pos_products',0],['pos/nobc_products','pos_nobc_products',1],['pos/transactions','pos_transactions',2],['pos/product_order',PROD_ORDER_KEY,3]]
   .forEach(([path,lsKey,type])=>{
     if(_fbListeners[path]) try{_fbListeners[path]();}catch(e){}
     const unsub = window._fbOnValue(path, snap=>{
       const val=snap.val(); if(val===null) return;
-      const toStore = type===2 ? (Array.isArray(val)?val:Object.values(val)) : val;
+      const toStore = (type===2||type===3) ? (Array.isArray(val)?val:Object.values(val)) : val;
       localStorage.setItem(lsKey, JSON.stringify(toStore));
-      if(type<2) renderProdGrid(); else{ renderStats(); renderMonthly(); renderDaily(); }
+      if(type===2){ renderStats(); renderMonthly(); renderDaily(); }
+      else renderProdGrid();
     }, err=>console.warn('[Firebase listen]',err));
     _fbListeners[path]=unsub;
   });
@@ -2199,7 +2467,7 @@ function fbScheduleSave(){
     try{
       await window._fbSet('pos',{
         updatedAt:new Date().toISOString(),
-        products:getProds(), nobc_products:getNobcProds(), transactions:getTx()
+        products:getProds(), product_order:getProdOrder(getProds()), nobc_products:getNobcProds(), transactions:getTx()
       });
       setFbStatus('connected','☁ Firebase 已連線');
     }catch(e){
@@ -2210,10 +2478,11 @@ function fbScheduleSave(){
 }
 
 // ── 覆寫 save 函式 ──
-const _origSaveProds2=saveProds, _origSaveNobcProds2=saveNobcProds, _origSaveTx2=saveTx;
-window.saveProds     = function(o){ _origSaveProds2(o);     fbScheduleSave(); };
-window.saveNobcProds = function(a){ _origSaveNobcProds2(a); fbScheduleSave(); };
-window.saveTx        = function(a){ _origSaveTx2(a);        fbScheduleSave(); };
+const _origSaveProds2=saveProds, _origSaveProdOrder2=saveProdOrder, _origSaveNobcProds2=saveNobcProds, _origSaveTx2=saveTx;
+window.saveProds     = function(o){ _origSaveProds2(o);       fbScheduleSave(); };
+window.saveProdOrder = function(a){ _origSaveProdOrder2(a);   fbScheduleSave(); };
+window.saveNobcProds = function(a){ _origSaveNobcProds2(a);   fbScheduleSave(); };
+window.saveTx        = function(a){ _origSaveTx2(a);          fbScheduleSave(); };
 
 // ── 等待 module 就緒後連線 ──
 function waitFbReady(cb){
