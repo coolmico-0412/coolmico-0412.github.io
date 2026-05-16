@@ -966,16 +966,15 @@ body::after {
   border-radius: var(--r-lg);
   box-shadow: var(--sh-lg);
   width: 100%;
-  max-width: 400px;
+  max-width: 380px;
   overflow: hidden;
   transform: translateY(20px) scale(.96);
   transition: transform .3s cubic-bezier(.34,1.2,.64,1);
 }
 .auth-overlay.visible .auth-box { transform: translateY(0) scale(1); }
-
 .auth-hero {
   background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-  padding: 32px 28px 24px;
+  padding: 30px 28px 22px;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -985,11 +984,10 @@ body::after {
   position: absolute;
   font-size: 120px;
   opacity: .08;
-  right: -20px;
-  top: -20px;
+  right: -20px; top: -20px;
   line-height: 1;
 }
-.auth-store-icon { font-size: 40px; margin-bottom: 10px; }
+.auth-store-icon { font-size: 40px; margin-bottom: 8px; }
 .auth-store-name {
   font-family: var(--serif);
   font-size: 22px;
@@ -997,16 +995,55 @@ body::after {
   color: #fff;
   margin-bottom: 4px;
 }
-.auth-tagline { font-size: 13px; color: rgba(255,255,255,.8); }
-
-.auth-body { padding: 24px 24px 28px; display:flex; flex-direction:column; gap:12px; }
+.auth-tagline { font-size: 13px; color: rgba(255,255,255,.8); line-height: 1.5; }
+.auth-body { padding: 22px 22px 24px; display:flex; flex-direction:column; gap:14px; }
 .auth-desc {
   text-align: center;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--muted);
   line-height: 1.6;
-  margin-bottom: 4px;
+  background: var(--surface2);
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  border: 1px solid var(--border);
 }
+/* Returning member lookup */
+.auth-mid-input {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.auth-mid-input input {
+  flex: 1;
+  border: 1.5px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 11px 14px;
+  font-size: 15px;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  outline: none;
+  transition: border-color .18s, box-shadow .18s;
+}
+.auth-mid-input input:focus { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-glow); }
+.auth-mid-input input::placeholder { color:var(--muted2); font-weight:400; letter-spacing:0; font-family:var(--th); font-size:13px; }
+.auth-lookup-btn {
+  padding: 11px 16px;
+  border-radius: var(--r-sm);
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all .18s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.auth-lookup-btn:hover { background:var(--primary2); }
+.auth-lookup-btn:disabled { opacity:.6; cursor:not-allowed; }
+/* Divider */
 .auth-or {
   display: flex;
   align-items: center;
@@ -1014,54 +1051,37 @@ body::after {
   font-size: 12px;
   color: var(--muted2);
 }
-.auth-or::before, .auth-or::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
-.social-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.auth-or::before, .auth-or::after { content:''; flex:1; height:1px; background:var(--border); }
+/* New member form */
+.auth-new-form { display:flex; flex-direction:column; gap:10px; }
+.auth-new-title { font-size:13px; font-weight:700; color:var(--text2); }
+.auth-submit-btn {
   width: 100%;
-  padding: 13px 18px;
+  padding: 13px;
   border-radius: var(--r-sm);
-  border: 1.5px solid var(--border2);
-  background: var(--surface);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  transition: all .18s;
-  position: relative;
-  overflow: hidden;
+  border: none;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 3px 12px rgba(201,78,110,.3);
+  transition: all .2s;
 }
-.social-btn:hover { border-color: var(--primary); box-shadow: var(--sh-sm); transform: translateY(-1px); }
-.social-btn:active { transform: scale(.98); }
-.social-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-.social-btn .sb-icon { font-size: 20px; flex-shrink: 0; width: 24px; text-align: center; }
-.social-btn .sb-text { flex: 1; text-align: left; }
-.social-btn .sb-badge { font-size: 10px; color: var(--muted2); }
-
-.social-btn.google { border-color: #dadce0; }
-.social-btn.google:hover { border-color: #4285f4; background: #f8f9ff; }
-.social-btn.facebook { border-color: #1877f2; }
-.social-btn.facebook:hover { background: #f0f4ff; }
-
+.auth-submit-btn:hover { transform:translateY(-1px); box-shadow:0 5px 16px rgba(201,78,110,.4); }
+.auth-submit-btn:disabled { background:var(--border2); color:var(--muted2); box-shadow:none; transform:none; cursor:not-allowed; }
 .auth-guest-btn {
   background: transparent;
   border: none;
-  color: var(--muted);
+  color: var(--muted2);
   font-size: 12px;
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
   transition: color .18s;
   text-align: center;
-  padding: 4px;
+  padding: 2px;
 }
-.auth-guest-btn:hover { color: var(--text); }
+.auth-guest-btn:hover { color: var(--muted); }
 
 /* ── Member Panel (Drawer from header) ── */
 .member-drawer-overlay {
@@ -1220,35 +1240,51 @@ body::after {
 </head>
 <body>
 
-<!-- ── Auth: Login Overlay (shown until user logs in or skips) ── -->
+<!-- ── Auth: Member Overlay ── -->
 <div class="auth-overlay" id="auth-overlay">
   <div class="auth-box">
     <div class="auth-hero">
       <div class="auth-store-icon">🛍</div>
       <div class="auth-store-name">ร้านค้าออนไลน์</div>
-      <div class="auth-tagline">เข้าสู่ระบบเพื่อประสบการณ์การช้อปปิ้งที่ดีขึ้น<br><span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;opacity:.85">登入享受完整會員功能</span></div>
+      <div class="auth-tagline">
+        ระบุรหัสสมาชิกหรือลงทะเบียนใหม่<br>
+        <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;opacity:.85">輸入會員編號或新建會員</span>
+      </div>
     </div>
     <div class="auth-body">
+
+      <!-- ── A: ผู้ที่มีรหัสสมาชิกแล้ว / 已有會員編號 ── -->
       <div class="auth-desc">
-        เข้าสู่ระบบเพื่อรับหมายเลขสมาชิก ดูประวัติการสั่งซื้อ<br>
-        <span style="font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--muted2)">登入取得會員編號，追蹤歷史訂單</span>
+        🪪 มีรหัสสมาชิกแล้ว? / 已有會員編號？
       </div>
-      <button class="social-btn google" id="btn-google" onclick="loginWithGoogle()">
-        <span class="sb-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        </span>
-        <span class="sb-text">เข้าสู่ระบบด้วย Google <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;display:block;font-weight:400;color:var(--muted)">Google 登入</span></span>
-      </button>
-      <button class="social-btn facebook" id="btn-fb" onclick="loginWithFacebook()">
-        <span class="sb-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.513c-1.491 0-1.956.93-1.956 1.887v2.254h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
-        </span>
-        <span class="sb-text">เข้าสู่ระบบด้วย Facebook <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;display:block;font-weight:400;color:var(--muted)">Facebook 登入</span></span>
-      </button>
+      <div class="auth-mid-input">
+        <input id="auth-mid-field" type="text" placeholder="M0001" maxlength="6"
+               oninput="this.value=this.value.toUpperCase()"
+               onkeydown="if(event.key==='Enter')lookupMember()">
+        <button class="auth-lookup-btn" id="auth-lookup-btn" onclick="lookupMember()">
+          ค้นหา / 查詢
+        </button>
+      </div>
+      <div id="auth-lookup-result" style="display:none;font-size:13px;border-radius:var(--r-sm);padding:10px 12px;"></div>
+
       <div class="auth-or"><span>หรือ / 或</span></div>
+
+      <!-- ── B: สมาชิกใหม่ / 新會員 ── -->
+      <div class="auth-new-form">
+        <div class="auth-new-title">📝 สมัครสมาชิกใหม่ / 新會員註冊</div>
+        <input class="field-input" id="auth-name" type="text"
+               placeholder="ชื่อ-นามสกุล / 姓名 (บังคับ)" autocomplete="name">
+        <input class="field-input" id="auth-phone" type="tel"
+               placeholder="เบอร์โทรศัพท์ / 電話 (บังคับ)" autocomplete="tel"
+               onkeydown="if(event.key==='Enter')registerMember()">
+        <button class="auth-submit-btn" id="auth-register-btn" onclick="registerMember()">
+          ✓ สมัครสมาชิก / 註冊會員
+        </button>
+      </div>
+
+      <div class="auth-or"><span></span></div>
       <button class="auth-guest-btn" onclick="continueAsGuest()">
-        ดำเนินการในฐานะแขก (ไม่บันทึกประวัติ)<br>
-        <span style="font-family:'Noto Sans TC',sans-serif">以訪客身份繼續（不儲存訂單記錄）</span>
+        ดำเนินการในฐานะแขก / 以訪客身份繼續（不記錄歷史）
       </button>
     </div>
   </div>
@@ -1300,7 +1336,7 @@ body::after {
     <!-- Auth Area: hidden/shown by JS -->
     <div id="auth-area-loggedout">
       <button class="login-btn-hdr" onclick="showAuthModal()">
-        👤 เข้าสู่ระบบ
+        🪪 สมาชิก / 會員
       </button>
     </div>
     <div id="auth-area-loggedin" style="display:none">
@@ -1482,26 +1518,17 @@ body::after {
 
 <script type="module">
 /* ═══════════════════════════════════════════════════════════════════
-   Firebase SDK v12
-   ├─ Auth   : Google / Facebook 登入，流水號會員編號
-   ├─ RTDB   : meta diff-sync (省流量) + 訂單寫入 + 會員記錄
-   └─ 商品   : 同名+同價去重，只顯示一個
+   Firebase SDK v12 — Realtime Database only (no Firebase Auth)
+   會員系統：姓名 + 電話 → Firebase 流水號 M0001, M0002…
+             回訪者輸入編號 → 查詢 Firebase 取回資料
+   商品同步：meta diff（省流量）
+   去重：同名+同價只顯示一個
 ═══════════════════════════════════════════════════════════════════ */
 import { initializeApp }
   from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-import {
-  getDatabase, ref, get, set, runTransaction, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
-import {
-  getAuth,
-  GoogleAuthProvider,
-  FacebookAuthProvider,
-  signInWithPopup,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+import { getDatabase, ref, get, set, runTransaction }
+  from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
 
-/* ── Config ── */
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyCXL_BPUqT5UA2Ufxo8Byulm6-ATNxTr4c",
   authDomain:        "mico1-72831.firebaseapp.com",
@@ -1510,60 +1537,49 @@ const FIREBASE_CONFIG = {
   storageBucket:     "mico1-72831.firebasestorage.app",
   messagingSenderId: "706559929324",
   appId:             "1:706559929324:web:05cf28d33b9f770d332ec9",
-  measurementId:     "G-X4E8H9KGV1"
 };
-
-/* ── Firebase Paths ── */
 const FB = {
-  META:           'shop/meta',
-  PRODUCTS:       'shop/products',
-  NOBC:           'shop/nobc_products',
-  ORDERS:         'shop/online_orders',
-  MEMBERS:        'shop/members',
-  MEMBER_COUNTER: 'shop/memberCounter',   // atomic increment
+  META:    'shop/meta',
+  PROD:    'shop/products',
+  NOBC:    'shop/nobc_products',
+  ORDERS:  'shop/online_orders',
+  MEMBERS: 'shop/members',
+  COUNTER: 'shop/memberCounter',  // atomic serial number
 };
-
-/* ── LocalStorage Keys ── */
 const LS = {
-  PRODUCTS: 'pos_products',
-  NOBC:     'pos_nobc_products',
-  SYNC_TS:  'shop_fb_sync_ts',
+  PROD:    'pos_products',
+  NOBC:    'pos_nobc_products',
+  SYNC_TS: 'shop_fb_sync_ts',
+  MEMBER:  'shop_member',   // 本機快取會員資料 { memberId, name, phone, ... }
 };
 
-/* ── Firebase Init ── */
 let _db   = null;
-let _auth = null;
 let _fbOK = false;
-
 try {
   const app = initializeApp(FIREBASE_CONFIG);
   _db   = getDatabase(app);
-  _auth = getAuth(app);
   _fbOK = true;
-} catch(e) {
-  console.warn('[Shop] Firebase init failed, local-only mode:', e);
-}
+} catch(e) { console.warn('[Shop] Firebase init failed:', e); }
 
 /* ── App State ── */
-let allProducts = [];
-let cart        = [];
-let activeCat   = '__all__';
-let drawerOpen  = false;
-let memberOpen  = false;
-/** @type {{ uid, memberId, memberNo, displayName, email, photoURL, provider, orderCount, totalSpent } | null} */
-let currentMember = null;
-let isGuest = false;
+let allProducts   = [];
+let cart          = [];
+let activeCat     = '__all__';
+let drawerOpen    = false;
+let memberOpen    = false;
+let currentMember = null;   // { memberId, name, phone, uid (=memberId), orderCount, totalSpent }
+let isGuest       = false;
 
 /* ══════════════════════════════════════════════
    Utilities
 ══════════════════════════════════════════════ */
 function h(v) {
-  return String(v ?? '').replace(/[&<>"']/g, c =>
-    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return String(v ?? '').replace(/[&<>"']/g,
+    c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-function safeGetLS(key, fallback) {
-  try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : fallback; }
-  catch(e) { return fallback; }
+function safeGetLS(key, fb) {
+  try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : fb; }
+  catch(e) { return fb; }
 }
 function safeSetLS(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)); return true; }
@@ -1571,12 +1587,11 @@ function safeSetLS(key, val) {
 }
 function fmtDate(iso) {
   try {
-    return new Date(iso).toLocaleString('th-TH', {
-      day:'2-digit', month:'short', year:'numeric',
-      hour:'2-digit', minute:'2-digit'
-    });
+    return new Date(iso).toLocaleString('th-TH',
+      { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
   } catch(e) { return iso || ''; }
 }
+function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = String(v ?? ''); }
 function setFbIndicator(state) {
   const el = document.getElementById('fb-indicator');
   if (!el) return;
@@ -1584,7 +1599,7 @@ function setFbIndicator(state) {
     connecting:{ color:'#f59e0b', title:'กำลังเชื่อมต่อ…' },
     synced:    { color:'#10b981', title:'ซิงค์แล้ว ✓' },
     local:     { color:'#94a3b8', title:'ใช้ข้อมูลในเครื่อง' },
-    error:     { color:'#ef4444', title:'Firebase ไม่พร้อม — local mode' },
+    error:     { color:'#ef4444', title:'Firebase ไม่พร้อม' },
   };
   const s = MAP[state] || MAP.local;
   el.style.background = s.color;
@@ -1601,120 +1616,105 @@ async function syncProducts() {
     const metaSnap = await get(ref(_db, FB.META));
     const fbTs     = metaSnap.exists() ? (metaSnap.val()?.updatedAt ?? null) : null;
     const localTs  = safeGetLS(LS.SYNC_TS, null);
+    if (fbTs !== null && fbTs === localTs) { setFbIndicator('local'); return; }
 
-    if (fbTs !== null && fbTs === localTs) {
-      setFbIndicator('local');
-      return; // 版本一致，完全用本機
-    }
-
-    const [prodSnap, nobcSnap] = await Promise.all([
-      get(ref(_db, FB.PRODUCTS)),
-      get(ref(_db, FB.NOBC)),
-    ]);
-
-    if (prodSnap.exists()) {
-      const d = prodSnap.val();
-      if (d && typeof d === 'object') safeSetLS(LS.PRODUCTS, d);
-    }
-    if (nobcSnap.exists()) {
-      const d = nobcSnap.val();
-      const arr = Array.isArray(d) ? d : Object.values(d || {});
-      safeSetLS(LS.NOBC, arr);
+    const [ps, ns] = await Promise.all([get(ref(_db, FB.PROD)), get(ref(_db, FB.NOBC))]);
+    if (ps.exists()) { const d = ps.val(); if (d && typeof d==='object') safeSetLS(LS.PROD, d); }
+    if (ns.exists()) {
+      const d = ns.val();
+      safeSetLS(LS.NOBC, Array.isArray(d) ? d : Object.values(d || {}));
     }
     if (fbTs !== null) safeSetLS(LS.SYNC_TS, fbTs);
     setFbIndicator('synced');
-  } catch(e) {
-    console.warn('[Shop] sync failed:', e);
-    setFbIndicator('error');
-  }
+  } catch(e) { console.warn('[Shop] sync:', e); setFbIndicator('error'); }
 }
 
 /* ══════════════════════════════════════════════
-   Firebase: Member System
-   流水號策略: runTransaction on /shop/memberCounter
+   Firebase: Member System (no Auth SDK)
+   ── Register: phone as unique key, serial No ──
+   ── Lookup:   by memberId (M0001…) ──
 ══════════════════════════════════════════════ */
-async function getOrCreateMember(fbUser) {
-  if (!_fbOK || !fbUser) return null;
-  try {
-    const uid = fbUser.uid;
-    const memberRef = ref(_db, `${FB.MEMBERS}/${uid}`);
-    const snap = await get(memberRef);
 
-    if (snap.exists()) {
-      // 已有會員記錄
-      return snap.val();
-    }
+// Normalize phone → use as Firebase key (digits only)
+function normPhone(p) { return String(p).replace(/\D/g, '').slice(-10) || null; }
 
-    // 新會員 → 原子遞增流水號
-    let newNo = 1;
-    await runTransaction(ref(_db, FB.MEMBER_COUNTER), current => {
-      newNo = (current || 0) + 1;
-      return newNo;
-    });
+// Register new member by name + phone → returns member record
+async function createMember(name, phone) {
+  if (!_fbOK) throw new Error('Firebase not available');
+  const phoneKey = normPhone(phone);
+  if (!phoneKey) throw new Error('invalid_phone');
 
-    const memberId = 'M' + String(newNo).padStart(4, '0'); // M0001, M0002…
-    const now = new Date().toISOString();
-    const record = {
-      uid,
-      memberId,
-      memberNo:    newNo,
-      displayName: fbUser.displayName || '—',
-      email:       fbUser.email       || '',
-      photoURL:    fbUser.photoURL    || '',
-      provider:    fbUser.providerData?.[0]?.providerId || 'unknown',
-      createdAt:   now,
-      orderCount:  0,
-      totalSpent:  0,
-    };
-    await set(memberRef, record);
-    console.log('[Shop] New member created:', memberId, fbUser.displayName);
-    return record;
-  } catch(e) {
-    console.warn('[Shop] getOrCreateMember error:', e);
-    return null;
+  // Check if phone already registered
+  const phoneIndexRef = ref(_db, `shop/phoneIndex/${phoneKey}`);
+  const existing = await get(phoneIndexRef);
+  if (existing.exists()) {
+    // Phone already registered → return existing member
+    const existingId = existing.val();
+    const snap = await get(ref(_db, `${FB.MEMBERS}/${existingId}`));
+    if (snap.exists()) return snap.val();
   }
+
+  // New member → atomic serial number
+  let serial = 1;
+  await runTransaction(ref(_db, FB.COUNTER), cur => { serial = (cur || 0) + 1; return serial; });
+  const memberId = 'M' + String(serial).padStart(4, '0');
+  const now = new Date().toISOString();
+  const record = {
+    memberId, serial,
+    name:        name.trim(),
+    phone:       phone.trim(),
+    phoneKey,
+    createdAt:   now,
+    orderCount:  0,
+    totalSpent:  0,
+  };
+  // Write member record
+  await set(ref(_db, `${FB.MEMBERS}/${memberId}`), record);
+  // Write phone index for fast lookup
+  await set(phoneIndexRef, memberId);
+  return record;
 }
 
-/* ── Write order to Firebase ── */
-async function writeOrderToFirebase(orderObj) {
-  if (!_fbOK) return false;
+// Lookup member by memberId (e.g. M0001)
+async function lookupMemberById(memberId) {
+  if (!_fbOK) return null;
   try {
-    // 1. 寫訂單
-    await set(ref(_db, `${FB.ORDERS}/${orderObj.id}`), orderObj);
-    // 2. 更新會員統計
-    if (currentMember?.uid) {
-      const uid = currentMember.uid;
-      await runTransaction(ref(_db, `${FB.MEMBERS}/${uid}/orderCount`),
-        n => (n || 0) + 1);
-      await runTransaction(ref(_db, `${FB.MEMBERS}/${uid}/totalSpent`),
-        n => (n || 0) + orderObj.total);
-      // 更新本機快取
-      currentMember.orderCount = (currentMember.orderCount || 0) + 1;
-      currentMember.totalSpent = (currentMember.totalSpent || 0) + orderObj.total;
-    }
-    return true;
-  } catch(e) {
-    console.warn('[Shop] writeOrder failed:', e);
-    return false;
-  }
+    const snap = await get(ref(_db, `${FB.MEMBERS}/${memberId.toUpperCase()}`));
+    return snap.exists() ? snap.val() : null;
+  } catch(e) { return null; }
 }
 
-/* ── Fetch member's order history ── */
-async function fetchMemberOrders(uid) {
-  if (!_fbOK || !uid) return [];
+// Fetch this member's orders from Firebase
+async function fetchMemberOrders(memberId) {
+  if (!_fbOK || !memberId) return [];
   try {
     const snap = await get(ref(_db, FB.ORDERS));
     if (!snap.exists()) return [];
-    const all = snap.val();
-    return Object.values(all)
-      .filter(o => o?.memberId === uid || o?.memberUid === uid)
+    return Object.values(snap.val())
+      .filter(o => o?.memberId === memberId)
       .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 20); // 最近 20 筆
+      .slice(0, 20);
   } catch(e) { return []; }
 }
 
+// Write order, update member stats
+async function writeOrderToFirebase(orderObj) {
+  if (!_fbOK) return false;
+  try {
+    await set(ref(_db, `${FB.ORDERS}/${orderObj.id}`), orderObj);
+    if (currentMember?.memberId) {
+      const mid = currentMember.memberId;
+      await runTransaction(ref(_db, `${FB.MEMBERS}/${mid}/orderCount`), n => (n||0)+1);
+      await runTransaction(ref(_db, `${FB.MEMBERS}/${mid}/totalSpent`), n => (n||0)+orderObj.total);
+      currentMember.orderCount = (currentMember.orderCount||0)+1;
+      currentMember.totalSpent = (currentMember.totalSpent||0)+orderObj.total;
+    }
+    return true;
+  } catch(e) { console.warn('[Shop] writeOrder:', e); return false; }
+}
+
 /* ══════════════════════════════════════════════
-   Auth UI
+   Auth Modal UI
 ══════════════════════════════════════════════ */
 function showAuthModal() {
   const o = document.getElementById('auth-overlay');
@@ -1729,110 +1729,119 @@ function hideAuthModal() {
   setTimeout(() => { o.style.display = 'none'; }, 300);
 }
 
-async function loginWithGoogle() {
-  if (!_fbOK || !_auth) { showToast('Firebase ไม่พร้อมใช้งาน', 'err'); return; }
-  setBtnLoading('btn-google', true);
+// ── A: Lookup by member ID ──
+async function lookupMember() {
+  const input  = document.getElementById('auth-mid-field');
+  const btn    = document.getElementById('auth-lookup-btn');
+  const result = document.getElementById('auth-lookup-result');
+  const mid    = (input?.value || '').trim().toUpperCase();
+  if (!mid || !mid.startsWith('M')) {
+    showLookupResult('กรุณากรอกรหัสสมาชิก เช่น M0001 / 請輸入如 M0001 的會員編號', 'err');
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = 'กำลังค้นหา…'; }
   try {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(_auth, provider);
-    // onAuthStateChanged จะ handle ต่อ
-  } catch(e) {
-    if (e.code !== 'auth/popup-closed-by-user') {
-      showToast('เข้าสู่ระบบล้มเหลว: ' + (e.message || e.code), 'err');
+    const member = await lookupMemberById(mid);
+    if (!member) {
+      showLookupResult('ไม่พบรหัสสมาชิกนี้ / 找不到此會員編號', 'err');
+    } else {
+      // Found! Auto-login
+      setMember(member);
+      hideAuthModal();
+      showToast(`ยินดีต้อนรับกลับ ${member.name}！🎉 (${member.memberId})`, 'ok');
     }
-    setBtnLoading('btn-google', false);
+  } catch(e) {
+    showLookupResult('เกิดข้อผิดพลาด กรุณาลองใหม่ / 發生錯誤，請再試', 'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'ค้นหา / 查詢'; }
   }
 }
-async function loginWithFacebook() {
-  if (!_fbOK || !_auth) { showToast('Firebase ไม่พร้อมใช้งาน', 'err'); return; }
-  setBtnLoading('btn-fb', true);
+function showLookupResult(msg, type) {
+  const el = document.getElementById('auth-lookup-result');
+  if (!el) return;
+  el.style.display = '';
+  el.textContent = msg;
+  el.style.background = type === 'err' ? 'rgba(201,78,110,.08)' : 'rgba(45,155,111,.08)';
+  el.style.border = `1px solid ${type === 'err' ? 'rgba(201,78,110,.25)' : 'rgba(45,155,111,.25)'}`;
+  el.style.color = type === 'err' ? 'var(--primary)' : 'var(--green)';
+}
+
+// ── B: Register new member ──
+async function registerMember() {
+  const name  = (document.getElementById('auth-name')?.value  || '').trim();
+  const phone = (document.getElementById('auth-phone')?.value || '').trim();
+  if (!name)  { showToast('กรุณากรอกชื่อ / 請填寫姓名', 'err'); return; }
+  if (!phone) { showToast('กรุณากรอกเบอร์โทร / 請填寫電話', 'err'); return; }
+
+  const btn = document.getElementById('auth-register-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'กำลังสมัคร…'; }
   try {
-    const provider = new FacebookAuthProvider();
-    await signInWithPopup(_auth, provider);
-  } catch(e) {
-    if (e.code !== 'auth/popup-closed-by-user') {
-      showToast('เข้าสู่ระบบล้มเหลว: ' + (e.message || e.code), 'err');
+    const member = await createMember(name, phone);
+    setMember(member);
+    safeSetLS(LS.MEMBER, member);
+    hideAuthModal();
+    const isNew = (member.orderCount === 0 && member.createdAt);
+    if (isNew) {
+      showToast(`สมัครสำเร็จ！ รหัสของคุณคือ ${member.memberId} 🎉`, 'ok');
+    } else {
+      showToast(`พบข้อมูลสมาชิกเดิม：${member.memberId} ยินดีต้อนรับ ${member.name}！`, 'ok');
     }
-    setBtnLoading('btn-fb', false);
+    // Clear fields
+    try {
+      ['auth-name','auth-phone'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+    } catch(e) {}
+  } catch(e) {
+    showToast('เกิดข้อผิดพลาด: ' + (e.message || ''), 'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✓ สมัครสมาชิก / 註冊會員'; }
   }
 }
+
 function continueAsGuest() {
   isGuest = true;
   hideAuthModal();
-  updateAuthUI(null);
+  updateAuthUI();
   showToast('กำลังใช้งานในฐานะแขก / 訪客模式', 'ok');
 }
-async function logout() {
-  try {
-    if (_auth) await signOut(_auth);
-  } catch(e) {}
+
+function setMember(member) {
+  currentMember = member;
+  isGuest = false;
+  safeSetLS(LS.MEMBER, member);
+  updateAuthUI();
+}
+
+function logout() {
   currentMember = null;
   isGuest = false;
   cart = [];
+  safeSetLS(LS.MEMBER, null);
   updateAllCartUI();
   renderProducts();
-  updateAuthUI(null);
+  updateAuthUI();
   closeMemberDrawer();
-  showToast('ออกจากระบบแล้ว / 已登出');
   setTimeout(() => showAuthModal(), 400);
-}
-function setBtnLoading(id, loading) {
-  const btn = document.getElementById(id);
-  if (!btn) return;
-  btn.disabled = loading;
-  if (loading) btn.style.opacity = '.6';
-  else btn.style.opacity = '1';
+  showToast('ออกจากระบบแล้ว / 已登出');
 }
 
-/* ── Auth State Change Handler ── */
-async function handleAuthStateChange(fbUser) {
-  setBtnLoading('btn-google', false);
-  setBtnLoading('btn-fb', false);
-
-  if (!fbUser) {
-    currentMember = null;
-    if (!isGuest) showAuthModal();
-    updateAuthUI(null);
-    return;
+/* ── Update Header ── */
+function updateAuthUI() {
+  const lo = document.getElementById('auth-area-loggedout');
+  const li = document.getElementById('auth-area-loggedin');
+  if (!lo || !li) return;
+  if (!currentMember) {
+    lo.style.display = ''; li.style.display = 'none'; return;
   }
-
-  // 登入成功 → 取得/建立會員
-  hideAuthModal();
-  showToast('กำลังโหลดข้อมูลสมาชิก…');
-  currentMember = await getOrCreateMember(fbUser);
-  updateAuthUI(fbUser);
-  showToast(`ยินดีต้อนรับ ${fbUser.displayName || ''} 🎉`, 'ok');
-}
-
-/* ── Update Header Auth UI ── */
-function updateAuthUI(fbUser) {
-  const loggedOut = document.getElementById('auth-area-loggedout');
-  const loggedIn  = document.getElementById('auth-area-loggedin');
-  if (!loggedOut || !loggedIn) return;
-
-  if (!fbUser && !currentMember) {
-    loggedOut.style.display = '';
-    loggedIn.style.display  = 'none';
-    return;
-  }
-  loggedOut.style.display = 'none';
-  loggedIn.style.display  = '';
-
-  const name    = currentMember?.displayName || fbUser?.displayName || 'Guest';
-  const membId  = currentMember?.memberId    || '—';
-  const photo   = currentMember?.photoURL    || fbUser?.photoURL    || '';
+  lo.style.display = 'none'; li.style.display = '';
+  const name    = currentMember.name    || '—';
+  const membId  = currentMember.memberId || '—';
   const initial = (name[0] || '?').toUpperCase();
-
   const avatarEl = document.getElementById('hdr-avatar');
-  if (avatarEl) {
-    avatarEl.innerHTML = photo
-      ? `<img src="${h(photo)}" onerror="this.parentNode.textContent='${h(initial)}'">`
-      : initial;
-  }
-  const unameEl = document.getElementById('hdr-uname');
-  if (unameEl) unameEl.textContent = name.split(' ')[0]; // first name only
-  const midEl = document.getElementById('hdr-mid');
-  if (midEl) midEl.textContent = membId;
+  if (avatarEl) avatarEl.innerHTML = initial;
+  setText('hdr-uname', name.split(' ')[0]);
+  setText('hdr-mid',   membId);
 }
 
 /* ══════════════════════════════════════════════
@@ -1841,7 +1850,6 @@ function updateAuthUI(fbUser) {
 function openMemberDrawer() {
   if (memberOpen) return;
   memberOpen = true;
-  // Populate data
   renderMemberDrawer();
   const overlay = document.getElementById('member-overlay');
   overlay.classList.add('open');
@@ -1850,59 +1858,42 @@ function openMemberDrawer() {
 function closeMemberDrawer() {
   if (!memberOpen) return;
   memberOpen = false;
-  const overlay = document.getElementById('member-overlay');
-  overlay.classList.remove('open');
+  document.getElementById('member-overlay')?.classList.remove('open');
   document.body.style.overflow = '';
 }
 function handleMemberOutsideClick(e) {
   if (e.target === document.getElementById('member-overlay')) closeMemberDrawer();
 }
-
 async function renderMemberDrawer() {
   if (!currentMember) return;
   const m = currentMember;
-
-  // Avatar
+  const initial = (m.name?.[0] || '?').toUpperCase();
   const avEl = document.getElementById('m-avatar-lg');
-  if (avEl) {
-    const initial = (m.displayName?.[0] || '?').toUpperCase();
-    avEl.innerHTML = m.photoURL
-      ? `<img src="${h(m.photoURL)}" onerror="this.parentNode.textContent='${h(initial)}'">`
-      : initial;
-  }
-  setText('m-dname', m.displayName || '—');
-  setText('m-id-chip', `🪪 ${m.memberId || '—'}`);
-  const prov = m.provider?.includes('google') ? '🔵 Google'
-             : m.provider?.includes('facebook') ? '🔷 Facebook' : '';
-  setText('m-provider', prov);
-  setText('m-order-count', m.orderCount ?? 0);
-  setText('m-total-spent', `NT$${m.totalSpent ?? 0}`);
+  if (avEl) avEl.textContent = initial;
+  setText('m-dname',      m.name    || '—');
+  setText('m-id-chip',    `🪪 ${m.memberId || '—'}`);
+  setText('m-provider',   `📞 ${m.phone || ''}`);
+  setText('m-order-count', m.orderCount || 0);
+  setText('m-total-spent', `NT$${m.totalSpent || 0}`);
 
-  // Order history (fetch from Firebase)
   const histEl = document.getElementById('m-order-hist');
   if (histEl) histEl.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:12px">กำลังโหลด…</div>`;
-  const orders = await fetchMemberOrders(m.uid);
+  const orders = await fetchMemberOrders(m.memberId);
   if (histEl) {
-    if (!orders.length) {
-      histEl.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:16px">ยังไม่มีประวัติ<br><span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">尚無訂單記錄</span></div>`;
-    } else {
-      histEl.innerHTML = orders.map(o => `
-        <div class="order-hist-item">
-          <div class="ohi-top">
-            <span class="ohi-id">${h(o.id)}</span>
-            <span class="ohi-date">${h(fmtDate(o.date))}</span>
-          </div>
-          <div class="ohi-total">NT$ ${h(String(o.total ?? 0))}</div>
-          <div class="ohi-items">${h(String((o.items||[]).length))} รายการ</div>
-          <span class="ohi-status">✓ ${h(o.status || 'pending')}</span>
+    histEl.innerHTML = orders.length ? orders.map(o => `
+      <div class="order-hist-item">
+        <div class="ohi-top">
+          <span class="ohi-id">${h(o.id)}</span>
+          <span class="ohi-date">${h(fmtDate(o.date))}</span>
         </div>
-      `).join('');
-    }
+        <div class="ohi-total">NT$ ${h(String(o.total ?? 0))}</div>
+        <div class="ohi-items">${h(String((o.items||[]).length))} รายการ</div>
+        <span class="ohi-status">✓ ${h(o.status || 'pending')}</span>
+      </div>`).join('')
+    : `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:16px">
+         ยังไม่มีประวัติ<br><span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">尚無訂單記錄</span>
+       </div>`;
   }
-}
-function setText(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = String(val ?? '');
 }
 
 /* ══════════════════════════════════════════════
@@ -1926,8 +1917,8 @@ const CAT_GRAD = {
 };
 
 /* ══════════════════════════════════════════════
-   Load & Deduplicate Products
-   規則：name.trim() + price 相同 → 保留第一個（條碼商品優先）
+   Products: Load + Deduplicate
+   去重規則：name.trim().toLowerCase() + price 相同 → 只保留第一個
 ══════════════════════════════════════════════ */
 const DEFAULT_PRODUCTS = {
   '4710088001001':{name:'統一麥香奶茶',price:25,category:'drink'},
@@ -1939,123 +1930,86 @@ const DEFAULT_PRODUCTS = {
   '4712345678900':{name:'農夫山泉礦泉水',price:15,category:'drink'},
   '4711234000001':{name:'小美冰淇淋',price:25,category:'frozen'},
 };
-
 function loadAllProducts() {
-  const barcodeMap = safeGetLS(LS.PRODUCTS, null) || DEFAULT_PRODUCTS;
+  const barcodeMap = safeGetLS(LS.PROD, null) || DEFAULT_PRODUCTS;
   const nobcList   = safeGetLS(LS.NOBC, []);
   const raw = [];
-
-  // Barcode products first (priority in dedup)
   try {
     Object.entries(barcodeMap).forEach(([bc, p]) => {
       if (!p || typeof p !== 'object') return;
       const name = String(p.name ?? '').trim();
       if (!name) return;
-      raw.push({
-        id: bc, name,
-        price:    Number(p.price    ?? 0),
-        category: String(p.category ?? 'other'),
-        image:    p.image ?? null,
-        type: 'barcode'
-      });
+      raw.push({ id:bc, name, price:Number(p.price??0),
+        category:String(p.category??'other'), image:p.image??null, type:'barcode' });
     });
   } catch(e) {}
-
-  // No-barcode products
   try {
     (Array.isArray(nobcList) ? nobcList : []).forEach(p => {
       if (!p || typeof p !== 'object') return;
       const name = String(p.name ?? '').trim();
       if (!name) return;
-      raw.push({
-        id:       p.id ?? ('NOBC-' + Math.random().toString(36).slice(2)),
-        name,
-        price:    Number(p.price    ?? 0),
-        category: String(p.category ?? 'other'),
-        image:    p.image ?? null,
-        type: 'nobc'
-      });
+      raw.push({ id:p.id??('NOBC-'+Math.random().toString(36).slice(2)),
+        name, price:Number(p.price??0),
+        category:String(p.category??'other'), image:p.image??null, type:'nobc' });
     });
   } catch(e) {}
-
-  // ── 去重：相同 name（忽略大小寫+空白）且相同 price，只保留第一個 ──
+  // Deduplicate: same name (case+space insensitive) + same price
   const seen = new Set();
   return raw.filter(p => {
     const key = `${p.name.toLowerCase().replace(/\s+/g,'_')}::${p.price}`;
     if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
+    seen.add(key); return true;
   });
 }
 
 /* ══════════════════════════════════════════════
-   Render: Category Tabs
+   Render: Tabs + Products
 ══════════════════════════════════════════════ */
 function renderTabs() {
-  const container = document.getElementById('tabs-container');
-  if (!container) return;
-  const counts = { '__all__': allProducts.length };
-  allProducts.forEach(p => {
-    const c = p.category || 'other';
-    counts[c] = (counts[c] || 0) + 1;
-  });
-  container.innerHTML = CATEGORIES
-    .filter(c => c.id === '__all__' || counts[c.id])
-    .map(c => {
-      const cnt = counts[c.id] || 0;
-      const active = activeCat === c.id ? ' active' : '';
-      return `<button class="tab-btn${active}" onclick="switchCat('${h(c.id)}')">
-        <span class="tab-emoji">${h(c.icon)}</span>
-        <span>${h(c.th)}<span style="font-family:'Noto Sans TC',sans-serif;font-size:10px;opacity:.65;margin-left:3px">${h(c.zh)}</span></span>
-        <span class="tab-count">${cnt}</span>
+  const c = document.getElementById('tabs-container');
+  if (!c) return;
+  const counts = {'__all__': allProducts.length};
+  allProducts.forEach(p => { const cat=p.category||'other'; counts[cat]=(counts[cat]||0)+1; });
+  c.innerHTML = CATEGORIES.filter(x => x.id==='__all__' || counts[x.id])
+    .map(x => {
+      const active = activeCat===x.id ? ' active' : '';
+      return `<button class="tab-btn${active}" onclick="switchCat('${h(x.id)}')">
+        <span class="tab-emoji">${h(x.icon)}</span>
+        <span>${h(x.th)}<span style="font-family:'Noto Sans TC',sans-serif;font-size:10px;opacity:.65;margin-left:3px">${h(x.zh)}</span></span>
+        <span class="tab-count">${counts[x.id]||0}</span>
       </button>`;
     }).join('');
 }
-
-/* ══════════════════════════════════════════════
-   Render: Product Grid
-══════════════════════════════════════════════ */
-function getCatIcon(catId) {
-  return (CATEGORIES.find(x => x.id === catId) || {}).icon || '📦';
-}
+function getCatIcon(catId) { return (CATEGORIES.find(x=>x.id===catId)||{}).icon||'📦'; }
 function renderProducts() {
   const grid = document.getElementById('product-grid');
   if (!grid) return;
-
-  const filtered = activeCat === '__all__'
-    ? allProducts
-    : allProducts.filter(p => (p.category || 'other') === activeCat);
-
+  const filtered = activeCat==='__all__' ? allProducts
+    : allProducts.filter(p => (p.category||'other')===activeCat);
   if (!filtered.length) {
     grid.innerHTML = `<div class="empty-state">
-      <div class="ei">🔍</div>
-      <div class="et">ไม่มีสินค้าในหมวดนี้</div>
-      <div class="es">กรุณาเพิ่มสินค้าในระบบ POS แล้วรีเฟรช<br><span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">請至 POS 系統新增商品後重新整理</span></div>
-    </div>`;
-    return;
+      <div class="ei">🔍</div><div class="et">ไม่มีสินค้าในหมวดนี้</div>
+      <div class="es">กรุณาเพิ่มสินค้าในระบบ POS แล้วรีเฟรช<br>
+        <span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">請至 POS 系統新增商品後重新整理</span>
+      </div></div>`; return;
   }
-
   grid.innerHTML = filtered.map((p, i) => {
-    const qty  = (cart.find(c => c.id === p.id) || {}).qty || 0;
-    const grad = CAT_GRAD[p.category || 'other'] || 'grad-other';
-    const icon = getCatIcon(p.category || 'other');
-    const init = (p.name || '?')[0];
+    const qty  = (cart.find(c=>c.id===p.id)||{}).qty||0;
+    const grad = CAT_GRAD[p.category||'other']||'grad-other';
+    const icon = getCatIcon(p.category||'other');
+    const init = (p.name||'?')[0];
     const imgHtml = p.image
       ? `<img class="card-img" src="${h(p.image)}" alt="${h(p.name)}" loading="lazy"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
          <div class="card-placeholder ${grad}" style="display:none">
-           <div class="ph-emoji">${h(icon)}</div><div class="ph-initial">${h(init)}</div>
-         </div>`
+           <div class="ph-emoji">${h(icon)}</div><div class="ph-initial">${h(init)}</div></div>`
       : `<div class="card-placeholder ${grad}">
-           <div class="ph-emoji">${h(icon)}</div><div class="ph-initial">${h(init)}</div>
-         </div>`;
-    const badge = qty > 0 ? `<div class="in-cart-badge">${qty}</div>` : '';
-
+           <div class="ph-emoji">${h(icon)}</div><div class="ph-initial">${h(init)}</div></div>`;
     return `<div class="product-card" onclick="addToCart('${h(p.id)}')"
           style="animation-delay:${Math.min(i*.04,.5)}s">
       <div class="card-img-wrap">
         ${imgHtml}
-        ${badge}
+        ${qty>0?`<div class="in-cart-badge">${qty}</div>`:''}
       </div>
       <div class="card-body">
         <div class="card-name">${h(p.name)}</div>
@@ -2063,55 +2017,46 @@ function renderProducts() {
           <div class="card-price"><span>NT$</span> ${h(String(p.price))}</div>
           <button class="add-btn" onclick="event.stopPropagation();addToCart('${h(p.id)}')" aria-label="เพิ่ม">＋</button>
         </div>
-      </div>
-    </div>`;
+      </div></div>`;
   }).join('');
 }
 
 /* ══════════════════════════════════════════════
    Cart Logic
 ══════════════════════════════════════════════ */
-function addToCart(productId) {
+function addToCart(id) {
   try {
-    const p = allProducts.find(x => x.id === productId);
+    const p = allProducts.find(x=>x.id===id);
     if (!p) return;
-    const ex = cart.find(c => c.id === productId);
-    if (ex) ex.qty += 1;
-    else cart.push({ id:p.id, name:p.name, price:p.price, category:p.category, qty:1 });
-    updateAllCartUI();
-    renderProducts();
-    showToast(`เพิ่มแล้ว：${p.name}`, 'ok');
-    const badge = document.getElementById('hdr-badge');
-    if (badge) { badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop'); }
+    const ex = cart.find(c=>c.id===id);
+    if (ex) ex.qty+=1; else cart.push({id:p.id,name:p.name,price:p.price,category:p.category,qty:1});
+    updateAllCartUI(); renderProducts();
+    showToast(`เพิ่มแล้ว：${p.name}`,'ok');
+    const b = document.getElementById('hdr-badge');
+    if (b) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
   } catch(e) {}
 }
 function changeQty(id, delta) {
-  const item = cart.find(c => c.id === id);
+  const item = cart.find(c=>c.id===id);
   if (!item) return;
-  item.qty = Math.max(1, item.qty + delta);
+  item.qty = Math.max(1, item.qty+delta);
   updateAllCartUI(); renderProducts();
 }
-function removeFromCart(id) {
-  cart = cart.filter(c => c.id !== id);
-  updateAllCartUI(); renderProducts();
-}
+function removeFromCart(id) { cart=cart.filter(c=>c.id!==id); updateAllCartUI(); renderProducts(); }
 function clearCart() {
   if (!cart.length) return;
-  cart = [];
-  updateAllCartUI(); renderProducts();
+  cart=[]; updateAllCartUI(); renderProducts();
   showToast('ล้างตะกร้าแล้ว / 購物車已清空');
 }
-function getTotal()    { return cart.reduce((s,i) => s + Number(i.price||0)*Number(i.qty||0), 0); }
-function getTotalQty() { return cart.reduce((s,i) => s + Number(i.qty||0), 0); }
+function getTotal()    { return cart.reduce((s,i)=>s+Number(i.price||0)*Number(i.qty||0),0); }
+function getTotalQty() { return cart.reduce((s,i)=>s+Number(i.qty||0),0); }
 
-/* ── Build Cart Items HTML ── */
-function buildCartItemsHTML() {
-  if (!cart.length) return `<div class="cart-empty">
-    <div class="cart-empty-icon">🛒</div>
+function buildCartHTML() {
+  if (!cart.length) return `<div class="cart-empty"><div class="cart-empty-icon">🛒</div>
     <div class="cart-empty-text">ตะกร้าว่างเปล่า<br>
       <span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">點擊商品開始選購</span>
     </div></div>`;
-  return cart.map(item => `
+  return cart.map(item=>`
     <div class="cart-item">
       <div class="ci-name">${h(item.name)}</div>
       <button class="ci-remove" onclick="removeFromCart('${h(item.id)}')">×</button>
@@ -2120,283 +2065,231 @@ function buildCartItemsHTML() {
         <span class="qty-num">${item.qty}</span>
         <button class="qty-btn-sm" onclick="changeQty('${h(item.id)}',1)">＋</button>
       </div>
-      <div class="ci-sub">NT$ ${item.price * item.qty}</div>
+      <div class="ci-sub">NT$ ${item.price*item.qty}</div>
     </div>`).join('');
 }
 
 function updateAllCartUI() {
-  const total    = getTotal();
-  const totalQty = getTotalQty();
-  const hasItems = cart.length > 0;
-  const emptyHTML = `<div class="cart-empty"><div class="cart-empty-icon">🛒</div><div class="cart-empty-text">ตะกร้าว่างเปล่า<br><span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">點擊商品開始選購</span></div></div>`;
-  const cartHTML = hasItems ? buildCartItemsHTML() : emptyHTML;
-
-  // Header badge
-  const hdrTxt   = document.getElementById('hdr-cart-txt');
-  const hdrBadge = document.getElementById('hdr-badge');
-  if (hdrTxt)   hdrTxt.textContent = `NT$ ${total}`;
-  if (hdrBadge) { hdrBadge.style.display = hasItems ? 'flex' : 'none'; hdrBadge.textContent = totalQty; }
-
+  const total=getTotal(), tq=getTotalQty(), has=cart.length>0;
+  const empty=`<div class="cart-empty"><div class="cart-empty-icon">🛒</div><div class="cart-empty-text">ตะกร้าว่างเปล่า<br><span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">點擊商品開始選購</span></div></div>`;
+  const cartH = has ? buildCartHTML() : empty;
+  // Header
+  setText('hdr-cart-txt', `NT$ ${total}`);
+  const b = document.getElementById('hdr-badge');
+  if (b) { b.style.display=has?'flex':'none'; b.textContent=tq; }
   // Sidebar
-  const sbBody     = document.getElementById('sb-cart-body');
-  const sbCount    = document.getElementById('sb-count');
-  const sbTotal    = document.getElementById('sb-total');
-  const sbCheckout = document.getElementById('sb-checkout-btn');
-  const sbLbl      = document.getElementById('sb-items-lbl');
-  if (sbBody)     sbBody.innerHTML = cartHTML;
-  if (sbCount)    sbCount.textContent = `${totalQty} ชิ้น`;
-  if (sbTotal)    sbTotal.textContent = `NT$ ${total}`;
-  if (sbCheckout) sbCheckout.disabled = !hasItems;
-  if (sbLbl)      sbLbl.textContent = hasItems ? `รวม ${cart.length} รายการ` : '';
-
+  const sbc=document.getElementById('sb-cart-body'), sbco=document.getElementById('sb-count'),
+        sbt=document.getElementById('sb-total'), sbck=document.getElementById('sb-checkout-btn'),
+        sbl=document.getElementById('sb-items-lbl');
+  if(sbc) sbc.innerHTML=cartH;
+  if(sbco) sbco.textContent=`${tq} ชิ้น`;
+  if(sbt) sbt.textContent=`NT$ ${total}`;
+  if(sbck) sbck.disabled=!has;
+  if(sbl) sbl.textContent=has?`รวม ${cart.length} รายการ`:'';
   // Drawer
-  const drBody     = document.getElementById('drawer-cart-body');
-  const drTotal    = document.getElementById('drawer-total');
-  const drCheckout = document.getElementById('drawer-checkout-btn');
-  if (drBody)     drBody.innerHTML = cartHTML;
-  if (drTotal)    drTotal.textContent = `NT$ ${total}`;
-  if (drCheckout) drCheckout.disabled = !hasItems;
-
-  // Mobile bottom bar
-  const mcbInner = document.getElementById('mcb-inner');
-  if (mcbInner) {
-    mcbInner.innerHTML = hasItems
-      ? `<div class="mcb-icon">🛒</div>
-         <div class="mcb-info">
-           <div class="mcb-count">รวม ${totalQty} ชิ้น</div>
-           <div class="mcb-amt">NT$ ${total}</div>
-         </div>
-         <div class="mcb-go">ดูตะกร้า</div>`
-      : `<div class="mcb-empty">ตะกร้าว่างเปล่า กดที่สินค้าเพื่อเพิ่ม 🛒</div>`;
-  }
+  const db=document.getElementById('drawer-cart-body'), dt=document.getElementById('drawer-total'),
+        dc=document.getElementById('drawer-checkout-btn');
+  if(db) db.innerHTML=cartH;
+  if(dt) dt.textContent=`NT$ ${total}`;
+  if(dc) dc.disabled=!has;
+  // Mobile bar
+  const mb=document.getElementById('mcb-inner');
+  if(mb) mb.innerHTML = has
+    ? `<div class="mcb-icon">🛒</div>
+       <div class="mcb-info"><div class="mcb-count">รวม ${tq} ชิ้น</div><div class="mcb-amt">NT$ ${total}</div></div>
+       <div class="mcb-go">ดูตะกร้า</div>`
+    : `<div class="mcb-empty">ตะกร้าว่างเปล่า กดที่สินค้าเพื่อเพิ่ม 🛒</div>`;
 }
 
 /* ══════════════════════════════════════════════
-   Drawer (Mobile Cart)
+   Drawer / Modals
 ══════════════════════════════════════════════ */
 function openDrawer() {
-  if (drawerOpen) return;
-  drawerOpen = true;
-  const o = document.getElementById('drawer-overlay');
+  if(drawerOpen) return; drawerOpen=true;
+  const o=document.getElementById('drawer-overlay');
   o.classList.add('open');
-  requestAnimationFrame(() => requestAnimationFrame(() => o.classList.add('visible')));
-  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>o.classList.add('visible')));
+  document.body.style.overflow='hidden';
 }
 function closeDrawer() {
-  if (!drawerOpen) return;
-  drawerOpen = false;
-  const o = document.getElementById('drawer-overlay');
+  if(!drawerOpen) return; drawerOpen=false;
+  const o=document.getElementById('drawer-overlay');
   o.classList.remove('visible');
-  setTimeout(() => { o.classList.remove('open'); }, 300);
-  document.body.style.overflow = '';
+  setTimeout(()=>{o.classList.remove('open');},300);
+  document.body.style.overflow='';
 }
-function handleDrawerOutsideClick(e) {
-  if (e.target === document.getElementById('drawer-overlay')) closeDrawer();
-}
-
-/* ══════════════════════════════════════════════
-   Order Modal
-══════════════════════════════════════════════ */
-function openOrderModal() {
-  if (!cart.length) { showToast('ตะกร้าว่างเปล่า！', 'err'); return; }
-  // Pre-fill member info
-  if (currentMember) {
-    const nameEl = document.getElementById('customer-name');
-    const phoneEl = document.getElementById('customer-phone');
-    if (nameEl && !nameEl.value) nameEl.value = currentMember.displayName || '';
-  }
-  // Fill order table
-  const tbody  = document.getElementById('modal-order-body');
-  const totalEl = document.getElementById('modal-order-total');
-  if (tbody) {
-    tbody.innerHTML = cart.map(item => {
-      const sub = item.price * item.qty;
-      return `<tr>
-        <td class="item-name">${h(item.name)}</td>
-        <td class="item-qty">${item.qty}</td>
-        <td>NT$ ${sub}</td>
-      </tr>`;
-    }).join('');
-  }
-  // Show member chip in modal
-  const mChip = document.getElementById('modal-member-chip');
-  if (mChip) {
-    mChip.style.display = currentMember ? '' : 'none';
-    mChip.textContent   = currentMember ? `🪪 ${currentMember.memberId} · ${currentMember.displayName}` : '';
-  }
-  if (totalEl) totalEl.textContent = `NT$ ${getTotal()}`;
-  openModal('order-modal');
-}
+function handleDrawerOutsideClick(e) { if(e.target===document.getElementById('drawer-overlay')) closeDrawer(); }
 
 function openModal(id) {
-  const o = document.getElementById(id);
-  if (!o) return;
+  const o=document.getElementById(id); if(!o) return;
   o.classList.add('open');
-  requestAnimationFrame(() => requestAnimationFrame(() => o.classList.add('visible')));
-  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>o.classList.add('visible')));
+  document.body.style.overflow='hidden';
 }
 function closeModal(id) {
-  const o = document.getElementById(id);
-  if (!o) return;
+  const o=document.getElementById(id); if(!o) return;
   o.classList.remove('visible');
-  setTimeout(() => { o.classList.remove('open'); document.body.style.overflow = ''; }, 280);
+  setTimeout(()=>{o.classList.remove('open'); document.body.style.overflow='';},280);
 }
-function handleModalOutsideClick(e, id) {
-  if (e.target === document.getElementById(id)) closeModal(id);
+function handleModalOutsideClick(e,id) { if(e.target===document.getElementById(id)) closeModal(id); }
+
+function openOrderModal() {
+  if(!cart.length) { showToast('ตะกร้าว่างเปล่า！','err'); return; }
+  // Pre-fill name if member
+  if(currentMember) {
+    const n=document.getElementById('customer-name');
+    const p=document.getElementById('customer-phone');
+    if(n && !n.value) n.value=currentMember.name||'';
+    if(p && !p.value) p.value=currentMember.phone||'';
+  }
+  // Fill table
+  const tb=document.getElementById('modal-order-body');
+  if(tb) tb.innerHTML=cart.map(item=>{
+    const sub=item.price*item.qty;
+    return `<tr>
+      <td class="item-name">${h(item.name)}</td>
+      <td class="item-qty">${item.qty}</td>
+      <td>NT$ ${sub}</td>
+    </tr>`;
+  }).join('');
+  const tel=document.getElementById('modal-order-total');
+  if(tel) tel.textContent=`NT$ ${getTotal()}`;
+  // Member chip
+  const chip=document.getElementById('modal-member-chip');
+  if(chip) {
+    chip.style.display=currentMember?'':'none';
+    chip.textContent=currentMember?`🪪 ${currentMember.memberId} · ${currentMember.name}`:'';
+  }
+  openModal('order-modal');
 }
 
 /* ══════════════════════════════════════════════
    Submit Order
 ══════════════════════════════════════════════ */
 async function submitOrder() {
-  if (!cart.length) return;
-  const btn = document.getElementById('confirm-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'กำลังส่ง…'; }
+  if(!cart.length) return;
+  const btn=document.getElementById('confirm-btn');
+  if(btn){btn.disabled=true;btn.textContent='กำลังส่ง…';}
   try {
-    const nameVal  = (document.getElementById('customer-name')?.value  || '').trim();
-    const phoneVal = (document.getElementById('customer-phone')?.value || '').trim();
-    const noteVal  = (document.getElementById('order-note')?.value     || '').trim();
-    const now      = new Date();
-    const orderId  = 'ONL-' + now.getTime().toString(36).toUpperCase();
-    const total    = getTotal();
+    const nameVal  = (document.getElementById('customer-name')?.value||'').trim();
+    const phoneVal = (document.getElementById('customer-phone')?.value||'').trim();
+    const noteVal  = (document.getElementById('order-note')?.value||'').trim();
+    const now=new Date(), orderId='ONL-'+now.getTime().toString(36).toUpperCase();
+    const total=getTotal();
 
     const orderObj = {
-      id:           orderId,
-      date:         now.toISOString(),
-      source:       'online',
-      // Member info
-      memberUid:    currentMember?.uid    || null,
-      memberId:     currentMember?.memberId || null,
-      memberName:   currentMember?.displayName || null,
-      isGuest:      !currentMember,
-      // Customer input
-      customerName:  nameVal  || currentMember?.displayName || 'แขก / 訪客',
-      customerPhone: phoneVal,
+      id: orderId, date: now.toISOString(), source: 'online',
+      memberId:      currentMember?.memberId || null,
+      memberName:    currentMember?.name     || null,
+      isGuest:       !currentMember,
+      customerName:  nameVal  || currentMember?.name  || 'แขก / 訪客',
+      customerPhone: phoneVal || currentMember?.phone || '',
       note:          noteVal,
-      items: cart.map(i => ({ id:i.id, name:i.name, price:i.price, qty:i.qty })),
-      subtotal: total,
-      total,
-      status: 'pending',
+      items: cart.map(i=>({id:i.id,name:i.name,price:i.price,qty:i.qty})),
+      subtotal:total, total, status:'pending',
     };
 
-    // 1. 存本機（確保不遺失）
-    const localOrders = safeGetLS('pos_online_orders', []);
-    if (Array.isArray(localOrders)) localOrders.push(orderObj);
-    safeSetLS('pos_online_orders', Array.isArray(localOrders) ? localOrders : [orderObj]);
-    const txList = safeGetLS('pos_transactions', []);
-    if (Array.isArray(txList)) txList.push(orderObj);
-    safeSetLS('pos_transactions', Array.isArray(txList) ? txList : [orderObj]);
+    // 本機先存
+    const lo=safeGetLS('pos_online_orders',[]);
+    if(Array.isArray(lo)) lo.push(orderObj);
+    safeSetLS('pos_online_orders',Array.isArray(lo)?lo:[orderObj]);
+    const tx=safeGetLS('pos_transactions',[]);
+    if(Array.isArray(tx)) tx.push(orderObj);
+    safeSetLS('pos_transactions',Array.isArray(tx)?tx:[orderObj]);
 
-    // 2. 非同步寫 Firebase（不阻塞 UI）
-    writeOrderToFirebase(orderObj).then(ok => {
-      if (ok) showToast('ส่งออเดอร์ไปยัง Firebase ✓', 'ok');
+    // Firebase 非同步寫入
+    writeOrderToFirebase(orderObj).then(ok=>{
+      if(ok) showToast('ส่งออเดอร์ไปยัง Firebase ✓','ok');
     });
 
-    // 3. 更新成功 Modal
-    const successId = document.getElementById('success-order-id');
-    if (successId) successId.textContent = `เลขที่ / 訂單編號：${orderId}`;
+    const si=document.getElementById('success-order-id');
+    if(si) si.textContent=`เลขที่ / 訂單編號：${orderId}`;
 
-    // 4. Reset
-    cart = [];
-    updateAllCartUI();
-    renderProducts();
+    cart=[]; updateAllCartUI(); renderProducts();
     closeModal('order-modal');
-    setTimeout(() => openModal('success-modal'), 300);
+    setTimeout(()=>openModal('success-modal'),300);
 
-    // 5. 更新 member drawer 統計（若已開啟）
-    if (currentMember && memberOpen) renderMemberDrawer();
-
+    if(currentMember && memberOpen) renderMemberDrawer();
     try {
-      ['customer-name','customer-phone','order-note'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
+      ['customer-name','customer-phone','order-note'].forEach(id=>{
+        const el=document.getElementById(id); if(el) el.value='';
       });
-    } catch(e) {}
+    } catch(e){}
   } catch(err) {
-    console.error('[Shop] submitOrder error:', err);
-    showToast('ส่งไม่สำเร็จ กรุณาลองใหม่ / 送出失敗', 'err');
+    console.error('[Shop] submitOrder:',err);
+    showToast('ส่งไม่สำเร็จ กรุณาลองใหม่ / 送出失敗','err');
   } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = '✓ ยืนยันสั่งซื้อ <span style="font-family:\'Noto Sans TC\',sans-serif;font-size:12px">確認送出</span>';
+    if(btn){
+      btn.disabled=false;
+      btn.innerHTML='✓ ยืนยันสั่งซื้อ <span style="font-family:\'Noto Sans TC\',sans-serif;font-size:12px">確認送出</span>';
     }
   }
 }
 
-function switchCat(catId) {
-  activeCat = catId;
-  renderTabs();
-  renderProducts();
-}
+function switchCat(catId) { activeCat=catId; renderTabs(); renderProducts(); }
 function closeSuccess() { closeModal('success-modal'); }
 
 /* ══════════════════════════════════════════════
    Toast
 ══════════════════════════════════════════════ */
-let _toastTimer = null;
-function showToast(msg, type) {
+let _tt=null;
+function showToast(msg,type) {
   try {
-    const t = document.getElementById('toast');
-    if (!t) return;
-    t.textContent = String(msg ?? '');
-    t.className = 'toast show' + (type ? ' ' + type : '');
-    clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(() => { t.className = 'toast'; }, 2800);
-  } catch(e) {}
+    const t=document.getElementById('toast'); if(!t) return;
+    t.textContent=String(msg??'');
+    t.className='toast show'+(type?' '+type:'');
+    clearTimeout(_tt); _tt=setTimeout(()=>{t.className='toast';},2800);
+  } catch(e){}
 }
 
 /* ══════════════════════════════════════════════
    Init
 ══════════════════════════════════════════════ */
 async function init() {
-  // Show skeleton while loading
-  const grid = document.getElementById('product-grid');
-  if (grid) grid.innerHTML = Array(6).fill(0)
-    .map(() => `<div class="skeleton skeleton-card"></div>`).join('');
-
+  const grid=document.getElementById('product-grid');
+  if(grid) grid.innerHTML=Array(6).fill(0).map(()=>`<div class="skeleton skeleton-card"></div>`).join('');
   try {
-    // 1. Sync products from Firebase (diff only)
     await syncProducts();
-
-    // 2. Load & deduplicate products
-    allProducts = loadAllProducts();
-    renderTabs();
-    renderProducts();
-    updateAllCartUI();
+    allProducts=loadAllProducts();
+    renderTabs(); renderProducts(); updateAllCartUI();
   } catch(e) {
-    if (grid) grid.innerHTML = `<div class="empty-state">
-      <div class="ei">⚠️</div>
-      <div class="et">ไม่สามารถโหลดสินค้าได้</div>
+    if(grid) grid.innerHTML=`<div class="empty-state">
+      <div class="ei">⚠️</div><div class="et">ไม่สามารถโหลดสินค้าได้</div>
       <div class="es">กรุณาเพิ่มสินค้าในระบบ POS ก่อน<br>
         <span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">請先在 POS 系統建立商品資料</span>
       </div></div>`;
   }
 
-  // 3. Set up Firebase Auth listener
-  if (_fbOK && _auth) {
-    onAuthStateChanged(_auth, handleAuthStateChange);
+  // Auto-restore member from localStorage
+  const savedMember = safeGetLS(LS.MEMBER, null);
+  if (savedMember?.memberId) {
+    // Re-verify from Firebase in background
+    if (_fbOK) {
+      lookupMemberById(savedMember.memberId).then(fresh => {
+        setMember(fresh || savedMember);
+      }).catch(() => setMember(savedMember));
+    } else {
+      setMember(savedMember);
+    }
   } else {
-    // No Firebase → show login modal anyway (guest option)
+    // First visit → show member modal
     showAuthModal();
   }
 }
 
-// Handle POS product changes from another tab
 window.addEventListener('storage', e => {
-  if (e.key === LS.PRODUCTS || e.key === LS.NOBC) {
-    try { allProducts = loadAllProducts(); renderTabs(); renderProducts(); } catch(e) {}
+  if(e.key===LS.PROD || e.key===LS.NOBC) {
+    try { allProducts=loadAllProducts(); renderTabs(); renderProducts(); } catch(e){}
   }
 });
 
-/* ── Expose to window (type="module" scope isolation) ── */
+/* ── Expose to window ── */
 Object.assign(window, {
   switchCat, addToCart, changeQty, removeFromCart, clearCart,
   openDrawer, closeDrawer, handleDrawerOutsideClick,
   openOrderModal, closeModal, handleModalOutsideClick,
   submitOrder, closeSuccess,
-  // Auth
-  loginWithGoogle, loginWithFacebook, continueAsGuest, logout, showAuthModal,
-  // Member
+  showAuthModal, lookupMember, registerMember, continueAsGuest, logout,
   openMemberDrawer, closeMemberDrawer, handleMemberOutsideClick,
 });
 
