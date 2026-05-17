@@ -3,8 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- ── PWA Core ── -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#C94E6E">
+
+<!-- ── iOS PWA ── -->
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ร้านค้า">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<!-- iOS splash screens -->
+<meta name="apple-mobile-web-app-orientations" content="portrait">
+
+<!-- ── Android / General ── -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="ร้านค้าออนไลน์">
+<meta name="description" content="สั่งซื้อสินค้าออนไลน์ 線上訂購系統">
+
+<!-- ── Open Graph (share preview) ── -->
+<meta property="og:title" content="ร้านค้าออนไลน์ 線上訂購">
+<meta property="og:description" content="สั่งซื้อสินค้าออนไลน์ได้ทันที">
+<meta property="og:type" content="website">
+
 <title>สั่งซื้อออนไลน์ 線上訂購</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1227,6 +1248,76 @@ body::after {
 }
 .logout-btn:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-glow); }
 
+/* ── PWA: Install Banner ── */
+.pwa-banner {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 800;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 24px rgba(42,20,16,.13);
+  padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  display: none;
+  align-items: center;
+  gap: 12px;
+  animation: slide-up .35s cubic-bezier(.32,.96,.47,1);
+}
+.pwa-banner.show { display: flex; }
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.pwa-banner-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+.pwa-banner-text { flex: 1; min-width: 0; }
+.pwa-banner-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.pwa-banner-sub   { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.pwa-banner-install {
+  flex-shrink: 0;
+  padding: 9px 16px;
+  border-radius: 50px;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(201,78,110,.3);
+  transition: all .18s;
+}
+.pwa-banner-install:hover { background: var(--primary2); transform: translateY(-1px); }
+.pwa-banner-dismiss {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--muted2);
+  font-size: 20px;
+  line-height: 1;
+  padding: 4px;
+  transition: color .18s;
+}
+.pwa-banner-dismiss:hover { color: var(--text); }
+
+/* ── PWA: Offline Toast ── */
+.offline-bar {
+  position: fixed;
+  top: var(--hdr-h);
+  left: 0; right: 0;
+  z-index: 250;
+  background: #e57373;
+  color: #fff;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  transform: translateY(-100%);
+  transition: transform .3s;
+  font-family: var(--th);
+}
+.offline-bar.show { transform: translateY(0); }
+
 /* ── Skeleton loader ── */
 .skeleton {
   background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
@@ -1239,6 +1330,24 @@ body::after {
 </style>
 </head>
 <body>
+
+<!-- ── PWA: Offline Bar ── -->
+<div class="offline-bar" id="offline-bar">
+  📵 ไม่มีอินเทอร์เน็ต — ใช้ข้อมูลที่แคชไว้ / 離線模式，使用快取資料
+</div>
+
+<!-- ── PWA: Install Banner ── -->
+<div class="pwa-banner" id="pwa-banner">
+  <div class="pwa-banner-icon">🛍</div>
+  <div class="pwa-banner-text">
+    <div class="pwa-banner-title">ติดตั้งแอปบนหน้าจอหลัก</div>
+    <div class="pwa-banner-sub">加到主畫面，像 App 一樣開啟</div>
+  </div>
+  <button class="pwa-banner-install" id="pwa-install-btn" onclick="pwaInstall()">
+    ติดตั้ง
+  </button>
+  <button class="pwa-banner-dismiss" onclick="pwaDismiss()" aria-label="ปิด">×</button>
+</div>
 
 <!-- ── Auth: Member Overlay ── -->
 <div class="auth-overlay" id="auth-overlay">
@@ -2246,6 +2355,8 @@ function showToast(msg,type) {
    Init
 ══════════════════════════════════════════════ */
 async function init() {
+  // Init PWA (SW + offline detection + install prompt)
+  initPWA();
   const grid=document.getElementById('product-grid');
   if(grid) grid.innerHTML=Array(6).fill(0).map(()=>`<div class="skeleton skeleton-card"></div>`).join('');
   try {
@@ -2283,6 +2394,72 @@ window.addEventListener('storage', e => {
   }
 });
 
+/* ══════════════════════════════════════════════
+   PWA: Service Worker Registration
+══════════════════════════════════════════════ */
+let _deferredInstallPrompt = null;
+
+function initPWA() {
+  // Register Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js', { scope: './' })
+      .then(reg => console.log('[PWA] SW registered, scope:', reg.scope))
+      .catch(err => console.warn('[PWA] SW registration failed:', err));
+  }
+
+  // Offline / online detection
+  const offlineBar = document.getElementById('offline-bar');
+  function updateOnlineStatus() {
+    if (!offlineBar) return;
+    if (!navigator.onLine) {
+      offlineBar.classList.add('show');
+    } else {
+      offlineBar.classList.remove('show');
+    }
+  }
+  window.addEventListener('online',  updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  updateOnlineStatus();
+
+  // Install banner (Android Chrome / Edge)
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    _deferredInstallPrompt = e;
+    // Only show if not already installed and not dismissed this session
+    if (!sessionStorage.getItem('pwa-dismissed')) {
+      const banner = document.getElementById('pwa-banner');
+      if (banner) banner.classList.add('show');
+    }
+  });
+
+  // Hide banner if already installed
+  window.addEventListener('appinstalled', () => {
+    const banner = document.getElementById('pwa-banner');
+    if (banner) banner.classList.remove('show');
+    _deferredInstallPrompt = null;
+    showToast('ติดตั้งแอปสำเร็จ！🎉 / 已成功安裝 App！', 'ok');
+  });
+}
+
+function pwaInstall() {
+  if (!_deferredInstallPrompt) return;
+  _deferredInstallPrompt.prompt();
+  _deferredInstallPrompt.userChoice.then(choice => {
+    if (choice.outcome === 'accepted') {
+      console.log('[PWA] User accepted install');
+    }
+    _deferredInstallPrompt = null;
+    const banner = document.getElementById('pwa-banner');
+    if (banner) banner.classList.remove('show');
+  });
+}
+
+function pwaDismiss() {
+  const banner = document.getElementById('pwa-banner');
+  if (banner) banner.classList.remove('show');
+  sessionStorage.setItem('pwa-dismissed', '1');
+}
+
 /* ── Expose to window ── */
 Object.assign(window, {
   switchCat, addToCart, changeQty, removeFromCart, clearCart,
@@ -2291,6 +2468,7 @@ Object.assign(window, {
   submitOrder, closeSuccess,
   showAuthModal, lookupMember, registerMember, continueAsGuest, logout,
   openMemberDrawer, closeMemberDrawer, handleMemberOutsideClick,
+  pwaInstall, pwaDismiss,
 });
 
 document.addEventListener('DOMContentLoaded', init);
