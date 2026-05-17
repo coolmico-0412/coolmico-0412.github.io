@@ -2,7 +2,7 @@
   "name": "ร้านค้าออนไลน์ 線上訂購",
   "short_name": "ร้านค้า",
   "description": "สั่งซื้อสินค้าออนไลน์ได้ทันที / 線上訂購系統",
-  "start_url": "./shop_order.html",
+  "start_url": "index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -47,7 +47,7 @@
       "name": "สั่งซื้อสินค้า / 立即訂購",
       "short_name": "สั่งซื้อ",
       "description": "เปิดร้านค้าและสั่งซื้อสินค้า",
-      "url": "./shop_order.html",
+      "url": "shop_order.html",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     }
   ],

@@ -6,7 +6,7 @@
      Google Fonts               → Stale While Revalidate
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION   = 'v1.0.0';
+const APP_VERSION   = 'v1.1.0';   // bumped: fixed Android start_url 404
 const STATIC_CACHE  = `shop-static-${APP_VERSION}`;
 const FONT_CACHE    = `shop-fonts-${APP_VERSION}`;
 const FIREBASE_CACHE= `shop-firebase-${APP_VERSION}`;
@@ -14,6 +14,7 @@ const ALL_CACHES    = [STATIC_CACHE, FONT_CACHE, FIREBASE_CACHE];
 
 /* ── 預先快取的靜態資源 ── */
 const STATIC_ASSETS = [
+  './index.html',
   './shop_order.html',
   './manifest.json',
 ];
@@ -129,8 +130,9 @@ async function cacheFirstWithFallback(request, cacheName) {
     }
     return response;
   } catch(e) {
-    // 離線降級：回傳快取的主頁
-    const fallback = await caches.match('./shop_order.html');
+    // 離線降級：優先回 index.html（PWA start_url），再試 shop_order.html
+    const fallback = await caches.match('./index.html')
+                  || await caches.match('./shop_order.html');
     if (fallback) return fallback;
     return new Response(
       `<!DOCTYPE html><html><body style="font-family:sans-serif;text-align:center;padding:40px">
