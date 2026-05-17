@@ -974,7 +974,7 @@ body::after {
   background: rgba(42,20,16,.65);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  display: flex;
+  display: none;              /* JS 控制開關，預設絕對隱藏 */
   align-items: center;
   justify-content: center;
   padding: 20px;
@@ -1350,7 +1350,7 @@ body::after {
 </div>
 
 <!-- ── Auth: Member Overlay ── -->
-<div class="auth-overlay" id="auth-overlay">
+<div class="auth-overlay" id="auth-overlay" style="display:none">
   <div class="auth-box">
     <div class="auth-hero">
       <div class="auth-store-icon">🛍</div>
@@ -1366,14 +1366,19 @@ body::after {
       <div class="auth-desc">
         🪪 มีรหัสสมาชิกแล้ว? / 已有會員編號？
       </div>
-      <div class="auth-mid-input">
-        <input id="auth-mid-field" type="text" placeholder="M0001" maxlength="6"
-               oninput="this.value=this.value.toUpperCase()"
-               onkeydown="if(event.key==='Enter')lookupMember()">
-        <button class="auth-lookup-btn" id="auth-lookup-btn" onclick="lookupMember()">
-          ค้นหา / 查詢
-        </button>
-      </div>
+      <input id="auth-mid-field" type="text" class="field-input"
+             placeholder="รหัสสมาชิก เช่น M0001 / 會員編號"
+             maxlength="6" style="text-transform:uppercase;font-family:'Courier New',monospace;font-weight:700;letter-spacing:1px;color:var(--primary)"
+             oninput="this.value=this.value.toUpperCase()"
+             onkeydown="if(event.key==='Enter')document.getElementById('auth-lookup-phone').focus()">
+      <input id="auth-lookup-phone" type="tel" class="field-input"
+             placeholder="เบอร์โทรที่ลงทะเบียนไว้ / 註冊時的電話"
+             autocomplete="tel"
+             onkeydown="if(event.key==='Enter')lookupMember()">
+      <button class="auth-submit-btn" id="auth-lookup-btn" onclick="lookupMember()"
+              style="background:linear-gradient(135deg,var(--primary),#E8892B)">
+        🔍 ค้นหาและเข้าสู่ระบบ / 查詢並登入
+      </button>
       <div id="auth-lookup-result" style="display:none;font-size:13px;border-radius:var(--r-sm);padding:10px 12px;"></div>
 
       <div class="auth-or"><span>หรือ / 或</span></div>
@@ -1725,17 +1730,35 @@ async function syncProducts() {
     const metaSnap = await get(ref(_db, FB.META));
     const fbTs     = metaSnap.exists() ? (metaSnap.val()?.updatedAt ?? null) : null;
     const localTs  = safeGetLS(LS.SYNC_TS, null);
-    if (fbTs !== null && fbTs === localTs) { setFbIndicator('local'); return; }
 
-    const [ps, ns] = await Promise.all([get(ref(_db, FB.PROD)), get(ref(_db, FB.NOBC))]);
-    if (ps.exists()) { const d = ps.val(); if (d && typeof d==='object') safeSetLS(LS.PROD, d); }
+    // 本機沒有商品時強制從 Firebase 拉取，不管時間戳
+    const hasLocalProducts = !!safeGetLS(LS.PROD, null);
+
+    if (hasLocalProducts && fbTs !== null && fbTs === localTs) {
+      // 版本一致且本機有商品 → 直接用快取
+      setFbIndicator('local');
+      return;
+    }
+
+    // 拉取商品資料
+    const [ps, ns] = await Promise.all([
+      get(ref(_db, FB.PROD)),
+      get(ref(_db, FB.NOBC)),
+    ]);
+    if (ps.exists()) {
+      const d = ps.val();
+      if (d && typeof d === 'object') safeSetLS(LS.PROD, d);
+    }
     if (ns.exists()) {
       const d = ns.val();
       safeSetLS(LS.NOBC, Array.isArray(d) ? d : Object.values(d || {}));
     }
     if (fbTs !== null) safeSetLS(LS.SYNC_TS, fbTs);
     setFbIndicator('synced');
-  } catch(e) { console.warn('[Shop] sync:', e); setFbIndicator('error'); }
+  } catch(e) {
+    console.warn('[Shop] syncProducts failed:', e);
+    setFbIndicator('error');
+  }
 }
 
 /* ══════════════════════════════════════════════
@@ -1838,31 +1861,44 @@ function hideAuthModal() {
   setTimeout(() => { o.style.display = 'none'; }, 300);
 }
 
-// ── A: Lookup by member ID ──
+// ── A: Lookup by member ID + phone (both must match) ──
 async function lookupMember() {
-  const input  = document.getElementById('auth-mid-field');
+  const mid    = (document.getElementById('auth-mid-field')?.value    || '').trim().toUpperCase();
+  const phone  = (document.getElementById('auth-lookup-phone')?.value || '').trim();
   const btn    = document.getElementById('auth-lookup-btn');
-  const result = document.getElementById('auth-lookup-result');
-  const mid    = (input?.value || '').trim().toUpperCase();
-  if (!mid || !mid.startsWith('M')) {
+
+  if (!mid || !mid.match(/^M\d{1,6}$/)) {
     showLookupResult('กรุณากรอกรหัสสมาชิก เช่น M0001 / 請輸入如 M0001 的會員編號', 'err');
     return;
   }
-  if (btn) { btn.disabled = true; btn.textContent = 'กำลังค้นหา…'; }
+  if (!phone) {
+    showLookupResult('กรุณากรอกเบอร์โทรที่ลงทะเบียนไว้ / 請填寫註冊時的電話', 'err');
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ… / 驗證中…'; }
   try {
     const member = await lookupMemberById(mid);
     if (!member) {
       showLookupResult('ไม่พบรหัสสมาชิกนี้ / 找不到此會員編號', 'err');
-    } else {
-      // Found! Auto-login
-      setMember(member);
-      hideAuthModal();
-      showToast(`ยินดีต้อนรับกลับ ${member.name}！🎉 (${member.memberId})`, 'ok');
+      return;
     }
+    // ── 安全驗證：電話末 4 碼必須吻合 ──
+    const inputLast4  = phone.replace(/\D/g,'').slice(-4);
+    const storedLast4 = String(member.phone || '').replace(/\D/g,'').slice(-4);
+    if (!inputLast4 || inputLast4 !== storedLast4) {
+      showLookupResult(
+        'เบอร์โทรไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง / 電話末4碼不符，請確認後重試', 'err');
+      return;
+    }
+    // 驗證通過
+    setMember(member);
+    hideAuthModal();
+    showToast(`ยินดีต้อนรับกลับ ${member.name}！🎉 (${member.memberId})`, 'ok');
   } catch(e) {
     showLookupResult('เกิดข้อผิดพลาด กรุณาลองใหม่ / 發生錯誤，請再試', 'err');
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'ค้นหา / 查詢'; }
+    if (btn) { btn.disabled = false; btn.textContent = '🔍 ค้นหาและเข้าสู่ระบบ / 查詢並登入'; }
   }
 }
 function showLookupResult(msg, type) {
@@ -2374,16 +2410,21 @@ async function init() {
   // Auto-restore member from localStorage
   const savedMember = safeGetLS(LS.MEMBER, null);
   if (savedMember?.memberId) {
-    // Re-verify from Firebase in background
+    // 確保 overlay 隱藏（預設已是 display:none，這裡再保險一次）
+    const o = document.getElementById('auth-overlay');
+    if (o) { o.style.display = 'none'; o.classList.remove('visible'); }
+
+    // Re-verify from Firebase in background (更新本機快取)
     if (_fbOK) {
       lookupMemberById(savedMember.memberId).then(fresh => {
+        // 不需電話驗證：自動登入只用本機快取的 memberId，Firebase 只是刷新資料
         setMember(fresh || savedMember);
       }).catch(() => setMember(savedMember));
     } else {
       setMember(savedMember);
     }
   } else {
-    // First visit → show member modal
+    // 第一次訪問 → 顯示會員彈窗
     showAuthModal();
   }
 }
