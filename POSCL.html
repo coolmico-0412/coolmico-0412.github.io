@@ -129,13 +129,12 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .nobc-cat-btn .cat-count{font-size:17px;color:var(--muted2);font-family:var(--mono);background:var(--surface3);border-radius:8px;padding:3px 12px;flex-shrink:0;}
 
 /* ── NOBC LIST (in POS modal after category select) ── */
-.nobc-list-item{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);transition:background .12s;}
-.nobc-list-item:last-child{border-bottom:none;}
-.nobc-list-item:hover{background:var(--surface2);}
-.nobc-list-name{flex:1;font-weight:600;font-family:var(--zh);color:var(--text);font-size:23px;}
-.nobc-list-price{font-family:var(--mono);font-weight:700;color:var(--gold);font-size:23px;flex-shrink:0;}
-.nobc-list-add{padding:8px 18px;font-size:18px;border-radius:6px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;font-family:var(--zh);font-weight:600;transition:all .15s;flex-shrink:0;}
-.nobc-list-add:hover{background:var(--accent);color:#fff;}
+.nobc-product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:10px;background:var(--surface2);}
+.nobc-list-item{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:8px;min-height:86px;padding:12px 13px;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;transition:background .12s,border-color .12s,transform .12s;text-align:left;font-family:var(--zh);box-shadow:var(--sh);}
+.nobc-list-item:hover{background:#fff;border-color:var(--accent);transform:translateY(-1px);}
+.nobc-list-item:active{transform:scale(.98);}
+.nobc-list-name{font-weight:700;font-family:var(--zh);color:var(--text);font-size:21px;line-height:1.22;}
+.nobc-list-price{font-family:var(--mono);font-weight:700;color:var(--gold);font-size:21px;line-height:1;}
 .nobc-cat-header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:2px solid var(--border);background:var(--surface2);}
 .nobc-cat-back{display:flex;align-items:center;gap:5px;font-size:20px;color:var(--accent);font-weight:600;cursor:pointer;border:none;background:transparent;font-family:var(--zh);padding:4px 0;}
 .nobc-cat-back:hover{color:var(--accent2);}
@@ -209,7 +208,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .prod-bc{font-family:var(--mono);font-size:9px;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .prod-name{font-size:11px;font-weight:600;color:var(--text);font-family:var(--zh);line-height:1.3;}
 .prod-price{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--gold);}
-.prod-acts{display:flex;gap:4px;margin-top:2px;}
+.prod-acts{display:flex;gap:4px;margin-top:auto;flex-wrap:wrap;align-items:center;}
 
 /* ── FILE STATUS BUTTON (in products page) ── */
 #file-status-prod{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:9px;cursor:pointer;font-size:12px;font-family:var(--zh);color:var(--muted);transition:all .18s;white-space:nowrap;}
@@ -382,11 +381,101 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .scan-mode-tab.active{background:var(--accent);color:#fff;}
 .scan-mode-tab:not(.active):hover{background:var(--aglow);color:var(--accent);}
 
+/* ── OPTIMIZED POLISH ── */
+body{line-height:1.45;}
+button,input,select{touch-action:manipulation;}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--aglow);outline-offset:2px;}
+nav{overflow-x:auto;scrollbar-width:none;}
+nav::-webkit-scrollbar{display:none;}
+.brand,.nav-tab{flex-shrink:0;}
+.pos-grid{grid-template-columns:minmax(320px,380px) minmax(0,1fr);}
+.right-col,.tbl,#cart-body,.t-row,.t-head{min-width:0;}
+.card,.co-panel,.tbl,.prod-cat-grid,.report-panel,.stat-chip,.rv-table{border-radius:8px;box-shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.04);}
+.mbox{border-radius:10px;}
+.video-wrap,.btn-checkout,.numpad-display,.scan-mode-tabs,#file-status-prod,#fb-status{border-radius:8px;}
+.t-head,.t-row{grid-template-columns:34px minmax(180px,1fr) 96px 128px 34px;column-gap:8px;}
+.t-name,.prod-name,.nobc-list-name{overflow-wrap:anywhere;}
+.qty-ctrl{justify-content:flex-start;}
+.btn,.btn-checkout,.btn-hold,.btn-nobc,.scan-mode-tab{min-height:40px;}
+.btn-nobc{font-size:18px;}
+.prod-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}
+.prod-card{border-radius:8px;min-height:96px;}
+.prod-card-top{display:flex;align-items:center;gap:6px;min-width:0;}
+.prod-card-top .prod-bc{flex:1;min-width:0;}
+.prod-order{display:flex;gap:4px;flex-shrink:0;margin-left:auto;}
+.prod-order-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer;font-family:var(--mono);font-size:13px;font-weight:700;line-height:1;transition:all .15s;}
+.prod-order-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--aglow);}
+.prod-order-btn:disabled{opacity:.32;cursor:not-allowed;border-color:var(--border);color:var(--muted2);background:var(--surface2);}
+.nobc-list-name,.nobc-list-price{font-size:21px;}
+.review-body{max-width:860px;}
+
+@media(min-width:641px) and (max-width:1100px){
+  .prod-cat-grid,.nobc-cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:8px;border:0;background:transparent;box-shadow:none;overflow:visible;}
+  .prod-cat-row,.nobc-cat-btn{position:relative;border:1px solid var(--border);border-radius:8px;padding:10px 12px;min-height:104px;background:var(--surface);box-shadow:var(--sh);}
+  .prod-cat-row{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;gap:6px 8px;align-items:start;}
+  .prod-cat-row.all-row{border:1px solid #bfdbfe;}
+  .prod-cat-row .pci{grid-row:1 / span 2;font-size:22px;}
+  .prod-cat-row .pct{min-width:0;}
+  .prod-cat-row .pct-th{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .prod-cat-row .pct-zh{font-size:15px;}
+  .prod-cat-row .pct-counts{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:5px;}
+  .pct-badge{font-size:10px;padding:2px 7px;}
+  .prod-cat-row .pct-arrow{position:absolute;right:9px;top:8px;}
+  .nobc-cat-btn{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 9px;align-items:start;border-bottom:1px solid var(--border)!important;}
+  .nobc-cat-btn .cat-icon{font-size:23px;}
+  .nobc-cat-btn .cat-th{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .nobc-cat-btn .cat-zh{font-size:16px;line-height:1.25;}
+  .nobc-cat-btn .cat-count{grid-column:1 / -1;justify-self:start;font-size:12px;padding:2px 8px;}
+  .nobc-product-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:8px;}
+  #m-nobc-list .mbox{width:min(720px,94vw)!important;}
+}
+
 @media(max-width:900px){
   .pos-grid{grid-template-columns:1fr;}
   .report-cols{grid-template-columns:1fr;}
-  .t-head,.t-row{grid-template-columns:26px 1fr 80px 34px;}
-  .nobc-cat-grid{}
+  .t-head,.t-row{grid-template-columns:28px minmax(0,1fr) 84px 118px 32px;}
+  .page{padding:14px 14px;}
+  .left-col{gap:12px;}
+}
+
+@media(max-width:640px){
+  body{font-size:13px;}
+  nav{height:auto;padding:8px 10px;gap:6px;}
+  .brand{font-size:12px;letter-spacing:2px;margin-right:4px;}
+  .nav-tab{min-width:84px;padding:7px 9px;font-size:12px;}
+  .page{padding:12px 10px;}
+  .scanner-body{padding:12px;}
+  .grand{padding:14px;justify-content:space-between;}
+  .gamt{font-size:22px;}
+  .sec-lbl{flex-wrap:wrap;letter-spacing:.8px;}
+  .sec-lbl .btn{width:100%;margin-left:0!important;}
+  .t-head{display:none;}
+  .t-row{grid-template-columns:24px minmax(0,1fr) 64px 104px 30px;gap:6px;padding:12px 10px;}
+  .t-price{font-size:11px;}
+  .qty-ctrl{gap:3px!important;}
+  .qty-btn{width:28px;height:28px;}
+  .qty-display{min-width:34px;font-size:14px;padding:5px 6px;}
+  .page-hd,.report-top{align-items:stretch;}
+  .btn-row{width:100%;}
+  #file-status-prod,#fb-status,.btn-row>div[style*="display:flex"],.btn-row .btn{flex:1 1 100%;justify-content:center;}
+  .prod-cat-row{padding:13px 14px;gap:12px;}
+  .prod-cat-row .pct-counts{flex-direction:column;align-items:flex-end;gap:4px;}
+  .nobc-cat-btn{padding:15px 14px;gap:10px;}
+  .nobc-cat-btn .cat-zh{font-size:18px;}
+  .nobc-product-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:7px;padding:8px;}
+  .nobc-list-item{min-height:82px;padding:11px 12px;}
+  .review-body{padding:14px;}
+  .review-footer{padding:14px;}
+  .rv-total-row .rta{font-size:24px;}
+  .rv-table th,.rv-table td{padding:9px 8px;font-size:12px;}
+  .stat-chip{flex:1 1 calc(50% - 8px);padding:10px 12px;}
+  .m-acts{flex-direction:column;}
+  #toast{left:12px;right:12px;bottom:14px;max-width:none;text-align:center;}
+}
+/* ── 線上訂單狀態標記 ── */
+#page-online-orders .card { overflow: visible; }
+@media(max-width:600px){
+  #page-online-orders > div:first-child { flex-direction: column; align-items: flex-start; }
 }
 </style>
 <script type="module">
@@ -425,6 +514,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   <button class="nav-tab active" onclick="showPage('pos',this)">🏪 แคชเชียร์<span class="zh">收銀台</span></button>
   <button class="nav-tab" onclick="showPage('products',this)">📦 สินค้า<span class="zh">商品管理</span></button>
   <button class="nav-tab" onclick="showPage('report',this)">📊 รายงาน<span class="zh">銷售報表</span></button>
+  <button class="nav-tab" onclick="showPage('online-orders',this)" id="nav-online">🛒 ออนไลน์<span class="zh">線上訂單</span><span id="online-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:50%;font-size:10px;padding:1px 5px;font-family:var(--mono)">0</span></button>
 </nav>
 
 <!-- ═══ 收銀台 ═══ -->
@@ -623,6 +713,63 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
     </div>
   </div>
   <div style="font-size:11px;color:var(--muted);margin-top:10px;font-family:var(--zh);text-align:right">💡 點擊各列項查看當期品項銷售明細</div>
+</div>
+
+<!-- ═══ 線上訂單頁 ═══ -->
+<div class="page" id="page-online-orders">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+    <div>
+      <div style="font-size:18px;font-weight:700;color:var(--text)">🛒 ออเดอร์ออนไลน์ <span style="font-family:var(--zh);font-size:14px;color:var(--muted)">線上訂單</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px;font-family:var(--zh)">客戶透過線上商店送出的訂單</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="oo-filter" onchange="renderOnlineOrders()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);color:var(--text);font-family:var(--th)">
+        <option value="pending">⏳ รอดำเนินการ / 待處理</option>
+        <option value="done">✓ เสร็จสิ้น / 已完成</option>
+        <option value="all">📋 ทั้งหมด / 全部</option>
+      </select>
+      <button class="btn btn-ghost" onclick="loadOnlineOrders()" style="font-size:13px;padding:7px 14px">🔄 รีเฟรช / 重新整理</button>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px" id="oo-stats-row">
+    <div class="card" style="padding:14px 16px;text-align:center">
+      <div style="font-size:22px;font-weight:700;color:var(--red)" id="oo-stat-pending">0</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">รอดำเนินการ / 待處理</div>
+    </div>
+    <div class="card" style="padding:14px 16px;text-align:center">
+      <div style="font-size:22px;font-weight:700;color:var(--green)" id="oo-stat-done">0</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">เสร็จสิ้น / 已完成</div>
+    </div>
+    <div class="card" style="padding:14px 16px;text-align:center">
+      <div style="font-size:22px;font-weight:700;color:var(--accent)" id="oo-stat-total-amt">NT$0</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">รายรับรวม / 總收入</div>
+    </div>
+    <div class="card" style="padding:14px 16px;text-align:center">
+      <div style="font-size:22px;font-weight:700;color:var(--purple)" id="oo-stat-members">0</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">สมาชิก / 會員數</div>
+    </div>
+  </div>
+
+  <!-- Order list -->
+  <div class="card" id="oo-list-wrap">
+    <div id="oo-list" style="padding:8px">
+      <div style="text-align:center;padding:40px;color:var(--muted2)">
+        <div style="font-size:32px;margin-bottom:8px">🛒</div>
+        <div style="font-family:var(--zh)">尚無線上訂單</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Modal: 線上訂單明細 ═══ -->
+<div class="overlay" id="m-online-order">
+  <div class="mbox" style="width:480px;max-height:85vh;overflow-y:auto">
+    <div class="m-title" id="ood-title">🛒 รายละเอียดออเดอร์<span class="zh">訂單明細</span></div>
+    <div id="ood-body"></div>
+    <div class="m-acts" style="margin-top:16px" id="ood-acts"></div>
+  </div>
 </div>
 
 <!-- ═══ Checkout Review Overlay ═══ -->
@@ -913,6 +1060,7 @@ const DEFAULT_PRODUCTS = {
   '4712345678900':{name:'農夫山泉礦泉水',price:15,category:'drink'},
   '4711234000001':{name:'小美冰淇淋',price:25,category:'frozen'},
 };
+const PROD_ORDER_KEY='pos_product_order';
 
 // ═══ 持久化（File System Access API + IndexedDB）═══
 let _fileHandle=null, _saveTimer=null;
@@ -939,6 +1087,7 @@ async function _loadFromFile(){
   try{
     const data=await _readFile(_fileHandle);
     if(data.products)     localStorage.setItem('pos_products',      JSON.stringify(data.products));
+    if(data.product_order)localStorage.setItem(PROD_ORDER_KEY,       JSON.stringify(Array.isArray(data.product_order)?data.product_order:Object.values(data.product_order)));
     if(data.nobc_products)localStorage.setItem('pos_nobc_products', JSON.stringify(data.nobc_products));
     if(data.transactions) localStorage.setItem('pos_transactions',  JSON.stringify(data.transactions));
   }catch(e){setFileStatus('error','⚠ 讀取失敗');}
@@ -949,7 +1098,7 @@ function _scheduleSave(){
     if(!_fileHandle)return;
     setFileStatus('saving','⏳ 儲存中...');
     try{
-      await _writeFile(_fileHandle,{version:1,savedAt:new Date().toISOString(),products:getProds(),nobc_products:getNobcProds(),transactions:getTx()});
+      await _writeFile(_fileHandle,{version:1,savedAt:new Date().toISOString(),products:getProds(),product_order:getProdOrder(getProds()),nobc_products:getNobcProds(),transactions:getTx()});
       setFileStatus('linked','✓ 已儲存');
       setTimeout(()=>setFileStatus('linked','✓ '+(_fileHandle.name||'資料檔案')),1500);
     }catch(e){setFileStatus('error','⚠ 儲存失敗，請重新選擇');}
@@ -960,7 +1109,8 @@ function setFileStatus(cls,label){
   const el=document.getElementById('file-status-prod');
   const lb=document.getElementById('file-label-prod');
   if(!el||!lb)return;
-  el.className=''; el.classList.add(cls);
+  el.classList.remove('linked','saving','error');
+  if(cls)el.classList.add(cls);
   lb.textContent=label;
 }
 
@@ -1022,6 +1172,7 @@ async function pickDataFile(){
       const existing=await _readFile(_fileHandle);
       if(existing && (existing.products||existing.transactions)){
         if(existing.products)     localStorage.setItem('pos_products',      JSON.stringify(existing.products));
+        if(existing.product_order)localStorage.setItem(PROD_ORDER_KEY,       JSON.stringify(Array.isArray(existing.product_order)?existing.product_order:Object.values(existing.product_order)));
         if(existing.nobc_products)localStorage.setItem('pos_nobc_products', JSON.stringify(existing.nobc_products));
         if(existing.transactions) localStorage.setItem('pos_transactions',  JSON.stringify(existing.transactions));
         setFileStatus('linked','✓ '+_fileHandle.name);
@@ -1031,7 +1182,7 @@ async function pickDataFile(){
       }
     }catch(readErr){
       // 檔案是空的或新建的，寫入目前資料
-      await _writeFile(_fileHandle,{version:1,savedAt:new Date().toISOString(),products:getProds(),nobc_products:getNobcProds(),transactions:getTx()});
+      await _writeFile(_fileHandle,{version:1,savedAt:new Date().toISOString(),products:getProds(),product_order:getProdOrder(getProds()),nobc_products:getNobcProds(),transactions:getTx()});
       setFileStatus('linked','✓ '+_fileHandle.name);
       showToast('已建立資料檔案：'+_fileHandle.name,'ok');
     }
@@ -1043,7 +1194,18 @@ async function pickDataFile(){
 
 // ═══ 資料層 ═══
 function getProds(){try{const s=localStorage.getItem('pos_products');if(s)return JSON.parse(s);}catch(e){}localStorage.setItem('pos_products',JSON.stringify(DEFAULT_PRODUCTS));return{...DEFAULT_PRODUCTS};}
-function saveProds(o){localStorage.setItem('pos_products',JSON.stringify(o));_scheduleSave();}
+function getRawProdOrder(){try{const a=JSON.parse(localStorage.getItem(PROD_ORDER_KEY)||'[]');return Array.isArray(a)?a.map(String):[];}catch(e){return[];}}
+function getProdOrder(prods=getProds()){
+  const keys=Object.keys(prods);
+  const raw=getRawProdOrder();
+  const seen=new Set(), order=[];
+  raw.forEach(bc=>{if(Object.prototype.hasOwnProperty.call(prods,bc)&&!seen.has(bc)){seen.add(bc);order.push(bc);}});
+  keys.forEach(bc=>{if(!seen.has(bc)){seen.add(bc);order.push(bc);}});
+  if(order.length!==raw.length||order.length!==keys.length||order.some((bc,i)=>bc!==raw[i]))localStorage.setItem(PROD_ORDER_KEY,JSON.stringify(order));
+  return order;
+}
+function saveProdOrder(order){localStorage.setItem(PROD_ORDER_KEY,JSON.stringify(order));_scheduleSave();}
+function saveProds(o){localStorage.setItem('pos_products',JSON.stringify(o));getProdOrder(o);_scheduleSave();}
 function getNobcProds(){try{return JSON.parse(localStorage.getItem('pos_nobc_products')||'[]');}catch(e){return[];}}
 function saveNobcProds(a){localStorage.setItem('pos_nobc_products',JSON.stringify(a));_scheduleSave();}
 function getTx(){try{return JSON.parse(localStorage.getItem('pos_transactions')||'[]');}catch(e){return[];}}
@@ -1067,6 +1229,13 @@ function isValidBarcode(code){
 }
 // 向下相容（舊呼叫點改用 isValidBarcode）
 const isEAN13 = isValidBarcode;
+
+function h(value){
+  return String(value ?? '').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function jsArg(value){
+  return h(JSON.stringify(String(value ?? '')));
+}
 
 // EAN-13 checksum 檢查（僅用於新增商品欄位的額外提示，非強制）
 function checkEAN13(code){
@@ -1256,16 +1425,16 @@ function renderCart(){
     <div class="t-row">
       <div class="t-num">${idx+1}</div>
       <div class="t-name">
-        ${item.name}
+        ${h(item.name)}
         ${item.noBarcode?'<span class="nobc-tag">無條碼</span>':''}
       </div>
       <div class="t-price">NT$ ${item.price}</div>
       <div class="qty-ctrl" style="display:flex;align-items:center;gap:4px;">
-        <button class="qty-btn" onclick="changeQty('${item.barcode}',1)">＋</button>
-        <span class="qty-display" onclick="editQty('${item.barcode}')">${item.qty}</span>
-        <button class="qty-btn" onclick="changeQty('${item.barcode}',-1)">−</button>
+        <button class="qty-btn" onclick="changeQty(${jsArg(item.barcode)},1)">＋</button>
+        <span class="qty-display" onclick="editQty(${jsArg(item.barcode)})">${item.qty}</span>
+        <button class="qty-btn" onclick="changeQty(${jsArg(item.barcode)},-1)">−</button>
       </div>
-      <button class="del-btn" onclick="removeItem('${item.barcode}')">×</button>
+      <button class="del-btn" onclick="removeItem(${jsArg(item.barcode)})">×</button>
     </div>`).join('');
   document.getElementById('item-count').textContent=totalQty;
   document.getElementById('btn-checkout').disabled=false;
@@ -1348,15 +1517,11 @@ function renderNobcListModal(){
       body.innerHTML=`<div class="empty-st" style="padding:32px 20px"><div class="ei" style="font-size:26px">🏷</div><div class="zh">此分類尚無商品</div></div>`;
       return;
     }
-    body.innerHTML=filtered.map(p=>`
-      <div class="nobc-list-item">
-        <div style="flex:1">
-          <div class="nobc-list-name">${p.name}</div>
-          ${p.category?`<div style="margin-top:3px"><span class="cat-tag">${getCatIcon(p.category)} ${getCatLabel(p.category)}</span></div>`:''}
-        </div>
+    body.innerHTML=`<div class="nobc-product-grid">${filtered.map(p=>`
+      <button type="button" class="nobc-list-item" onclick="addNobcProdToCart(${p._idx})" title="加入購物車">
+        <div class="nobc-list-name">${h(p.name)}</div>
         <div class="nobc-list-price">NT$ ${p.price}</div>
-        <button class="nobc-list-add" onclick="addNobcProdToCart(${p._idx})">+ 加入</button>
-      </div>`).join('');
+      </button>`).join('')}</div>`;
   }
 }
 
@@ -1425,6 +1590,21 @@ function delNobcProd(idx){
   showToast('已刪除無條碼商品','ok');
 }
 
+function moveNobcProd(idx,dir){
+  const prods=getNobcProds();
+  if(!prods[idx])return;
+  const inScope=p=>prodSelectedCat==='__all__'||prodSelectedCat===null||(p.category||'other')===prodSelectedCat;
+  let target=-1;
+  for(let i=idx+dir;i>=0&&i<prods.length;i+=dir){
+    if(inScope(prods[i])){target=i;break;}
+  }
+  if(target<0)return;
+  [prods[idx],prods[target]]=[prods[target],prods[idx]];
+  saveNobcProds(prods);
+  renderProdGrid();
+  showToast('已調整商品順序','ok');
+}
+
 // ═══ 結帳流程 ═══
 function openReview(){
   if(!cart.length)return;
@@ -1434,7 +1614,7 @@ function openReview(){
     const sub=item.price*item.qty;total+=sub;
     return`<tr>
       <td class="num" style="color:var(--muted2)">${i+1}</td>
-      <td>${item.name}${item.noBarcode?'<span class="nobc-tag">無條碼</span>':''}</td>
+      <td>${h(item.name)}${item.noBarcode?'<span class="nobc-tag">無條碼</span>':''}</td>
       <td class="num">NT$ ${item.price}</td>
       <td class="num">${item.qty}</td>
       <td class="sub">NT$ ${sub}</td>
@@ -1457,11 +1637,17 @@ function confirmCheckout(){
   closeReview();
   const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
   const now=new Date();
-  const tx={id:'TX'+now.getTime().toString(36).toUpperCase(),date:now.toISOString(),items:JSON.parse(JSON.stringify(cart)),subtotal:sub,total:sub};
+  const tx={
+    id:'TX'+now.getTime().toString(36).toUpperCase(),
+    date:now.toISOString(),
+    source:'pos',
+    items:JSON.parse(JSON.stringify(cart)),
+    subtotal:sub,
+    total:sub,
+  };
   const txList=getTx();txList.push(tx);saveTx(txList);
   cart=[];renderCart();stopScanner();
   showToast('ชำระเงินเรียบร้อย! / 結帳完成 ✓','ok');
-  // 語音感謝
   setTimeout(()=>speak('ขอบคุณที่ใช้บริการครับ'),300);
 }
 
@@ -1482,7 +1668,7 @@ let prodSelectedCat = null; // null=分類首頁, 'frozen'/...'__all__'=商品�
 function renderProdGrid(){
   const prods = getProds();
   const nobcProds = getNobcProds();
-  const bcKeys = Object.keys(prods);
+  const bcKeys = getProdOrder(prods);
 
   const mainArea = document.getElementById('prod-main-area');
   const stickyBar = document.getElementById('prod-cat-sticky');
@@ -1557,26 +1743,38 @@ function renderProdGrid(){
 
     // 無條碼商品卡片
     const nobcCards = filteredNobc.length
-      ? filteredNobc.map(p=>`<div class="prod-card" style="border-color:#e9d5ff">
-          <div class="prod-bc" style="color:var(--purple)">無條碼</div>
-          <div class="prod-name">${p.name}</div>
+      ? filteredNobc.map((p,pos)=>`<div class="prod-card" style="border-color:#e9d5ff">
+          <div class="prod-card-top">
+            <div class="prod-bc" style="color:var(--purple)">無條碼</div>
+          </div>
+          <div class="prod-name">${h(p.name)}</div>
           <div class="prod-price">NT$ ${p.price}</div>
           <div class="prod-acts">
             <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh);border-color:var(--purple);color:var(--purple)" onclick="editNobcProd(${p._idx})">✏</button>
             <button class="btn btn-danger" style="font-size:10px;padding:4px 7px" onclick="delNobcProd(${p._idx})">🗑</button>
+            <div class="prod-order">
+              <button class="prod-order-btn" title="上移" onclick="moveNobcProd(${p._idx},-1)" ${pos===0?'disabled':''}>↑</button>
+              <button class="prod-order-btn" title="下移" onclick="moveNobcProd(${p._idx},1)" ${pos===filteredNobc.length-1?'disabled':''}>↓</button>
+            </div>
           </div>
         </div>`).join('')
       : `<div class="empty-st" style="padding:28px 16px"><div class="ei" style="font-size:24px">🏷</div><div class="zh">此分類無無條碼商品</div></div>`;
 
     // 條碼商品卡片
     const bcCards = filteredBc.length
-      ? filteredBc.map(({bc,p})=>`<div class="prod-card">
-          <div class="prod-bc">${bc}</div>
-          <div class="prod-name">${p.name}</div>
+      ? filteredBc.map(({bc,p},pos)=>`<div class="prod-card">
+          <div class="prod-card-top">
+            <div class="prod-bc">${h(bc)}</div>
+          </div>
+          <div class="prod-name">${h(p.name)}</div>
           <div class="prod-price">NT$ ${p.price}</div>
           <div class="prod-acts">
-            <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh)" onclick="openEditProd('${bc}')">✏</button>
-            <button class="btn btn-danger" style="font-size:10px;padding:4px 7px" onclick="delProduct('${bc}')">🗑</button>
+            <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh)" onclick="openEditProd(${jsArg(bc)})">✏</button>
+            <button class="btn btn-danger" style="font-size:10px;padding:4px 7px" onclick="delProduct(${jsArg(bc)})">🗑</button>
+            <div class="prod-order">
+              <button class="prod-order-btn" title="上移" onclick="moveBarcodeProduct(${jsArg(bc)},-1)" ${pos===0?'disabled':''}>↑</button>
+              <button class="prod-order-btn" title="下移" onclick="moveBarcodeProduct(${jsArg(bc)},1)" ${pos===filteredBc.length-1?'disabled':''}>↓</button>
+            </div>
           </div>
         </div>`).join('')
       : `<div class="empty-st" style="padding:28px 16px"><div class="ei" style="font-size:24px">📦</div><div class="zh">此分類無條碼商品</div></div>`;
@@ -1635,6 +1833,23 @@ function delProduct(bc){
   if(!confirm('確定刪除此商品？'))return;
   const prods=getProds();delete prods[bc];saveProds(prods);
   renderProdGrid();showToast('已刪除商品','ok');
+}
+function moveBarcodeProduct(bc,dir){
+  const prods=getProds();
+  if(!prods[bc])return;
+  const order=getProdOrder(prods);
+  const idx=order.indexOf(String(bc));
+  if(idx<0)return;
+  const inScope=key=>prodSelectedCat==='__all__'||prodSelectedCat===null||(prods[key].category||'other')===prodSelectedCat;
+  let target=-1;
+  for(let i=idx+dir;i>=0&&i<order.length;i+=dir){
+    if(inScope(order[i])){target=i;break;}
+  }
+  if(target<0)return;
+  [order[idx],order[target]]=[order[target],order[idx]];
+  saveProdOrder(order);
+  renderProdGrid();
+  showToast('已調整商品順序','ok');
 }
 function exportProducts(){
   const prods=getProds();const nobcProds=getNobcProds();
@@ -1758,7 +1973,7 @@ function showDrilldown(key,mode){
   const modeLabel={daily:'每日',monthly:'每月',weekly:'每週'};
   document.getElementById('drill-title').textContent=(modeLabel[mode]||mode)+'銷售明細';
   document.getElementById('drill-sub').textContent=key.replace('~',' ~ ')+'　共 '+filtered.length+' 筆交易';
-  document.getElementById('drill-body').innerHTML=items.map(([name,v])=>`<tr><td>${name}</td><td class="num">${v.qty} 件</td><td class="num" style="color:var(--gold);font-weight:700">NT$ ${v.total}</td></tr>`).join('');
+  document.getElementById('drill-body').innerHTML=items.map(([name,v])=>`<tr><td>${h(name)}</td><td class="num">${v.qty} 件</td><td class="num" style="color:var(--gold);font-weight:700">NT$ ${v.total}</td></tr>`).join('');
   document.getElementById('drill-total-amt').textContent='NT$ '+grand;
   openModal('m-drill');
 }
@@ -2280,6 +2495,7 @@ async function fbPullAll(){
     const snap = await window._fbGet('pos');
     const data = snap.val() || {};
     if(data.products)      localStorage.setItem('pos_products',      JSON.stringify(data.products));
+    if(data.product_order) localStorage.setItem(PROD_ORDER_KEY,       JSON.stringify(Array.isArray(data.product_order)?data.product_order:Object.values(data.product_order)));
     if(data.nobc_products) localStorage.setItem('pos_nobc_products', JSON.stringify(data.nobc_products));
     if(data.transactions){
       const arr = Array.isArray(data.transactions) ? data.transactions : Object.values(data.transactions);
@@ -2297,14 +2513,15 @@ async function fbPullAll(){
 // ── 即時監聽 ──
 function fbListenAll(){
   if(!window._fbOnValue) return;
-  [['pos/products','pos_products',0],['pos/nobc_products','pos_nobc_products',1],['pos/transactions','pos_transactions',2]]
+  [['pos/products','pos_products',0],['pos/nobc_products','pos_nobc_products',1],['pos/transactions','pos_transactions',2],['pos/product_order',PROD_ORDER_KEY,3]]
   .forEach(([path,lsKey,type])=>{
     if(_fbListeners[path]) try{_fbListeners[path]();}catch(e){}
     const unsub = window._fbOnValue(path, snap=>{
       const val=snap.val(); if(val===null) return;
-      const toStore = type===2 ? (Array.isArray(val)?val:Object.values(val)) : val;
+      const toStore = (type===2||type===3) ? (Array.isArray(val)?val:Object.values(val)) : val;
       localStorage.setItem(lsKey, JSON.stringify(toStore));
-      if(type<2) renderProdGrid(); else{ renderStats(); renderMonthly(); renderDaily(); }
+      if(type===2){ renderStats(); renderMonthly(); renderDaily(); }
+      else renderProdGrid();
     }, err=>console.warn('[Firebase listen]',err));
     _fbListeners[path]=unsub;
   });
@@ -2317,10 +2534,31 @@ function fbScheduleSave(){
   _fbSaveTimer=setTimeout(async()=>{
     setFbStatus('connecting','☁ 儲存中...');
     try{
+      const now = new Date().toISOString();
+      const prods = getProds();
+      const nobcProds = getNobcProds();
+      const txList = getTx();
+      const prodOrder = getProdOrder(prods);
+
+      // ── 1. 原有 pos/ 路徑（維持向下相容）──
       await window._fbSet('pos',{
-        updatedAt:new Date().toISOString(),
-        products:getProds(), nobc_products:getNobcProds(), transactions:getTx()
+        updatedAt: now,
+        products: prods,
+        product_order: prodOrder,
+        nobc_products: nobcProds,
+        transactions: txList,
       });
+
+      // ── 2. shop/ 路徑（供客戶端 Shop 系統使用）──
+      await window._fbSet('shop/products',     prods);
+      await window._fbSet('shop/nobc_products', nobcProds);
+      // meta.updatedAt 讓 Shop 端做差異比對（只讀這個小節點省流量）
+      await window._fbSet('shop/meta', {
+        updatedAt: now,
+        productCount: Object.keys(prods).length,
+        nobcCount: nobcProds.length,
+      });
+
       setFbStatus('connected','☁ Firebase 已連線');
     }catch(e){
       console.error('[Firebase save]',e);
@@ -2330,10 +2568,11 @@ function fbScheduleSave(){
 }
 
 // ── 覆寫 save 函式 ──
-const _origSaveProds2=saveProds, _origSaveNobcProds2=saveNobcProds, _origSaveTx2=saveTx;
-window.saveProds     = function(o){ _origSaveProds2(o);     fbScheduleSave(); };
-window.saveNobcProds = function(a){ _origSaveNobcProds2(a); fbScheduleSave(); };
-window.saveTx        = function(a){ _origSaveTx2(a);        fbScheduleSave(); };
+const _origSaveProds2=saveProds, _origSaveProdOrder2=saveProdOrder, _origSaveNobcProds2=saveNobcProds, _origSaveTx2=saveTx;
+window.saveProds     = function(o){ _origSaveProds2(o);       fbScheduleSave(); };
+window.saveProdOrder = function(a){ _origSaveProdOrder2(a);   fbScheduleSave(); };
+window.saveNobcProds = function(a){ _origSaveNobcProds2(a);   fbScheduleSave(); };
+window.saveTx        = function(a){ _origSaveTx2(a);          fbScheduleSave(); };
 
 // ── 等待 module 就緒後連線 ──
 function waitFbReady(cb){
@@ -2372,6 +2611,220 @@ waitFbReady(async()=>{
     document.getElementById('fb-status').onclick=()=>openModal('m-firebase');
   }
 });
+
+// ══════════════════════════════════════════════════════════
+//  線上訂單管理
+// ══════════════════════════════════════════════════════════
+let _onlineOrders = [];   // 本機快取
+
+function fmtDateTh(iso){
+  try{
+    return new Date(iso).toLocaleString('th-TH',{
+      day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'
+    });
+  }catch(e){return iso||'';}
+}
+
+// 從 Firebase 拉取線上訂單
+async function loadOnlineOrders(){
+  if(!window._fbGet){ renderOnlineOrders(); return; }
+  try{
+    const snap = await window._fbGet('shop/online_orders');
+    if(snap && snap.val()){
+      const raw = snap.val();
+      _onlineOrders = Object.values(raw)
+        .filter(o=>o && o.id)
+        .sort((a,b)=>new Date(b.date)-new Date(a.date));
+    } else {
+      _onlineOrders = [];
+    }
+  }catch(e){
+    console.warn('[POS] loadOnlineOrders failed:',e);
+  }
+  renderOnlineOrders();
+  updateOnlineBadge();
+}
+
+// 即時監聽線上訂單
+function listenOnlineOrders(){
+  if(!window._fbOnValue) return;
+  window._fbOnValue('shop/online_orders', snap=>{
+    if(!snap || !snap.val()){ _onlineOrders=[]; }
+    else{
+      _onlineOrders = Object.values(snap.val())
+        .filter(o=>o&&o.id)
+        .sort((a,b)=>new Date(b.date)-new Date(a.date));
+    }
+    renderOnlineOrders();
+    updateOnlineBadge();
+  }, err=>console.warn('[POS] online orders listen:', err));
+}
+
+function updateOnlineBadge(){
+  const pending = _onlineOrders.filter(o=>o.status==='pending').length;
+  const badge = document.getElementById('online-badge');
+  if(!badge) return;
+  badge.style.display = pending>0 ? '' : 'none';
+  badge.textContent   = pending>99 ? '99+' : pending;
+}
+
+function renderOnlineOrders(){
+  const filter = document.getElementById('oo-filter')?.value || 'pending';
+  const filtered = _onlineOrders.filter(o=>{
+    if(filter==='all') return true;
+    return (o.status||'pending') === filter;
+  });
+
+  // Stats
+  const pending  = _onlineOrders.filter(o=>(o.status||'pending')==='pending').length;
+  const done     = _onlineOrders.filter(o=>o.status==='done').length;
+  const totalAmt = _onlineOrders.filter(o=>o.status==='done').reduce((s,o)=>s+(o.total||0),0);
+  const members  = new Set(_onlineOrders.filter(o=>o.memberId).map(o=>o.memberId)).size;
+  const sp = t=>{ const el=document.getElementById(t); if(el) return el; return {textContent:''}; };
+  sp('oo-stat-pending').textContent = pending;
+  sp('oo-stat-done').textContent    = done;
+  sp('oo-stat-total-amt').textContent = 'NT$'+totalAmt;
+  sp('oo-stat-members').textContent = members;
+
+  const list = document.getElementById('oo-list');
+  if(!list) return;
+
+  if(!filtered.length){
+    list.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--muted2)">
+      <div style="font-size:32px;margin-bottom:8px">🛒</div>
+      <div style="font-family:var(--zh);font-size:13px">${filter==='pending'?'目前沒有待處理訂單 🎉':filter==='done'?'尚無已完成訂單':'尚無線上訂單'}</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(o=>{
+    const isPending = (o.status||'pending')==='pending';
+    const memberTag = o.memberId
+      ? `<span style="font-size:10px;background:rgba(124,58,237,.1);color:var(--purple);border-radius:4px;padding:1px 6px;font-family:var(--mono)">${o.memberId}</span>`
+      : `<span style="font-size:10px;background:var(--surface2);color:var(--muted2);border-radius:4px;padding:1px 6px">แขก/訪客</span>`;
+    const statusTag = isPending
+      ? `<span style="font-size:11px;background:rgba(220,38,38,.1);color:var(--red);border-radius:4px;padding:2px 8px;font-weight:600">⏳ รอดำเนินการ</span>`
+      : `<span style="font-size:11px;background:rgba(5,150,105,.1);color:var(--green);border-radius:4px;padding:2px 8px;font-weight:600">✓ เสร็จสิ้น</span>`;
+    const itemSummary = (o.items||[]).slice(0,2).map(i=>i.name).join('、')
+      + ((o.items||[]).length>2?` +${(o.items||[]).length-2}...`:'');
+
+    return `<div onclick="openOnlineOrder('${o.id}')" style="
+        display:grid;grid-template-columns:1fr auto;gap:6px 12px;
+        padding:12px 14px;border-bottom:1px solid var(--border);
+        cursor:pointer;transition:background .15s;border-radius:8px;
+        ${isPending?'border-left:3px solid var(--red);':'border-left:3px solid var(--green);'}
+      " onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+        <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent)">${o.id}</span>
+        ${statusTag}
+        ${memberTag}
+      </div>
+      <div style="text-align:right;font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text)">${o.total!=null?'NT$'+o.total:''}</div>
+      <div style="font-size:12px;color:var(--muted)">${o.customerName||''} ${o.customerPhone?'· '+o.customerPhone:''}</div>
+      <div style="font-size:11px;color:var(--muted2);text-align:right">${fmtDateTh(o.date)}</div>
+      ${itemSummary?`<div style="font-size:12px;color:var(--text2);grid-column:1/-1">📦 ${itemSummary}</div>`:''}
+      ${o.note?`<div style="font-size:11px;color:var(--gold);grid-column:1/-1">💬 ${o.note}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// 開啟訂單明細
+function openOnlineOrder(orderId){
+  const o = _onlineOrders.find(x=>x.id===orderId);
+  if(!o) return;
+  const isPending = (o.status||'pending')==='pending';
+
+  const body = document.getElementById('ood-body');
+  const acts = document.getElementById('ood-acts');
+  if(!body||!acts) return;
+
+  body.innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center">
+      ${isPending
+        ? `<span style="background:rgba(220,38,38,.1);color:var(--red);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600">⏳ รอดำเนินการ / 待處理</span>`
+        : `<span style="background:rgba(5,150,105,.1);color:var(--green);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600">✓ เสร็จสิ้น / 已完成</span>`}
+      <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${o.id}</span>
+      <span style="font-size:11px;color:var(--muted2)">${fmtDateTh(o.date)}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:2px;font-family:var(--zh)">顧客</div>
+        <div style="font-size:13px;font-weight:600">${o.customerName||'—'}</div>
+        <div style="font-size:11px;color:var(--muted)">${o.customerPhone||''}</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:2px;font-family:var(--zh)">會員</div>
+        <div style="font-size:13px;font-weight:600;font-family:var(--mono);color:var(--purple)">${o.memberId||'訪客'}</div>
+        <div style="font-size:11px;color:var(--muted)">${o.memberName||''}</div>
+      </div>
+    </div>
+    ${o.note?`<div style="background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:var(--gold)">💬 ${o.note}</div>`:''}
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">
+      <thead>
+        <tr style="background:var(--surface2)">
+          <th style="text-align:left;padding:7px 8px;font-size:11px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)">สินค้า / 商品</th>
+          <th style="text-align:center;padding:7px 8px;font-size:11px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)">จำนวน / 數量</th>
+          <th style="text-align:right;padding:7px 8px;font-size:11px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)">รวม / 小計</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${(o.items||[]).map(i=>`
+          <tr>
+            <td style="padding:8px;border-bottom:1px solid var(--border)">${i.name||''}</td>
+            <td style="text-align:center;padding:8px;border-bottom:1px solid var(--border);color:var(--muted)">${i.qty}</td>
+            <td style="text-align:right;padding:8px;border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:600">NT$${(i.price*i.qty)}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:2px solid var(--border)">
+      <span style="font-size:14px;font-weight:600;font-family:var(--zh)">訂單總金額</span>
+      <span style="font-size:20px;font-weight:700;font-family:var(--mono);color:var(--accent)">NT$${o.total||0}</span>
+    </div>
+  `;
+
+  acts.innerHTML = isPending
+    ? `<button class="btn btn-accent" style="flex:1" onclick="markOrderDone('${o.id}')">✓ ยืนยันเสร็จสิ้น / 確認完成</button>
+       <button class="btn btn-ghost" onclick="closeModal('m-online-order')">ปิด / 關閉</button>`
+    : `<button class="btn btn-ghost" onclick="revertOrderPending('${o.id}')" style="color:var(--muted)">↩ คืนสถานะ / 退回待處理</button>
+       <button class="btn btn-ghost" onclick="closeModal('m-online-order')" style="flex:1">ปิด / 關閉</button>`;
+
+  openModal('m-online-order');
+}
+
+// 標記完成
+async function markOrderDone(orderId){
+  await updateOrderStatus(orderId, 'done');
+  closeModal('m-online-order');
+  showToast('ยืนยันออเดอร์เรียบร้อย / 訂單已確認完成','ok');
+}
+// 退回待處理
+async function revertOrderPending(orderId){
+  await updateOrderStatus(orderId, 'pending');
+  closeModal('m-online-order');
+  showToast('คืนสถานะเป็นรอดำเนินการ / 已退回待處理','ok');
+}
+
+async function updateOrderStatus(orderId, status){
+  // 更新本機
+  const o = _onlineOrders.find(x=>x.id===orderId);
+  if(o) o.status = status;
+  renderOnlineOrders();
+  updateOnlineBadge();
+  // 同步 Firebase
+  if(window._fbSet){
+    try{
+      await window._fbSet(`shop/online_orders/${orderId}/status`, status);
+    }catch(e){ console.warn('[POS] updateOrderStatus Firebase fail:',e); }
+  }
+}
+
+// 在 fbListenAll 之後加掛線上訂單監聽
+const _origFbPullAll = fbPullAll;
+async function fbPullAll(){
+  await _origFbPullAll();
+  await loadOnlineOrders();
+  listenOnlineOrders();
+}
 
 renderCart();
 initPersistence();
