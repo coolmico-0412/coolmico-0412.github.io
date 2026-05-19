@@ -598,17 +598,24 @@ nav::-webkit-scrollbar{display:none;}
 .pwa-offline-bar.show { transform: translateY(0); }
 </style>
 <script type="module">
-  // Firebase 設定從 localStorage 讀取，不寫死在程式碼中
-  // 避免 API Key 暴露於公開的 GitHub repository
+  // Firebase 設定：優先讀 localStorage（方便切換專案），沒有則用預設設定
   const FB_CFG_KEY = 'pos_firebase_cfg';
+  const FB_DEFAULT = {
+    apiKey:            "AIzaSyCXL_BPUqT5UA2Ufxo8Byulm6-ATNxTr4c",
+    authDomain:        "mico1-72831.firebaseapp.com",
+    databaseURL:       "https://mico1-72831-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId:         "mico1-72831",
+    storageBucket:     "mico1-72831.firebasestorage.app",
+    messagingSenderId: "706559929324",
+    appId:             "1:706559929324:web:05cf28d33b9f770d332ec9",
+  };
+
   let cfg;
   try { cfg = JSON.parse(localStorage.getItem(FB_CFG_KEY) || 'null'); } catch(e) {}
+  // 沒有 localStorage 設定時，使用預設設定
+  if (!cfg || !cfg.databaseURL) cfg = FB_DEFAULT;
 
-  if(!cfg || !cfg.databaseURL){
-    // 尚未設定，通知主腳本等待使用者輸入
-    window._fbNeedSetup = true;
-    document.dispatchEvent(new Event('firebase-ready'));
-  } else {
+  try {
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js");
     const { getDatabase, ref, set, get, onValue, off } = await import("https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js");
 
@@ -622,6 +629,10 @@ nav::-webkit-scrollbar{display:none;}
     window._fbOnValue = (path, cb, errCb) => onValue(ref(db, path), cb, errCb);
     window._fbOff     = (refObj) => off(refObj);
     window._fbReady   = true;
+    document.dispatchEvent(new Event('firebase-ready'));
+  } catch(e) {
+    console.error('[POS Firebase init]', e);
+    window._fbNeedSetup = true;
     document.dispatchEvent(new Event('firebase-ready'));
   }
 </script>
@@ -1100,6 +1111,10 @@ nav::-webkit-scrollbar{display:none;}
 <div class="overlay" id="m-firebase">
   <div class="mbox" style="width:500px">
     <div class="m-title">☁️ Firebase 設定<span class="zh">雲端同步 Realtime Database</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;font-family:var(--zh)">
+      目前使用<b>預設設定</b>自動連線。如需切換到其他 Firebase 專案，填寫下方欄位後儲存。<br>
+      清空所有欄位並儲存，可恢復預設設定。
+    </div>
     <div class="fb-cfg-note">
       1. 前往 <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → 專案設定 → Web 應用程式<br>
       2. 複製各欄位值貼到下方（設定儲存在本機，不會上傳 GitHub）<br>
@@ -2607,14 +2622,27 @@ function loadFbConfigToModal(){
   }catch(e){}
 }
 async function saveFirebaseConfig(){
+  const apiKey      = (document.getElementById('fb-apiKey')?.value||'').trim();
+  const databaseURL = (document.getElementById('fb-dbUrl')?.value||'').trim();
+
+  if(apiKey && !databaseURL){
+    setFbModalStatus('⚠ 請填寫 Database URL（必填）','var(--red)');
+    return;
+  }
+  if(!apiKey && !databaseURL){
+    // 全空 → 清除自訂設定，恢復預設
+    localStorage.removeItem(FB_CFG_KEY);
+    setFbModalStatus('✓ 已恢復預設設定，重新載入中...','var(--green)');
+    setTimeout(()=>location.reload(), 1000);
+    return;
+  }
   const cfg={
-    apiKey:       (document.getElementById('fb-apiKey')?.value||'').trim(),
+    apiKey,
     authDomain:   (document.getElementById('fb-authDomain')?.value||'').trim(),
-    databaseURL:  (document.getElementById('fb-dbUrl')?.value||'').trim(),
+    databaseURL,
     projectId:    (document.getElementById('fb-projectId')?.value||'').trim(),
     appId:        (document.getElementById('fb-appId')?.value||'').trim(),
   };
-  if(!cfg.databaseURL){ setFbModalStatus('⚠ 請填寫 Database URL（必填）','var(--red)'); return; }
   localStorage.setItem(FB_CFG_KEY, JSON.stringify(cfg));
   setFbModalStatus('✓ 設定已儲存，重新載入頁面以連線...','var(--green)');
   setTimeout(()=>location.reload(), 1200);
