@@ -2592,6 +2592,8 @@ function applySwUpdate() {
 }
 
 window.applySwUpdate = applySwUpdate;
+
+function pwaInstall() {
   if (!_deferredInstallPrompt) return;
   _deferredInstallPrompt.prompt();
   _deferredInstallPrompt.userChoice.then(choice => {
