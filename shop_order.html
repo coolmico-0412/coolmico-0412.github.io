@@ -1725,60 +1725,92 @@ function setFbIndicator(state) {
 }
 
 /* ══════════════════════════════════════════════
-   Firebase: Product Sync (diff by updatedAt)
+   Firebase: Product Sync
+   強制從 server 拉取，不用 SDK 快取
 ══════════════════════════════════════════════ */
 async function syncProducts() {
-  if (!_fbOK) { setFbIndicator('local'); return; }
+  if (!_fbOK || !_db) { setFbIndicator('local'); return; }
   setFbIndicator('connecting');
 
-  // 每個 Firebase get() 最多等 6 秒
-  function getWithTimeout(fbRef, ms = 6000) {
+  // 強制從 Firebase server 拉取（非 SDK 本地快取）
+  function serverGet(path, ms = 8000) {
     return Promise.race([
-      get(fbRef),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('get timeout')), ms))
+      get(ref(_db, path)),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`timeout: ${path}`)), ms)
+      )
     ]);
   }
 
   try {
-    const metaSnap = await getWithTimeout(ref(_db, FB.META));
+    // 先讀 meta 判斷是否需要更新
+    const metaSnap = await serverGet(FB.META);
     const fbTs     = metaSnap.exists() ? (metaSnap.val()?.updatedAt ?? null) : null;
     const localTs  = safeGetLS(LS.SYNC_TS, null);
 
+    // 計算本機商品數量
     const localProds     = safeGetLS(LS.PROD, null);
     const localProdCount = localProds ? Object.keys(localProds).length : 0;
     const localNobc      = safeGetLS(LS.NOBC, []);
     const localNobcCount = Array.isArray(localNobc) ? localNobc.length : 0;
     const totalLocal     = localProdCount + localNobcCount;
-    const forceSync      = totalLocal < 20;
 
-    if (!forceSync && fbTs !== null && fbTs === localTs) {
+    // 判斷是否需要同步
+    const forceByCount   = totalLocal < 20;          // 商品太少強制同步
+    const forceByVersion = fbTs !== null && fbTs !== localTs; // 版本不同需同步
+    const noMeta         = fbTs === null;             // meta 不存在也同步
+
+    if (!forceByCount && !forceByVersion && !noMeta) {
+      console.log('[Shop] 商品已是最新，跳過同步');
       setFbIndicator('local');
       return;
     }
 
-    console.log(forceSync
-      ? `[Shop] 本機商品 ${totalLocal} 個 < 20，強制同步`
-      : '[Shop] Firebase 版本變更，同步中…');
+    console.log('[Shop] 同步原因：',
+      forceByCount   ? `商品數量 ${totalLocal} < 20` :
+      forceByVersion ? `版本不符 (local:${localTs} fb:${fbTs})` :
+      'meta 不存在，首次同步'
+    );
 
+    // 同時拉取商品資料
     const [ps, ns] = await Promise.all([
-      getWithTimeout(ref(_db, FB.PROD)),
-      getWithTimeout(ref(_db, FB.NOBC)),
+      serverGet(FB.PROD),
+      serverGet(FB.NOBC),
     ]);
 
+    let updated = false;
     if (ps.exists()) {
       const d = ps.val();
-      if (d && typeof d === 'object') safeSetLS(LS.PROD, d);
+      if (d && typeof d === 'object' && Object.keys(d).length > 0) {
+        safeSetLS(LS.PROD, d);
+        updated = true;
+        console.log(`[Shop] 拉取商品 ${Object.keys(d).length} 筆`);
+      }
     }
     if (ns.exists()) {
       const d = ns.val();
-      safeSetLS(LS.NOBC, Array.isArray(d) ? d : Object.values(d || {}));
+      const arr = Array.isArray(d) ? d : Object.values(d || {});
+      if (arr.length > 0) {
+        safeSetLS(LS.NOBC, arr);
+        updated = true;
+        console.log(`[Shop] 拉取無條碼商品 ${arr.length} 筆`);
+      }
     }
+
+    // 更新同步時間戳
     if (fbTs !== null) safeSetLS(LS.SYNC_TS, fbTs);
-    setFbIndicator('synced');
+
+    if (updated) {
+      setFbIndicator('synced');
+    } else {
+      console.warn('[Shop] Firebase 商品為空，保留本機資料');
+      setFbIndicator('local');
+    }
+
   } catch(e) {
     console.warn('[Shop] syncProducts failed:', e.message);
     setFbIndicator('error');
-    throw e; // 讓 syncProductsBackground 的 catch 接到
+    throw e;
   }
 }
 
@@ -2449,27 +2481,30 @@ async function init() {
 async function syncProductsBackground() {
   if (!_fbOK) { setFbIndicator('local'); return; }
 
-  // 8 秒 timeout 保護
   const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('timeout')), 8000)
+    setTimeout(() => reject(new Error('timeout')), 10000)
   );
 
   try {
     setFbIndicator('connecting');
     await Promise.race([syncProducts(), timeout]);
-    // 同步成功後更新商品顯示
+
+    // 同步成功後重新載入並比對，若有變化就重新渲染
     const fresh = loadAllProducts();
-    if (fresh.length !== allProducts.length ||
-        JSON.stringify(fresh.map(p=>p.id).sort()) !==
-        JSON.stringify(allProducts.map(p=>p.id).sort())) {
+    const prevIds  = allProducts.map(p => p.id + p.price).sort().join(',');
+    const freshIds = fresh.map(p => p.id + p.price).sort().join(',');
+
+    if (prevIds !== freshIds || fresh.length !== allProducts.length) {
+      console.log(`[Shop] 商品已更新：${allProducts.length} → ${fresh.length} 筆，重新渲染`);
       allProducts = fresh;
       renderTabs();
       renderProducts();
+    } else {
+      console.log('[Shop] 商品無變化，保持現有畫面');
     }
   } catch(e) {
     console.warn('[Shop] Background sync failed/timeout:', e.message);
     setFbIndicator('error');
-    // 失敗不影響 UI，繼續用本機快取
   }
 }
 
