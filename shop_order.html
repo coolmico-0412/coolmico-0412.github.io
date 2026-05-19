@@ -1730,12 +1730,20 @@ function setFbIndicator(state) {
 async function syncProducts() {
   if (!_fbOK) { setFbIndicator('local'); return; }
   setFbIndicator('connecting');
+
+  // 每個 Firebase get() 最多等 6 秒
+  function getWithTimeout(fbRef, ms = 6000) {
+    return Promise.race([
+      get(fbRef),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('get timeout')), ms))
+    ]);
+  }
+
   try {
-    const metaSnap = await get(ref(_db, FB.META));
+    const metaSnap = await getWithTimeout(ref(_db, FB.META));
     const fbTs     = metaSnap.exists() ? (metaSnap.val()?.updatedAt ?? null) : null;
     const localTs  = safeGetLS(LS.SYNC_TS, null);
 
-    // 本機商品不足 20 個 → 強制同步（不管時間戳）
     const localProds     = safeGetLS(LS.PROD, null);
     const localProdCount = localProds ? Object.keys(localProds).length : 0;
     const localNobc      = safeGetLS(LS.NOBC, []);
@@ -1744,21 +1752,19 @@ async function syncProducts() {
     const forceSync      = totalLocal < 20;
 
     if (!forceSync && fbTs !== null && fbTs === localTs) {
-      // 商品足夠且版本一致 → 直接用快取
       setFbIndicator('local');
       return;
     }
 
-    if (forceSync) {
-      console.log(`[Shop] 本機商品僅 ${totalLocal} 個（< 20），強制同步 Firebase`);
-    } else {
-      console.log('[Shop] Firebase 版本變更，同步中…');
-    }
+    console.log(forceSync
+      ? `[Shop] 本機商品 ${totalLocal} 個 < 20，強制同步`
+      : '[Shop] Firebase 版本變更，同步中…');
 
     const [ps, ns] = await Promise.all([
-      get(ref(_db, FB.PROD)),
-      get(ref(_db, FB.NOBC)),
+      getWithTimeout(ref(_db, FB.PROD)),
+      getWithTimeout(ref(_db, FB.NOBC)),
     ]);
+
     if (ps.exists()) {
       const d = ps.val();
       if (d && typeof d === 'object') safeSetLS(LS.PROD, d);
@@ -1770,8 +1776,9 @@ async function syncProducts() {
     if (fbTs !== null) safeSetLS(LS.SYNC_TS, fbTs);
     setFbIndicator('synced');
   } catch(e) {
-    console.warn('[Shop] syncProducts failed:', e);
+    console.warn('[Shop] syncProducts failed:', e.message);
     setFbIndicator('error');
+    throw e; // 讓 syncProductsBackground 的 catch 接到
   }
 }
 
@@ -2402,44 +2409,67 @@ function showToast(msg,type) {
 }
 
 /* ══════════════════════════════════════════════
-   Init
+   Init — 修正版
+   順序：① 立即渲染本機商品  ② 立即判斷會員
+         ③ Firebase 背景同步（有 timeout，不阻塞 UI）
 ══════════════════════════════════════════════ */
 async function init() {
-  // Init PWA (SW + offline detection + install prompt)
+  // PWA 初始化
   initPWA();
-  const grid=document.getElementById('product-grid');
-  if(grid) grid.innerHTML=Array(6).fill(0).map(()=>`<div class="skeleton skeleton-card"></div>`).join('');
-  try {
-    await syncProducts();
-    allProducts=loadAllProducts();
-    renderTabs(); renderProducts(); updateAllCartUI();
-  } catch(e) {
-    if(grid) grid.innerHTML=`<div class="empty-state">
-      <div class="ei">⚠️</div><div class="et">ไม่สามารถโหลดสินค้าได้</div>
-      <div class="es">กรุณาเพิ่มสินค้าในระบบ POS ก่อน<br>
-        <span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">請先在 POS 系統建立商品資料</span>
-      </div></div>`;
-  }
 
-  // Auto-restore member from localStorage
+  // ── ① 立即從本機快取渲染商品（不等 Firebase）──
+  allProducts = loadAllProducts();
+  renderTabs();
+  renderProducts();
+  updateAllCartUI();
+
+  // ── ② 立即判斷會員狀態（不等 Firebase）──
   const savedMember = safeGetLS(LS.MEMBER, null);
   if (savedMember?.memberId) {
-    // 確保 overlay 隱藏（預設已是 display:none，這裡再保險一次）
+    // 確保 overlay 不擋畫面
     const o = document.getElementById('auth-overlay');
     if (o) { o.style.display = 'none'; o.classList.remove('visible'); }
-
-    // Re-verify from Firebase in background (更新本機快取)
+    // 先用本機快取登入，Firebase 背景驗證
+    setMember(savedMember);
     if (_fbOK) {
-      lookupMemberById(savedMember.memberId).then(fresh => {
-        // 不需電話驗證：自動登入只用本機快取的 memberId，Firebase 只是刷新資料
-        setMember(fresh || savedMember);
-      }).catch(() => setMember(savedMember));
-    } else {
-      setMember(savedMember);
+      lookupMemberById(savedMember.memberId)
+        .then(fresh => { if (fresh) setMember(fresh); })
+        .catch(() => {});
     }
   } else {
-    // 第一次訪問 → 顯示會員彈窗
+    // 新訪客 → 顯示會員彈窗
     showAuthModal();
+  }
+
+  // ── ③ Firebase 背景同步商品（有 8 秒 timeout，失敗不影響 UI）──
+  syncProductsBackground();
+}
+
+// Firebase 商品同步（背景執行，不阻塞 UI）
+async function syncProductsBackground() {
+  if (!_fbOK) { setFbIndicator('local'); return; }
+
+  // 8 秒 timeout 保護
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('timeout')), 8000)
+  );
+
+  try {
+    setFbIndicator('connecting');
+    await Promise.race([syncProducts(), timeout]);
+    // 同步成功後更新商品顯示
+    const fresh = loadAllProducts();
+    if (fresh.length !== allProducts.length ||
+        JSON.stringify(fresh.map(p=>p.id).sort()) !==
+        JSON.stringify(allProducts.map(p=>p.id).sort())) {
+      allProducts = fresh;
+      renderTabs();
+      renderProducts();
+    }
+  } catch(e) {
+    console.warn('[Shop] Background sync failed/timeout:', e.message);
+    setFbIndicator('error');
+    // 失敗不影響 UI，繼續用本機快取
   }
 }
 
