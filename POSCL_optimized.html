@@ -2760,22 +2760,27 @@ waitFbReady(async()=>{
   }
   setFbStatus('connecting','☁ 連線中...');
   try{
-    await new Promise((resolve,reject)=>{
-      const t=setTimeout(()=>reject(new Error('timeout')),8000);
-      const unsub=window._fbOnValue('.info/connected',snap=>{
-        clearTimeout(t); unsub(); resolve(snap.val());
-      },err=>{clearTimeout(t);reject(err);});
+    // 等待 .info/connected 為 true（Firebase 真正連線，不是初始的 false）
+    await new Promise((resolve, reject)=>{
+      const t = setTimeout(()=>reject(new Error('timeout')), 12000);
+      const unsub = window._fbOnValue('.info/connected', snap=>{
+        if(snap.val() === true){   // ← 必須是 true 才算連線成功
+          clearTimeout(t);
+          unsub();
+          resolve();
+        }
+        // val() === false 是初始狀態，繼續等待
+      }, err=>{ clearTimeout(t); reject(err); });
     });
     _fbConnected=true;
     setFbStatus('connected','☁ Firebase 已連線');
     await fbPullAll();
     fbListenAll();
-    // 連線成功後點擊可開啟設定（供更換設定用）
     document.getElementById('fb-status').style.cursor='pointer';
     document.getElementById('fb-status').onclick=()=>openModal('m-firebase');
   }catch(e){
     console.error('[Firebase init]',e);
-    setFbStatus('error','☁ 連線失敗');
+    setFbStatus('error','☁ 連線失敗：'+e.message);
     showToast('Firebase 連線失敗，使用本地資料','err');
     document.getElementById('fb-status').style.cursor='pointer';
     document.getElementById('fb-status').onclick=()=>openModal('m-firebase');
@@ -2988,13 +2993,23 @@ async function updateOrderStatus(orderId, status){
   }
 }
 
-// 在 fbListenAll 之後加掛線上訂單監聽
-const _origFbPullAll = fbPullAll;
-async function fbPullAll(){
-  await _origFbPullAll();
-  await loadOnlineOrders();
-  listenOnlineOrders();
-}
+// ── fbPullAll 擴充：拉完 POS 資料後，同步拉取線上訂單 ──
+// 用 flag 覆寫避免 hoisting 問題
+window._fbPullAllExtended = true;
+const _origFbPullAllRef = { fn: null };
+
+// 在 DOMContentLoaded 後延遲覆寫，確保 fbPullAll 已定義
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof fbPullAll === 'function') {
+    _origFbPullAllRef.fn = fbPullAll;
+    // 重新定義 fbPullAll 為擴充版
+    window.fbPullAll = async function() {
+      if (_origFbPullAllRef.fn) await _origFbPullAllRef.fn();
+      await loadOnlineOrders();
+      listenOnlineOrders();
+    };
+  }
+});
 
 /* ══════════════════════════════════════════════
    POS PWA：Service Worker + 安裝 + 離線偵測
