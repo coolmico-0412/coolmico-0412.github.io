@@ -1419,18 +1419,7 @@ body::after {
       <div class="member-provider" id="m-provider"></div>
     </div>
     <div class="member-body">
-      <div class="member-section-title">สถิติ / 統計</div>
-      <div class="stat-row">
-        <div class="stat-card">
-          <div class="stat-num" id="m-order-count">0</div>
-          <div class="stat-lbl">ออเดอร์ / 訂單數</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" id="m-total-spent" style="font-size:15px">NT$0</div>
-          <div class="stat-lbl">ยอดรวม / 累計消費</div>
-        </div>
-      </div>
-      <div class="member-section-title" style="margin-top:4px">ประวัติ / 訂單歷史</div>
+      <div class="member-section-title">ประวัติ / 訂單歷史</div>
       <div id="m-order-hist">
         <div style="text-align:center;color:var(--muted2);font-size:13px;padding:20px 0">ยังไม่มีประวัติการสั่งซื้อ<br><span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">尚無訂單記錄</span></div>
       </div>
@@ -1580,6 +1569,11 @@ body::after {
       </div>
       <!-- Note -->
       <div class="field-group">
+        <label class="field-label">📍 สถานที่จัดส่ง <span class="zh">送貨地點</span> <span style="color:var(--primary);font-size:12px">*</span></label>
+        <input class="field-input" id="order-delivery" type="text" placeholder="เช่น บ้านเลขที่ / 地址或取貨地點" autocomplete="street-address" required>
+        <div class="field-hint" id="order-delivery-err" style="color:var(--primary);display:none">กรุณากรอกสถานที่จัดส่ง / 請填寫送貨地點</div>
+      </div>
+      <div class="field-group">
         <label class="field-label">หมายเหตุ <span class="zh">備註</span> <span style="font-weight:400;color:var(--muted2)">（ไม่บังคับ）</span></label>
         <input class="field-input" id="order-note" type="text" placeholder="เช่น ไม่ใส่น้ำแข็ง / 不加冰">
       </div>
@@ -1682,7 +1676,7 @@ try {
 /* ── App State ── */
 let allProducts   = [];
 let cart          = [];
-let activeCat     = '__all__';
+let activeCat     = 'food';   // 預設顯示第一個有商品的分類
 let drawerOpen    = false;
 let memberOpen    = false;
 let currentMember = null;   // { memberId, name, phone, uid (=memberId), orderCount, totalSpent }
@@ -1705,8 +1699,13 @@ function safeSetLS(key, val) {
 }
 function fmtDate(iso) {
   try {
-    return new Date(iso).toLocaleString('th-TH',
-      { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const d   = new Date(iso);
+    const y   = d.getFullYear();
+    const mo  = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    const hh  = String(d.getHours()).padStart(2,'0');
+    const mm  = String(d.getMinutes()).padStart(2,'0');
+    return `${y}/${mo}/${day} ${hh}:${mm}`;
   } catch(e) { return iso || ''; }
 }
 function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = String(v ?? ''); }
@@ -2068,37 +2067,51 @@ async function renderMemberDrawer() {
   const initial = (m.name?.[0] || '?').toUpperCase();
   const avEl = document.getElementById('m-avatar-lg');
   if (avEl) avEl.textContent = initial;
-  setText('m-dname',      m.name    || '—');
-  setText('m-id-chip',    `🪪 ${m.memberId || '—'}`);
-  setText('m-provider',   `📞 ${m.phone || ''}`);
-  setText('m-order-count', m.orderCount || 0);
-  setText('m-total-spent', `NT$${m.totalSpent || 0}`);
+  setText('m-dname',   m.name    || '—');
+  setText('m-id-chip', `🪪 ${m.memberId || '—'}`);
+  setText('m-provider',`📞 ${m.phone || ''}`);
 
   const histEl = document.getElementById('m-order-hist');
-  if (histEl) histEl.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:12px">กำลังโหลด…</div>`;
+  if (histEl) histEl.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:12px">กำลังโหลด… / 載入中…</div>`;
   const orders = await fetchMemberOrders(m.memberId);
-  if (histEl) {
-    histEl.innerHTML = orders.length ? orders.map(o => `
-      <div class="order-hist-item">
-        <div class="ohi-top">
-          <span class="ohi-id">${h(o.id)}</span>
-          <span class="ohi-date">${h(fmtDate(o.date))}</span>
-        </div>
-        <div class="ohi-total">NT$ ${h(String(o.total ?? 0))}</div>
-        <div class="ohi-items">${h(String((o.items||[]).length))} รายการ</div>
-        <span class="ohi-status">✓ ${h(o.status || 'pending')}</span>
-      </div>`).join('')
-    : `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:16px">
-         ยังไม่มีประวัติ<br><span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">尚無訂單記錄</span>
-       </div>`;
+  if (!histEl) return;
+
+  if (!orders.length) {
+    histEl.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:16px">
+      ยังไม่มีประวัติ<br><span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">尚無訂單記錄</span>
+    </div>`;
+    return;
   }
+
+  histEl.innerHTML = orders.map(o => {
+    const itemsHtml = (o.items||[]).map(i => `
+      <div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text2)">
+        <span>${h(i.name||'')}</span>
+        <span style="font-family:'Courier New',monospace;color:var(--muted)">×${i.qty} NT$${(i.price||0)*i.qty}</span>
+      </div>`).join('');
+
+    return `<div class="order-hist-item" style="cursor:pointer" onclick="this.querySelector('.ohi-detail').style.display=this.querySelector('.ohi-detail').style.display==='none'?'block':'none'">
+      <div class="ohi-top">
+        <span class="ohi-id">${h(o.id)}</span>
+        <span class="ohi-date">${h(fmtDate(o.date))}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
+        <span class="ohi-total">NT$ ${h(String(o.total ?? 0))}</span>
+        <span style="font-size:10px;color:var(--muted2)">${(o.items||[]).length} รายการ ▾</span>
+      </div>
+      <div class="ohi-detail" style="display:none;margin-top:8px;padding-top:6px;border-top:1px dashed var(--border2)">
+        ${itemsHtml}
+        ${o.deliveryLocation ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">📍 ${h(o.deliveryLocation)}</div>` : ''}
+        ${o.note ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">💬 ${h(o.note)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 /* ══════════════════════════════════════════════
    Categories (align with POS)
 ══════════════════════════════════════════════ */
 const CATEGORIES = [
-  {id:'__all__',   icon:'🛍',  th:'ทั้งหมด',                  zh:'全部商品'},
   {id:'frozen',    icon:'🧊',  th:'อาหารแช่แข็ง',              zh:'冷凍食品'},
   {id:'seasoning', icon:'🌶',  th:'เครื่องปรุง',               zh:'調味品'},
   {id:'drink',     icon:'🥤',  th:'เครื่องดื่ม',               zh:'飲料'},
@@ -2166,24 +2179,29 @@ function loadAllProducts() {
 function renderTabs() {
   const c = document.getElementById('tabs-container');
   if (!c) return;
-  const counts = {'__all__': allProducts.length};
+  const counts = {};
   allProducts.forEach(p => { const cat=p.category||'other'; counts[cat]=(counts[cat]||0)+1; });
-  c.innerHTML = CATEGORIES.filter(x => x.id==='__all__' || counts[x.id])
-    .map(x => {
-      const active = activeCat===x.id ? ' active' : '';
-      return `<button class="tab-btn${active}" onclick="switchCat('${h(x.id)}')">
-        <span class="tab-emoji">${h(x.icon)}</span>
-        <span>${h(x.th)}<span style="font-family:'Noto Sans TC',sans-serif;font-size:10px;opacity:.65;margin-left:3px">${h(x.zh)}</span></span>
-        <span class="tab-count">${counts[x.id]||0}</span>
-      </button>`;
-    }).join('');
+
+  // 如果 activeCat 在目前商品中沒有，自動切到第一個有商品的分類
+  const available = CATEGORIES.filter(x => counts[x.id] > 0);
+  if (!counts[activeCat] && available.length > 0) {
+    activeCat = available[0].id;
+  }
+
+  c.innerHTML = available.map(x => {
+    const active = activeCat===x.id ? ' active' : '';
+    return `<button class="tab-btn${active}" onclick="switchCat('${h(x.id)}')">
+      <span class="tab-emoji">${h(x.icon)}</span>
+      <span>${h(x.th)}<span style="font-family:'Noto Sans TC',sans-serif;font-size:10px;opacity:.65;margin-left:3px">${h(x.zh)}</span></span>
+      <span class="tab-count">${counts[x.id]||0}</span>
+    </button>`;
+  }).join('');
 }
 function getCatIcon(catId) { return (CATEGORIES.find(x=>x.id===catId)||{}).icon||'📦'; }
 function renderProducts() {
   const grid = document.getElementById('product-grid');
   if (!grid) return;
-  const filtered = activeCat==='__all__' ? allProducts
-    : allProducts.filter(p => (p.category||'other')===activeCat);
+  const filtered = allProducts.filter(p => (p.category||'other') === activeCat);
   if (!filtered.length) {
     grid.innerHTML = `<div class="empty-state">
       <div class="ei">🔍</div><div class="et">ไม่มีสินค้าในหมวดนี้</div>
@@ -2333,14 +2351,23 @@ function handleModalOutsideClick(e,id) { if(e.target===document.getElementById(i
 
 function openOrderModal() {
   if(!cart.length) { showToast('ตะกร้าว่างเปล่า！','err'); return; }
-  // Pre-fill name if member
+  // Pre-fill from member / last saved
   if(currentMember) {
     const n=document.getElementById('customer-name');
     const p=document.getElementById('customer-phone');
     if(n && !n.value) n.value=currentMember.name||'';
     if(p && !p.value) p.value=currentMember.phone||'';
   }
-  // Fill table
+  // 記住上次填寫的送貨地點
+  const deliveryEl = document.getElementById('order-delivery');
+  if(deliveryEl && !deliveryEl.value) {
+    deliveryEl.value = localStorage.getItem('shop_last_delivery') || '';
+  }
+  // Hide error
+  const errEl = document.getElementById('order-delivery-err');
+  if(errEl) errEl.style.display = 'none';
+
+  // Fill order table
   const tb=document.getElementById('modal-order-body');
   if(tb) tb.innerHTML=cart.map(item=>{
     const sub=item.price*item.qty;
@@ -2352,7 +2379,6 @@ function openOrderModal() {
   }).join('');
   const tel=document.getElementById('modal-order-total');
   if(tel) tel.textContent=`NT$ ${getTotal()}`;
-  // Member chip
   const chip=document.getElementById('modal-member-chip');
   if(chip) {
     chip.style.display=currentMember?'':'none';
@@ -2366,6 +2392,19 @@ function openOrderModal() {
 ══════════════════════════════════════════════ */
 async function submitOrder() {
   if(!cart.length) return;
+
+  // 送貨地點必填驗證
+  const deliveryVal = (document.getElementById('order-delivery')?.value||'').trim();
+  if(!deliveryVal) {
+    const errEl = document.getElementById('order-delivery-err');
+    if(errEl) errEl.style.display = '';
+    document.getElementById('order-delivery')?.focus();
+    showToast('กรุณากรอกสถานที่จัดส่ง / 請填寫送貨地點','err');
+    return;
+  }
+  // 記住本次地點
+  try{ localStorage.setItem('shop_last_delivery', deliveryVal); }catch(e){}
+
   const btn=document.getElementById('confirm-btn');
   if(btn){btn.disabled=true;btn.textContent='กำลังส่ง…';}
   try {
@@ -2377,12 +2416,13 @@ async function submitOrder() {
 
     const orderObj = {
       id: orderId, date: now.toISOString(), source: 'online',
-      memberId:      currentMember?.memberId || null,
-      memberName:    currentMember?.name     || null,
-      isGuest:       !currentMember,
-      customerName:  nameVal  || currentMember?.name  || 'แขก / 訪客',
-      customerPhone: phoneVal || currentMember?.phone || '',
-      note:          noteVal,
+      memberId:         currentMember?.memberId || null,
+      memberName:       currentMember?.name     || null,
+      isGuest:          !currentMember,
+      customerName:     nameVal  || currentMember?.name  || 'แขก / 訪客',
+      customerPhone:    phoneVal || currentMember?.phone || '',
+      deliveryLocation: deliveryVal,
+      note:             noteVal,
       items: cart.map(i=>({id:i.id,name:i.name,price:i.price,qty:i.qty})),
       subtotal:total, total, status:'pending',
     };
@@ -2409,7 +2449,7 @@ async function submitOrder() {
 
     if(currentMember && memberOpen) renderMemberDrawer();
     try {
-      ['customer-name','customer-phone','order-note'].forEach(id=>{
+      ['customer-name','customer-phone','order-note','order-delivery'].forEach(id=>{
         const el=document.getElementById(id); if(el) el.value='';
       });
     } catch(e){}
