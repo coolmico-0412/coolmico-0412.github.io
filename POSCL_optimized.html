@@ -1947,40 +1947,48 @@ function renderProdGrid(){
 
     // 無條碼商品卡片
     const nobcCards = filteredNobc.length
-      ? filteredNobc.map((p,pos)=>`<div class="prod-card" style="border-color:#e9d5ff">
-          <div class="prod-card-top">
-            <div class="prod-bc" style="color:var(--purple)">無條碼</div>
-          </div>
-          <div class="prod-name">${h(p.name)}</div>
-          <div class="prod-price">NT$ ${p.price}</div>
-          <div class="prod-acts">
-            <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh);border-color:var(--purple);color:var(--purple)" onclick="editNobcProd(${p._idx})">✏</button>
-            <button class="btn btn-danger" style="font-size:10px;padding:4px 7px" onclick="delNobcProd(${p._idx})">🗑</button>
-            <div class="prod-order">
-              <button class="prod-order-btn" title="上移" onclick="moveNobcProd(${p._idx},-1)" ${pos===0?'disabled':''}>↑</button>
-              <button class="prod-order-btn" title="下移" onclick="moveNobcProd(${p._idx},1)" ${pos===filteredNobc.length-1?'disabled':''}>↓</button>
+      ? filteredNobc.map((p,pos)=>{
+          const isOos = p.outOfStock === true;
+          return `<div class="prod-card" style="border-color:#e9d5ff${isOos?';opacity:.6;background:var(--surface2)':''}">
+            <div class="prod-card-top">
+              <div class="prod-bc" style="color:var(--purple)">無條碼</div>
+              ${isOos?`<span style="font-size:9px;background:var(--red);color:#fff;border-radius:4px;padding:1px 5px;font-weight:700">缺貨</span>`:''}
             </div>
-          </div>
-        </div>`).join('')
+            <div class="prod-name">${h(p.name)}</div>
+            <div class="prod-price">NT$ ${p.price}</div>
+            <div class="prod-acts">
+              <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh);border-color:var(--purple);color:var(--purple)" onclick="editNobcProd(${p._idx})">✏</button>
+              <button class="btn btn-danger" style="font-size:10px;padding:4px 7px" onclick="delNobcProd(${p._idx})">🗑</button>
+              <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh);${isOos?'border-color:var(--green);color:var(--green)':'border-color:var(--red);color:var(--red)'}" onclick="toggleNobcOos(${p._idx})">${isOos?'✓補貨':'缺貨'}</button>
+              <div class="prod-order">
+                <button class="prod-order-btn" title="上移" onclick="moveNobcProd(${p._idx},-1)" ${pos===0?'disabled':''}>↑</button>
+                <button class="prod-order-btn" title="下移" onclick="moveNobcProd(${p._idx},1)" ${pos===filteredNobc.length-1?'disabled':''}>↓</button>
+              </div>
+            </div>
+          </div>`;}).join('')
       : `<div class="empty-st" style="padding:28px 16px"><div class="ei" style="font-size:24px">🏷</div><div class="zh">此分類無無條碼商品</div></div>`;
 
     // 條碼商品卡片
     const bcCards = filteredBc.length
-      ? filteredBc.map(({bc,p},pos)=>`<div class="prod-card">
-          <div class="prod-card-top">
-            <div class="prod-bc">${h(bc)}</div>
-          </div>
-          <div class="prod-name">${h(p.name)}</div>
-          <div class="prod-price">NT$ ${p.price}</div>
-          <div class="prod-acts">
-            <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh)" onclick="openEditProd(${jsArg(bc)})">✏</button>
-            <button class="btn btn-danger" style="font-size:10px;padding:4px 7px" onclick="delProduct(${jsArg(bc)})">🗑</button>
-            <div class="prod-order">
-              <button class="prod-order-btn" title="上移" onclick="moveBarcodeProduct(${jsArg(bc)},-1)" ${pos===0?'disabled':''}>↑</button>
-              <button class="prod-order-btn" title="下移" onclick="moveBarcodeProduct(${jsArg(bc)},1)" ${pos===filteredBc.length-1?'disabled':''}>↓</button>
+      ? filteredBc.map(({bc,p},pos)=>{
+          const isOos = p.outOfStock === true;
+          return `<div class="prod-card"${isOos?' style="opacity:.6;background:var(--surface2)"':''}>
+            <div class="prod-card-top">
+              <div class="prod-bc">${h(bc)}</div>
+              ${isOos?`<span style="font-size:9px;background:var(--red);color:#fff;border-radius:4px;padding:1px 5px;font-weight:700">缺貨</span>`:''}
             </div>
-          </div>
-        </div>`).join('')
+            <div class="prod-name">${h(p.name)}</div>
+            <div class="prod-price">NT$ ${p.price}</div>
+            <div class="prod-acts">
+              <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh)" onclick="openEditProd(${jsArg(bc)})">✏</button>
+              <button class="btn btn-danger" style="font-size:10px;padding:4px 7px" onclick="delProduct(${jsArg(bc)})">🗑</button>
+              <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh);${isOos?'border-color:var(--green);color:var(--green)':'border-color:var(--red);color:var(--red)'}" onclick="toggleBcOos(${jsArg(bc)})">${isOos?'✓補貨':'缺貨'}</button>
+              <div class="prod-order">
+                <button class="prod-order-btn" title="上移" onclick="moveBarcodeProduct(${jsArg(bc)},-1)" ${pos===0?'disabled':''}>↑</button>
+                <button class="prod-order-btn" title="下移" onclick="moveBarcodeProduct(${jsArg(bc)},1)" ${pos===filteredBc.length-1?'disabled':''}>↓</button>
+              </div>
+            </div>
+          </div>`;}).join('')
       : `<div class="empty-st" style="padding:28px 16px"><div class="ei" style="font-size:24px">📦</div><div class="zh">此分類無條碼商品</div></div>`;
 
     mainArea.innerHTML = `<div class="prod-two-col">
@@ -2999,6 +3007,7 @@ function openOnlineOrder(orderId){
       </div>
     </div>
     ${o.note?`<div style="background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:var(--gold)">💬 ${o.note}</div>`:''}
+    ${o.deliveryLocation?`<div style="background:var(--surface2);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--text2)">📍 ${o.deliveryLocation}${o.deliveryKm?` &nbsp;·&nbsp; 🛵 ${o.deliveryKm}km / ${o.deliveryDays}日內`:''}</div>`:''}
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">
       <thead>
         <tr style="background:var(--surface2)">
@@ -3348,8 +3357,47 @@ function posInstallDismiss() {
 // ── 啟動 PWA ──
 initPosPWA();
 
-renderCart();
-initPersistence();
+/* 缺貨切換 — 條碼商品 */
+function toggleBcOos(bc){
+  const prods = getProds();
+  if(!prods[bc]) return;
+  prods[bc].outOfStock = !prods[bc].outOfStock;
+  saveProds(prods);
+  syncOosToFirebase();
+  renderProdGrid();
+  showToast(prods[bc].outOfStock ? `缺貨標記：${prods[bc].name}` : `補貨恢復：${prods[bc].name}`, prods[bc].outOfStock?'err':'ok');
+}
+
+/* 缺貨切換 — 無條碼商品 */
+function toggleNobcOos(idx){
+  const prods = getNobcProds();
+  if(!prods[idx]) return;
+  prods[idx].outOfStock = !prods[idx].outOfStock;
+  saveNobcProds(prods);
+  syncOosToFirebase();
+  renderProdGrid();
+  showToast(prods[idx].outOfStock ? `缺貨標記：${prods[idx].name}` : `補貨恢復：${prods[idx].name}`, prods[idx].outOfStock?'err':'ok');
+}
+
+/* 立即將缺貨清單同步至 Firebase shop/outOfStock */
+async function syncOosToFirebase(){
+  if(!window._fbSet) return;
+  try {
+    const prods    = getProds();
+    const nobcProds = getNobcProds();
+    // 收集所有缺貨商品的 id（條碼 or nobc id）
+    const oosMap = {};
+    Object.entries(prods).forEach(([bc,p])=>{
+      if(p.outOfStock) oosMap[bc] = { name:p.name, type:'barcode' };
+    });
+    nobcProds.forEach(p=>{
+      if(p.outOfStock && p.id) oosMap[p.id] = { name:p.name, type:'nobc' };
+    });
+    await window._fbSet('shop/outOfStock', oosMap);
+    // 同時更新 meta.updatedAt 讓 Shop 端感知到商品變動
+    await window._fbSet('shop/meta/updatedAt', new Date().toISOString());
+  } catch(e){ console.warn('[POS] syncOosToFirebase fail:',e); }
+}
 // 頁面切換時若切回收銀台，自動聚焦掃描器輸入框
 const _origShowPage = showPage;
 window.showPage = function(id, btn){

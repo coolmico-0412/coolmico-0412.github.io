@@ -1572,6 +1572,12 @@ body::after {
         <label class="field-label">📍 สถานที่จัดส่ง <span class="zh">送貨地點</span> <span style="color:var(--primary);font-size:12px">*</span></label>
         <input class="field-input" id="order-delivery" type="text" placeholder="เช่น บ้านเลขที่ / 地址或取貨地點" autocomplete="street-address" required>
         <div class="field-hint" id="order-delivery-err" style="color:var(--primary);display:none">กรุณากรอกสถานที่จัดส่ง / 請填寫送貨地點</div>
+        <div class="field-hint" id="delivery-range-hint" style="margin-top:4px;line-height:1.7;display:none">
+          🛵 NT$1,000 → 3km / 1日內 &nbsp;|&nbsp;
+          NT$2,000 → 6km / 2日內 &nbsp;|&nbsp;
+          NT$3,000 → 9km / 3日內<br>
+          <span style="font-family:'Noto Sans TC',sans-serif">（金額每增加 NT$1,000 多 3km、多 1 天，以此類推）</span>
+        </div>
       </div>
       <div class="field-group">
         <label class="field-label">หมายเหตุ <span class="zh">備註</span> <span style="font-weight:400;color:var(--muted2)">（ไม่บังคับ）</span></label>
@@ -1656,13 +1662,15 @@ const FB = {
   NOBC:    'shop/nobc_products',
   ORDERS:  'shop/online_orders',
   MEMBERS: 'shop/members',
-  COUNTER: 'shop/memberCounter',  // atomic serial number
+  COUNTER: 'shop/memberCounter',
+  OOS:     'shop/outOfStock',     // 缺貨清單
 };
 const LS = {
   PROD:    'pos_products',
   NOBC:    'pos_nobc_products',
   SYNC_TS: 'shop_fb_sync_ts',
-  MEMBER:  'shop_member',   // 本機快取會員資料 { memberId, name, phone, ... }
+  MEMBER:  'shop_member',
+  OOS:     'shop_out_of_stock',   // 缺貨清單快取
 };
 
 let _db   = null;
@@ -1771,10 +1779,11 @@ async function syncProducts() {
       'meta 不存在，首次同步'
     );
 
-    // 同時拉取商品資料
-    const [ps, ns] = await Promise.all([
+    // 同時拉取商品資料 + 缺貨清單
+    const [ps, ns, oosSnap] = await Promise.all([
       serverGet(FB.PROD),
       serverGet(FB.NOBC),
+      serverGet(FB.OOS),
     ]);
 
     let updated = false;
@@ -1795,6 +1804,10 @@ async function syncProducts() {
         console.log(`[Shop] 拉取無條碼商品 ${arr.length} 筆`);
       }
     }
+    // 缺貨清單（即使是空的也要更新）
+    const oosMap = oosSnap.exists() ? (oosSnap.val() || {}) : {};
+    safeSetLS(LS.OOS, oosMap);
+    console.log(`[Shop] 缺貨商品：${Object.keys(oosMap).length} 筆`);
 
     // 更新同步時間戳
     if (fbTs !== null) safeSetLS(LS.SYNC_TS, fbTs);
@@ -2144,12 +2157,14 @@ const DEFAULT_PRODUCTS = {
 function loadAllProducts() {
   const barcodeMap = safeGetLS(LS.PROD, null) || DEFAULT_PRODUCTS;
   const nobcList   = safeGetLS(LS.NOBC, []);
+  const oosMap     = safeGetLS(LS.OOS, {});   // 缺貨清單 {id: {name, type}}
   const raw = [];
   try {
     Object.entries(barcodeMap).forEach(([bc, p]) => {
       if (!p || typeof p !== 'object') return;
       const name = String(p.name ?? '').trim();
       if (!name) return;
+      if (oosMap[bc] || p.outOfStock) return;   // 缺貨 → 跳過
       raw.push({ id:bc, name, price:Number(p.price??0),
         category:String(p.category??'other'), image:p.image??null, type:'barcode' });
     });
@@ -2159,6 +2174,7 @@ function loadAllProducts() {
       if (!p || typeof p !== 'object') return;
       const name = String(p.name ?? '').trim();
       if (!name) return;
+      if (oosMap[p.id] || p.outOfStock) return;  // 缺貨 → 跳過
       raw.push({ id:p.id??('NOBC-'+Math.random().toString(36).slice(2)),
         name, price:Number(p.price??0),
         category:String(p.category??'other'), image:p.image??null, type:'nobc' });
@@ -2351,6 +2367,16 @@ function handleModalOutsideClick(e,id) { if(e.target===document.getElementById(i
 
 function openOrderModal() {
   if(!cart.length) { showToast('ตะกร้าว่างเปล่า！','err'); return; }
+
+  const total = getTotal();
+
+  // 最低訂單金額 1000 元
+  if(total < 1000) {
+    const need = 1000 - total;
+    showToast(`ยอดขั้นต่ำ NT$1,000 / 最低消費 NT$1,000（還差 NT$${need}）`, 'err');
+    return;
+  }
+
   // Pre-fill from member / last saved
   if(currentMember) {
     const n=document.getElementById('customer-name');
@@ -2367,6 +2393,19 @@ function openOrderModal() {
   const errEl = document.getElementById('order-delivery-err');
   if(errEl) errEl.style.display = 'none';
 
+  // 動態送貨範圍說明
+  const tier    = Math.floor(total / 1000);
+  const km      = tier * 3;
+  const days    = tier;
+  const hintEl  = document.getElementById('delivery-range-hint');
+  if(hintEl) {
+    hintEl.style.display = '';
+    // 更新目前這筆訂單的配送資格
+    hintEl.innerHTML = `🛵 NT$1,000 → 3km / 1日內 &nbsp;|&nbsp; NT$2,000 → 6km / 2日內 &nbsp;|&nbsp; NT$3,000 → 9km / 3日內<br>
+      <span style="font-family:'Noto Sans TC',sans-serif">（金額每增加 NT$1,000 多 3km、多 1 天）</span><br>
+      <b style="color:var(--primary)">📍 您的訂單 NT$${total}：${km}km 以內 / ${days} 日內送達</b>`;
+  }
+
   // Fill order table
   const tb=document.getElementById('modal-order-body');
   if(tb) tb.innerHTML=cart.map(item=>{
@@ -2378,7 +2417,7 @@ function openOrderModal() {
     </tr>`;
   }).join('');
   const tel=document.getElementById('modal-order-total');
-  if(tel) tel.textContent=`NT$ ${getTotal()}`;
+  if(tel) tel.textContent=`NT$ ${total}`;
   const chip=document.getElementById('modal-member-chip');
   if(chip) {
     chip.style.display=currentMember?'':'none';
@@ -2414,6 +2453,7 @@ async function submitOrder() {
     const now=new Date(), orderId='ONL-'+now.getTime().toString(36).toUpperCase();
     const total=getTotal();
 
+    const tier = Math.floor(total / 1000);
     const orderObj = {
       id: orderId, date: now.toISOString(), source: 'online',
       memberId:         currentMember?.memberId || null,
@@ -2422,6 +2462,8 @@ async function submitOrder() {
       customerName:     nameVal  || currentMember?.name  || 'แขก / 訪客',
       customerPhone:    phoneVal || currentMember?.phone || '',
       deliveryLocation: deliveryVal,
+      deliveryKm:       tier * 3,
+      deliveryDays:     tier,
       note:             noteVal,
       items: cart.map(i=>({id:i.id,name:i.name,price:i.price,qty:i.qty})),
       subtotal:total, total, status:'pending',
