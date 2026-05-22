@@ -1322,7 +1322,54 @@ body::after {
 }
 .offline-bar.show { transform: translateY(0); }
 
-/* ── Skeleton loader ── */
+/* ── Lang Switcher ── */
+#lang-switcher {
+  position: fixed;
+  bottom: 32px;
+  left: 12px;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.lang-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  background: var(--surface);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--sh-sm);
+  transition: all .18s;
+  opacity: .65;
+}
+.lang-btn:hover, .lang-btn.active {
+  opacity: 1;
+  border-color: var(--primary);
+  transform: scale(1.12);
+  box-shadow: var(--sh-md);
+}
+.lang-btn.active { border-color: var(--primary); background: var(--primary-glow); }
+
+/* Edit profile lang buttons */
+.lang-btn-lg {
+  padding: 8px 14px;
+  border-radius: 50px;
+  border: 1.5px solid var(--border2);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .18s;
+  color: var(--text2);
+}
+.lang-btn-lg:hover { border-color:var(--primary); color:var(--primary); }
+.lang-btn-lg.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+</style>
 .skeleton {
   background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
   background-size: 200% 100%;
@@ -1358,51 +1405,52 @@ body::after {
   <div class="auth-box">
     <div class="auth-hero">
       <div class="auth-store-icon">🛍</div>
-      <div class="auth-store-name">ร้านค้าออนไลน์</div>
-      <div class="auth-tagline">
-        ระบุรหัสสมาชิกหรือลงทะเบียนใหม่<br>
-        <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;opacity:.85">輸入會員編號或新建會員</span>
+      <div class="auth-store-name" id="auth-store-name-text">ร้านค้าออนไลน์</div>
+      <div class="auth-tagline" id="auth-tagline-text">
+        ระบุรหัสสมาชิกหรือลงทะเบียนใหม่
       </div>
     </div>
     <div class="auth-body">
-
-      <!-- ── A: ผู้ที่มีรหัสสมาชิกแล้ว / 已有會員編號 ── -->
-      <div class="auth-desc">
-        🪪 มีรหัสสมาชิกแล้ว? / 已有會員編號？
-      </div>
+      <div class="auth-desc" id="auth-desc-lookup">🪪 มีรหัสสมาชิกแล้ว?</div>
       <input id="auth-mid-field" type="text" class="field-input"
-             placeholder="รหัสสมาชิก เช่น M0001 / 會員編號"
+             placeholder="รหัสสมาชิก เช่น M0001"
              maxlength="6" style="text-transform:uppercase;font-family:'Courier New',monospace;font-weight:700;letter-spacing:1px;color:var(--primary)"
              oninput="this.value=this.value.toUpperCase()"
              onkeydown="if(event.key==='Enter')document.getElementById('auth-lookup-phone').focus()">
       <input id="auth-lookup-phone" type="tel" class="field-input"
-             placeholder="เบอร์โทรที่ลงทะเบียนไว้ / 註冊時的電話"
+             placeholder="เบอร์โทรที่ลงทะเบียนไว้"
              autocomplete="tel"
              onkeydown="if(event.key==='Enter')lookupMember()">
       <button class="auth-submit-btn" id="auth-lookup-btn" onclick="lookupMember()"
               style="background:linear-gradient(135deg,var(--primary),#E8892B)">
-        🔍 ค้นหาและเข้าสู่ระบบ / 查詢並登入
+        🔍 ค้นหาและเข้าสู่ระบบ
       </button>
       <div id="auth-lookup-result" style="display:none;font-size:13px;border-radius:var(--r-sm);padding:10px 12px;"></div>
 
-      <div class="auth-or"><span>หรือ / 或</span></div>
+      <div class="auth-or"><span id="auth-or-1">หรือ</span></div>
 
-      <!-- ── B: สมาชิกใหม่ / 新會員 ── -->
       <div class="auth-new-form">
-        <div class="auth-new-title">📝 สมัครสมาชิกใหม่ / 新會員註冊</div>
+        <div class="auth-new-title" id="auth-new-title-text">📝 สมัครสมาชิกใหม่</div>
         <input class="field-input" id="auth-name" type="text"
-               placeholder="ชื่อ-นามสกุล / 姓名 (บังคับ)" autocomplete="name">
+               placeholder="ชื่อ-นามสกุล (บังคับ)" autocomplete="name">
         <input class="field-input" id="auth-phone" type="tel"
-               placeholder="เบอร์โทรศัพท์ / 電話 (บังคับ)" autocomplete="tel"
-               onkeydown="if(event.key==='Enter')registerMember()">
+               placeholder="เบอร์โทรศัพท์ (บังคับ)" autocomplete="tel">
+        <!-- 國籍選單 -->
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)" id="auth-nat-label">สัญชาติ</label>
+          <select id="auth-nationality" class="field-input" style="cursor:pointer"
+                  onchange="onNatChange(this.value)">
+            <option value="">— เลือกสัญชาติ / Select —</option>
+          </select>
+        </div>
         <button class="auth-submit-btn" id="auth-register-btn" onclick="registerMember()">
-          ✓ สมัครสมาชิก / 註冊會員
+          ✓ สมัครสมาชิก
         </button>
       </div>
 
       <div class="auth-or"><span></span></div>
-      <button class="auth-guest-btn" onclick="continueAsGuest()">
-        ดำเนินการในฐานะแขก / 以訪客身份繼續（不記錄歷史）
+      <button class="auth-guest-btn" id="auth-guest-btn-text" onclick="continueAsGuest()">
+        ดำเนินการในฐานะแขก
       </button>
     </div>
   </div>
@@ -1419,13 +1467,56 @@ body::after {
       <div class="member-provider" id="m-provider"></div>
     </div>
     <div class="member-body">
-      <div class="member-section-title">ประวัติ / 訂單歷史</div>
+      <div class="member-section-title" id="m-history-title">ประวัติ</div>
       <div id="m-order-hist">
-        <div style="text-align:center;color:var(--muted2);font-size:13px;padding:20px 0">ยังไม่มีประวัติการสั่งซื้อ<br><span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">尚無訂單記錄</span></div>
+        <div style="text-align:center;color:var(--muted2);font-size:13px;padding:20px 0">ยังไม่มีประวัติการสั่งซื้อ</div>
       </div>
     </div>
-    <div class="member-ft">
-      <button class="logout-btn" onclick="logout()">🚪 ออกจากระบบ <span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">登出</span></button>
+    <div class="member-ft" style="display:flex;flex-direction:column;gap:8px">
+      <button class="logout-btn" id="m-edit-profile-btn" onclick="openEditProfile()"
+        style="border-color:var(--primary);color:var(--primary)">✏ แก้ไขข้อมูล</button>
+      <button class="logout-btn" id="m-logout-btn" onclick="logout()">🚪 ออกจากระบบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit Profile Modal ── -->
+<div class="modal-overlay" id="edit-profile-modal" onclick="handleModalOutsideClick(event,'edit-profile-modal')">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-hd">
+      <div class="modal-title" id="edit-profile-title">✏ แก้ไขข้อมูลสมาชิก</div>
+      <button class="modal-close" onclick="closeModal('edit-profile-modal')">×</button>
+    </div>
+    <div class="modal-body" style="gap:14px">
+      <div class="field-group">
+        <label class="field-label" id="ep-name-label">ชื่อ</label>
+        <input class="field-input" id="ep-name" type="text" autocomplete="name">
+      </div>
+      <div class="field-group">
+        <label class="field-label" id="ep-phone-label">เบอร์โทร</label>
+        <input class="field-input" id="ep-phone" type="tel" autocomplete="tel">
+      </div>
+      <div class="field-group">
+        <label class="field-label" id="ep-nat-label">สัญชาติ</label>
+        <select class="field-input" id="ep-nationality" style="cursor:pointer"
+                onchange="onNatChange(this.value)">
+          <option value="">— Select —</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">ภาษา / Language</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="lang-btn-lg" onclick="setLang('th')" data-lang-lg="th">🇹🇭 ภาษาไทย</button>
+          <button class="lang-btn-lg" onclick="setLang('id')" data-lang-lg="id">🇮🇩 Indonesia</button>
+          <button class="lang-btn-lg" onclick="setLang('vi')" data-lang-lg="vi">🇻🇳 Tiếng Việt</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-cancel" onclick="closeModal('edit-profile-modal')">← ยกเลิก</button>
+      <button class="btn-confirm" onclick="saveEditProfile()">
+        <span id="ep-save-btn">บันทึก</span>
+      </button>
     </div>
   </div>
 </div>
@@ -1436,14 +1527,14 @@ body::after {
     <div class="brand-icon">🛍</div>
     <div>
       <div class="brand-name" id="shop-name">ร้านค้าออนไลน์</div>
-      <div class="brand-sub">คลิกสินค้าเพื่อเพิ่มลงตะกร้า <span class="zh">點擊商品加入購物車</span></div>
+      <div class="brand-sub" id="brand-sub-text">คลิกสินค้าเพื่อเพิ่มลงตะกร้า</div>
     </div>
   </div>
   <div class="header-right">
     <!-- Auth Area: hidden/shown by JS -->
     <div id="auth-area-loggedout">
       <button class="login-btn-hdr" onclick="showAuthModal()">
-        🪪 สมาชิก / 會員
+        <span id="login-btn-text">🪪 สมาชิก / 會員</span>
       </button>
     </div>
     <div id="auth-area-loggedin" style="display:none">
@@ -1485,10 +1576,10 @@ body::after {
   <aside class="cart-sidebar" id="cart-sidebar">
     <div class="cart-hd">
       <div class="cart-title">
-        🛒 ตะกร้าสินค้า
+        🛒 <span id="sb-cart-title">ตะกร้าสินค้า</span>
         <span class="cart-count-pill" id="sb-count">0 ชิ้น</span>
       </div>
-      <button class="cart-clear-btn" onclick="clearCart()">ล้างตะกร้า <span class="zh">清空</span></button>
+      <button class="cart-clear-btn" id="sb-clear-btn" onclick="clearCart()">ล้างตะกร้า</button>
     </div>
     <div class="cart-body-scroll" id="sb-cart-body">
       <div class="cart-empty">
@@ -1499,13 +1590,13 @@ body::after {
     <div class="cart-ft">
       <div class="cart-summary">
         <div class="cart-total-row">
-          <span class="cart-total-label">ยอดรวม <span class="zh">合計</span></span>
+          <span class="cart-total-label" id="sb-total-label">ยอดรวม</span>
           <span class="cart-total-amt" id="sb-total">NT$ 0</span>
         </div>
         <div class="cart-items-lbl" id="sb-items-lbl"></div>
       </div>
       <button class="checkout-btn" id="sb-checkout-btn" onclick="openOrderModal()" disabled>
-        🎉 สั่งซื้อ <span class="zh">送出訂單</span>
+        🎉 สั่งซื้อ
       </button>
     </div>
   </aside>
@@ -1524,7 +1615,7 @@ body::after {
   <div class="cart-drawer" id="cart-drawer">
     <div class="drawer-handle"></div>
     <div class="drawer-hd">
-      <div class="drawer-title">🛒 ตะกร้าสินค้า <span class="zh">購物車</span></div>
+      <div class="drawer-title">🛒 <span id="drawer-cart-title">ตะกร้าสินค้า</span></div>
       <button class="drawer-close" onclick="closeDrawer()">×</button>
     </div>
     <div class="drawer-body" id="drawer-cart-body">
@@ -1532,11 +1623,11 @@ body::after {
     </div>
     <div class="drawer-ft">
       <div class="cart-total-row">
-        <span class="cart-total-label">ยอดรวม <span class="zh">合計</span></span>
+        <span class="cart-total-label" id="drawer-total-label">ยอดรวม</span>
         <span class="cart-total-amt" id="drawer-total">NT$ 0</span>
       </div>
       <button class="checkout-btn" id="drawer-checkout-btn" onclick="closeDrawer();openOrderModal()" disabled>
-        🎉 สั่งซื้อ <span class="zh">送出訂單</span>
+        🎉 สั่งซื้อ
       </button>
     </div>
   </div>
@@ -1546,80 +1637,70 @@ body::after {
 <div class="modal-overlay" id="order-modal" onclick="handleModalOutsideClick(event,'order-modal')">
   <div class="modal-box" id="order-box">
     <div class="modal-hd">
-      <div class="modal-title">📋 ยืนยันคำสั่งซื้อ <span class="zh" style="font-size:14px">確認訂單</span></div>
+      <div class="modal-title" id="modal-order-title">📋 ยืนยันคำสั่งซื้อ</div>
       <button class="modal-close" onclick="closeModal('order-modal')">×</button>
     </div>
     <div class="modal-body">
-      <!-- Member chip (shown when logged in) -->
       <div id="modal-member-chip" style="display:none;background:var(--primary-glow);border:1px solid rgba(201,78,110,.25);border-radius:var(--r-sm);padding:8px 12px;font-size:12px;color:var(--primary);font-weight:600;"></div>
-      <!-- Customer Info -->
       <div>
-        <div class="order-summary-hd">👤 ข้อมูลลูกค้า <span class="zh">顧客資料</span></div>
+        <div class="order-summary-hd" id="modal-customer-info-title">👤 ข้อมูลลูกค้า</div>
         <div class="field-row">
           <div class="field-group">
-            <label class="field-label">ชื่อ <span class="zh">姓名</span></label>
-            <input class="field-input" id="customer-name" type="text" placeholder="ชื่อของคุณ" autocomplete="name">
+            <label class="field-label" id="modal-name-label">ชื่อ</label>
+            <input class="field-input" id="customer-name" type="text" placeholder="ชื่อ" autocomplete="name">
           </div>
           <div class="field-group">
-            <label class="field-label">เบอร์โทร <span class="zh">電話</span></label>
-            <input class="field-input" id="customer-phone" type="tel" placeholder="เบอร์ติดต่อ" autocomplete="tel">
+            <label class="field-label" id="modal-phone-label">เบอร์โทร</label>
+            <input class="field-input" id="customer-phone" type="tel" placeholder="เบอร์โทร" autocomplete="tel">
           </div>
         </div>
-        <div class="field-hint" style="margin-top:6px">ชื่อและเบอร์โทรไม่บังคับ / 姓名與電話選填</div>
-      </div>
-      <!-- Note -->
-      <div class="field-group">
-        <label class="field-label">📍 สถานที่จัดส่ง <span class="zh">送貨地點</span> <span style="color:var(--primary);font-size:12px">*</span></label>
-        <input class="field-input" id="order-delivery" type="text" placeholder="เช่น บ้านเลขที่ / 地址或取貨地點" autocomplete="street-address" required>
-        <div class="field-hint" id="order-delivery-err" style="color:var(--primary);display:none">กรุณากรอกสถานที่จัดส่ง / 請填寫送貨地點</div>
-        <div class="field-hint" id="delivery-range-hint" style="margin-top:4px;line-height:1.7;display:none">
-          🛵 NT$1,000 → 3km / 1日內 &nbsp;|&nbsp;
-          NT$2,000 → 6km / 2日內 &nbsp;|&nbsp;
-          NT$3,000 → 9km / 3日內<br>
-          <span style="font-family:'Noto Sans TC',sans-serif">（金額每增加 NT$1,000 多 3km、多 1 天，以此類推）</span>
-        </div>
+        <div class="field-hint" id="modal-customer-hint" style="margin-top:6px">ชื่อและเบอร์โทรไม่บังคับ</div>
       </div>
       <div class="field-group">
-        <label class="field-label">หมายเหตุ <span class="zh">備註</span> <span style="font-weight:400;color:var(--muted2)">（ไม่บังคับ）</span></label>
-        <input class="field-input" id="order-note" type="text" placeholder="เช่น ไม่ใส่น้ำแข็ง / 不加冰">
+        <label class="field-label" id="modal-delivery-label">📍 สถานที่จัดส่ง <span style="color:var(--primary);font-size:12px">*</span></label>
+        <input class="field-input" id="order-delivery" type="text" placeholder="เช่น บ้านเลขที่" autocomplete="street-address" required>
+        <div class="field-hint" id="modal-delivery-err" style="color:var(--primary);display:none">กรุณากรอกสถานที่จัดส่ง</div>
+        <div class="field-hint" id="delivery-range-hint" style="margin-top:4px;line-height:1.7;display:none"></div>
       </div>
-      <!-- Order Summary -->
+      <div class="field-group">
+        <label class="field-label" id="modal-note-label">หมายเหตุ <span style="font-weight:400;color:var(--muted2)">（ไม่บังคับ）</span></label>
+        <input class="field-input" id="order-note" type="text" placeholder="เช่น ไม่ใส่น้ำแข็ง">
+      </div>
       <div>
-        <div class="order-summary-hd">🧾 รายการสินค้า <span class="zh">訂單明細</span></div>
+        <div class="order-summary-hd" id="modal-summary-title">🧾 รายการสินค้า</div>
         <table class="order-table">
           <thead>
             <tr>
-              <th>สินค้า <span class="zh">商品</span></th>
-              <th style="text-align:center">จำนวน <span class="zh">數量</span></th>
-              <th>รวม <span class="zh">小計</span></th>
+              <th id="modal-th-product">สินค้า</th>
+              <th style="text-align:center" id="modal-th-qty">จำนวน</th>
+              <th id="modal-th-sub">รวม</th>
             </tr>
           </thead>
           <tbody id="modal-order-body"></tbody>
         </table>
         <div class="order-total-row">
-          <span class="order-total-label">ยอดรวมทั้งหมด <span class="zh">訂單總金額</span></span>
+          <span class="order-total-label" id="modal-order-total-label">ยอดรวมทั้งหมด</span>
           <span class="order-total-amt" id="modal-order-total">NT$ 0</span>
         </div>
       </div>
     </div>
     <div class="modal-ft">
-      <button class="btn-cancel" onclick="closeModal('order-modal')">← แก้ไข <span class="zh">返回修改</span></button>
+      <button class="btn-cancel" id="modal-btn-back" onclick="closeModal('order-modal')">← แก้ไข</button>
       <button class="btn-confirm" id="confirm-btn" onclick="submitOrder()">
-        ✓ ยืนยันสั่งซื้อ <span class="zh">確認送出</span>
+        <span id="modal-btn-confirm-text">✓ ยืนยันสั่งซื้อ</span>
       </button>
     </div>
-  </div>
-</div>
+  </div></div>
 
 <!-- ── Success Modal ── -->
 <div class="modal-overlay" id="success-modal">
   <div class="modal-box">
     <div class="success-box">
       <div class="success-icon">🎉</div>
-      <div class="success-title">ส่งคำสั่งซื้อแล้ว！</div>
-      <div class="success-msg">ขอบคุณที่สั่งซื้อ！<br>เราจะเตรียมสินค้าให้คุณโดยเร็ว<br><span class="zh" style="font-size:13px">感謝您的訂購，我們將盡快為您備貨</span></div>
-      <div class="success-order-id" id="success-order-id">เลขที่ออเดอร์ / 訂單編號：—</div>
-      <button class="btn-done" onclick="closeSuccess()">สั่งซื้อต่อ <span class="zh">繼續選購</span></button>
+      <div class="success-title" id="success-title-text">ส่งคำสั่งซื้อแล้ว！</div>
+      <div class="success-msg" id="success-msg-text">ขอบคุณที่สั่งซื้อ！<br>เราจะเตรียมสินค้าให้คุณโดยเร็ว</div>
+      <div class="success-order-id" id="success-order-id">เลขที่ออเดอร์：—</div>
+      <button class="btn-done" id="btn-done-text" onclick="closeSuccess()">สั่งซื้อต่อ</button>
     </div>
   </div>
 </div>
@@ -1684,7 +1765,7 @@ try {
 /* ── App State ── */
 let allProducts   = [];
 let cart          = [];
-let activeCat     = 'food';   // 預設顯示第一個有商品的分類
+let activeCat     = 'frozen';  // 預設顯示冷凍食品
 let drawerOpen    = false;
 let memberOpen    = false;
 let currentMember = null;   // { memberId, name, phone, uid (=memberId), orderCount, totalSpent }
@@ -1836,22 +1917,19 @@ async function syncProducts() {
 function normPhone(p) { return String(p).replace(/\D/g, '').slice(-10) || null; }
 
 // Register new member by name + phone → returns member record
-async function createMember(name, phone) {
+async function createMember(name, phone, nationality = '') {
   if (!_fbOK) throw new Error('Firebase not available');
   const phoneKey = normPhone(phone);
   if (!phoneKey) throw new Error('invalid_phone');
 
-  // Check if phone already registered
   const phoneIndexRef = ref(_db, `shop/phoneIndex/${phoneKey}`);
   const existing = await get(phoneIndexRef);
   if (existing.exists()) {
-    // Phone already registered → return existing member
     const existingId = existing.val();
     const snap = await get(ref(_db, `${FB.MEMBERS}/${existingId}`));
     if (snap.exists()) return snap.val();
   }
 
-  // New member → atomic serial number
   let serial = 1;
   await runTransaction(ref(_db, FB.COUNTER), cur => { serial = (cur || 0) + 1; return serial; });
   const memberId = 'M' + String(serial).padStart(4, '0');
@@ -1861,13 +1939,12 @@ async function createMember(name, phone) {
     name:        name.trim(),
     phone:       phone.trim(),
     phoneKey,
+    nationality: nationality || '',
     createdAt:   now,
     orderCount:  0,
     totalSpent:  0,
   };
-  // Write member record
   await set(ref(_db, `${FB.MEMBERS}/${memberId}`), record);
-  // Write phone index for fast lookup
   await set(phoneIndexRef, memberId);
   return record;
 }
@@ -1931,39 +2008,25 @@ async function lookupMember() {
   const mid    = (document.getElementById('auth-mid-field')?.value    || '').trim().toUpperCase();
   const phone  = (document.getElementById('auth-lookup-phone')?.value || '').trim();
   const btn    = document.getElementById('auth-lookup-btn');
-
-  if (!mid || !mid.match(/^M\d{1,6}$/)) {
-    showLookupResult('กรุณากรอกรหัสสมาชิก เช่น M0001 / 請輸入如 M0001 的會員編號', 'err');
-    return;
-  }
-  if (!phone) {
-    showLookupResult('กรุณากรอกเบอร์โทรที่ลงทะเบียนไว้ / 請填寫註冊時的電話', 'err');
-    return;
-  }
-
-  if (btn) { btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ… / 驗證中…'; }
+  if (!mid || !mid.match(/^M\d{1,6}$/)) { showLookupResult(t('lookupNotFound'), 'err'); return; }
+  if (!phone)                             { showLookupResult(t('placeholderLookupPhone'), 'err'); return; }
+  if (btn) { btn.disabled = true; btn.textContent = t('lookupSearching'); }
   try {
     const member = await lookupMemberById(mid);
-    if (!member) {
-      showLookupResult('ไม่พบรหัสสมาชิกนี้ / 找不到此會員編號', 'err');
-      return;
-    }
-    // ── 安全驗證：電話末 4 碼必須吻合 ──
+    if (!member) { showLookupResult(t('lookupNotFound'), 'err'); return; }
     const inputLast4  = phone.replace(/\D/g,'').slice(-4);
     const storedLast4 = String(member.phone || '').replace(/\D/g,'').slice(-4);
     if (!inputLast4 || inputLast4 !== storedLast4) {
-      showLookupResult(
-        'เบอร์โทรไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง / 電話末4碼不符，請確認後重試', 'err');
-      return;
+      showLookupResult(t('lookupPhoneMismatch'), 'err'); return;
     }
-    // 驗證通過
+    if (member.nationality && NAT_TO_LANG[member.nationality]) setLang(NAT_TO_LANG[member.nationality]);
     setMember(member);
     hideAuthModal();
-    showToast(`ยินดีต้อนรับกลับ ${member.name}！🎉 (${member.memberId})`, 'ok');
+    showToast(`${t('welcomeBack')} ${member.name}！🎉 (${member.memberId})`, 'ok');
   } catch(e) {
-    showLookupResult('เกิดข้อผิดพลาด กรุณาลองใหม่ / 發生錯誤，請再試', 'err');
+    showLookupResult(t('lookupError'), 'err');
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '🔍 ค้นหาและเข้าสู่ระบบ / 查詢並登入'; }
+    if (btn) { btn.disabled = false; btn.textContent = t('btnLookup'); }
   }
 }
 function showLookupResult(msg, type) {
@@ -1980,32 +2043,30 @@ function showLookupResult(msg, type) {
 async function registerMember() {
   const name  = (document.getElementById('auth-name')?.value  || '').trim();
   const phone = (document.getElementById('auth-phone')?.value || '').trim();
-  if (!name)  { showToast('กรุณากรอกชื่อ / 請填寫姓名', 'err'); return; }
-  if (!phone) { showToast('กรุณากรอกเบอร์โทร / 請填寫電話', 'err'); return; }
+  const nat   = (document.getElementById('auth-nationality')?.value || '').trim();
+  if (!name)  { showToast(t('nameRequired'), 'err'); return; }
+  if (!phone) { showToast(t('phoneRequired'), 'err'); return; }
 
   const btn = document.getElementById('auth-register-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'กำลังสมัคร…'; }
+  if (btn) { btn.disabled = true; btn.textContent = t('registering'); }
   try {
-    const member = await createMember(name, phone);
+    const member = await createMember(name, phone, nat);
+    // 依國籍自動設語言
+    if (nat && NAT_TO_LANG[nat]) setLang(NAT_TO_LANG[nat]);
     setMember(member);
     safeSetLS(LS.MEMBER, member);
     hideAuthModal();
-    const isNew = (member.orderCount === 0 && member.createdAt);
+    const isNew = (member.orderCount === 0);
     if (isNew) {
-      showToast(`สมัครสำเร็จ！ รหัสของคุณคือ ${member.memberId} 🎉`, 'ok');
+      showToast(`${t('registerSuccess')} ${member.memberId} 🎉`, 'ok');
     } else {
-      showToast(`พบข้อมูลสมาชิกเดิม：${member.memberId} ยินดีต้อนรับ ${member.name}！`, 'ok');
+      showToast(`${t('foundExisting')} ${member.name}！(${member.memberId})`, 'ok');
     }
-    // Clear fields
-    try {
-      ['auth-name','auth-phone'].forEach(id => {
-        const el = document.getElementById(id); if (el) el.value = '';
-      });
-    } catch(e) {}
+    try { ['auth-name','auth-phone'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; }); } catch(e){}
   } catch(e) {
     showToast('เกิดข้อผิดพลาด: ' + (e.message || ''), 'err');
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '✓ สมัครสมาชิก / 註冊會員'; }
+    if (btn) { btn.disabled = false; btn.textContent = t('btnRegister'); }
   }
 }
 
@@ -2013,14 +2074,20 @@ function continueAsGuest() {
   isGuest = true;
   hideAuthModal();
   updateAuthUI();
-  showToast('กำลังใช้งานในฐานะแขก / 訪客模式', 'ok');
+  showToast(t('guestMode'), 'ok');
 }
 
 function setMember(member) {
   currentMember = member;
   isGuest = false;
   safeSetLS(LS.MEMBER, member);
+  // 依會員國籍設語言
+  if (member?.nationality && NAT_TO_LANG[member.nationality]) {
+    _lang = NAT_TO_LANG[member.nationality];
+    try { localStorage.setItem('shop_lang', _lang); } catch(e) {}
+  }
   updateAuthUI();
+  applyLang();
 }
 
 function logout() {
@@ -2033,7 +2100,7 @@ function logout() {
   updateAuthUI();
   closeMemberDrawer();
   setTimeout(() => showAuthModal(), 400);
-  showToast('ออกจากระบบแล้ว / 已登出');
+  showToast(t('loggedOut'));
 }
 
 /* ── Update Header ── */
@@ -2045,11 +2112,14 @@ function updateAuthUI() {
     lo.style.display = ''; li.style.display = 'none'; return;
   }
   lo.style.display = 'none'; li.style.display = '';
-  const name    = currentMember.name    || '—';
-  const membId  = currentMember.memberId || '—';
+  const name   = currentMember.name    || '—';
+  const membId = currentMember.memberId || '—';
+  const nat    = currentMember.nationality || '';
+  const natObj = NATIONALITIES.find(n=>n.code===nat);
+  const flag   = natObj ? natObj.flag : '';
   const initial = (name[0] || '?').toUpperCase();
   const avatarEl = document.getElementById('hdr-avatar');
-  if (avatarEl) avatarEl.innerHTML = initial;
+  if (avatarEl) avatarEl.innerHTML = flag ? `<span style="font-size:16px">${flag}</span>` : initial;
   setText('hdr-uname', name.split(' ')[0]);
   setText('hdr-mid',   membId);
 }
@@ -2122,8 +2192,371 @@ async function renderMemberDrawer() {
 }
 
 /* ══════════════════════════════════════════════
-   Categories (align with POS)
+   多語言系統 i18n
+   支援：th（泰文）、id（印尼文）、vi（越南文）
 ══════════════════════════════════════════════ */
+const LANGS = {
+  th: {
+    flag:'🇹🇭', label:'ภาษาไทย', nationality:'ไทย',
+    brandSub:'คลิกสินค้าเพื่อเพิ่มลงตะกร้า',
+    loginBtn:'🪪 สมาชิก / 會員',
+    authTitle:'ร้านค้าออนไลน์',
+    authTagline:'ระบุรหัสสมาชิกหรือลงทะเบียนใหม่',
+    authDescLookup:'🪪 มีรหัสสมาชิกแล้ว?',
+    placeholderMid:'รหัสสมาชิก เช่น M0001',
+    placeholderLookupPhone:'เบอร์โทรที่ลงทะเบียนไว้',
+    btnLookup:'🔍 ค้นหาและเข้าสู่ระบบ',
+    orDivider:'หรือ',
+    newMemberTitle:'📝 สมัครสมาชิกใหม่',
+    placeholderName:'ชื่อ-นามสกุล (บังคับ)',
+    placeholderPhone:'เบอร์โทรศัพท์ (บังคับ)',
+    labelNationality:'สัญชาติ',
+    btnRegister:'✓ สมัครสมาชิก',
+    btnGuest:'ดำเนินการในฐานะแขก',
+    cartTitle:'ตะกร้าสินค้า',
+    cartEmpty:'ตะกร้าว่างเปล่า\nกดที่สินค้าเพื่อเพิ่ม',
+    cartPcs:'ชิ้น',
+    cartItems:'รายการ',
+    cartTotal:'ยอดรวม',
+    btnCheckout:'🎉 สั่งซื้อ',
+    drawerView:'ดูตะกร้า',
+    barEmpty:'ตะกร้าว่างเปล่า กดที่สินค้าเพื่อเพิ่ม 🛒',
+    orderTitle:'📋 ยืนยันคำสั่งซื้อ',
+    customerInfo:'👤 ข้อมูลลูกค้า',
+    labelName:'ชื่อ',
+    labelPhone:'เบอร์โทร',
+    customerHint:'ชื่อและเบอร์โทรไม่บังคับ',
+    labelDelivery:'📍 สถานที่จัดส่ง',
+    placeholderDelivery:'เช่น บ้านเลขที่ / 地址',
+    deliveryRequired:'กรุณากรอกสถานที่จัดส่ง',
+    labelNote:'หมายเหตุ',
+    placeholderNote:'เช่น ไม่ใส่น้ำแข็ง',
+    orderSummary:'🧾 รายการสินค้า',
+    thProduct:'สินค้า', thQty:'จำนวน', thSub:'รวม',
+    orderTotalLabel:'ยอดรวมทั้งหมด',
+    btnBack:'← แก้ไข',
+    btnConfirm:'✓ ยืนยันสั่งซื้อ',
+    successTitle:'ส่งคำสั่งซื้อแล้ว！',
+    successMsg:'ขอบคุณที่สั่งซื้อ！\nเราจะเตรียมสินค้าให้คุณโดยเร็ว',
+    successOrderId:'เลขที่ออเดอร์',
+    btnContinue:'สั่งซื้อต่อ',
+    historyTitle:'ประวัติ',
+    historyEmpty:'ยังไม่มีประวัติการสั่งซื้อ',
+    btnLogout:'🚪 ออกจากระบบ',
+    btnEditProfile:'✏ แก้ไขข้อมูล',
+    editProfileTitle:'✏ แก้ไขข้อมูลสมาชิก',
+    btnSaveProfile:'บันทึก',
+    minOrder:'ยอดขั้นต่ำ NT$1,000',
+    toastAdded:'เพิ่มแล้ว',
+    toastCleared:'ล้างตะกร้าแล้ว',
+    toastCartEmpty:'ตะกร้าว่างเปล่า！',
+    toastOrderSent:'ส่งออเดอร์ไปยัง Firebase ✓',
+    toastFail:'ส่งไม่สำเร็จ กรุณาลองใหม่',
+    deliveryRule:'🛵 NT$1,000 → 3km / 1วัน | NT$2,000 → 6km / 2วัน | NT$3,000 → 9km / 3วัน',
+    deliveryRuleNote:'(เพิ่มทุก NT$1,000 ได้ +3km +1วัน)',
+    deliveryYours:'📍 ออเดอร์ของคุณ NT$%t：%kkm ภายใน %d วัน',
+    clearCart:'ล้างตะกร้า',
+    lookupVerifyHint:'',
+    lookupNotFound:'ไม่พบรหัสสมาชิกนี้',
+    lookupPhoneMismatch:'เบอร์โทรไม่ตรงกัน',
+    lookupError:'เกิดข้อผิดพลาด กรุณาลองใหม่',
+    lookupSearching:'กำลังตรวจสอบ…',
+    registering:'กำลังสมัคร…',
+    nameRequired:'กรุณากรอกชื่อ',
+    phoneRequired:'กรุณากรอกเบอร์โทร',
+    guestMode:'กำลังใช้งานในฐานะแขก',
+    loggedOut:'ออกจากระบบแล้ว',
+    welcomeBack:'ยินดีต้อนรับ',
+    registerSuccess:'สมัครสำเร็จ！ รหัสของคุณคือ',
+    foundExisting:'พบข้อมูลสมาชิกเดิม ยินดีต้อนรับ',
+    mbrId:'รหัสสมาชิก',
+  },
+  id: {
+    flag:'🇮🇩', label:'Bahasa Indonesia', nationality:'Indonesia',
+    brandSub:'Klik produk untuk tambah ke keranjang',
+    loginBtn:'🪪 Anggota / 會員',
+    authTitle:'Toko Online',
+    authTagline:'Masukkan kode anggota atau daftar baru',
+    authDescLookup:'🪪 Sudah punya kode anggota?',
+    placeholderMid:'Kode anggota, mis. M0001',
+    placeholderLookupPhone:'Nomor HP saat mendaftar',
+    btnLookup:'🔍 Cari dan Masuk',
+    orDivider:'atau',
+    newMemberTitle:'📝 Daftar Anggota Baru',
+    placeholderName:'Nama lengkap (wajib)',
+    placeholderPhone:'Nomor HP (wajib)',
+    labelNationality:'Kewarganegaraan',
+    btnRegister:'✓ Daftar Sekarang',
+    btnGuest:'Lanjutkan sebagai Tamu',
+    cartTitle:'Keranjang Belanja',
+    cartEmpty:'Keranjang kosong\nKlik produk untuk tambah',
+    cartPcs:'item',
+    cartItems:'produk',
+    cartTotal:'Total',
+    btnCheckout:'🎉 Pesan Sekarang',
+    drawerView:'Lihat Keranjang',
+    barEmpty:'Keranjang kosong, klik produk untuk tambah 🛒',
+    orderTitle:'📋 Konfirmasi Pesanan',
+    customerInfo:'👤 Data Pelanggan',
+    labelName:'Nama',
+    labelPhone:'Nomor HP',
+    customerHint:'Nama dan nomor HP tidak wajib',
+    labelDelivery:'📍 Alamat Pengiriman',
+    placeholderDelivery:'mis. Alamat rumah / 地址',
+    deliveryRequired:'Harap isi alamat pengiriman',
+    labelNote:'Catatan',
+    placeholderNote:'mis. Tanpa es batu',
+    orderSummary:'🧾 Rincian Pesanan',
+    thProduct:'Produk', thQty:'Jumlah', thSub:'Subtotal',
+    orderTotalLabel:'Total Keseluruhan',
+    btnBack:'← Ubah',
+    btnConfirm:'✓ Konfirmasi Pesanan',
+    successTitle:'Pesanan Terkirim！',
+    successMsg:'Terima kasih telah memesan！\nKami akan segera menyiapkan pesanan Anda.',
+    successOrderId:'No. Pesanan',
+    btnContinue:'Lanjut Belanja',
+    historyTitle:'Riwayat',
+    historyEmpty:'Belum ada riwayat pembelian',
+    btnLogout:'🚪 Keluar',
+    btnEditProfile:'✏ Edit Profil',
+    editProfileTitle:'✏ Edit Data Anggota',
+    btnSaveProfile:'Simpan',
+    minOrder:'Minimal pembelian NT$1.000',
+    toastAdded:'Ditambahkan',
+    toastCleared:'Keranjang dikosongkan',
+    toastCartEmpty:'Keranjang masih kosong！',
+    toastOrderSent:'Pesanan dikirim ke Firebase ✓',
+    toastFail:'Gagal mengirim, coba lagi',
+    deliveryRule:'🛵 NT$1.000 → 3km / 1 hari | NT$2.000 → 6km / 2 hari | NT$3.000 → 9km / 3 hari',
+    deliveryRuleNote:'(Setiap tambah NT$1.000 dapat +3km +1 hari)',
+    deliveryYours:'📍 Pesanan Anda NT$%t：%kkm dalam %d hari',
+    clearCart:'Kosongkan',
+    lookupNotFound:'Kode anggota tidak ditemukan',
+    lookupPhoneMismatch:'Nomor HP tidak sesuai',
+    lookupError:'Terjadi kesalahan, coba lagi',
+    lookupSearching:'Memeriksa…',
+    registering:'Mendaftarkan…',
+    nameRequired:'Harap isi nama',
+    phoneRequired:'Harap isi nomor HP',
+    guestMode:'Melanjutkan sebagai tamu',
+    loggedOut:'Berhasil keluar',
+    welcomeBack:'Selamat datang kembali',
+    registerSuccess:'Berhasil daftar！ Kode Anda：',
+    foundExisting:'Data anggota ditemukan, selamat datang',
+    mbrId:'Kode Anggota',
+  },
+  vi: {
+    flag:'🇻🇳', label:'Tiếng Việt', nationality:'Việt Nam',
+    brandSub:'Nhấp vào sản phẩm để thêm vào giỏ hàng',
+    loginBtn:'🪪 Thành viên / 會員',
+    authTitle:'Cửa hàng trực tuyến',
+    authTagline:'Nhập mã thành viên hoặc đăng ký mới',
+    authDescLookup:'🪪 Đã có mã thành viên?',
+    placeholderMid:'Mã thành viên, vd. M0001',
+    placeholderLookupPhone:'Số điện thoại đã đăng ký',
+    btnLookup:'🔍 Tìm và Đăng nhập',
+    orDivider:'hoặc',
+    newMemberTitle:'📝 Đăng ký thành viên mới',
+    placeholderName:'Họ và tên (bắt buộc)',
+    placeholderPhone:'Số điện thoại (bắt buộc)',
+    labelNationality:'Quốc tịch',
+    btnRegister:'✓ Đăng ký ngay',
+    btnGuest:'Tiếp tục với tư cách khách',
+    cartTitle:'Giỏ hàng',
+    cartEmpty:'Giỏ hàng trống\nNhấp vào sản phẩm để thêm',
+    cartPcs:'sản phẩm',
+    cartItems:'loại',
+    cartTotal:'Tổng cộng',
+    btnCheckout:'🎉 Đặt hàng',
+    drawerView:'Xem giỏ hàng',
+    barEmpty:'Giỏ hàng trống, nhấp vào sản phẩm để thêm 🛒',
+    orderTitle:'📋 Xác nhận đơn hàng',
+    customerInfo:'👤 Thông tin khách hàng',
+    labelName:'Họ tên',
+    labelPhone:'Điện thoại',
+    customerHint:'Họ tên và điện thoại không bắt buộc',
+    labelDelivery:'📍 Địa chỉ giao hàng',
+    placeholderDelivery:'vd. Địa chỉ nhà / 地址',
+    deliveryRequired:'Vui lòng nhập địa chỉ giao hàng',
+    labelNote:'Ghi chú',
+    placeholderNote:'vd. Không đá',
+    orderSummary:'🧾 Chi tiết đơn hàng',
+    thProduct:'Sản phẩm', thQty:'Số lượng', thSub:'Thành tiền',
+    orderTotalLabel:'Tổng đơn hàng',
+    btnBack:'← Sửa lại',
+    btnConfirm:'✓ Xác nhận đặt hàng',
+    successTitle:'Đã gửi đơn hàng！',
+    successMsg:'Cảm ơn bạn đã đặt hàng！\nChúng tôi sẽ chuẩn bị hàng ngay cho bạn.',
+    successOrderId:'Mã đơn hàng',
+    btnContinue:'Tiếp tục mua',
+    historyTitle:'Lịch sử',
+    historyEmpty:'Chưa có lịch sử mua hàng',
+    btnLogout:'🚪 Đăng xuất',
+    btnEditProfile:'✏ Sửa thông tin',
+    editProfileTitle:'✏ Sửa thông tin thành viên',
+    btnSaveProfile:'Lưu',
+    minOrder:'Đơn tối thiểu NT$1.000',
+    toastAdded:'Đã thêm',
+    toastCleared:'Đã xóa giỏ hàng',
+    toastCartEmpty:'Giỏ hàng đang trống！',
+    toastOrderSent:'Đã gửi đơn hàng lên Firebase ✓',
+    toastFail:'Gửi thất bại, vui lòng thử lại',
+    deliveryRule:'🛵 NT$1.000 → 3km / 1 ngày | NT$2.000 → 6km / 2 ngày | NT$3.000 → 9km / 3 ngày',
+    deliveryRuleNote:'(Mỗi NT$1.000 thêm được +3km +1 ngày)',
+    deliveryYours:'📍 Đơn của bạn NT$%t：%kkm trong %d ngày',
+    clearCart:'Xóa giỏ',
+    lookupNotFound:'Không tìm thấy mã thành viên',
+    lookupPhoneMismatch:'Số điện thoại không khớp',
+    lookupError:'Có lỗi xảy ra, thử lại',
+    lookupSearching:'Đang kiểm tra…',
+    registering:'Đang đăng ký…',
+    nameRequired:'Vui lòng nhập họ tên',
+    phoneRequired:'Vui lòng nhập số điện thoại',
+    guestMode:'Đang dùng với tư cách khách',
+    loggedOut:'Đã đăng xuất',
+    welcomeBack:'Chào mừng trở lại',
+    registerSuccess:'Đăng ký thành công！ Mã của bạn：',
+    foundExisting:'Tìm thấy tài khoản cũ, xin chào',
+    mbrId:'Mã thành viên',
+  },
+};
+
+const NATIONALITIES = [
+  { code:'th', flag:'🇹🇭', label:'ไทย / Thai' },
+  { code:'id', flag:'🇮🇩', label:'Indonesia / Indonesian' },
+  { code:'vi', flag:'🇻🇳', label:'Việt Nam / Vietnamese' },
+  { code:'tw', flag:'🇹🇼', label:'台灣 / Taiwanese' },
+  { code:'cn', flag:'🇨🇳', label:'中國 / Chinese' },
+  { code:'mm', flag:'🇲🇲', label:'Myanmar / Burmese' },
+  { code:'ph', flag:'🇵🇭', label:'Philippines / Filipino' },
+  { code:'other', flag:'🌏', label:'อื่นๆ / Other' },
+];
+
+// nationality → preferred lang
+const NAT_TO_LANG = { th:'th', id:'id', vi:'vi' };
+
+let _lang = 'th';  // 目前語言
+
+function t(key) {
+  return (LANGS[_lang] || LANGS.th)[key] || LANGS.th[key] || key;
+}
+function setLang(lang) {
+  if (!LANGS[lang]) return;
+  _lang = lang;
+  try { localStorage.setItem('shop_lang', lang); } catch(e) {}
+  applyLang();
+}
+function detectLang() {
+  try {
+    const saved = localStorage.getItem('shop_lang');
+    if (saved && LANGS[saved]) { _lang = saved; return; }
+    const m = safeGetLS(LS.MEMBER, null);
+    if (m?.nationality && NAT_TO_LANG[m.nationality]) {
+      _lang = NAT_TO_LANG[m.nationality]; return;
+    }
+    const bl = navigator.language?.slice(0,2) || 'th';
+    if (LANGS[bl]) _lang = bl;
+  } catch(e) {}
+}
+
+/* 套用語言到所有靜態 UI 元素 */
+function applyLang() {
+  const L = LANGS[_lang] || LANGS.th;
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const setPlaceholder = (id, val) => { const el = document.getElementById(id); if(el) el.placeholder = val; };
+  const setHtml = (id, val) => { const el = document.getElementById(id); if(el) el.innerHTML = val; };
+
+  // Header
+  set('brand-sub-text', L.brandSub);
+  set('login-btn-text', L.loginBtn);
+
+  // Auth modal
+  set('auth-store-name-text', L.authTitle);
+  set('auth-tagline-text', L.authTagline);
+  set('auth-desc-lookup', L.authDescLookup);
+  setPlaceholder('auth-mid-field', L.placeholderMid);
+  setPlaceholder('auth-lookup-phone', L.placeholderLookupPhone);
+  set('auth-lookup-btn', L.btnLookup);
+  set('auth-or-1', L.orDivider);
+  set('auth-new-title-text', L.newMemberTitle);
+  setPlaceholder('auth-name', L.placeholderName);
+  setPlaceholder('auth-phone', L.placeholderPhone);
+  set('auth-nat-label', L.labelNationality);
+  set('auth-register-btn', L.btnRegister);
+  set('auth-guest-btn-text', L.btnGuest);
+
+  // Sidebar cart
+  set('sb-cart-title', L.cartTitle);
+  set('sb-clear-btn', L.clearCart);
+  set('sb-total-label', L.cartTotal);
+  set('sb-checkout-btn', L.btnCheckout);
+
+  // Drawer cart
+  set('drawer-cart-title', L.cartTitle);
+  set('drawer-total-label', L.cartTotal);
+  set('drawer-checkout-btn', L.btnCheckout);
+
+  // Order modal
+  set('modal-order-title', L.orderTitle);
+  set('modal-customer-info-title', L.customerInfo);
+  set('modal-name-label', L.labelName);
+  setPlaceholder('customer-name', L.labelName);
+  set('modal-phone-label', L.labelPhone);
+  setPlaceholder('customer-phone', L.labelPhone);
+  set('modal-customer-hint', L.customerHint);
+  set('modal-delivery-label', L.labelDelivery);
+  setPlaceholder('order-delivery', L.placeholderDelivery);
+  set('modal-delivery-err', L.deliveryRequired);
+  set('modal-note-label', L.labelNote);
+  setPlaceholder('order-note', L.placeholderNote);
+  set('modal-summary-title', L.orderSummary);
+  set('modal-th-product', L.thProduct);
+  set('modal-th-qty', L.thQty);
+  set('modal-th-sub', L.thSub);
+  set('modal-order-total-label', L.orderTotalLabel);
+  set('modal-btn-back', L.btnBack);
+  set('modal-btn-confirm-text', L.btnConfirm);
+
+  // Success modal
+  set('success-title-text', L.successTitle);
+  set('success-msg-text', L.successMsg);
+  set('btn-done-text', L.btnContinue);
+
+  // Member drawer
+  set('m-history-title', L.historyTitle);
+  set('m-logout-btn', L.btnLogout);
+  set('m-edit-profile-btn', L.btnEditProfile);
+
+  // Language switcher active state (both floater and profile modal)
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === _lang);
+  });
+  document.querySelectorAll('.lang-btn-lg').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.langLg === _lang);
+  });
+
+  // Re-render dynamic cart UI
+  updateAllCartUI();
+}
+
+/* 語言切換浮動按鈕 — 右上角 */
+function buildLangSwitcher() {
+  const existing = document.getElementById('lang-switcher');
+  if (existing) return;
+  const div = document.createElement('div');
+  div.id = 'lang-switcher';
+  div.innerHTML = Object.entries(LANGS).map(([code, L]) =>
+    `<button class="lang-btn${_lang===code?' active':''}" data-lang="${code}" onclick="setLang('${code}')" title="${L.label}">${L.flag}</button>`
+  ).join('');
+  document.body.appendChild(div);
+}
+
+/* 國籍選單選項 HTML */
+function buildNatOptions(selectedCode) {
+  return NATIONALITIES.map(n =>
+    `<option value="${n.code}"${n.code===selectedCode?' selected':''}>${n.flag} ${n.label}</option>`
+  ).join('');
+}
 const CATEGORIES = [
   {id:'frozen',    icon:'🧊',  th:'อาหารแช่แข็ง',              zh:'冷凍食品'},
   {id:'seasoning', icon:'🌶',  th:'เครื่องปรุง',               zh:'調味品'},
@@ -2263,11 +2696,12 @@ function addToCart(id) {
     const ex = cart.find(c=>c.id===id);
     if (ex) ex.qty+=1; else cart.push({id:p.id,name:p.name,price:p.price,category:p.category,qty:1});
     updateAllCartUI(); renderProducts();
-    showToast(`เพิ่มแล้ว：${p.name}`,'ok');
+    showToast(`${t('toastAdded')}：${p.name}`,'ok');
     const b = document.getElementById('hdr-badge');
     if (b) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
   } catch(e) {}
 }
+
 function changeQty(id, delta) {
   const item = cart.find(c=>c.id===id);
   if (!item) return;
@@ -2278,16 +2712,14 @@ function removeFromCart(id) { cart=cart.filter(c=>c.id!==id); updateAllCartUI();
 function clearCart() {
   if (!cart.length) return;
   cart=[]; updateAllCartUI(); renderProducts();
-  showToast('ล้างตะกร้าแล้ว / 購物車已清空');
+  showToast(t('toastCleared'));
 }
 function getTotal()    { return cart.reduce((s,i)=>s+Number(i.price||0)*Number(i.qty||0),0); }
 function getTotalQty() { return cart.reduce((s,i)=>s+Number(i.qty||0),0); }
 
 function buildCartHTML() {
   if (!cart.length) return `<div class="cart-empty"><div class="cart-empty-icon">🛒</div>
-    <div class="cart-empty-text">ตะกร้าว่างเปล่า<br>
-      <span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">點擊商品開始選購</span>
-    </div></div>`;
+    <div class="cart-empty-text">${t('cartEmpty').replace('\n','<br>')}</div></div>`;
   return cart.map(item=>`
     <div class="cart-item">
       <div class="ci-name">${h(item.name)}</div>
@@ -2303,23 +2735,26 @@ function buildCartHTML() {
 
 function updateAllCartUI() {
   const total=getTotal(), tq=getTotalQty(), has=cart.length>0;
-  const empty=`<div class="cart-empty"><div class="cart-empty-icon">🛒</div><div class="cart-empty-text">ตะกร้าว่างเปล่า<br><span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">點擊商品開始選購</span></div></div>`;
-  const cartH = has ? buildCartHTML() : empty;
+  const emptyHTML = `<div class="cart-empty"><div class="cart-empty-icon">🛒</div><div class="cart-empty-text">${t('cartEmpty').replace('\n','<br>')}</div></div>`;
+  const cartH = has ? buildCartHTML() : emptyHTML;
   // Header
   setText('hdr-cart-txt', `NT$ ${total}`);
   const b = document.getElementById('hdr-badge');
   if (b) { b.style.display=has?'flex':'none'; b.textContent=tq; }
   // Sidebar
-  const sbc=document.getElementById('sb-cart-body'), sbco=document.getElementById('sb-count'),
-        sbt=document.getElementById('sb-total'), sbck=document.getElementById('sb-checkout-btn'),
+  const sbc=document.getElementById('sb-cart-body'),
+        sbco=document.getElementById('sb-count'),
+        sbt=document.getElementById('sb-total'),
+        sbck=document.getElementById('sb-checkout-btn'),
         sbl=document.getElementById('sb-items-lbl');
   if(sbc) sbc.innerHTML=cartH;
-  if(sbco) sbco.textContent=`${tq} ชิ้น`;
+  if(sbco) sbco.textContent=`${tq} ${t('cartPcs')}`;
   if(sbt) sbt.textContent=`NT$ ${total}`;
   if(sbck) sbck.disabled=!has;
-  if(sbl) sbl.textContent=has?`รวม ${cart.length} รายการ`:'';
+  if(sbl) sbl.textContent=has?`${t('cartItems')}: ${cart.length}`:'';
   // Drawer
-  const db=document.getElementById('drawer-cart-body'), dt=document.getElementById('drawer-total'),
+  const db=document.getElementById('drawer-cart-body'),
+        dt=document.getElementById('drawer-total'),
         dc=document.getElementById('drawer-checkout-btn');
   if(db) db.innerHTML=cartH;
   if(dt) dt.textContent=`NT$ ${total}`;
@@ -2328,9 +2763,9 @@ function updateAllCartUI() {
   const mb=document.getElementById('mcb-inner');
   if(mb) mb.innerHTML = has
     ? `<div class="mcb-icon">🛒</div>
-       <div class="mcb-info"><div class="mcb-count">รวม ${tq} ชิ้น</div><div class="mcb-amt">NT$ ${total}</div></div>
-       <div class="mcb-go">ดูตะกร้า</div>`
-    : `<div class="mcb-empty">ตะกร้าว่างเปล่า กดที่สินค้าเพื่อเพิ่ม 🛒</div>`;
+       <div class="mcb-info"><div class="mcb-count">${t('cartItems')}: ${tq}</div><div class="mcb-amt">NT$ ${total}</div></div>
+       <div class="mcb-go">${t('drawerView')}</div>`
+    : `<div class="mcb-empty">${t('barEmpty')}</div>`;
 }
 
 /* ══════════════════════════════════════════════
@@ -2366,14 +2801,14 @@ function closeModal(id) {
 function handleModalOutsideClick(e,id) { if(e.target===document.getElementById(id)) closeModal(id); }
 
 function openOrderModal() {
-  if(!cart.length) { showToast('ตะกร้าว่างเปล่า！','err'); return; }
+  if(!cart.length) { showToast(t('toastCartEmpty'),'err'); return; }
 
   const total = getTotal();
 
   // 最低訂單金額 1000 元
   if(total < 1000) {
     const need = 1000 - total;
-    showToast(`ยอดขั้นต่ำ NT$1,000 / 最低消費 NT$1,000（還差 NT$${need}）`, 'err');
+    showToast(`${t('minOrder')}（還差 NT$${need}）`, 'err');
     return;
   }
 
@@ -2400,10 +2835,11 @@ function openOrderModal() {
   const hintEl  = document.getElementById('delivery-range-hint');
   if(hintEl) {
     hintEl.style.display = '';
-    // 更新目前這筆訂單的配送資格
-    hintEl.innerHTML = `🛵 NT$1,000 → 3km / 1日內 &nbsp;|&nbsp; NT$2,000 → 6km / 2日內 &nbsp;|&nbsp; NT$3,000 → 9km / 3日內<br>
-      <span style="font-family:'Noto Sans TC',sans-serif">（金額每增加 NT$1,000 多 3km、多 1 天）</span><br>
-      <b style="color:var(--primary)">📍 您的訂單 NT$${total}：${km}km 以內 / ${days} 日內送達</b>`;
+    const yourMsg = t('deliveryYours')
+      .replace('%t', total).replace('%k', km).replace('%d', days);
+    hintEl.innerHTML = `${t('deliveryRule')}<br>
+      <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
+      <b style="color:var(--primary)">${yourMsg}</b>`;
   }
 
   // Fill order table
@@ -2435,10 +2871,10 @@ async function submitOrder() {
   // 送貨地點必填驗證
   const deliveryVal = (document.getElementById('order-delivery')?.value||'').trim();
   if(!deliveryVal) {
-    const errEl = document.getElementById('order-delivery-err');
+    const errEl = document.getElementById('modal-delivery-err');
     if(errEl) errEl.style.display = '';
     document.getElementById('order-delivery')?.focus();
-    showToast('กรุณากรอกสถานที่จัดส่ง / 請填寫送貨地點','err');
+    showToast(t('deliveryRequired'),'err');
     return;
   }
   // 記住本次地點
@@ -2479,11 +2915,11 @@ async function submitOrder() {
 
     // Firebase 非同步寫入
     writeOrderToFirebase(orderObj).then(ok=>{
-      if(ok) showToast('ส่งออเดอร์ไปยัง Firebase ✓','ok');
+      if(ok) showToast(t('toastOrderSent'),'ok');
     });
 
     const si=document.getElementById('success-order-id');
-    if(si) si.textContent=`เลขที่ / 訂單編號：${orderId}`;
+    if(si) si.textContent=`${t('successOrderId')}：${orderId}`;
 
     cart=[]; updateAllCartUI(); renderProducts();
     closeModal('order-modal');
@@ -2497,13 +2933,73 @@ async function submitOrder() {
     } catch(e){}
   } catch(err) {
     console.error('[Shop] submitOrder:',err);
-    showToast('ส่งไม่สำเร็จ กรุณาลองใหม่ / 送出失敗','err');
+    showToast(t('toastFail'),'err');
   } finally {
     if(btn){
       btn.disabled=false;
-      btn.innerHTML='✓ ยืนยันสั่งซื้อ <span style="font-family:\'Noto Sans TC\',sans-serif;font-size:12px">確認送出</span>';
+      const el = document.getElementById('modal-btn-confirm-text');
+      if(el) el.textContent = t('btnConfirm');
     }
   }
+}
+
+/* 國籍變更 → 自動切語言 */
+function onNatChange(natCode) {
+  if (natCode && NAT_TO_LANG[natCode]) setLang(NAT_TO_LANG[natCode]);
+}
+
+/* 編輯會員資料 */
+function openEditProfile() {
+  if (!currentMember) return;
+  closeMemberDrawer();
+  const m = currentMember;
+  const nameEl = document.getElementById('ep-name');
+  const phoneEl = document.getElementById('ep-phone');
+  const natEl  = document.getElementById('ep-nationality');
+  if (nameEl)  nameEl.value  = m.name  || '';
+  if (phoneEl) phoneEl.value = m.phone || '';
+  if (natEl)   natEl.innerHTML = `<option value="">— Select —</option>` + buildNatOptions(m.nationality || '');
+  // Update lang buttons active state
+  document.querySelectorAll('.lang-btn-lg').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.langLg === _lang);
+  });
+  // Update EP labels
+  setText('edit-profile-title', t('editProfileTitle'));
+  setText('ep-name-label',  t('labelName'));
+  setText('ep-phone-label', t('labelPhone'));
+  setText('ep-nat-label',   t('labelNationality'));
+  setText('ep-save-btn',    t('btnSaveProfile'));
+  openModal('edit-profile-modal');
+}
+
+async function saveEditProfile() {
+  const name  = (document.getElementById('ep-name')?.value  || '').trim();
+  const phone = (document.getElementById('ep-phone')?.value || '').trim();
+  const nat   = (document.getElementById('ep-nationality')?.value || '').trim();
+  if (!name || !phone) { showToast(t('nameRequired'), 'err'); return; }
+
+  // Update local
+  if (currentMember) {
+    currentMember.name        = name;
+    currentMember.phone       = phone;
+    currentMember.nationality = nat;
+    safeSetLS(LS.MEMBER, currentMember);
+    updateAuthUI();
+
+    // Update Firebase
+    if (_fbOK && _db && currentMember.memberId) {
+      try {
+        await set(ref(_db, `${FB.MEMBERS}/${currentMember.memberId}/name`),        name);
+        await set(ref(_db, `${FB.MEMBERS}/${currentMember.memberId}/phone`),       phone);
+        await set(ref(_db, `${FB.MEMBERS}/${currentMember.memberId}/nationality`), nat);
+      } catch(e) { console.warn('[Shop] saveEditProfile Firebase:', e); }
+    }
+    // 依新國籍切語言
+    if (nat && NAT_TO_LANG[nat]) setLang(NAT_TO_LANG[nat]);
+  }
+  closeModal('edit-profile-modal');
+  showToast(t('btnSaveProfile') + ' ✓', 'ok');
+  setTimeout(() => openMemberDrawer(), 300);
 }
 
 function switchCat(catId) { activeCat=catId; renderTabs(); renderProducts(); }
@@ -2528,34 +3024,45 @@ function showToast(msg,type) {
          ③ Firebase 背景同步（有 timeout，不阻塞 UI）
 ══════════════════════════════════════════════ */
 async function init() {
-  // PWA 初始化
+  // ① 偵測語言（從 localStorage / 會員資料 / 瀏覽器語言）
+  detectLang();
+
+  // ② PWA 初始化
   initPWA();
 
-  // ── ① 立即從本機快取渲染商品（不等 Firebase）──
+  // ③ 建立語言切換按鈕
+  buildLangSwitcher();
+
+  // ④ 填充國籍下拉選單（Auth + Edit Profile）
+  const natOpts = buildNatOptions('');
+  const authNat = document.getElementById('auth-nationality');
+  if (authNat) authNat.innerHTML = `<option value="">— เลือกสัญชาติ —</option>` + natOpts;
+
+  // ⑤ 套用目前語言到所有 UI
+  applyLang();
+
+  // ⑥ 立即從本機快取渲染商品（不等 Firebase）
   allProducts = loadAllProducts();
   renderTabs();
   renderProducts();
   updateAllCartUI();
 
-  // ── ② 立即判斷會員狀態（不等 Firebase）──
+  // ⑦ 立即判斷會員狀態（不等 Firebase）
   const savedMember = safeGetLS(LS.MEMBER, null);
   if (savedMember?.memberId) {
-    // 確保 overlay 不擋畫面
     const o = document.getElementById('auth-overlay');
     if (o) { o.style.display = 'none'; o.classList.remove('visible'); }
-    // 先用本機快取登入，Firebase 背景驗證
-    setMember(savedMember);
+    setMember(savedMember);  // setMember 內已含語言偵測
     if (_fbOK) {
       lookupMemberById(savedMember.memberId)
         .then(fresh => { if (fresh) setMember(fresh); })
         .catch(() => {});
     }
   } else {
-    // 新訪客 → 顯示會員彈窗
     showAuthModal();
   }
 
-  // ── ③ Firebase 背景同步商品（有 8 秒 timeout，失敗不影響 UI）──
+  // ⑧ Firebase 背景同步商品（10 秒 timeout，失敗不影響 UI）
   syncProductsBackground();
 }
 
@@ -2738,6 +3245,8 @@ Object.assign(window, {
   showAuthModal, lookupMember, registerMember, continueAsGuest, logout,
   openMemberDrawer, closeMemberDrawer, handleMemberOutsideClick,
   pwaInstall, pwaDismiss,
+  setLang, onNatChange,
+  openEditProfile, saveEditProfile,
 });
 
 document.addEventListener('DOMContentLoaded', init);
