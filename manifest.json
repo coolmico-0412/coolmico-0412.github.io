@@ -1,7 +1,7 @@
 {
-  "name": "ร้านค้าออนไลน์ 線上訂購",
-  "short_name": "ร้านค้า",
-  "description": "สั่งซื้อสินค้าออนไลน์ได้ทันที / 線上訂購系統",
+  "name": "Online Shop",
+  "short_name": "Shop",
+  "description": "Online shopping / ร้านค้าออนไลน์ / Toko Online / Cửa hàng trực tuyến / 線上商店",
   "start_url": "index.html",
   "scope": "./",
   "display": "standalone",
@@ -11,46 +11,18 @@
   "lang": "th",
   "categories": ["shopping", "food"],
   "icons": [
-    {
-      "src": "icons/icon-72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "icons/icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "shortcuts": [
     {
-      "name": "สั่งซื้อสินค้า / 立即訂購",
-      "short_name": "สั่งซื้อ",
-      "description": "เปิดร้านค้าและสั่งซื้อสินค้า",
+      "name": "Order Now",
       "url": "shop_order.html",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     }
   ],
-  "screenshots": [],
   "prefer_related_applications": false
 }

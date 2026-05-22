@@ -1322,53 +1322,65 @@ body::after {
 }
 .offline-bar.show { transform: translateY(0); }
 
-/* ── Lang Switcher ── */
+/* ── Lang Switcher (左下角展開/折疊) ── */
 #lang-switcher {
   position: fixed;
-  bottom: 32px;
+  bottom: 20px;
   left: 12px;
   z-index: 900;
+}
+.ls-collapsed {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border2);
+  box-shadow: var(--sh-md);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all .2s;
+}
+.ls-collapsed:hover { border-color:var(--primary); transform:scale(1.08); }
+.ls-expanded {
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-.lang-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 2px solid var(--border2);
   background: var(--surface);
-  font-size: 18px;
-  cursor: pointer;
+  border: 1.5px solid var(--border2);
+  border-radius: var(--r-md);
+  padding: 8px;
+  box-shadow: var(--sh-lg);
+  min-width: 72px;
+}
+.ls-label {
+  font-size: 14px;
+  text-align: center;
+  color: var(--muted);
+  padding: 2px 0 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+.ls-opt {
   display: flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: var(--sh-sm);
-  transition: all .18s;
-  opacity: .65;
-}
-.lang-btn:hover, .lang-btn.active {
-  opacity: 1;
-  border-color: var(--primary);
-  transform: scale(1.12);
-  box-shadow: var(--sh-md);
-}
-.lang-btn.active { border-color: var(--primary); background: var(--primary-glow); }
-
-/* Edit profile lang buttons */
-.lang-btn-lg {
-  padding: 8px 14px;
-  border-radius: 50px;
-  border: 1.5px solid var(--border2);
-  background: var(--surface);
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all .15s;
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
-  transition: all .18s;
   color: var(--text2);
+  white-space: nowrap;
 }
-.lang-btn-lg:hover { border-color:var(--primary); color:var(--primary); }
-.lang-btn-lg.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+.ls-opt:hover { background:var(--surface2); border-color:var(--border2); }
+.ls-opt.active { background:var(--primary-glow); border-color:var(--primary); color:var(--primary); font-weight:700; }
+.ls-flag { font-size: 18px; }
+.ls-txt  { font-size: 12px; }
+
+/* Edit profile lang buttons — remove, replaced by nat select */
+.lang-btn-lg { display: none; }
 </style>
 .skeleton {
   background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
@@ -1497,19 +1509,12 @@ body::after {
         <input class="field-input" id="ep-phone" type="tel" autocomplete="tel">
       </div>
       <div class="field-group">
-        <label class="field-label" id="ep-nat-label">สัญชาติ</label>
+        <label class="field-label" id="ep-nat-label">สัญชาติ / ภาษา</label>
         <select class="field-input" id="ep-nationality" style="cursor:pointer"
                 onchange="onNatChange(this.value)">
           <option value="">— Select —</option>
         </select>
-      </div>
-      <div class="field-group">
-        <label class="field-label">ภาษา / Language</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="lang-btn-lg" onclick="setLang('th')" data-lang-lg="th">🇹🇭 ภาษาไทย</button>
-          <button class="lang-btn-lg" onclick="setLang('id')" data-lang-lg="id">🇮🇩 Indonesia</button>
-          <button class="lang-btn-lg" onclick="setLang('vi')" data-lang-lg="vi">🇻🇳 Tiếng Việt</button>
-        </div>
+        <div class="field-hint" style="margin-top:4px" id="ep-nat-hint">เลือกสัญชาติเพื่อเปลี่ยนภาษา</div>
       </div>
     </div>
     <div class="modal-ft">
@@ -2082,12 +2087,12 @@ function setMember(member) {
   isGuest = false;
   safeSetLS(LS.MEMBER, member);
   // 依會員國籍設語言
-  if (member?.nationality && NAT_TO_LANG[member.nationality]) {
-    _lang = NAT_TO_LANG[member.nationality];
+  if (member?.nationality && LANGS[member.nationality]) {
+    _lang = member.nationality;
     try { localStorage.setItem('shop_lang', _lang); } catch(e) {}
   }
   updateAuthUI();
-  applyLang();
+  applyLang(); // 含 buildLangSwitcher (→折疊) + renderTabs
 }
 
 function logout() {
@@ -2095,11 +2100,14 @@ function logout() {
   isGuest = false;
   cart = [];
   safeSetLS(LS.MEMBER, null);
+  localStorage.removeItem('shop_lang'); // 清除語言選擇，下次由瀏覽器語言決定
+  detectLang();
   updateAllCartUI();
   renderProducts();
   updateAuthUI();
   closeMemberDrawer();
   setTimeout(() => showAuthModal(), 400);
+  buildLangSwitcher(); // 登出後展開
   showToast(t('loggedOut'));
 }
 
@@ -2197,9 +2205,9 @@ async function renderMemberDrawer() {
 ══════════════════════════════════════════════ */
 const LANGS = {
   th: {
-    flag:'🇹🇭', label:'ภาษาไทย', nationality:'ไทย',
+    flag:'🇹🇭', label:'ภาษาไทย',
     brandSub:'คลิกสินค้าเพื่อเพิ่มลงตะกร้า',
-    loginBtn:'🪪 สมาชิก / 會員',
+    loginBtn:'🪪 สมาชิก',
     authTitle:'ร้านค้าออนไลน์',
     authTagline:'ระบุรหัสสมาชิกหรือลงทะเบียนใหม่',
     authDescLookup:'🪪 มีรหัสสมาชิกแล้ว?',
@@ -2210,145 +2218,58 @@ const LANGS = {
     newMemberTitle:'📝 สมัครสมาชิกใหม่',
     placeholderName:'ชื่อ-นามสกุล (บังคับ)',
     placeholderPhone:'เบอร์โทรศัพท์ (บังคับ)',
-    labelNationality:'สัญชาติ',
+    labelNationality:'สัญชาติ / ภาษา',
     btnRegister:'✓ สมัครสมาชิก',
     btnGuest:'ดำเนินการในฐานะแขก',
     cartTitle:'ตะกร้าสินค้า',
     cartEmpty:'ตะกร้าว่างเปล่า\nกดที่สินค้าเพื่อเพิ่ม',
-    cartPcs:'ชิ้น',
-    cartItems:'รายการ',
-    cartTotal:'ยอดรวม',
-    btnCheckout:'🎉 สั่งซื้อ',
-    drawerView:'ดูตะกร้า',
+    cartPcs:'ชิ้น', cartItems:'รายการ', cartTotal:'ยอดรวม',
+    btnCheckout:'🎉 สั่งซื้อ', drawerView:'ดูตะกร้า',
     barEmpty:'ตะกร้าว่างเปล่า กดที่สินค้าเพื่อเพิ่ม 🛒',
     orderTitle:'📋 ยืนยันคำสั่งซื้อ',
     customerInfo:'👤 ข้อมูลลูกค้า',
-    labelName:'ชื่อ',
-    labelPhone:'เบอร์โทร',
+    labelName:'ชื่อ', labelPhone:'เบอร์โทร',
     customerHint:'ชื่อและเบอร์โทรไม่บังคับ',
     labelDelivery:'📍 สถานที่จัดส่ง',
-    placeholderDelivery:'เช่น บ้านเลขที่ / 地址',
+    placeholderDelivery:'เช่น บ้านเลขที่',
     deliveryRequired:'กรุณากรอกสถานที่จัดส่ง',
-    labelNote:'หมายเหตุ',
-    placeholderNote:'เช่น ไม่ใส่น้ำแข็ง',
+    labelNote:'หมายเหตุ', placeholderNote:'เช่น ไม่ใส่น้ำแข็ง',
     orderSummary:'🧾 รายการสินค้า',
     thProduct:'สินค้า', thQty:'จำนวน', thSub:'รวม',
     orderTotalLabel:'ยอดรวมทั้งหมด',
-    btnBack:'← แก้ไข',
-    btnConfirm:'✓ ยืนยันสั่งซื้อ',
+    btnBack:'← แก้ไข', btnConfirm:'✓ ยืนยันสั่งซื้อ',
     successTitle:'ส่งคำสั่งซื้อแล้ว！',
     successMsg:'ขอบคุณที่สั่งซื้อ！\nเราจะเตรียมสินค้าให้คุณโดยเร็ว',
-    successOrderId:'เลขที่ออเดอร์',
-    btnContinue:'สั่งซื้อต่อ',
-    historyTitle:'ประวัติ',
-    historyEmpty:'ยังไม่มีประวัติการสั่งซื้อ',
-    btnLogout:'🚪 ออกจากระบบ',
-    btnEditProfile:'✏ แก้ไขข้อมูล',
-    editProfileTitle:'✏ แก้ไขข้อมูลสมาชิก',
-    btnSaveProfile:'บันทึก',
+    successOrderId:'เลขที่ออเดอร์', btnContinue:'สั่งซื้อต่อ',
+    historyTitle:'ประวัติ', historyEmpty:'ยังไม่มีประวัติการสั่งซื้อ',
+    btnLogout:'🚪 ออกจากระบบ', btnEditProfile:'✏ แก้ไขข้อมูล',
+    editProfileTitle:'✏ แก้ไขข้อมูลสมาชิก', btnSaveProfile:'บันทึก',
     minOrder:'ยอดขั้นต่ำ NT$1,000',
-    toastAdded:'เพิ่มแล้ว',
-    toastCleared:'ล้างตะกร้าแล้ว',
-    toastCartEmpty:'ตะกร้าว่างเปล่า！',
-    toastOrderSent:'ส่งออเดอร์ไปยัง Firebase ✓',
+    toastAdded:'เพิ่มแล้ว', toastCleared:'ล้างตะกร้าแล้ว',
+    toastCartEmpty:'ตะกร้าว่างเปล่า！', toastOrderSent:'ส่งออเดอร์ไปยัง Firebase ✓',
     toastFail:'ส่งไม่สำเร็จ กรุณาลองใหม่',
-    deliveryRule:'🛵 NT$1,000 → 3km / 1วัน | NT$2,000 → 6km / 2วัน | NT$3,000 → 9km / 3วัน',
+    deliveryRule:'🛵 NT$1,000→3km/1วัน | NT$2,000→6km/2วัน | NT$3,000→9km/3วัน',
     deliveryRuleNote:'(เพิ่มทุก NT$1,000 ได้ +3km +1วัน)',
     deliveryYours:'📍 ออเดอร์ของคุณ NT$%t：%kkm ภายใน %d วัน',
     clearCart:'ล้างตะกร้า',
-    lookupVerifyHint:'',
     lookupNotFound:'ไม่พบรหัสสมาชิกนี้',
     lookupPhoneMismatch:'เบอร์โทรไม่ตรงกัน',
     lookupError:'เกิดข้อผิดพลาด กรุณาลองใหม่',
-    lookupSearching:'กำลังตรวจสอบ…',
-    registering:'กำลังสมัคร…',
-    nameRequired:'กรุณากรอกชื่อ',
-    phoneRequired:'กรุณากรอกเบอร์โทร',
-    guestMode:'กำลังใช้งานในฐานะแขก',
-    loggedOut:'ออกจากระบบแล้ว',
+    lookupSearching:'กำลังตรวจสอบ…', registering:'กำลังสมัคร…',
+    nameRequired:'กรุณากรอกชื่อ', phoneRequired:'กรุณากรอกเบอร์โทร',
+    guestMode:'กำลังใช้งานในฐานะแขก', loggedOut:'ออกจากระบบแล้ว',
     welcomeBack:'ยินดีต้อนรับ',
     registerSuccess:'สมัครสำเร็จ！ รหัสของคุณคือ',
     foundExisting:'พบข้อมูลสมาชิกเดิม ยินดีต้อนรับ',
     mbrId:'รหัสสมาชิก',
-  },
-  id: {
-    flag:'🇮🇩', label:'Bahasa Indonesia', nationality:'Indonesia',
-    brandSub:'Klik produk untuk tambah ke keranjang',
-    loginBtn:'🪪 Anggota / 會員',
-    authTitle:'Toko Online',
-    authTagline:'Masukkan kode anggota atau daftar baru',
-    authDescLookup:'🪪 Sudah punya kode anggota?',
-    placeholderMid:'Kode anggota, mis. M0001',
-    placeholderLookupPhone:'Nomor HP saat mendaftar',
-    btnLookup:'🔍 Cari dan Masuk',
-    orDivider:'atau',
-    newMemberTitle:'📝 Daftar Anggota Baru',
-    placeholderName:'Nama lengkap (wajib)',
-    placeholderPhone:'Nomor HP (wajib)',
-    labelNationality:'Kewarganegaraan',
-    btnRegister:'✓ Daftar Sekarang',
-    btnGuest:'Lanjutkan sebagai Tamu',
-    cartTitle:'Keranjang Belanja',
-    cartEmpty:'Keranjang kosong\nKlik produk untuk tambah',
-    cartPcs:'item',
-    cartItems:'produk',
-    cartTotal:'Total',
-    btnCheckout:'🎉 Pesan Sekarang',
-    drawerView:'Lihat Keranjang',
-    barEmpty:'Keranjang kosong, klik produk untuk tambah 🛒',
-    orderTitle:'📋 Konfirmasi Pesanan',
-    customerInfo:'👤 Data Pelanggan',
-    labelName:'Nama',
-    labelPhone:'Nomor HP',
-    customerHint:'Nama dan nomor HP tidak wajib',
-    labelDelivery:'📍 Alamat Pengiriman',
-    placeholderDelivery:'mis. Alamat rumah / 地址',
-    deliveryRequired:'Harap isi alamat pengiriman',
-    labelNote:'Catatan',
-    placeholderNote:'mis. Tanpa es batu',
-    orderSummary:'🧾 Rincian Pesanan',
-    thProduct:'Produk', thQty:'Jumlah', thSub:'Subtotal',
-    orderTotalLabel:'Total Keseluruhan',
-    btnBack:'← Ubah',
-    btnConfirm:'✓ Konfirmasi Pesanan',
-    successTitle:'Pesanan Terkirim！',
-    successMsg:'Terima kasih telah memesan！\nKami akan segera menyiapkan pesanan Anda.',
-    successOrderId:'No. Pesanan',
-    btnContinue:'Lanjut Belanja',
-    historyTitle:'Riwayat',
-    historyEmpty:'Belum ada riwayat pembelian',
-    btnLogout:'🚪 Keluar',
-    btnEditProfile:'✏ Edit Profil',
-    editProfileTitle:'✏ Edit Data Anggota',
-    btnSaveProfile:'Simpan',
-    minOrder:'Minimal pembelian NT$1.000',
-    toastAdded:'Ditambahkan',
-    toastCleared:'Keranjang dikosongkan',
-    toastCartEmpty:'Keranjang masih kosong！',
-    toastOrderSent:'Pesanan dikirim ke Firebase ✓',
-    toastFail:'Gagal mengirim, coba lagi',
-    deliveryRule:'🛵 NT$1.000 → 3km / 1 hari | NT$2.000 → 6km / 2 hari | NT$3.000 → 9km / 3 hari',
-    deliveryRuleNote:'(Setiap tambah NT$1.000 dapat +3km +1 hari)',
-    deliveryYours:'📍 Pesanan Anda NT$%t：%kkm dalam %d hari',
-    clearCart:'Kosongkan',
-    lookupNotFound:'Kode anggota tidak ditemukan',
-    lookupPhoneMismatch:'Nomor HP tidak sesuai',
-    lookupError:'Terjadi kesalahan, coba lagi',
-    lookupSearching:'Memeriksa…',
-    registering:'Mendaftarkan…',
-    nameRequired:'Harap isi nama',
-    phoneRequired:'Harap isi nomor HP',
-    guestMode:'Melanjutkan sebagai tamu',
-    loggedOut:'Berhasil keluar',
-    welcomeBack:'Selamat datang kembali',
-    registerSuccess:'Berhasil daftar！ Kode Anda：',
-    foundExisting:'Data anggota ditemukan, selamat datang',
-    mbrId:'Kode Anggota',
+    cats:{ frozen:'อาหารแช่แข็ง', seasoning:'เครื่องปรุง', drink:'เครื่องดื่ม',
+           rice:'ข้าว', alcohol:'เครื่องดื่มแอลกอฮอล์', hygiene:'ของใช้ส่วนตัว',
+           food:'อาหาร', other:'อื่นๆ' },
   },
   vi: {
-    flag:'🇻🇳', label:'Tiếng Việt', nationality:'Việt Nam',
+    flag:'🇻🇳', label:'Tiếng Việt',
     brandSub:'Nhấp vào sản phẩm để thêm vào giỏ hàng',
-    loginBtn:'🪪 Thành viên / 會員',
+    loginBtn:'🪪 Thành viên',
     authTitle:'Cửa hàng trực tuyến',
     authTagline:'Nhập mã thành viên hoặc đăng ký mới',
     authDescLookup:'🪪 Đã có mã thành viên?',
@@ -2359,81 +2280,253 @@ const LANGS = {
     newMemberTitle:'📝 Đăng ký thành viên mới',
     placeholderName:'Họ và tên (bắt buộc)',
     placeholderPhone:'Số điện thoại (bắt buộc)',
-    labelNationality:'Quốc tịch',
+    labelNationality:'Quốc tịch / Ngôn ngữ',
     btnRegister:'✓ Đăng ký ngay',
     btnGuest:'Tiếp tục với tư cách khách',
     cartTitle:'Giỏ hàng',
     cartEmpty:'Giỏ hàng trống\nNhấp vào sản phẩm để thêm',
-    cartPcs:'sản phẩm',
-    cartItems:'loại',
-    cartTotal:'Tổng cộng',
-    btnCheckout:'🎉 Đặt hàng',
-    drawerView:'Xem giỏ hàng',
+    cartPcs:'sản phẩm', cartItems:'loại', cartTotal:'Tổng cộng',
+    btnCheckout:'🎉 Đặt hàng', drawerView:'Xem giỏ hàng',
     barEmpty:'Giỏ hàng trống, nhấp vào sản phẩm để thêm 🛒',
     orderTitle:'📋 Xác nhận đơn hàng',
     customerInfo:'👤 Thông tin khách hàng',
-    labelName:'Họ tên',
-    labelPhone:'Điện thoại',
+    labelName:'Họ tên', labelPhone:'Điện thoại',
     customerHint:'Họ tên và điện thoại không bắt buộc',
     labelDelivery:'📍 Địa chỉ giao hàng',
-    placeholderDelivery:'vd. Địa chỉ nhà / 地址',
+    placeholderDelivery:'vd. Địa chỉ nhà',
     deliveryRequired:'Vui lòng nhập địa chỉ giao hàng',
-    labelNote:'Ghi chú',
-    placeholderNote:'vd. Không đá',
+    labelNote:'Ghi chú', placeholderNote:'vd. Không đá',
     orderSummary:'🧾 Chi tiết đơn hàng',
     thProduct:'Sản phẩm', thQty:'Số lượng', thSub:'Thành tiền',
     orderTotalLabel:'Tổng đơn hàng',
-    btnBack:'← Sửa lại',
-    btnConfirm:'✓ Xác nhận đặt hàng',
+    btnBack:'← Sửa lại', btnConfirm:'✓ Xác nhận đặt hàng',
     successTitle:'Đã gửi đơn hàng！',
     successMsg:'Cảm ơn bạn đã đặt hàng！\nChúng tôi sẽ chuẩn bị hàng ngay cho bạn.',
-    successOrderId:'Mã đơn hàng',
-    btnContinue:'Tiếp tục mua',
-    historyTitle:'Lịch sử',
-    historyEmpty:'Chưa có lịch sử mua hàng',
-    btnLogout:'🚪 Đăng xuất',
-    btnEditProfile:'✏ Sửa thông tin',
-    editProfileTitle:'✏ Sửa thông tin thành viên',
-    btnSaveProfile:'Lưu',
+    successOrderId:'Mã đơn hàng', btnContinue:'Tiếp tục mua',
+    historyTitle:'Lịch sử', historyEmpty:'Chưa có lịch sử mua hàng',
+    btnLogout:'🚪 Đăng xuất', btnEditProfile:'✏ Sửa thông tin',
+    editProfileTitle:'✏ Sửa thông tin thành viên', btnSaveProfile:'Lưu',
     minOrder:'Đơn tối thiểu NT$1.000',
-    toastAdded:'Đã thêm',
-    toastCleared:'Đã xóa giỏ hàng',
-    toastCartEmpty:'Giỏ hàng đang trống！',
-    toastOrderSent:'Đã gửi đơn hàng lên Firebase ✓',
+    toastAdded:'Đã thêm', toastCleared:'Đã xóa giỏ hàng',
+    toastCartEmpty:'Giỏ hàng đang trống！', toastOrderSent:'Đã gửi đơn hàng lên Firebase ✓',
     toastFail:'Gửi thất bại, vui lòng thử lại',
-    deliveryRule:'🛵 NT$1.000 → 3km / 1 ngày | NT$2.000 → 6km / 2 ngày | NT$3.000 → 9km / 3 ngày',
+    deliveryRule:'🛵 NT$1.000→3km/1ng | NT$2.000→6km/2ng | NT$3.000→9km/3ng',
     deliveryRuleNote:'(Mỗi NT$1.000 thêm được +3km +1 ngày)',
     deliveryYours:'📍 Đơn của bạn NT$%t：%kkm trong %d ngày',
     clearCart:'Xóa giỏ',
     lookupNotFound:'Không tìm thấy mã thành viên',
     lookupPhoneMismatch:'Số điện thoại không khớp',
     lookupError:'Có lỗi xảy ra, thử lại',
-    lookupSearching:'Đang kiểm tra…',
-    registering:'Đang đăng ký…',
-    nameRequired:'Vui lòng nhập họ tên',
-    phoneRequired:'Vui lòng nhập số điện thoại',
-    guestMode:'Đang dùng với tư cách khách',
-    loggedOut:'Đã đăng xuất',
+    lookupSearching:'Đang kiểm tra…', registering:'Đang đăng ký…',
+    nameRequired:'Vui lòng nhập họ tên', phoneRequired:'Vui lòng nhập số điện thoại',
+    guestMode:'Đang dùng với tư cách khách', loggedOut:'Đã đăng xuất',
     welcomeBack:'Chào mừng trở lại',
     registerSuccess:'Đăng ký thành công！ Mã của bạn：',
     foundExisting:'Tìm thấy tài khoản cũ, xin chào',
     mbrId:'Mã thành viên',
+    cats:{ frozen:'Thực phẩm đông lạnh', seasoning:'Gia vị', drink:'Đồ uống',
+           rice:'Gạo', alcohol:'Rượu bia', hygiene:'Vệ sinh & làm đẹp',
+           food:'Thực phẩm', other:'Khác' },
+  },
+  id: {
+    flag:'🇮🇩', label:'Bahasa Indonesia',
+    brandSub:'Klik produk untuk tambah ke keranjang',
+    loginBtn:'🪪 Anggota',
+    authTitle:'Toko Online',
+    authTagline:'Masukkan kode anggota atau daftar baru',
+    authDescLookup:'🪪 Sudah punya kode anggota?',
+    placeholderMid:'Kode anggota, mis. M0001',
+    placeholderLookupPhone:'Nomor HP saat mendaftar',
+    btnLookup:'🔍 Cari dan Masuk',
+    orDivider:'atau',
+    newMemberTitle:'📝 Daftar Anggota Baru',
+    placeholderName:'Nama lengkap (wajib)',
+    placeholderPhone:'Nomor HP (wajib)',
+    labelNationality:'Kebangsaan / Bahasa',
+    btnRegister:'✓ Daftar Sekarang',
+    btnGuest:'Lanjutkan sebagai Tamu',
+    cartTitle:'Keranjang Belanja',
+    cartEmpty:'Keranjang kosong\nKlik produk untuk tambah',
+    cartPcs:'item', cartItems:'produk', cartTotal:'Total',
+    btnCheckout:'🎉 Pesan Sekarang', drawerView:'Lihat Keranjang',
+    barEmpty:'Keranjang kosong, klik produk untuk tambah 🛒',
+    orderTitle:'📋 Konfirmasi Pesanan',
+    customerInfo:'👤 Data Pelanggan',
+    labelName:'Nama', labelPhone:'Nomor HP',
+    customerHint:'Nama dan nomor HP tidak wajib',
+    labelDelivery:'📍 Alamat Pengiriman',
+    placeholderDelivery:'mis. Alamat rumah',
+    deliveryRequired:'Harap isi alamat pengiriman',
+    labelNote:'Catatan', placeholderNote:'mis. Tanpa es batu',
+    orderSummary:'🧾 Rincian Pesanan',
+    thProduct:'Produk', thQty:'Jumlah', thSub:'Subtotal',
+    orderTotalLabel:'Total Keseluruhan',
+    btnBack:'← Ubah', btnConfirm:'✓ Konfirmasi Pesanan',
+    successTitle:'Pesanan Terkirim！',
+    successMsg:'Terima kasih telah memesan！\nKami akan segera menyiapkan pesanan Anda.',
+    successOrderId:'No. Pesanan', btnContinue:'Lanjut Belanja',
+    historyTitle:'Riwayat', historyEmpty:'Belum ada riwayat pembelian',
+    btnLogout:'🚪 Keluar', btnEditProfile:'✏ Edit Profil',
+    editProfileTitle:'✏ Edit Data Anggota', btnSaveProfile:'Simpan',
+    minOrder:'Minimal pembelian NT$1.000',
+    toastAdded:'Ditambahkan', toastCleared:'Keranjang dikosongkan',
+    toastCartEmpty:'Keranjang masih kosong！', toastOrderSent:'Pesanan dikirim ke Firebase ✓',
+    toastFail:'Gagal mengirim, coba lagi',
+    deliveryRule:'🛵 NT$1.000→3km/1hr | NT$2.000→6km/2hr | NT$3.000→9km/3hr',
+    deliveryRuleNote:'(Setiap tambah NT$1.000 dapat +3km +1 hari)',
+    deliveryYours:'📍 Pesanan Anda NT$%t：%kkm dalam %d hari',
+    clearCart:'Kosongkan',
+    lookupNotFound:'Kode anggota tidak ditemukan',
+    lookupPhoneMismatch:'Nomor HP tidak sesuai',
+    lookupError:'Terjadi kesalahan, coba lagi',
+    lookupSearching:'Memeriksa…', registering:'Mendaftarkan…',
+    nameRequired:'Harap isi nama', phoneRequired:'Harap isi nomor HP',
+    guestMode:'Melanjutkan sebagai tamu', loggedOut:'Berhasil keluar',
+    welcomeBack:'Selamat datang kembali',
+    registerSuccess:'Berhasil daftar！ Kode Anda：',
+    foundExisting:'Data anggota ditemukan, selamat datang',
+    mbrId:'Kode Anggota',
+    cats:{ frozen:'Makanan Beku', seasoning:'Bumbu', drink:'Minuman',
+           rice:'Beras', alcohol:'Minuman Keras', hygiene:'Kebersihan & Kecantikan',
+           food:'Makanan', other:'Lainnya' },
+  },
+  ph: {
+    flag:'🇵🇭', label:'English',
+    brandSub:'Click products to add to cart',
+    loginBtn:'🪪 Member',
+    authTitle:'Online Shop',
+    authTagline:'Enter your member code or register new',
+    authDescLookup:'🪪 Already have a member code?',
+    placeholderMid:'Member code, e.g. M0001',
+    placeholderLookupPhone:'Phone number used at registration',
+    btnLookup:'🔍 Search & Login',
+    orDivider:'or',
+    newMemberTitle:'📝 Register New Member',
+    placeholderName:'Full name (required)',
+    placeholderPhone:'Phone number (required)',
+    labelNationality:'Nationality / Language',
+    btnRegister:'✓ Register Now',
+    btnGuest:'Continue as Guest',
+    cartTitle:'Shopping Cart',
+    cartEmpty:'Cart is empty\nClick products to add',
+    cartPcs:'items', cartItems:'types', cartTotal:'Total',
+    btnCheckout:'🎉 Place Order', drawerView:'View Cart',
+    barEmpty:'Cart is empty, click products to add 🛒',
+    orderTitle:'📋 Confirm Order',
+    customerInfo:'👤 Customer Information',
+    labelName:'Name', labelPhone:'Phone',
+    customerHint:'Name and phone are optional',
+    labelDelivery:'📍 Delivery Address',
+    placeholderDelivery:'e.g. Home address',
+    deliveryRequired:'Please enter delivery address',
+    labelNote:'Notes', placeholderNote:'e.g. No ice',
+    orderSummary:'🧾 Order Summary',
+    thProduct:'Product', thQty:'Qty', thSub:'Subtotal',
+    orderTotalLabel:'Order Total',
+    btnBack:'← Edit', btnConfirm:'✓ Confirm Order',
+    successTitle:'Order Submitted！',
+    successMsg:'Thank you for your order！\nWe will prepare it as soon as possible.',
+    successOrderId:'Order No.', btnContinue:'Continue Shopping',
+    historyTitle:'History', historyEmpty:'No purchase history yet',
+    btnLogout:'🚪 Logout', btnEditProfile:'✏ Edit Profile',
+    editProfileTitle:'✏ Edit Member Profile', btnSaveProfile:'Save',
+    minOrder:'Minimum order NT$1,000',
+    toastAdded:'Added', toastCleared:'Cart cleared',
+    toastCartEmpty:'Cart is empty！', toastOrderSent:'Order sent to Firebase ✓',
+    toastFail:'Failed to send, please try again',
+    deliveryRule:'🛵 NT$1,000→3km/1day | NT$2,000→6km/2days | NT$3,000→9km/3days',
+    deliveryRuleNote:'(Every NT$1,000 more = +3km +1 day)',
+    deliveryYours:'📍 Your order NT$%t：%kkm within %d day(s)',
+    clearCart:'Clear Cart',
+    lookupNotFound:'Member code not found',
+    lookupPhoneMismatch:'Phone number does not match',
+    lookupError:'An error occurred, please try again',
+    lookupSearching:'Verifying…', registering:'Registering…',
+    nameRequired:'Please enter your name', phoneRequired:'Please enter your phone number',
+    guestMode:'Continuing as guest', loggedOut:'Logged out',
+    welcomeBack:'Welcome back',
+    registerSuccess:'Registration successful！ Your code：',
+    foundExisting:'Existing member found, welcome',
+    mbrId:'Member Code',
+    cats:{ frozen:'Frozen Food', seasoning:'Seasonings', drink:'Beverages',
+           rice:'Rice', alcohol:'Alcoholic Drinks', hygiene:'Hygiene & Beauty',
+           food:'Food', other:'Others' },
+  },
+  tw: {
+    flag:'🇹🇼', label:'中文',
+    brandSub:'點擊商品加入購物車',
+    loginBtn:'🪪 會員',
+    authTitle:'線上商店',
+    authTagline:'輸入會員編號或新建會員',
+    authDescLookup:'🪪 已有會員編號？',
+    placeholderMid:'會員編號，如 M0001',
+    placeholderLookupPhone:'註冊時的電話號碼',
+    btnLookup:'🔍 查詢並登入',
+    orDivider:'或',
+    newMemberTitle:'📝 新會員註冊',
+    placeholderName:'姓名（必填）',
+    placeholderPhone:'電話號碼（必填）',
+    labelNationality:'國籍 / 語言',
+    btnRegister:'✓ 立即註冊',
+    btnGuest:'以訪客身份繼續',
+    cartTitle:'購物車',
+    cartEmpty:'購物車是空的\n點擊商品開始選購',
+    cartPcs:'件', cartItems:'種商品', cartTotal:'合計',
+    btnCheckout:'🎉 送出訂單', drawerView:'查看購物車',
+    barEmpty:'購物車是空的，點擊商品開始選購 🛒',
+    orderTitle:'📋 確認訂單',
+    customerInfo:'👤 顧客資料',
+    labelName:'姓名', labelPhone:'電話',
+    customerHint:'姓名與電話選填',
+    labelDelivery:'📍 送貨地點',
+    placeholderDelivery:'例：地址或取貨地點',
+    deliveryRequired:'請填寫送貨地點',
+    labelNote:'備註', placeholderNote:'例：不加冰',
+    orderSummary:'🧾 訂單明細',
+    thProduct:'商品', thQty:'數量', thSub:'小計',
+    orderTotalLabel:'訂單總金額',
+    btnBack:'← 返回修改', btnConfirm:'✓ 確認送出',
+    successTitle:'訂單已送出！',
+    successMsg:'感謝您的訂購！\n我們將盡快為您備貨。',
+    successOrderId:'訂單編號', btnContinue:'繼續選購',
+    historyTitle:'訂單歷史', historyEmpty:'尚無訂單記錄',
+    btnLogout:'🚪 登出', btnEditProfile:'✏ 編輯資料',
+    editProfileTitle:'✏ 編輯會員資料', btnSaveProfile:'儲存',
+    minOrder:'最低消費 NT$1,000',
+    toastAdded:'已加入', toastCleared:'購物車已清空',
+    toastCartEmpty:'購物車是空的！', toastOrderSent:'訂單已寫入 Firebase ✓',
+    toastFail:'送出失敗，請再試一次',
+    deliveryRule:'🛵 NT$1,000→3km/1日 | NT$2,000→6km/2日 | NT$3,000→9km/3日',
+    deliveryRuleNote:'（每增加 NT$1,000 多 3km、多 1 天）',
+    deliveryYours:'📍 您的訂單 NT$%t：%kkm 以內 / %d 日內送達',
+    clearCart:'清空購物車',
+    lookupNotFound:'找不到此會員編號',
+    lookupPhoneMismatch:'電話號碼不符，請確認後重試',
+    lookupError:'發生錯誤，請再試一次',
+    lookupSearching:'驗證中…', registering:'註冊中…',
+    nameRequired:'請填寫姓名', phoneRequired:'請填寫電話號碼',
+    guestMode:'以訪客模式繼續', loggedOut:'已登出',
+    welcomeBack:'歡迎回來',
+    registerSuccess:'註冊成功！您的會員編號：',
+    foundExisting:'找到既有帳號，歡迎回來',
+    mbrId:'會員編號',
+    cats:{ frozen:'冷凍食品', seasoning:'調味品', drink:'飲料',
+           rice:'米', alcohol:'酒', hygiene:'清潔保養品',
+           food:'食品', other:'其他' },
   },
 };
 
-const NATIONALITIES = [
-  { code:'th', flag:'🇹🇭', label:'ไทย / Thai' },
-  { code:'id', flag:'🇮🇩', label:'Indonesia / Indonesian' },
-  { code:'vi', flag:'🇻🇳', label:'Việt Nam / Vietnamese' },
-  { code:'tw', flag:'🇹🇼', label:'台灣 / Taiwanese' },
-  { code:'cn', flag:'🇨🇳', label:'中國 / Chinese' },
-  { code:'mm', flag:'🇲🇲', label:'Myanmar / Burmese' },
-  { code:'ph', flag:'🇵🇭', label:'Philippines / Filipino' },
-  { code:'other', flag:'🌏', label:'อื่นๆ / Other' },
+// 國籍/語言 對應（nat code = lang code，一對一）
+const NAT_LANG_OPTIONS = [
+  { code:'th', flag:'🇹🇭', label:'ไทย / ภาษาไทย',            labelShort:'🇹🇭 TH' },
+  { code:'vi', flag:'🇻🇳', label:'Việt Nam / Tiếng Việt',     labelShort:'🇻🇳 VI' },
+  { code:'id', flag:'🇮🇩', label:'Indonesia / Bahasa Indonesia',labelShort:'🇮🇩 ID' },
+  { code:'ph', flag:'🇵🇭', label:'Philippines / English',      labelShort:'🇵🇭 EN' },
+  { code:'tw', flag:'🇹🇼', label:'台灣 / 中文',               labelShort:'🇹🇼 中' },
 ];
-
-// nationality → preferred lang
-const NAT_TO_LANG = { th:'th', id:'id', vi:'vi' };
+// 向下相容
+const NATIONALITIES = NAT_LANG_OPTIONS.map(o=>({ code:o.code, flag:o.flag, label:o.label }));
+const NAT_TO_LANG   = { th:'th', vi:'vi', id:'id', ph:'ph', tw:'tw' };
 
 let _lang = 'th';  // 目前語言
 
@@ -2444,27 +2537,35 @@ function setLang(lang) {
   if (!LANGS[lang]) return;
   _lang = lang;
   try { localStorage.setItem('shop_lang', lang); } catch(e) {}
-  applyLang();
+  applyLang(); // applyLang 內已呼叫 buildLangSwitcher + renderTabs
 }
 function detectLang() {
   try {
+    // 1. localStorage 明確選擇優先
     const saved = localStorage.getItem('shop_lang');
     if (saved && LANGS[saved]) { _lang = saved; return; }
+    // 2. 已登入會員的國籍
     const m = safeGetLS(LS.MEMBER, null);
-    if (m?.nationality && NAT_TO_LANG[m.nationality]) {
-      _lang = NAT_TO_LANG[m.nationality]; return;
+    if (m?.nationality && LANGS[m.nationality]) { _lang = m.nationality; return; }
+    // 3. 手機/瀏覽器語言
+    const navLangs = navigator.languages || [navigator.language || 'th'];
+    for (const nl of navLangs) {
+      const code = nl.slice(0,2).toLowerCase();
+      // 瀏覽器 language code → LANGS key 對應
+      const MAP = { th:'th', vi:'vi', id:'id', ms:'id', en:'ph', zh:'tw', 'zh-tw':'tw', 'zh-hant':'tw' };
+      const full = nl.toLowerCase().replace('_','-');
+      if (MAP[full]) { _lang = MAP[full]; return; }
+      if (MAP[code]) { _lang = MAP[code]; return; }
     }
-    const bl = navigator.language?.slice(0,2) || 'th';
-    if (LANGS[bl]) _lang = bl;
   } catch(e) {}
+  _lang = 'th'; // 最終預設
 }
 
 /* 套用語言到所有靜態 UI 元素 */
 function applyLang() {
   const L = LANGS[_lang] || LANGS.th;
-  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
-  const setPlaceholder = (id, val) => { const el = document.getElementById(id); if(el) el.placeholder = val; };
-  const setHtml = (id, val) => { const el = document.getElementById(id); if(el) el.innerHTML = val; };
+  const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+  const setP = (id, val) => { const el=document.getElementById(id); if(el) el.placeholder=val; };
 
   // Header
   set('brand-sub-text', L.brandSub);
@@ -2474,13 +2575,13 @@ function applyLang() {
   set('auth-store-name-text', L.authTitle);
   set('auth-tagline-text', L.authTagline);
   set('auth-desc-lookup', L.authDescLookup);
-  setPlaceholder('auth-mid-field', L.placeholderMid);
-  setPlaceholder('auth-lookup-phone', L.placeholderLookupPhone);
+  setP('auth-mid-field', L.placeholderMid);
+  setP('auth-lookup-phone', L.placeholderLookupPhone);
   set('auth-lookup-btn', L.btnLookup);
   set('auth-or-1', L.orDivider);
   set('auth-new-title-text', L.newMemberTitle);
-  setPlaceholder('auth-name', L.placeholderName);
-  setPlaceholder('auth-phone', L.placeholderPhone);
+  setP('auth-name', L.placeholderName);
+  setP('auth-phone', L.placeholderPhone);
   set('auth-nat-label', L.labelNationality);
   set('auth-register-btn', L.btnRegister);
   set('auth-guest-btn-text', L.btnGuest);
@@ -2500,15 +2601,15 @@ function applyLang() {
   set('modal-order-title', L.orderTitle);
   set('modal-customer-info-title', L.customerInfo);
   set('modal-name-label', L.labelName);
-  setPlaceholder('customer-name', L.labelName);
+  setP('customer-name', L.labelName);
   set('modal-phone-label', L.labelPhone);
-  setPlaceholder('customer-phone', L.labelPhone);
+  setP('customer-phone', L.labelPhone);
   set('modal-customer-hint', L.customerHint);
   set('modal-delivery-label', L.labelDelivery);
-  setPlaceholder('order-delivery', L.placeholderDelivery);
+  setP('order-delivery', L.placeholderDelivery);
   set('modal-delivery-err', L.deliveryRequired);
   set('modal-note-label', L.labelNote);
-  setPlaceholder('order-note', L.placeholderNote);
+  setP('order-note', L.placeholderNote);
   set('modal-summary-title', L.orderSummary);
   set('modal-th-product', L.thProduct);
   set('modal-th-qty', L.thQty);
@@ -2519,7 +2620,7 @@ function applyLang() {
 
   // Success modal
   set('success-title-text', L.successTitle);
-  set('success-msg-text', L.successMsg);
+  set('success-msg-text', L.successMsg.replace('\n','\n'));
   set('btn-done-text', L.btnContinue);
 
   // Member drawer
@@ -2527,34 +2628,64 @@ function applyLang() {
   set('m-logout-btn', L.btnLogout);
   set('m-edit-profile-btn', L.btnEditProfile);
 
-  // Language switcher active state (both floater and profile modal)
-  document.querySelectorAll('.lang-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.lang === _lang);
-  });
-  document.querySelectorAll('.lang-btn-lg').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.langLg === _lang);
-  });
+  // Edit profile
+  set('edit-profile-title', L.editProfileTitle);
+  set('ep-name-label', L.labelName);
+  set('ep-phone-label', L.labelPhone);
+  set('ep-nat-label', L.labelNationality);
+  set('ep-nat-hint', L.authTagline);
+  set('ep-save-btn', L.btnSaveProfile);
 
-  // Re-render dynamic cart UI
+  // Update lang switcher to reflect current selection
+  buildLangSwitcher();
+
+  // Re-render dynamic content
+  renderTabs();
   updateAllCartUI();
 }
 
-/* 語言切換浮動按鈕 — 右上角 */
+/* 左下角語言切換面板 — 登入前展開，登入後折疊為國籍旗幟 */
 function buildLangSwitcher() {
-  const existing = document.getElementById('lang-switcher');
-  if (existing) return;
-  const div = document.createElement('div');
-  div.id = 'lang-switcher';
-  div.innerHTML = Object.entries(LANGS).map(([code, L]) =>
-    `<button class="lang-btn${_lang===code?' active':''}" data-lang="${code}" onclick="setLang('${code}')" title="${L.label}">${L.flag}</button>`
-  ).join('');
-  document.body.appendChild(div);
+  let el = document.getElementById('lang-switcher');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'lang-switcher';
+    document.body.appendChild(el);
+  }
+  const isLoggedIn = !!(currentMember);
+  el.innerHTML = isLoggedIn
+    // 已登入：折疊顯示選擇的國籍旗幟，點擊展開
+    ? `<div class="ls-collapsed" onclick="lsExpand()" title="${(LANGS[_lang]||LANGS.th).label}">
+        <span style="font-size:20px">${(LANGS[_lang]||LANGS.th).flag}</span>
+      </div>`
+    // 未登入：展開顯示所有選項
+    : `<div class="ls-expanded">
+        <div class="ls-label">🌐</div>
+        ${NAT_LANG_OPTIONS.map(o => `
+          <button class="ls-opt${_lang===o.code?' active':''}" onclick="setLang('${o.code}')" title="${o.label}">
+            <span class="ls-flag">${o.flag}</span>
+            <span class="ls-txt">${o.labelShort.replace(/^[^\s]+\s/,'')}</span>
+          </button>`).join('')}
+      </div>`;
 }
 
-/* 國籍選單選項 HTML */
+function lsExpand() {
+  const el = document.getElementById('lang-switcher');
+  if (!el) return;
+  el.innerHTML = `<div class="ls-expanded">
+    <div class="ls-label" onclick="buildLangSwitcher()" style="cursor:pointer">×</div>
+    ${NAT_LANG_OPTIONS.map(o => `
+      <button class="ls-opt${_lang===o.code?' active':''}" onclick="setLang('${o.code}')" title="${o.label}">
+        <span class="ls-flag">${o.flag}</span>
+        <span class="ls-txt">${o.labelShort.replace(/^[^\s]+\s/,'')}</span>
+      </button>`).join('')}
+  </div>`;
+}
+
+/* 國籍/語言 選單選項 HTML */
 function buildNatOptions(selectedCode) {
-  return NATIONALITIES.map(n =>
-    `<option value="${n.code}"${n.code===selectedCode?' selected':''}>${n.flag} ${n.label}</option>`
+  return NAT_LANG_OPTIONS.map(o =>
+    `<option value="${o.code}"${o.code===selectedCode?' selected':''}>${o.flag} ${o.label}</option>`
   ).join('');
 }
 const CATEGORIES = [
@@ -2630,18 +2761,15 @@ function renderTabs() {
   if (!c) return;
   const counts = {};
   allProducts.forEach(p => { const cat=p.category||'other'; counts[cat]=(counts[cat]||0)+1; });
-
-  // 如果 activeCat 在目前商品中沒有，自動切到第一個有商品的分類
   const available = CATEGORIES.filter(x => counts[x.id] > 0);
-  if (!counts[activeCat] && available.length > 0) {
-    activeCat = available[0].id;
-  }
-
+  if (!counts[activeCat] && available.length > 0) activeCat = available[0].id;
+  const L = LANGS[_lang] || LANGS.th;
   c.innerHTML = available.map(x => {
-    const active = activeCat===x.id ? ' active' : '';
+    const active  = activeCat===x.id ? ' active' : '';
+    const catName = (L.cats && L.cats[x.id]) ? L.cats[x.id] : x.th;
     return `<button class="tab-btn${active}" onclick="switchCat('${h(x.id)}')">
       <span class="tab-emoji">${h(x.icon)}</span>
-      <span>${h(x.th)}<span style="font-family:'Noto Sans TC',sans-serif;font-size:10px;opacity:.65;margin-left:3px">${h(x.zh)}</span></span>
+      <span>${h(catName)}</span>
       <span class="tab-count">${counts[x.id]||0}</span>
     </button>`;
   }).join('');
@@ -2955,15 +3083,11 @@ function openEditProfile() {
   const m = currentMember;
   const nameEl = document.getElementById('ep-name');
   const phoneEl = document.getElementById('ep-phone');
-  const natEl  = document.getElementById('ep-nationality');
+  const natEl   = document.getElementById('ep-nationality');
   if (nameEl)  nameEl.value  = m.name  || '';
   if (phoneEl) phoneEl.value = m.phone || '';
   if (natEl)   natEl.innerHTML = `<option value="">— Select —</option>` + buildNatOptions(m.nationality || '');
-  // Update lang buttons active state
-  document.querySelectorAll('.lang-btn-lg').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.langLg === _lang);
-  });
-  // Update EP labels
+  // Update labels in current language
   setText('edit-profile-title', t('editProfileTitle'));
   setText('ep-name-label',  t('labelName'));
   setText('ep-phone-label', t('labelPhone'));
@@ -3002,6 +3126,23 @@ async function saveEditProfile() {
   setTimeout(() => openMemberDrawer(), 300);
 }
 
+/* 依語言動態設定頁面標題 */
+const TITLES = {
+  th:'ร้านค้าออนไลน์', vi:'Cửa hàng trực tuyến',
+  id:'Toko Online', ph:'Online Shop', tw:'線上商店',
+};
+function updatePageTitle() {
+  const title = TITLES[_lang] || TITLES.th;
+  document.title = title;
+  // 更新 PWA manifest name 動態覆蓋（部分瀏覽器支援）
+  const metaAppName = document.querySelector('meta[name="application-name"]');
+  if (metaAppName) metaAppName.content = title;
+  const metaApple = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+  if (metaApple) metaApple.content = title;
+  // 更新 brand name
+  setText('shop-name', title);
+}
+
 function switchCat(catId) { activeCat=catId; renderTabs(); renderProducts(); }
 function closeSuccess() { closeModal('success-modal'); }
 
@@ -3033,13 +3174,14 @@ async function init() {
   // ③ 建立語言切換按鈕
   buildLangSwitcher();
 
-  // ④ 填充國籍下拉選單（Auth + Edit Profile）
+  // ④ 填充國籍/語言下拉選單（Auth + Edit Profile）
   const natOpts = buildNatOptions('');
   const authNat = document.getElementById('auth-nationality');
-  if (authNat) authNat.innerHTML = `<option value="">— เลือกสัญชาติ —</option>` + natOpts;
+  if (authNat) authNat.innerHTML = `<option value="">— ${(LANGS[_lang]||LANGS.th).labelNationality||'Select'} —</option>` + natOpts;
 
-  // ⑤ 套用目前語言到所有 UI
+  // ⑤ 套用語言 + 設定頁面標題（依語言顯示）
   applyLang();
+  updatePageTitle();
 
   // ⑥ 立即從本機快取渲染商品（不等 Firebase）
   allProducts = loadAllProducts();
@@ -3247,6 +3389,7 @@ Object.assign(window, {
   pwaInstall, pwaDismiss,
   setLang, onNatChange,
   openEditProfile, saveEditProfile,
+  lsExpand, updatePageTitle,
 });
 
 document.addEventListener('DOMContentLoaded', init);
