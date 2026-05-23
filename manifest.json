@@ -20,7 +20,7 @@
   "shortcuts": [
     {
       "name": "Order Now",
-      "url": "shop_order.html",
+      "url": "shop.html",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     }
   ],
