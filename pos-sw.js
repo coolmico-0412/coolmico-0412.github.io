@@ -102,7 +102,7 @@ async function networkFirstHTML(req, cache) {
     return res;
   } catch(e) {
     const cached = await caches.match(req) ||
-                   await caches.match('./POSCL_optimized.html');
+                   await caches.match('./POS.html');
     if (cached) return cached;
     return new Response(
       `<!DOCTYPE html><html lang="th"><head>
