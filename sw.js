@@ -126,7 +126,7 @@ async function networkFirstHTML(request, cacheName) {
   } catch(e) {
     const cached = await caches.match(request)
                 || await caches.match('./index.html')
-                || await caches.match('./shop_order.html');
+                || await caches.match('./shop.html');
     if (cached) return cached;
     return new Response(
       `<!DOCTYPE html><html lang="th"><head>
