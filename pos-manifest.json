@@ -2,7 +2,7 @@
   "name": "POS SYSTEM",
   "short_name": "POS",
   "description": "ระบบ POS ออนไลน์ / 線上收銀系統",
-  "start_url": "POSCL_optimized.html",
+  "start_url": "POS.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
@@ -20,7 +20,7 @@
   "shortcuts": [
     {
       "name": "แคชเชียร์ / 收銀台",
-      "url": "POSCL_optimized.html",
+      "url": "POS.html",
       "icons": [{ "src": "pos-icons/pos-icon-96.png", "sizes": "96x96" }]
     }
   ],
