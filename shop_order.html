@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -1381,7 +1381,6 @@ body::after {
 
 /* Edit profile lang buttons — remove, replaced by nat select */
 .lang-btn-lg { display: none; }
-</style>
 .skeleton {
   background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
   background-size: 200% 100%;
@@ -1390,7 +1389,77 @@ body::after {
 }
 @keyframes shimmer { 0% { background-position:200% 0 } 100% { background-position:-200% 0 } }
 .skeleton-card { height:220px; border-radius:var(--r-md); }
+
+/* ── Geolocation Button & Map Modal ── */
+.geo-row {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  gap:8px;
+  align-items:stretch;
+}
+.geo-row .field-input { min-width:0; }
+.geo-row .field-input[readonly] {
+  background:var(--surface2);
+  color:var(--text2);
+  cursor:default;
+}
+.geo-btn {
+  flex-shrink:0; padding:0 12px; border-radius:var(--r-sm);
+  border:1.5px solid var(--primary); background:var(--primary-glow);
+  color:var(--primary); font-size:11px; font-weight:700; cursor:pointer;
+  white-space:nowrap; transition:all .18s; font-family:var(--zh);
+  line-height:1.3; text-align:center; min-width:90px;
+}
+.geo-btn:hover { background:var(--primary); color:#fff; }
+.geo-btn.geo-btn-secondary {
+  border-color:var(--border2);
+  background:var(--surface);
+  color:var(--text2);
+}
+.geo-btn.geo-btn-secondary:hover {
+  border-color:var(--primary);
+  background:var(--primary-glow);
+  color:var(--primary);
+}
+.geo-btn:disabled { opacity:.5; cursor:not-allowed; }
+.geo-status {
+  font-size:12px; margin-top:5px; padding:6px 10px;
+  border-radius:8px; display:none; line-height:1.5; white-space:pre-line;
+}
+.geo-status.ok      { display:block; background:rgba(45,155,111,.08); color:var(--green); border:1px solid rgba(45,155,111,.2); }
+.geo-status.err     { display:block; background:rgba(201,78,110,.08); color:var(--primary); border:1px solid rgba(201,78,110,.2); }
+.geo-status.loading { display:block; background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
+.map-overlay {
+  position:fixed; inset:0; z-index:800;
+  background:rgba(42,20,16,.6); backdrop-filter:blur(4px);
+  display:none; align-items:center; justify-content:center; padding:16px;
+}
+.map-overlay.open { display:flex; }
+.map-box {
+  background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--sh-lg);
+  width:100%; max-width:560px; overflow:hidden;
+  display:flex; flex-direction:column; max-height:90vh;
+}
+.map-hd {
+  padding:14px 16px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+}
+.map-title { font-size:15px; font-weight:700; color:var(--text); font-family:var(--zh); }
+.map-close { background:transparent; border:none; color:var(--muted); font-size:22px; cursor:pointer; }
+#map-container { width:100%; height:300px; flex-shrink:0; }
+.map-info {
+  padding:10px 14px; font-size:12px; color:var(--muted);
+  background:var(--surface2); border-top:1px solid var(--border);
+  font-family:var(--zh); line-height:1.5; flex-shrink:0;
+}
+.map-ft { padding:12px 16px; border-top:1px solid var(--border); display:flex; gap:8px; flex-shrink:0; }
+@media(max-width:560px) {
+  .geo-row { grid-template-columns:1fr 1fr; }
+  .geo-row .field-input { grid-column:1 / -1; }
+  .geo-btn { min-height:40px; }
+}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 </head>
 <body>
 
@@ -1485,8 +1554,6 @@ body::after {
       </div>
     </div>
     <div class="member-ft" style="display:flex;flex-direction:column;gap:8px">
-      <button class="logout-btn" id="m-edit-profile-btn" onclick="openEditProfile()"
-        style="border-color:var(--primary);color:var(--primary)">✏ แก้ไขข้อมูล</button>
       <button class="logout-btn" id="m-logout-btn" onclick="logout()">🚪 ออกจากระบบ</button>
     </div>
   </div>
@@ -1663,7 +1730,12 @@ body::after {
       </div>
       <div class="field-group">
         <label class="field-label" id="modal-delivery-label">📍 สถานที่จัดส่ง <span style="color:var(--primary);font-size:12px">*</span></label>
-        <input class="field-input" id="order-delivery" type="text" placeholder="เช่น บ้านเลขที่" autocomplete="street-address" required>
+        <div class="geo-row">
+          <input class="field-input" id="order-delivery" type="text" placeholder="請按「取得目前座標」" autocomplete="off" readonly>
+          <button class="geo-btn" id="geo-btn" onclick="getCurrentLocation()" type="button">取得目前座標</button>
+          <button class="geo-btn geo-btn-secondary" id="map-pick-btn" onclick="openMapPicker()" type="button">地圖選點</button>
+        </div>
+        <div class="geo-status" id="geo-status"></div>
         <div class="field-hint" id="modal-delivery-err" style="color:var(--primary);display:none">กรุณากรอกสถานที่จัดส่ง</div>
         <div class="field-hint" id="delivery-range-hint" style="margin-top:4px;line-height:1.7;display:none"></div>
       </div>
@@ -2231,8 +2303,10 @@ const LANGS = {
     labelName:'ชื่อ', labelPhone:'เบอร์โทร',
     customerHint:'ชื่อและเบอร์โทรไม่บังคับ',
     labelDelivery:'📍 สถานที่จัดส่ง',
-    placeholderDelivery:'เช่น บ้านเลขที่',
-    deliveryRequired:'กรุณากรอกสถานที่จัดส่ง',
+    placeholderDelivery:'กดรับพิกัดปัจจุบัน',
+    deliveryRequired:'กรุณากดรับพิกัดสถานที่จัดส่ง',
+    btnCurrentLocation:'⌖ พิกัดปัจจุบัน',
+    btnMapPick:'ปักหมุดแผนที่',
     labelNote:'หมายเหตุ', placeholderNote:'เช่น ไม่ใส่น้ำแข็ง',
     orderSummary:'🧾 รายการสินค้า',
     thProduct:'สินค้า', thQty:'จำนวน', thSub:'รวม',
@@ -2292,9 +2366,11 @@ const LANGS = {
     customerInfo:'👤 Thông tin khách hàng',
     labelName:'Họ tên', labelPhone:'Điện thoại',
     customerHint:'Họ tên và điện thoại không bắt buộc',
-    labelDelivery:'📍 Địa chỉ giao hàng',
-    placeholderDelivery:'vd. Địa chỉ nhà',
-    deliveryRequired:'Vui lòng nhập địa chỉ giao hàng',
+    labelDelivery:'📍 Vị trí giao hàng',
+    placeholderDelivery:'Bấm lấy tọa độ hiện tại',
+    deliveryRequired:'Vui lòng lấy tọa độ giao hàng',
+    btnCurrentLocation:'⌖ Vị trí hiện tại',
+    btnMapPick:'Chọn trên bản đồ',
     labelNote:'Ghi chú', placeholderNote:'vd. Không đá',
     orderSummary:'🧾 Chi tiết đơn hàng',
     thProduct:'Sản phẩm', thQty:'Số lượng', thSub:'Thành tiền',
@@ -2354,9 +2430,11 @@ const LANGS = {
     customerInfo:'👤 Data Pelanggan',
     labelName:'Nama', labelPhone:'Nomor HP',
     customerHint:'Nama dan nomor HP tidak wajib',
-    labelDelivery:'📍 Alamat Pengiriman',
-    placeholderDelivery:'mis. Alamat rumah',
-    deliveryRequired:'Harap isi alamat pengiriman',
+    labelDelivery:'📍 Lokasi Pengiriman',
+    placeholderDelivery:'Tekan untuk ambil koordinat saat ini',
+    deliveryRequired:'Harap ambil koordinat pengiriman',
+    btnCurrentLocation:'⌖ Lokasi saat ini',
+    btnMapPick:'Pilih peta',
     labelNote:'Catatan', placeholderNote:'mis. Tanpa es batu',
     orderSummary:'🧾 Rincian Pesanan',
     thProduct:'Produk', thQty:'Jumlah', thSub:'Subtotal',
@@ -2416,9 +2494,11 @@ const LANGS = {
     customerInfo:'👤 Customer Information',
     labelName:'Name', labelPhone:'Phone',
     customerHint:'Name and phone are optional',
-    labelDelivery:'📍 Delivery Address',
-    placeholderDelivery:'e.g. Home address',
-    deliveryRequired:'Please enter delivery address',
+    labelDelivery:'📍 Delivery Location',
+    placeholderDelivery:'Press current location to capture coordinates',
+    deliveryRequired:'Please capture your delivery coordinates',
+    btnCurrentLocation:'⌖ Current location',
+    btnMapPick:'Map PIN',
     labelNote:'Notes', placeholderNote:'e.g. No ice',
     orderSummary:'🧾 Order Summary',
     thProduct:'Product', thQty:'Qty', thSub:'Subtotal',
@@ -2479,8 +2559,10 @@ const LANGS = {
     labelName:'姓名', labelPhone:'電話',
     customerHint:'姓名與電話選填',
     labelDelivery:'📍 送貨地點',
-    placeholderDelivery:'例：地址或取貨地點',
-    deliveryRequired:'請填寫送貨地點',
+    placeholderDelivery:'按「取得目前座標」自動帶入',
+    deliveryRequired:'請先取得送貨座標',
+    btnCurrentLocation:'⌖ 取得目前座標',
+    btnMapPick:'地圖選點',
     labelNote:'備註', placeholderNote:'例：不加冰',
     orderSummary:'🧾 訂單明細',
     thProduct:'商品', thQty:'數量', thSub:'小計',
@@ -2608,6 +2690,8 @@ function applyLang() {
   set('modal-delivery-label', L.labelDelivery);
   setP('order-delivery', L.placeholderDelivery);
   set('modal-delivery-err', L.deliveryRequired);
+  set('geo-btn', L.btnCurrentLocation);
+  set('map-pick-btn', L.btnMapPick);
   set('modal-note-label', L.labelNote);
   setP('order-note', L.placeholderNote);
   set('modal-summary-title', L.orderSummary);
@@ -2636,6 +2720,25 @@ function applyLang() {
   set('ep-nat-hint', L.authTagline);
   set('ep-save-btn', L.btnSaveProfile);
 
+  // Update delivery range hint if order modal is open
+  const hintEl = document.getElementById('delivery-range-hint');
+  if(hintEl && hintEl.style.display !== 'none') {
+    const total = getTotal();
+    const tier  = Math.max(1, Math.floor(total / 1000));
+    const km    = tier * 3;
+    const days  = tier;
+    const yourMsg = total >= 1000
+      ? t('deliveryYours').replace('%t',total).replace('%k',km).replace('%d',days)
+      : `⚠ ${t('minOrder')}`;
+    const yourColor = total >= 1000 ? 'var(--green)' : 'var(--primary)';
+    hintEl.innerHTML = `${t('deliveryRule')}<br>
+      <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
+      <b style="color:${yourColor}">${yourMsg}</b>`;
+  }
+
+  // Update page title + PWA meta to match language
+  updatePageTitle();
+
   // Update lang switcher to reflect current selection
   buildLangSwitcher();
 
@@ -2644,7 +2747,9 @@ function applyLang() {
   updateAllCartUI();
 }
 
-/* 左下角語言切換面板 — 登入前展開，登入後折疊為國籍旗幟 */
+/* 左下角語言切換面板 — 登入前展開，登入後折疊為國籍旗幟，點擊 toggle */
+let _lsOpen = false;
+
 function buildLangSwitcher() {
   let el = document.getElementById('lang-switcher');
   if (!el) {
@@ -2653,34 +2758,27 @@ function buildLangSwitcher() {
     document.body.appendChild(el);
   }
   const isLoggedIn = !!(currentMember);
-  el.innerHTML = isLoggedIn
-    // 已登入：折疊顯示選擇的國籍旗幟，點擊展開
-    ? `<div class="ls-collapsed" onclick="lsExpand()" title="${(LANGS[_lang]||LANGS.th).label}">
-        <span style="font-size:20px">${(LANGS[_lang]||LANGS.th).flag}</span>
-      </div>`
-    // 未登入：展開顯示所有選項
-    : `<div class="ls-expanded">
-        <div class="ls-label">🌐</div>
-        ${NAT_LANG_OPTIONS.map(o => `
-          <button class="ls-opt${_lang===o.code?' active':''}" onclick="setLang('${o.code}')" title="${o.label}">
-            <span class="ls-flag">${o.flag}</span>
-            <span class="ls-txt">${o.labelShort.replace(/^[^\s]+\s/,'')}</span>
-          </button>`).join('')}
-      </div>`;
+  // 登入前始終展開；登入後依 _lsOpen 決定
+  const showExpanded = !isLoggedIn || _lsOpen;
+
+  if (showExpanded) {
+    el.innerHTML = `<div class="ls-expanded">
+      <div class="ls-label">🌐</div>
+      ${NAT_LANG_OPTIONS.map(o => `
+        <button class="ls-opt${_lang===o.code?' active':''}" onclick="setLang('${o.code}')" title="${o.label}">
+          <span class="ls-flag">${o.flag}</span>
+          <span class="ls-txt">${o.labelShort.replace(/^[^\s]+\s/,'')}</span>
+        </button>`).join('')}
+      ${isLoggedIn ? `<button class="ls-opt" onclick="_lsOpen=false;buildLangSwitcher()" style="justify-content:center;opacity:.5;font-size:11px;padding:4px">▼</button>` : ''}
+    </div>`;
+  } else {
+    el.innerHTML = `<div class="ls-collapsed" onclick="_lsOpen=true;buildLangSwitcher()" title="${(LANGS[_lang]||LANGS.th).label}">
+      <span style="font-size:20px">${(LANGS[_lang]||LANGS.th).flag}</span>
+    </div>`;
+  }
 }
 
-function lsExpand() {
-  const el = document.getElementById('lang-switcher');
-  if (!el) return;
-  el.innerHTML = `<div class="ls-expanded">
-    <div class="ls-label" onclick="buildLangSwitcher()" style="cursor:pointer">×</div>
-    ${NAT_LANG_OPTIONS.map(o => `
-      <button class="ls-opt${_lang===o.code?' active':''}" onclick="setLang('${o.code}')" title="${o.label}">
-        <span class="ls-flag">${o.flag}</span>
-        <span class="ls-txt">${o.labelShort.replace(/^[^\s]+\s/,'')}</span>
-      </button>`).join('')}
-  </div>`;
-}
+function lsExpand() { _lsOpen = true; buildLangSwitcher(); }
 
 /* 國籍/語言 選單選項 HTML */
 function buildNatOptions(selectedCode) {
@@ -2933,13 +3031,6 @@ function openOrderModal() {
 
   const total = getTotal();
 
-  // 最低訂單金額 1000 元
-  if(total < 1000) {
-    const need = 1000 - total;
-    showToast(`${t('minOrder')}（還差 NT$${need}）`, 'err');
-    return;
-  }
-
   // Pre-fill from member / last saved
   if(currentMember) {
     const n=document.getElementById('customer-name');
@@ -2947,27 +3038,25 @@ function openOrderModal() {
     if(n && !n.value) n.value=currentMember.name||'';
     if(p && !p.value) p.value=currentMember.phone||'';
   }
-  // 記住上次填寫的送貨地點
   const deliveryEl = document.getElementById('order-delivery');
-  if(deliveryEl && !deliveryEl.value) {
-    deliveryEl.value = localStorage.getItem('shop_last_delivery') || '';
-  }
-  // Hide error
-  const errEl = document.getElementById('order-delivery-err');
+  if(deliveryEl && !getDeliveryCoords()) deliveryEl.value = '';
+  const errEl = document.getElementById('modal-delivery-err');
   if(errEl) errEl.style.display = 'none';
 
-  // 動態送貨範圍說明
-  const tier    = Math.floor(total / 1000);
-  const km      = tier * 3;
-  const days    = tier;
-  const hintEl  = document.getElementById('delivery-range-hint');
+  // 動態送貨範圍說明（金額不足時顯示最低消費提醒）
+  const hintEl = document.getElementById('delivery-range-hint');
   if(hintEl) {
     hintEl.style.display = '';
-    const yourMsg = t('deliveryYours')
-      .replace('%t', total).replace('%k', km).replace('%d', days);
+    const tier = Math.max(1, Math.floor(total / 1000));
+    const km   = tier * 3;
+    const days = tier;
+    const yourMsg = total >= 1000
+      ? t('deliveryYours').replace('%t',total).replace('%k',km).replace('%d',days)
+      : `⚠ ${t('minOrder')}`;
+    const yourColor = total >= 1000 ? 'var(--green)' : 'var(--primary)';
     hintEl.innerHTML = `${t('deliveryRule')}<br>
       <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
-      <b style="color:var(--primary)">${yourMsg}</b>`;
+      <b style="color:${yourColor}">${yourMsg}</b>`;
   }
 
   // Fill order table
@@ -2981,7 +3070,10 @@ function openOrderModal() {
     </tr>`;
   }).join('');
   const tel=document.getElementById('modal-order-total');
-  if(tel) tel.textContent=`NT$ ${total}`;
+  if(tel) {
+    tel.textContent=`NT$ ${total}`;
+    tel.style.color = total >= 1000 ? 'var(--primary)' : 'var(--red)';
+  }
   const chip=document.getElementById('modal-member-chip');
   if(chip) {
     chip.style.display=currentMember?'':'none';
@@ -2996,15 +3088,25 @@ function openOrderModal() {
 async function submitOrder() {
   if(!cart.length) return;
 
-  // 送貨地點必填驗證
-  const deliveryVal = (document.getElementById('order-delivery')?.value||'').trim();
-  if(!deliveryVal) {
-    const errEl = document.getElementById('modal-delivery-err');
-    if(errEl) errEl.style.display = '';
-    document.getElementById('order-delivery')?.focus();
-    showToast(t('deliveryRequired'),'err');
+  // 最低 1000 元在確認送出時攔截
+  const total = getTotal();
+  if(total < 1000) {
+    const need = 1000 - total;
+    showToast(`${t('minOrder')} — 還差 NT$${need}`, 'err');
     return;
   }
+
+  // 送貨座標必填驗證：不再要求手動輸入地址。
+  const deliveryCoordsForSubmit = getDeliveryCoords();
+  if(!deliveryCoordsForSubmit) {
+    const errEl = document.getElementById('modal-delivery-err');
+    if(errEl) errEl.style.display = '';
+    setGeoStatus('請先按「取得目前座標」，讓訂單存入送貨座標\n若瀏覽器無法定位，可使用「地圖選點」。', 'err');
+    document.getElementById('geo-btn')?.focus();
+    showToast(t('deliveryRequired'), 'err');
+    return;
+  }
+  const deliveryVal = (document.getElementById('order-delivery')?.value || deliveryCoordsForSubmit.address || `${deliveryCoordsForSubmit.lat}, ${deliveryCoordsForSubmit.lng}`).trim();
   // 記住本次地點
   try{ localStorage.setItem('shop_last_delivery', deliveryVal); }catch(e){}
 
@@ -3018,6 +3120,17 @@ async function submitOrder() {
     const total=getTotal();
 
     const tier = Math.floor(total / 1000);
+    const coords = deliveryCoordsForSubmit;
+    const distKm = coords ? calcDistKm(STORE.lat, STORE.lng, coords.lat, coords.lng) : null;
+    const maxKm  = tier * 3;
+
+    // 如果有座標，驗證距離
+    if (distKm !== null && distKm > maxKm) {
+      showToast(`距離 ${distKm.toFixed(1)} km 超出本訂單可配送範圍（${maxKm} km）`, 'err');
+      if(btn){btn.disabled=false; const el=document.getElementById('modal-btn-confirm-text'); if(el) el.textContent=t('btnConfirm');}
+      return;
+    }
+
     const orderObj = {
       id: orderId, date: now.toISOString(), source: 'online',
       memberId:         currentMember?.memberId || null,
@@ -3026,7 +3139,14 @@ async function submitOrder() {
       customerName:     nameVal  || currentMember?.name  || 'แขก / 訪客',
       customerPhone:    phoneVal || currentMember?.phone || '',
       deliveryLocation: deliveryVal,
-      deliveryKm:       tier * 3,
+      deliveryCoords:   coords,
+      deliveryLat:      coords.lat,
+      deliveryLng:      coords.lng,
+      deliveryGeoSource: coords.source,
+      deliveryResolvedAddress: coords.address,
+      deliveryKm:       distKm !== null ? Math.round(distKm * 10) / 10 : null,
+      storeAddress:     STORE.name,
+      storeCoords:      { lat: STORE.lat, lng: STORE.lng },
       deliveryDays:     tier,
       note:             noteVal,
       items: cart.map(i=>({id:i.id,name:i.name,price:i.price,qty:i.qty})),
@@ -3058,6 +3178,8 @@ async function submitOrder() {
       ['customer-name','customer-phone','order-note','order-delivery'].forEach(id=>{
         const el=document.getElementById(id); if(el) el.value='';
       });
+      resetDeliveryCoords({ clearDisplay: true });
+      clearGeoStatus();
     } catch(e){}
   } catch(err) {
     console.error('[Shop] submitOrder:',err);
@@ -3378,7 +3500,389 @@ function pwaDismiss() {
   sessionStorage.setItem('pwa-dismissed', '1');
 }
 
-/* ── Expose to window ── */
+/* ══════════════════════════════════════════════
+   送貨座標距離驗證系統
+   店家位置：苗栗縣通霄鎮通南里中山路109號1樓
+   使用瀏覽器 Geolocation 取得目前座標，Nominatim 只做反查顯示。
+   允許範圍：苗栗縣、台中市
+   超出範圍：直接拒絕
+══════════════════════════════════════════════ */
+
+// 店家座標（苗栗縣通霄鎮通南里中山路109號1樓）
+const STORE = {
+  lat: 24.4889,
+  lng: 120.6723,
+  name: '苗栗縣通霄鎮通南里中山路109號1樓',
+};
+
+// 免費方案：Browser Geolocation + Nominatim reverse geocode + Leaflet/OpenStreetMap 圖磚，不需要 API key。
+const ALLOWED_REGIONS = ['苗栗縣', '苗栗市', '台中市', '臺中市', 'Miaoli', 'Taichung'];
+const TAIWAN_REGION_NAMES = [
+  '臺北市','台北市','新北市','桃園市','新竹縣','新竹市','苗栗縣','苗栗市',
+  '臺中市','台中市','彰化縣','南投縣','雲林縣','嘉義縣','嘉義市','臺南市','台南市',
+  '高雄市','屏東縣','宜蘭縣','花蓮縣','臺東縣','台東縣','澎湖縣','金門縣','連江縣',
+  'Keelung','Taipei','New Taipei','Taoyuan','Hsinchu','Miaoli','Taichung','Changhua',
+  'Nantou','Yunlin','Chiayi','Tainan','Kaohsiung','Pingtung','Yilan','Hualien','Taitung',
+  'Penghu','Kinmen','Lienchiang'
+];
+const GEOLOCATION_OPTIONS = {
+  enableHighAccuracy: true,
+  timeout: 12000,
+  maximumAge: 60000,
+};
+
+let _pinLat = null;
+let _pinLng = null;
+let _pinAddress = '';
+let _pinSource = '';
+let _pinAccuracy = null;
+let _pinConfirmed = false;
+let _mapInstance = null;
+let _pinMarker = null;
+let _storeMarker = null;
+
+function calcDistKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2
+          + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+async function nominatimReverse(lat, lng) {
+  const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=zh-TW`;
+  const res = await fetch(url, { headers: { 'Accept-Language': 'zh-TW,zh;q=0.9' } });
+  if (!res.ok) throw new Error('Reverse geocode error');
+  return await res.json();
+}
+
+function normalizeRegionText(text) {
+  return String(text || '').replace(/臺/g, '台');
+}
+
+function isAddressAllowed(text) {
+  const normalized = normalizeRegionText(text);
+  return ALLOWED_REGIONS.some(r => normalized.includes(normalizeRegionText(r)));
+}
+
+function getTaiwanRegionMention(text) {
+  const normalized = normalizeRegionText(text);
+  const hit = TAIWAN_REGION_NAMES.find(r => normalized.includes(normalizeRegionText(r)));
+  return hit || '';
+}
+
+function isKnownTaiwanRegionTooFar(text) {
+  const region = getTaiwanRegionMention(text);
+  return !!region && !isAddressAllowed(region);
+}
+
+function formatCoords(lat, lng) {
+  return `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
+}
+
+function shortAddress(address) {
+  return String(address || '').split(',').slice(0, 4).join('').trim();
+}
+
+function setDeliveryDisplay(text) {
+  const addrEl = document.getElementById('order-delivery');
+  if (addrEl) addrEl.value = text || '';
+  const errEl = document.getElementById('modal-delivery-err');
+  if (errEl) errEl.style.display = 'none';
+}
+
+function resetDeliveryCoords(options = {}) {
+  _pinLat = null;
+  _pinLng = null;
+  _pinAddress = '';
+  _pinSource = '';
+  _pinAccuracy = null;
+  _pinConfirmed = false;
+  if (options.clearDisplay) setDeliveryDisplay('');
+  const mapBtn = document.getElementById('map-confirm-btn');
+  if (mapBtn) mapBtn.disabled = true;
+}
+
+function commitDeliveryCoords(lat, lng, options = {}) {
+  _pinLat = Number(lat);
+  _pinLng = Number(lng);
+  _pinAddress = options.address || formatCoords(_pinLat, _pinLng);
+  _pinSource = options.source || 'current';
+  _pinAccuracy = Number.isFinite(options.accuracy) ? Number(options.accuracy) : null;
+  _pinConfirmed = options.confirmed !== false;
+
+  if (options.updateInput !== false) {
+    setDeliveryDisplay(shortAddress(_pinAddress) || formatCoords(_pinLat, _pinLng));
+  }
+
+  const distKm = calcDistKm(STORE.lat, STORE.lng, _pinLat, _pinLng);
+  updateDeliveryHintWithDist(distKm);
+  return distKm;
+}
+
+function getCurrentPositionAsync() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('unsupported'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(resolve, reject, GEOLOCATION_OPTIONS);
+  });
+}
+
+function getLocationErrorMessage(err) {
+  if (err?.message === 'unsupported') {
+    return '此瀏覽器不支援定位，請改用「地圖選點」。';
+  }
+  if (err?.code === 1) {
+    return '定位權限被拒絕，請允許瀏覽器定位，或改用「地圖選點」。';
+  }
+  if (err?.code === 2) {
+    return '目前無法取得定位訊號，請移到訊號較好的地方再試，或改用「地圖選點」。';
+  }
+  if (err?.code === 3) {
+    return '定位逾時，請再試一次，或改用「地圖選點」。';
+  }
+  return '取得目前座標失敗，請再試一次或改用「地圖選點」。';
+}
+
+function showTooFarStatus(region) {
+  const label = region ? `（${region}）` : '';
+  setGeoStatus(`距離過遠${label}，目前僅配送苗栗縣與台中市`, 'err');
+  updateDeliveryHintWithDist(Number.POSITIVE_INFINITY);
+}
+
+function setGeoStatus(msg, type) {
+  const el = document.getElementById('geo-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = `geo-status ${type}`;
+}
+function clearGeoStatus() {
+  const el = document.getElementById('geo-status');
+  if (el) el.className = 'geo-status';
+}
+
+function updateDeliveryHintWithDist(distKm) {
+  const total   = getTotal();
+  const tier    = Math.max(1, Math.floor(total / 1000));
+  const maxKm   = tier * 3;
+  const days    = tier;
+  const hintEl  = document.getElementById('delivery-range-hint');
+  if (!hintEl) return;
+  hintEl.style.display = '';
+
+  if (total < 1000) {
+    hintEl.innerHTML = `${t('deliveryRule')}<br>
+      <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
+      <b style="color:var(--primary)">⚠ ${t('minOrder')}</b>`;
+    return;
+  }
+
+  if (distKm === Number.POSITIVE_INFINITY) {
+    hintEl.innerHTML = `${t('deliveryRule')}<br>
+      <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
+      <b style="color:var(--red)">⚠ 距離過遠，目前僅配送苗栗縣與台中市</b>`;
+    return;
+  }
+
+  const distStr = distKm !== null ? `（距離店家 ${distKm.toFixed(1)} km）` : '';
+  const canDeliver = distKm === null || distKm <= maxKm;
+  hintEl.innerHTML = `${t('deliveryRule')}<br>
+    <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
+    <b style="color:${canDeliver?'var(--green)':'var(--red)'}">
+      ${canDeliver
+        ? t('deliveryYours').replace('%t',total).replace('%k',maxKm).replace('%d',days) + distStr
+        : `⚠ 距離 ${distKm?.toFixed(1)} km 超出本訂單可配送範圍（${maxKm} km）`}
+    </b>`;
+}
+
+async function getCurrentLocation() {
+  const btn = document.getElementById('geo-btn');
+  const originalText = btn?.textContent || t('btnCurrentLocation');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '定位中…';
+  }
+  setGeoStatus('正在取得目前座標，請允許瀏覽器定位…', 'loading');
+
+  try {
+    const pos = await getCurrentPositionAsync();
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    const accuracy = pos.coords.accuracy;
+    let displayName = '';
+    let reverseFailed = false;
+
+    try {
+      setGeoStatus('已取得座標，正在確認地址與配送範圍…', 'loading');
+      const rev = await nominatimReverse(lat, lng);
+      displayName = rev?.display_name || '';
+    } catch(e) {
+      reverseFailed = true;
+    }
+
+    if (displayName && !isAddressAllowed(displayName)) {
+      resetDeliveryCoords({ clearDisplay: true });
+      showTooFarStatus(getTaiwanRegionMention(displayName));
+      return;
+    }
+
+    const distKm = commitDeliveryCoords(lat, lng, {
+      address: displayName || formatCoords(lat, lng),
+      source: 'current',
+      accuracy,
+    });
+    const accuracyText = Number.isFinite(accuracy) ? `，誤差約 ${Math.round(accuracy)} m` : '';
+    const locationText = shortAddress(displayName) || formatCoords(lat, lng);
+    const reverseText = reverseFailed ? '\n地址反查暫時失敗，已改用座標保存。' : '';
+    setGeoStatus(`✓ 已取得目前座標${accuracyText}
+📍 ${locationText}
+📏 距店家 ${distKm.toFixed(1)} km${reverseText}`, 'ok');
+
+  } catch(e) {
+    resetDeliveryCoords({ clearDisplay: true });
+    setGeoStatus(getLocationErrorMessage(e), 'err');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
+}
+
+// 保留舊名稱，避免舊版 onclick 或快取頁面呼叫時失效。
+function geocodeAddress() {
+  return getCurrentLocation();
+}
+
+function openMapPicker() {
+  const overlay = document.getElementById('map-overlay');
+  if (!overlay) return;
+  if (!window.L) {
+    setGeoStatus('地圖元件尚未載入，請稍後再試。', 'err');
+    return;
+  }
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  setTimeout(() => {
+    if (!_mapInstance) {
+      _mapInstance = L.map('map-container').setView([STORE.lat, STORE.lng], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(_mapInstance);
+
+      const storeIcon = L.divIcon({
+        html: '<div style="background:#C94E6E;width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div>',
+        iconSize: [14,14], iconAnchor: [7,7],
+      });
+      _storeMarker = L.marker([STORE.lat, STORE.lng], { icon: storeIcon })
+        .addTo(_mapInstance)
+        .bindPopup(`🏪 ${STORE.name}`);
+
+      _mapInstance.on('click', async (e) => {
+        const { lat, lng } = e.latlng;
+        await placePinAt(lat, lng);
+      });
+    } else {
+      _mapInstance.invalidateSize();
+    }
+    const mapInfo = document.getElementById('map-info');
+    if (mapInfo) {
+      mapInfo.innerHTML = '可點選地圖修正送貨位置<br>若瀏覽器定位不準，請用 PIN 選擇實際位置';
+    }
+    if (_pinLat && _pinMarker) {
+      _mapInstance.setView([_pinLat, _pinLng], 14);
+    } else if (Number.isFinite(_pinLat) && Number.isFinite(_pinLng)) {
+      _mapInstance.setView([_pinLat, _pinLng], 14);
+    }
+  }, 100);
+}
+
+async function placePinAt(lat, lng) {
+  if (_pinMarker) { _mapInstance.removeLayer(_pinMarker); _pinMarker = null; }
+
+  const pinIcon = L.divIcon({
+    html: '<div style="background:#E8892B;width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)"></div>',
+    iconSize: [16,16], iconAnchor: [8,16],
+  });
+  _pinMarker = L.marker([lat, lng], { icon: pinIcon }).addTo(_mapInstance);
+
+  const mapInfo = document.getElementById('map-info');
+  if (mapInfo) mapInfo.textContent = '正在確認座標…';
+
+  const distKm = calcDistKm(STORE.lat, STORE.lng, lat, lng);
+
+  try {
+    const rev = await nominatimReverse(lat, lng);
+    const displayName = rev?.display_name || '';
+
+    if (displayName && !isAddressAllowed(displayName)) {
+      const region = getTaiwanRegionMention(displayName);
+      if (mapInfo) mapInfo.innerHTML = `⚠ 距離過遠${region ? `（${region}）` : ''}，目前僅配送苗栗縣與台中市<br>${displayName}<br>📏 距店家 <b>${distKm.toFixed(1)} km</b>`;
+      _pinMarker.bindPopup(`⚠ 距離過遠<br>📏 ${distKm.toFixed(1)} km`).openPopup();
+      const btn = document.getElementById('map-confirm-btn');
+      if (btn) btn.disabled = true;
+      resetDeliveryCoords({ clearDisplay: true });
+      updateDeliveryHintWithDist(Number.POSITIVE_INFINITY);
+      return;
+    }
+
+    _pinLat = Number(lat); _pinLng = Number(lng);
+    _pinAddress = displayName || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    _pinSource = 'pin';
+    _pinAccuracy = null;
+    _pinConfirmed = false;
+
+    const shortAddr = shortAddress(displayName) || _pinAddress;
+    if (mapInfo) mapInfo.innerHTML = `📍 ${shortAddr}<br>📏 距店家 <b>${distKm.toFixed(1)} km</b>`;
+    _pinMarker.bindPopup(`📍 ${shortAddr}<br>📏 ${distKm.toFixed(1)} km`).openPopup();
+
+    const btn = document.getElementById('map-confirm-btn');
+    if (btn) btn.disabled = false;
+  } catch(e) {
+    _pinLat = Number(lat); _pinLng = Number(lng);
+    _pinAddress = formatCoords(lat, lng);
+    _pinSource = 'pin';
+    _pinAccuracy = null;
+    _pinConfirmed = false;
+    if (mapInfo) mapInfo.textContent = `📍 ${_pinAddress}，距店家 ${distKm.toFixed(1)} km`;
+    const btn = document.getElementById('map-confirm-btn');
+    if (btn) btn.disabled = false;
+  }
+}
+
+function confirmMapPin() {
+  if (!Number.isFinite(_pinLat) || !Number.isFinite(_pinLng)) return;
+
+  _pinConfirmed = true;
+  setDeliveryDisplay(shortAddress(_pinAddress) || formatCoords(_pinLat, _pinLng));
+
+  const distKm = calcDistKm(STORE.lat, STORE.lng, _pinLat, _pinLng);
+  setGeoStatus(`✓ PIN 座標已確認
+📏 距店家 ${distKm.toFixed(1)} km`, 'ok');
+  updateDeliveryHintWithDist(distKm);
+  closeMapPicker();
+}
+
+function closeMapPicker() {
+  const overlay = document.getElementById('map-overlay');
+  if (overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function getDeliveryCoords() {
+  return (_pinConfirmed && Number.isFinite(_pinLat) && Number.isFinite(_pinLng)) ? {
+    lat: Number(_pinLat.toFixed(6)),
+    lng: Number(_pinLng.toFixed(6)),
+    address: _pinAddress,
+    source: _pinSource || 'current',
+    accuracy: Number.isFinite(_pinAccuracy) ? Math.round(_pinAccuracy) : null,
+  } : null;
+}
 Object.assign(window, {
   switchCat, addToCart, changeQty, removeFromCart, clearCart,
   openDrawer, closeDrawer, handleDrawerOutsideClick,
@@ -3389,10 +3893,47 @@ Object.assign(window, {
   pwaInstall, pwaDismiss,
   setLang, onNatChange,
   openEditProfile, saveEditProfile,
+  getCurrentLocation, geocodeAddress, openMapPicker, closeMapPicker, confirmMapPin,
   lsExpand, updatePageTitle,
 });
 
 document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('input', (e) => {
+  if (e.target && e.target.id === 'order-delivery' && !e.target.readOnly) {
+    resetDeliveryCoords();
+    clearGeoStatus();
+  }
+});
 </script>
+<!-- ── Map Picker Modal ── -->
+<div class="map-overlay" id="map-overlay">
+  <div class="map-box">
+    <div class="map-hd">
+      <div class="map-title">📍 點選送貨位置 / ปักหมุดที่อยู่</div>
+      <button class="map-close" onclick="closeMapPicker()">×</button>
+    </div>
+    <div id="map-container"></div>
+    <div class="map-info" id="map-info">
+      請點擊地圖上的送貨位置來取得座標<br>
+      若目前定位不準，可用 PIN 修正位置
+    </div>
+    <div class="map-ft">
+      <button class="btn-cancel" onclick="closeMapPicker()" style="flex:1">
+        ยกเลิก / 取消
+      </button>
+      <button class="btn-confirm" id="map-confirm-btn" onclick="confirmMapPin()" disabled
+              style="flex:2;background:linear-gradient(135deg,var(--primary),var(--accent))">
+        ✓ ยืนยันตำแหน่ง / 確認位置
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
 </body>
 </html>
+
+
+
