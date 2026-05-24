@@ -2753,6 +2753,7 @@ function t(key) {
 function setLang(lang) {
   if (!LANGS[lang]) return;
   _lang = lang;
+  _lsOpen = false; // 選完語言後自動收起選單
   try { localStorage.setItem('shop_lang', lang); } catch(e) {}
   applyLang(); // applyLang 內已呼叫 buildLangSwitcher + renderTabs
 }
