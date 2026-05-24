@@ -2339,6 +2339,33 @@ const LANGS = {
     cats:{ frozen:'อาหารแช่แข็ง', seasoning:'เครื่องปรุง', drink:'เครื่องดื่ม',
            rice:'ข้าว', alcohol:'เครื่องดื่มแอลกอฮอล์', hygiene:'ของใช้ส่วนตัว',
            food:'อาหาร', other:'อื่นๆ' },
+    geoLocating:'กำลังระบุตำแหน่ง…',
+    geoGetting:'กำลังรับพิกัดปัจจุบัน กรุณาอนุญาตให้เบราว์เซอร์ระบุตำแหน่ง…',
+    geoConfirming:'ได้รับพิกัดแล้ว กำลังตรวจสอบที่อยู่และรัศมีจัดส่ง…',
+    geoAccuracy:'，ความแม่นยำ ±%a ม.',
+    geoReverseFailed:'\nการค้นหาที่อยู่ล้มเหลว ใช้พิกัดแทน',
+    geoSuccess:'✓ ได้รับพิกัดปัจจุบันแล้ว%a\n📍 %loc\n📏 ห่างร้าน %d กม.%rev',
+    geoErrUnsupported:'เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง ใช้ "ปักหมุดแผนที่" แทน',
+    geoErrDenied:'ถูกปฏิเสธการระบุตำแหน่ง กรุณาอนุญาตหรือใช้ "ปักหมุดแผนที่" แทน',
+    geoErrUnavail:'ไม่สามารถรับสัญญาณตำแหน่งได้ ลองย้ายที่หรือใช้ "ปักหมุดแผนที่"',
+    geoErrTimeout:'หมดเวลาระบุตำแหน่ง ลองอีกครั้งหรือใช้ "ปักหมุดแผนที่"',
+    geoErrDefault:'ไม่สามารถรับพิกัดปัจจุบันได้ ลองอีกครั้งหรือใช้ "ปักหมุดแผนที่"',
+    geoTooFar:'ระยะทางไกลเกิน%r ขณะนี้ส่งเฉพาะเมียวลี่และไถจง',
+    geoDist:'（ห่างร้าน %d กม.）',
+    geoOutOfRange:'⚠ ระยะทาง %d กม. เกินรัศมีจัดส่ง (%k กม.) ของออเดอร์นี้',
+    mapNotLoaded:'ส่วนประกอบแผนที่ยังโหลดไม่เสร็จ กรุณาลองใหม่',
+    mapInstructions:'คลิกบนแผนที่เพื่อแก้ตำแหน่งส่งของ<br>หากตำแหน่ง GPS ไม่แม่นยำ ให้ใช้ PIN แทน',
+    mapInitInfo:'คลิกบนแผนที่เพื่อเลือกตำแหน่งส่งของ<br>หากตำแหน่ง GPS ไม่แม่นยำ ให้ใช้ PIN แทน',
+    mapTitle:'📍 เลือกตำแหน่งส่งของ',
+    btnCancel:'ยกเลิก',
+    btnConfirmPos:'✓ ยืนยันตำแหน่ง',
+    pinConfirming:'กำลังตรวจสอบพิกัด…',
+    pinTooFarMap:'⚠ ระยะทางไกลเกิน%r ขณะนี้ส่งเฉพาะเมียวลี่และไถจง',
+    pinDistStore:'📏 ห่างร้าน %d กม.',
+    pinConfirmed:'✓ ยืนยันพิกัด PIN แล้ว\n📏 ห่างร้าน %d กม.',
+    submitting:'กำลังส่ง…',
+    geoNoCoords:'กรุณากด "พิกัดปัจจุบัน" ก่อน\nหากระบุตำแหน่งไม่ได้ ใช้ "ปักหมุดแผนที่"',
+    minOrderShort:'ขาดอีก NT$%n',
   },
   vi: {
     flag:'🇻🇳', label:'Tiếng Việt',
@@ -2403,6 +2430,33 @@ const LANGS = {
     cats:{ frozen:'Thực phẩm đông lạnh', seasoning:'Gia vị', drink:'Đồ uống',
            rice:'Gạo', alcohol:'Rượu bia', hygiene:'Vệ sinh & làm đẹp',
            food:'Thực phẩm', other:'Khác' },
+    geoLocating:'Đang xác định vị trí…',
+    geoGetting:'Đang lấy tọa độ hiện tại, vui lòng cho phép trình duyệt định vị…',
+    geoConfirming:'Đã lấy tọa độ, đang xác nhận địa chỉ và phạm vi giao hàng…',
+    geoAccuracy:'，độ chính xác ±%a m',
+    geoReverseFailed:'\nKhông tra cứu được địa chỉ, đã lưu bằng tọa độ.',
+    geoSuccess:'✓ Đã lấy tọa độ hiện tại%a\n📍 %loc\n📏 Cách cửa hàng %d km%rev',
+    geoErrUnsupported:'Trình duyệt không hỗ trợ định vị, hãy dùng "Chọn trên bản đồ"',
+    geoErrDenied:'Đã từ chối quyền định vị, hãy cho phép hoặc dùng "Chọn trên bản đồ"',
+    geoErrUnavail:'Không nhận được tín hiệu định vị, hãy thử lại hoặc dùng "Chọn trên bản đồ"',
+    geoErrTimeout:'Quá thời gian định vị, thử lại hoặc dùng "Chọn trên bản đồ"',
+    geoErrDefault:'Không lấy được tọa độ hiện tại, thử lại hoặc dùng "Chọn trên bản đồ"',
+    geoTooFar:'Quá xa%r，hiện chỉ giao hàng Miaoli và Đài Trung',
+    geoDist:'（cách cửa hàng %d km）',
+    geoOutOfRange:'⚠ Khoảng cách %d km vượt phạm vi giao hàng (%k km) của đơn này',
+    mapNotLoaded:'Bản đồ chưa tải xong, vui lòng thử lại.',
+    mapInstructions:'Nhấp vào bản đồ để điều chỉnh vị trí giao hàng<br>Nếu GPS không chính xác, hãy dùng PIN',
+    mapInitInfo:'Nhấp vào bản đồ để chọn vị trí giao hàng<br>Nếu GPS không chính xác, hãy dùng PIN thay thế',
+    mapTitle:'📍 Chọn vị trí giao hàng',
+    btnCancel:'Hủy',
+    btnConfirmPos:'✓ Xác nhận vị trí',
+    pinConfirming:'Đang xác nhận tọa độ…',
+    pinTooFarMap:'⚠ Quá xa%r，hiện chỉ giao hàng Miaoli và Đài Trung',
+    pinDistStore:'📏 Cách cửa hàng %d km',
+    pinConfirmed:'✓ Đã xác nhận tọa độ PIN\n📏 Cách cửa hàng %d km',
+    submitting:'Đang gửi…',
+    geoNoCoords:'Vui lòng nhấn "Vị trí hiện tại" trước\nNếu không định vị được, dùng "Chọn trên bản đồ"',
+    minOrderShort:'Còn thiếu NT$%n',
   },
   id: {
     flag:'🇮🇩', label:'Bahasa Indonesia',
@@ -2467,6 +2521,33 @@ const LANGS = {
     cats:{ frozen:'Makanan Beku', seasoning:'Bumbu', drink:'Minuman',
            rice:'Beras', alcohol:'Minuman Keras', hygiene:'Kebersihan & Kecantikan',
            food:'Makanan', other:'Lainnya' },
+    geoLocating:'Sedang mencari lokasi…',
+    geoGetting:'Sedang mengambil koordinat, izinkan browser melacak lokasi…',
+    geoConfirming:'Koordinat diperoleh, sedang memverifikasi alamat dan jangkauan pengiriman…',
+    geoAccuracy:'，akurasi ±%a m',
+    geoReverseFailed:'\nGagal mencari alamat sementara, menggunakan koordinat.',
+    geoSuccess:'✓ Koordinat saat ini berhasil didapat%a\n📍 %loc\n📏 Jarak dari toko %d km%rev',
+    geoErrUnsupported:'Browser tidak mendukung lokasi, gunakan "Pilih peta" sebagai gantinya',
+    geoErrDenied:'Izin lokasi ditolak, izinkan browser atau gunakan "Pilih peta"',
+    geoErrUnavail:'Sinyal lokasi tidak tersedia, coba lagi atau gunakan "Pilih peta"',
+    geoErrTimeout:'Waktu habis, coba lagi atau gunakan "Pilih peta"',
+    geoErrDefault:'Gagal mendapatkan koordinat, coba lagi atau gunakan "Pilih peta"',
+    geoTooFar:'Terlalu jauh%r，saat ini hanya kirim ke Miaoli dan Taichung',
+    geoDist:'（jarak dari toko %d km）',
+    geoOutOfRange:'⚠ Jarak %d km melebihi jangkauan pengiriman (%k km) pesanan ini',
+    mapNotLoaded:'Komponen peta belum dimuat, coba lagi nanti.',
+    mapInstructions:'Klik peta untuk menyesuaikan lokasi pengiriman<br>Jika GPS kurang akurat, gunakan PIN',
+    mapInitInfo:'Klik peta untuk memilih lokasi pengiriman<br>Jika GPS kurang akurat, gunakan PIN sebagai gantinya',
+    mapTitle:'📍 Pilih Lokasi Pengiriman',
+    btnCancel:'Batal',
+    btnConfirmPos:'✓ Konfirmasi Lokasi',
+    pinConfirming:'Memverifikasi koordinat…',
+    pinTooFarMap:'⚠ Terlalu jauh%r，hanya kirim ke Miaoli dan Taichung',
+    pinDistStore:'📏 Jarak dari toko %d km',
+    pinConfirmed:'✓ Koordinat PIN dikonfirmasi\n📏 Jarak dari toko %d km',
+    submitting:'Mengirim…',
+    geoNoCoords:'Tekan "Lokasi saat ini" terlebih dahulu\nJika tidak bisa, gunakan "Pilih peta"',
+    minOrderShort:'Kurang NT$%n lagi',
   },
   ph: {
     flag:'🇵🇭', label:'English',
@@ -2531,6 +2612,33 @@ const LANGS = {
     cats:{ frozen:'Frozen Food', seasoning:'Seasonings', drink:'Beverages',
            rice:'Rice', alcohol:'Alcoholic Drinks', hygiene:'Hygiene & Beauty',
            food:'Food', other:'Others' },
+    geoLocating:'Locating…',
+    geoGetting:'Getting current coordinates, please allow location access…',
+    geoConfirming:'Got coordinates, confirming address and delivery range…',
+    geoAccuracy:'，accuracy ±%a m',
+    geoReverseFailed:'\nAddress lookup failed temporarily, coordinates saved instead.',
+    geoSuccess:'✓ Current coordinates obtained%a\n📍 %loc\n📏 %d km from store%rev',
+    geoErrUnsupported:'This browser does not support location. Use "Map PIN" instead.',
+    geoErrDenied:'Location permission denied. Allow access or use "Map PIN".',
+    geoErrUnavail:'Cannot get location signal. Move to a better spot or use "Map PIN".',
+    geoErrTimeout:'Location timed out. Try again or use "Map PIN".',
+    geoErrDefault:'Failed to get coordinates. Try again or use "Map PIN".',
+    geoTooFar:'Too far%r，delivering to Miaoli and Taichung only',
+    geoDist:'（%d km from store）',
+    geoOutOfRange:'⚠ Distance %d km exceeds delivery range (%k km) for this order',
+    mapNotLoaded:'Map component not loaded yet, please try again.',
+    mapInstructions:'Click the map to adjust delivery location<br>If GPS is inaccurate, use PIN to set the exact spot',
+    mapInitInfo:'Click the map to select your delivery location<br>If GPS is inaccurate, use PIN instead',
+    mapTitle:'📍 Select Delivery Location',
+    btnCancel:'Cancel',
+    btnConfirmPos:'✓ Confirm Location',
+    pinConfirming:'Confirming coordinates…',
+    pinTooFarMap:'⚠ Too far%r，delivering to Miaoli and Taichung only',
+    pinDistStore:'📏 %d km from store',
+    pinConfirmed:'✓ PIN coordinates confirmed\n📏 %d km from store',
+    submitting:'Submitting…',
+    geoNoCoords:'Please press "Current location" first\nIf location fails, use "Map PIN"',
+    minOrderShort:'NT$%n more needed',
   },
   tw: {
     flag:'🇹🇼', label:'中文',
@@ -2595,6 +2703,33 @@ const LANGS = {
     cats:{ frozen:'冷凍食品', seasoning:'調味品', drink:'飲料',
            rice:'米', alcohol:'酒', hygiene:'清潔保養品',
            food:'食品', other:'其他' },
+    geoLocating:'定位中…',
+    geoGetting:'正在取得目前座標，請允許瀏覽器定位…',
+    geoConfirming:'已取得座標，正在確認地址與配送範圍…',
+    geoAccuracy:'，誤差約 %a m',
+    geoReverseFailed:'\n地址反查暫時失敗，已改用座標保存。',
+    geoSuccess:'✓ 已取得目前座標%a\n📍 %loc\n📏 距店家 %d km%rev',
+    geoErrUnsupported:'此瀏覽器不支援定位，請改用「地圖選點」。',
+    geoErrDenied:'定位權限被拒絕，請允許瀏覽器定位，或改用「地圖選點」。',
+    geoErrUnavail:'目前無法取得定位訊號，請移到訊號較好的地方再試，或改用「地圖選點」。',
+    geoErrTimeout:'定位逾時，請再試一次，或改用「地圖選點」。',
+    geoErrDefault:'取得目前座標失敗，請再試一次或改用「地圖選點」。',
+    geoTooFar:'距離過遠%r，目前僅配送苗栗縣與台中市',
+    geoDist:'（距離店家 %d km）',
+    geoOutOfRange:'⚠ 距離 %d km 超出本訂單可配送範圍（%k km）',
+    mapNotLoaded:'地圖元件尚未載入，請稍後再試。',
+    mapInstructions:'可點選地圖修正送貨位置<br>若瀏覽器定位不準，請用 PIN 選擇實際位置',
+    mapInitInfo:'請點擊地圖上的送貨位置來取得座標<br>若目前定位不準，可用 PIN 修正位置',
+    mapTitle:'📍 點選送貨位置',
+    btnCancel:'取消',
+    btnConfirmPos:'✓ 確認位置',
+    pinConfirming:'正在確認座標…',
+    pinTooFarMap:'⚠ 距離過遠%r，目前僅配送苗栗縣與台中市',
+    pinDistStore:'📏 距店家 %d km',
+    pinConfirmed:'✓ PIN 座標已確認\n📏 距店家 %d km',
+    submitting:'送出中…',
+    geoNoCoords:'請先按「取得目前座標」，讓訂單存入送貨座標\n若瀏覽器無法定位，可使用「地圖選點」。',
+    minOrderShort:'還差 NT$%n',
   },
 };
 
@@ -2719,6 +2854,11 @@ function applyLang() {
   set('ep-nat-label', L.labelNationality);
   set('ep-nat-hint', L.authTagline);
   set('ep-save-btn', L.btnSaveProfile);
+
+  // Map overlay
+  set('map-title-text', L.mapTitle);
+  set('map-cancel-btn', L.btnCancel);
+  set('map-confirm-btn', L.btnConfirmPos);
 
   // Update delivery range hint if order modal is open
   const hintEl = document.getElementById('delivery-range-hint');
@@ -3093,7 +3233,7 @@ async function submitOrder() {
   const total = getTotal();
   if(total < 1000) {
     const need = 1000 - total;
-    showToast(`${t('minOrder')} — 還差 NT$${need}`, 'err');
+    showToast(`${t('minOrder')} — ${t('minOrderShort').replace('%n', need)}`, 'err');
     return;
   }
 
@@ -3102,7 +3242,7 @@ async function submitOrder() {
   if(!deliveryCoordsForSubmit) {
     const errEl = document.getElementById('modal-delivery-err');
     if(errEl) errEl.style.display = '';
-    setGeoStatus('請先按「取得目前座標」，讓訂單存入送貨座標\n若瀏覽器無法定位，可使用「地圖選點」。', 'err');
+    setGeoStatus(t('geoNoCoords'), 'err');
     document.getElementById('geo-btn')?.focus();
     showToast(t('deliveryRequired'), 'err');
     return;
@@ -3112,7 +3252,7 @@ async function submitOrder() {
   try{ localStorage.setItem('shop_last_delivery', deliveryVal); }catch(e){}
 
   const btn=document.getElementById('confirm-btn');
-  if(btn){btn.disabled=true;btn.textContent='กำลังส่ง…';}
+  if(btn){btn.disabled=true;btn.textContent=t('submitting');}
   try {
     const nameVal  = (document.getElementById('customer-name')?.value||'').trim();
     const phoneVal = (document.getElementById('customer-phone')?.value||'').trim();
@@ -3127,7 +3267,7 @@ async function submitOrder() {
 
     // 如果有座標，驗證距離
     if (distKm !== null && distKm > maxKm) {
-      showToast(`距離 ${distKm.toFixed(1)} km 超出本訂單可配送範圍（${maxKm} km）`, 'err');
+      showToast(t('geoOutOfRange').replace('%d', distKm.toFixed(1)).replace('%k', maxKm), 'err');
       if(btn){btn.disabled=false; const el=document.getElementById('modal-btn-confirm-text'); if(el) el.textContent=t('btnConfirm');}
       return;
     }
@@ -3633,24 +3773,16 @@ function getCurrentPositionAsync() {
 }
 
 function getLocationErrorMessage(err) {
-  if (err?.message === 'unsupported') {
-    return '此瀏覽器不支援定位，請改用「地圖選點」。';
-  }
-  if (err?.code === 1) {
-    return '定位權限被拒絕，請允許瀏覽器定位，或改用「地圖選點」。';
-  }
-  if (err?.code === 2) {
-    return '目前無法取得定位訊號，請移到訊號較好的地方再試，或改用「地圖選點」。';
-  }
-  if (err?.code === 3) {
-    return '定位逾時，請再試一次，或改用「地圖選點」。';
-  }
-  return '取得目前座標失敗，請再試一次或改用「地圖選點」。';
+  if (err?.message === 'unsupported') return t('geoErrUnsupported');
+  if (err?.code === 1) return t('geoErrDenied');
+  if (err?.code === 2) return t('geoErrUnavail');
+  if (err?.code === 3) return t('geoErrTimeout');
+  return t('geoErrDefault');
 }
 
 function showTooFarStatus(region) {
   const label = region ? `（${region}）` : '';
-  setGeoStatus(`距離過遠${label}，目前僅配送苗栗縣與台中市`, 'err');
+  setGeoStatus(t('geoTooFar').replace('%r', label), 'err');
   updateDeliveryHintWithDist(Number.POSITIVE_INFINITY);
 }
 
@@ -3684,18 +3816,18 @@ function updateDeliveryHintWithDist(distKm) {
   if (distKm === Number.POSITIVE_INFINITY) {
     hintEl.innerHTML = `${t('deliveryRule')}<br>
       <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
-      <b style="color:var(--red)">⚠ 距離過遠，目前僅配送苗栗縣與台中市</b>`;
+      <b style="color:var(--red)">⚠ ${t('geoTooFar').replace('%r', '')}</b>`;
     return;
   }
 
-  const distStr = distKm !== null ? `（距離店家 ${distKm.toFixed(1)} km）` : '';
+  const distStr = distKm !== null ? t('geoDist').replace('%d', distKm.toFixed(1)) : '';
   const canDeliver = distKm === null || distKm <= maxKm;
   hintEl.innerHTML = `${t('deliveryRule')}<br>
     <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
     <b style="color:${canDeliver?'var(--green)':'var(--red)'}">
       ${canDeliver
         ? t('deliveryYours').replace('%t',total).replace('%k',maxKm).replace('%d',days) + distStr
-        : `⚠ 距離 ${distKm?.toFixed(1)} km 超出本訂單可配送範圍（${maxKm} km）`}
+        : t('geoOutOfRange').replace('%d', distKm?.toFixed(1)).replace('%k', maxKm)}
     </b>`;
 }
 
@@ -3704,9 +3836,9 @@ async function getCurrentLocation() {
   const originalText = btn?.textContent || t('btnCurrentLocation');
   if (btn) {
     btn.disabled = true;
-    btn.textContent = '定位中…';
+    btn.textContent = t('geoLocating');
   }
-  setGeoStatus('正在取得目前座標，請允許瀏覽器定位…', 'loading');
+  setGeoStatus(t('geoGetting'), 'loading');
 
   try {
     const pos = await getCurrentPositionAsync();
@@ -3717,7 +3849,7 @@ async function getCurrentLocation() {
     let reverseFailed = false;
 
     try {
-      setGeoStatus('已取得座標，正在確認地址與配送範圍…', 'loading');
+      setGeoStatus(t('geoConfirming'), 'loading');
       const rev = await nominatimReverse(lat, lng);
       displayName = rev?.display_name || '';
     } catch(e) {
@@ -3735,12 +3867,17 @@ async function getCurrentLocation() {
       source: 'current',
       accuracy,
     });
-    const accuracyText = Number.isFinite(accuracy) ? `，誤差約 ${Math.round(accuracy)} m` : '';
+    const accuracyText = Number.isFinite(accuracy) ? t('geoAccuracy').replace('%a', Math.round(accuracy)) : '';
     const locationText = shortAddress(displayName) || formatCoords(lat, lng);
-    const reverseText = reverseFailed ? '\n地址反查暫時失敗，已改用座標保存。' : '';
-    setGeoStatus(`✓ 已取得目前座標${accuracyText}
-📍 ${locationText}
-📏 距店家 ${distKm.toFixed(1)} km${reverseText}`, 'ok');
+    const reverseText = reverseFailed ? t('geoReverseFailed') : '';
+    setGeoStatus(
+      t('geoSuccess')
+        .replace('%a', accuracyText)
+        .replace('%loc', locationText)
+        .replace('%d', distKm.toFixed(1))
+        .replace('%rev', reverseText),
+      'ok'
+    );
 
   } catch(e) {
     resetDeliveryCoords({ clearDisplay: true });
@@ -3762,7 +3899,7 @@ function openMapPicker() {
   const overlay = document.getElementById('map-overlay');
   if (!overlay) return;
   if (!window.L) {
-    setGeoStatus('地圖元件尚未載入，請稍後再試。', 'err');
+    setGeoStatus(t('mapNotLoaded'), 'err');
     return;
   }
   overlay.classList.add('open');
@@ -3793,7 +3930,7 @@ function openMapPicker() {
     }
     const mapInfo = document.getElementById('map-info');
     if (mapInfo) {
-      mapInfo.innerHTML = '可點選地圖修正送貨位置<br>若瀏覽器定位不準，請用 PIN 選擇實際位置';
+      mapInfo.innerHTML = (_pinLat && _pinMarker) ? t('mapInstructions') : t('mapInitInfo');
     }
     if (_pinLat && _pinMarker) {
       _mapInstance.setView([_pinLat, _pinLng], 14);
@@ -3813,7 +3950,7 @@ async function placePinAt(lat, lng) {
   _pinMarker = L.marker([lat, lng], { icon: pinIcon }).addTo(_mapInstance);
 
   const mapInfo = document.getElementById('map-info');
-  if (mapInfo) mapInfo.textContent = '正在確認座標…';
+  if (mapInfo) mapInfo.textContent = t('pinConfirming');
 
   const distKm = calcDistKm(STORE.lat, STORE.lng, lat, lng);
 
@@ -3823,8 +3960,10 @@ async function placePinAt(lat, lng) {
 
     if (displayName && !isAddressAllowed(displayName)) {
       const region = getTaiwanRegionMention(displayName);
-      if (mapInfo) mapInfo.innerHTML = `⚠ 距離過遠${region ? `（${region}）` : ''}，目前僅配送苗栗縣與台中市<br>${displayName}<br>📏 距店家 <b>${distKm.toFixed(1)} km</b>`;
-      _pinMarker.bindPopup(`⚠ 距離過遠<br>📏 ${distKm.toFixed(1)} km`).openPopup();
+      const regionLabel = region ? `（${region}）` : '';
+      const distLabel = t('pinDistStore').replace('%d', distKm.toFixed(1));
+      if (mapInfo) mapInfo.innerHTML = `${t('pinTooFarMap').replace('%r', regionLabel)}<br>${displayName}<br><b>${distLabel}</b>`;
+      _pinMarker.bindPopup(`${t('pinTooFarMap').replace('%r', '')}<br>${distLabel}`).openPopup();
       const btn = document.getElementById('map-confirm-btn');
       if (btn) btn.disabled = true;
       resetDeliveryCoords({ clearDisplay: true });
@@ -3839,8 +3978,9 @@ async function placePinAt(lat, lng) {
     _pinConfirmed = false;
 
     const shortAddr = shortAddress(displayName) || _pinAddress;
-    if (mapInfo) mapInfo.innerHTML = `📍 ${shortAddr}<br>📏 距店家 <b>${distKm.toFixed(1)} km</b>`;
-    _pinMarker.bindPopup(`📍 ${shortAddr}<br>📏 ${distKm.toFixed(1)} km`).openPopup();
+    const distLabel = t('pinDistStore').replace('%d', distKm.toFixed(1));
+    if (mapInfo) mapInfo.innerHTML = `📍 ${shortAddr}<br><b>${distLabel}</b>`;
+    _pinMarker.bindPopup(`📍 ${shortAddr}<br>${distLabel}`).openPopup();
 
     const btn = document.getElementById('map-confirm-btn');
     if (btn) btn.disabled = false;
@@ -3850,7 +3990,8 @@ async function placePinAt(lat, lng) {
     _pinSource = 'pin';
     _pinAccuracy = null;
     _pinConfirmed = false;
-    if (mapInfo) mapInfo.textContent = `📍 ${_pinAddress}，距店家 ${distKm.toFixed(1)} km`;
+    const distLabel = t('pinDistStore').replace('%d', distKm.toFixed(1));
+    if (mapInfo) mapInfo.textContent = `📍 ${_pinAddress}，${distLabel}`;
     const btn = document.getElementById('map-confirm-btn');
     if (btn) btn.disabled = false;
   }
@@ -3863,8 +4004,7 @@ function confirmMapPin() {
   setDeliveryDisplay(shortAddress(_pinAddress) || formatCoords(_pinLat, _pinLng));
 
   const distKm = calcDistKm(STORE.lat, STORE.lng, _pinLat, _pinLng);
-  setGeoStatus(`✓ PIN 座標已確認
-📏 距店家 ${distKm.toFixed(1)} km`, 'ok');
+  setGeoStatus(t('pinConfirmed').replace('%d', distKm.toFixed(1)), 'ok');
   updateDeliveryHintWithDist(distKm);
   closeMapPicker();
 }
@@ -3910,21 +4050,18 @@ document.addEventListener('input', (e) => {
 <div class="map-overlay" id="map-overlay">
   <div class="map-box">
     <div class="map-hd">
-      <div class="map-title">📍 點選送貨位置 / ปักหมุดที่อยู่</div>
+      <div class="map-title" id="map-title-text">📍 點選送貨位置</div>
       <button class="map-close" onclick="closeMapPicker()">×</button>
     </div>
     <div id="map-container"></div>
-    <div class="map-info" id="map-info">
-      請點擊地圖上的送貨位置來取得座標<br>
-      若目前定位不準，可用 PIN 修正位置
-    </div>
+    <div class="map-info" id="map-info"></div>
     <div class="map-ft">
-      <button class="btn-cancel" onclick="closeMapPicker()" style="flex:1">
-        ยกเลิก / 取消
+      <button class="btn-cancel" id="map-cancel-btn" onclick="closeMapPicker()" style="flex:1">
+        取消
       </button>
       <button class="btn-confirm" id="map-confirm-btn" onclick="confirmMapPin()" disabled
               style="flex:2;background:linear-gradient(135deg,var(--primary),var(--accent))">
-        ✓ ยืนยันตำแหน่ง / 確認位置
+        ✓ 確認位置
       </button>
     </div>
   </div>
