@@ -3513,6 +3513,9 @@ window.addEventListener('storage', e => {
    PWA: Service Worker Registration
 ══════════════════════════════════════════════ */
 let _deferredInstallPrompt = null;
+// 模組層級旗標：防止同一次 controllerchange 觸發多次 reload
+// （reload 後頁面重建，自然歸零，不需 sessionStorage）
+let _swRefreshing = false;
 
 function initPWA() {
   // Register Service Worker
@@ -3521,29 +3524,43 @@ function initPWA() {
       .then(reg => {
         console.log('[PWA] SW registered:', reg.scope);
 
-        // 偵測到新版 SW 等待中 → 提示使用者更新
+        // ── 偵測新版 SW 安裝中 ──
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           if (!newWorker) return;
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // 有新版本可用
               showUpdateBar(reg);
             }
           });
         });
 
-        // 頁面載入時也檢查是否有等待中的新版
+        // ── 頁面載入時，若已有 waiting worker → 顯示更新條
+        //    ⚠️ Bug fix #2：加 sessionStorage 防護
+        //    skipWaiting → controllerchange → reload 後，新頁面 reg.waiting
+        //    在 race window 內仍可能非空，若不防護會立刻再次彈出更新條。
         if (reg.waiting && navigator.serviceWorker.controller) {
-          showUpdateBar(reg);
+          if (sessionStorage.getItem('sw-just-updated')) {
+            // 這次 reload 是因為我們自己觸發的更新，跳過提示並清除旗標
+            sessionStorage.removeItem('sw-just-updated');
+          } else {
+            showUpdateBar(reg);
+          }
         }
+
+        // 定期背景檢查更新（每 60 秒）
+        setInterval(() => reg.update().catch(() => {}), 60_000);
       })
       .catch(err => console.warn('[PWA] SW registration failed:', err));
 
-    // SW 控制權切換時自動重新載入（套用新版）
-    let swRefreshing = false;
+    // ── SW 控制權切換時 reload（唯一的 reload 觸發點）──
+    // ⚠️ Bug fix #1：_swRefreshing 移到模組層級，避免 initPWA 重入時重置
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!swRefreshing) { swRefreshing = true; location.reload(); }
+      if (_swRefreshing) return;
+      _swRefreshing = true;
+      // 標記此次 reload 由 SW 更新引發，讓新頁面跳過 showUpdateBar
+      sessionStorage.setItem('sw-just-updated', '1');
+      location.reload();
     });
   }
 
@@ -3582,41 +3599,49 @@ function initPWA() {
 }
 
 function showUpdateBar(reg) {
-  // 顯示更新提示條
-  let bar = document.getElementById('sw-update-bar');
-  if (!bar) {
-    bar = document.createElement('div');
-    bar.id = 'sw-update-bar';
-    bar.style.cssText = `
-      position:fixed;top:var(--hdr-h,64px);left:0;right:0;z-index:600;
-      background:var(--primary);color:#fff;display:flex;align-items:center;
-      gap:10px;padding:10px 16px;font-size:13px;font-family:var(--th);
-      box-shadow:0 3px 12px rgba(0,0,0,.2);animation:slide-dn .3s ease;
-    `;
-    bar.innerHTML = `
-      <span style="flex:1">🔄 มีเวอร์ชันใหม่！/ 有新版本！</span>
-      <button onclick="applySwUpdate()" style="
-        background:rgba(255,255,255,.25);border:1.5px solid rgba(255,255,255,.5);
-        color:#fff;border-radius:50px;padding:6px 14px;font-size:12px;
-        font-weight:700;cursor:pointer;white-space:nowrap">
-        อัปเดตเลย / 立即更新
-      </button>
-      <button onclick="this.parentNode.remove()" style="
-        background:transparent;border:none;color:rgba(255,255,255,.7);
-        font-size:18px;cursor:pointer;padding:2px 4px;line-height:1">×</button>
-    `;
-    document.body.appendChild(bar);
-  }
-  // 存 reg 供 apply 使用
+  // ⚠️ Bug fix #3：防止同一個頁面生命週期內重複建立更新條
+  if (document.getElementById('sw-update-bar')) return;
+
   window._pendingSwReg = reg;
+
+  const bar = document.createElement('div');
+  bar.id = 'sw-update-bar';
+  bar.style.cssText = `
+    position:fixed;top:var(--hdr-h,64px);left:0;right:0;z-index:600;
+    background:var(--primary);color:#fff;display:flex;align-items:center;
+    gap:10px;padding:10px 16px;font-size:13px;font-family:var(--th);
+    box-shadow:0 3px 12px rgba(0,0,0,.2);animation:slide-dn .3s ease;
+  `;
+  bar.innerHTML = `
+    <span style="flex:1">🔄 มีเวอร์ชันใหม่！/ 有新版本！</span>
+    <button onclick="applySwUpdate()" style="
+      background:rgba(255,255,255,.25);border:1.5px solid rgba(255,255,255,.5);
+      color:#fff;border-radius:50px;padding:6px 14px;font-size:12px;
+      font-weight:700;cursor:pointer;white-space:nowrap">
+      อัปเดตเลย / 立即更新
+    </button>
+    <button onclick="this.parentNode.remove()" style="
+      background:transparent;border:none;color:rgba(255,255,255,.7);
+      font-size:18px;cursor:pointer;padding:2px 4px;line-height:1">×</button>
+  `;
+  document.body.appendChild(bar);
 }
 
 function applySwUpdate() {
   const reg = window._pendingSwReg;
+  // 立刻移除更新條，防止使用者重複點擊
+  document.getElementById('sw-update-bar')?.remove();
+
   if (reg?.waiting) {
+    // ⚠️ Bug fix #1 核心：只發訊息，不在這裡 reload！
+    // 流程：postMessage(SKIP_WAITING) → SW skipWaiting()
+    //       → controllerchange → sessionStorage 標記 → location.reload()
+    // 由 controllerchange handler 統一負責 reload，確保只 reload 一次。
     reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-    // controllerchange 會觸發自動 reload
   } else {
+    // 沒有 waiting worker（極罕見：用戶等太久 SW 已自動接管）
+    // 直接 reload，同樣要標記避免新頁面誤判為「又有新版」
+    sessionStorage.setItem('sw-just-updated', '1');
     location.reload();
   }
 }
