@@ -896,7 +896,7 @@ nav::-webkit-scrollbar{display:none;}
   </div>
 
   <!-- Filter indicator -->
-  <div id="oo-filter-bar" style="display:none;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+  <div id="oo-filter-bar" style="display:none;margin-bottom:10px;align-items:center;gap:8px">
     <span id="oo-filter-label" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:50px;background:var(--surface2);color:var(--muted)"></span>
     <button onclick="ooSetFilter('all')" style="font-size:11px;color:var(--muted2);background:none;border:none;cursor:pointer;text-decoration:underline">顯示全部</button>
   </div>
@@ -1105,6 +1105,23 @@ nav::-webkit-scrollbar{display:none;}
     <div class="m-acts">
       <button class="btn btn-accent" style="flex:1" onclick="savePermNobcProduct()">儲存</button>
       <button class="btn btn-ghost" onclick="closeModal('m-addnobc')">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Modal: 編輯無條碼商品 ═══ -->
+<div class="overlay" id="m-editnobc">
+  <div class="mbox">
+    <div class="m-title">✏ แก้ไขสินค้าไม่มีบาร์โค้ด<span class="zh">編輯無條碼商品</span></div>
+    <div class="fg"><label>品項名稱 *</label><input class="fi" id="editnobc-name" type="text"></div>
+    <div class="fg"><label>單價（NT$）*</label><input class="fi" id="editnobc-price" type="number" min="0" step="1"></div>
+    <div class="fg">
+      <label>分類 หมวดหมู่ / 分類</label>
+      <select class="fi" id="editnobc-cat"></select>
+    </div>
+    <div class="m-acts">
+      <button class="btn btn-accent" style="flex:1" onclick="saveEditNobcProduct()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-editnobc')">取消</button>
     </div>
   </div>
 </div>
@@ -1563,6 +1580,7 @@ function setQty(bc,input){
   document.getElementById('item-count').textContent=totalQty;
   document.getElementById('grand-total').textContent='NT$ '+sub;
   document.getElementById('btn-checkout').disabled=cart.length===0;
+  const bh=document.getElementById('btn-hold');if(bh)bh.disabled=cart.length===0;
 }
 function changeQty(bc,d){
   const item=cart.find(i=>i.barcode===bc);if(!item)return;
@@ -1771,21 +1789,29 @@ function savePermNobcProduct(){
   document.getElementById('addnobc-name').value='';
   document.getElementById('addnobc-price').value='';
 }
+let _editNobcIdx = -1;
 function editNobcProd(idx){
   const prods=getNobcProds();const p=prods[idx];if(!p)return;
-  const newName=prompt('品項名稱：',p.name);if(newName===null)return;
-  const newPrice=parseFloat(prompt('單價（NT$）：',p.price));
-  if(!newName.trim()||isNaN(newPrice)||newPrice<0){showToast('資料有誤','err');return;}
-  // 分類用簡單 prompt 選擇
-  const catIds=CATEGORIES.map(c=>c.id);
-  const catLabels=CATEGORIES.map((c,i)=>`${i+1}. ${c.icon}${c.th} ${c.zh}`).join('\n');
-  const curIdx=catIds.indexOf(p.category||'other');
-  const catInput=prompt('選擇分類（輸入數字）：\n'+catLabels,curIdx+1);
-  const catNum=parseInt(catInput)-1;
-  const newCat=(catNum>=0&&catNum<catIds.length)?catIds[catNum]:(p.category||'other');
-  prods[idx]={...p,name:newName.trim(),price:newPrice,category:newCat};
-  saveNobcProds(prods);renderProdGrid();
-  showToast('已更新：'+newName,'ok');
+  _editNobcIdx = idx;
+  document.getElementById('editnobc-name').value = p.name;
+  document.getElementById('editnobc-price').value = p.price;
+  buildCatOptions('editnobc-cat', p.category||'other');
+  openModal('m-editnobc');
+}
+function saveEditNobcProduct(){
+  const name=(document.getElementById('editnobc-name').value||'').trim();
+  const price=parseFloat(document.getElementById('editnobc-price').value);
+  const category=document.getElementById('editnobc-cat').value||'other';
+  if(!name){showToast('請輸入品項名稱','err');return;}
+  if(isNaN(price)||price<0){showToast('請輸入正確價格','err');return;}
+  const prods=getNobcProds();
+  if(!prods[_editNobcIdx]){showToast('找不到商品','err');return;}
+  prods[_editNobcIdx]={...prods[_editNobcIdx],name,price,category};
+  saveNobcProds(prods);
+  closeModal('m-editnobc');
+  renderProdGrid();
+  showToast('已更新：'+name,'ok');
+  _editNobcIdx=-1;
 }
 function delNobcProd(idx){
   if(!confirm('確定刪除此無條碼商品？'))return;
@@ -1877,6 +1903,10 @@ function renderProdGrid(){
   const prods = getProds();
   const nobcProds = getNobcProds();
   const bcKeys = getProdOrder(prods);
+
+  // 更新副標題商品數
+  const lbl = document.getElementById('prod-count-lbl');
+  if(lbl) lbl.textContent = '條碼商品 '+bcKeys.length+' 種 / 無條碼商品 '+nobcProds.length+' 種';
 
   const mainArea = document.getElementById('prod-main-area');
   const stickyBar = document.getElementById('prod-cat-sticky');
@@ -2257,11 +2287,13 @@ function _getAudioCtx(){
   }
   return _audioCtx;
 }
-/* 在任何用戶手勢後解鎖 AudioContext（iOS / Chrome autoplay policy）*/
+let _audioUnlocked = false;
 function _unlockAudio(){
+  if(_audioUnlocked) return;
   try{
     const ctx = _getAudioCtx();
-    if(ctx.state==='suspended') ctx.resume();
+    if(ctx.state==='suspended') ctx.resume().then(()=>{ _audioUnlocked=true; });
+    else _audioUnlocked=true;
   }catch(e){}
 }
 ['touchstart','touchend','mousedown','keydown'].forEach(ev=>
@@ -2817,7 +2849,7 @@ async function fbPullAll(){
       localStorage.setItem('pos_transactions', JSON.stringify(arr));
     }
     setFbStatus('connected','☁ Firebase 已連線');
-    renderProdGrid(); renderStats(); renderMonthly(); renderDaily();
+    renderProdGrid(); renderStats(); renderMonthly(); renderWeekly(); renderDaily();
     showToast('Firebase 資料同步完成','ok');
   }catch(e){
     console.error('[Firebase pull]',e);
@@ -2835,7 +2867,7 @@ function fbListenAll(){
       const val=snap.val(); if(val===null) return;
       const toStore = (type===2||type===3) ? (Array.isArray(val)?val:Object.values(val)) : val;
       localStorage.setItem(lsKey, JSON.stringify(toStore));
-      if(type===2){ renderStats(); renderMonthly(); renderDaily(); }
+      if(type===2){ renderStats(); renderMonthly(); renderWeekly(); renderDaily(); }
       else renderProdGrid();
     }, err=>console.warn('[Firebase listen]',err));
     _fbListeners[path]=unsub;
@@ -3010,9 +3042,9 @@ function renderOnlineOrders(){
   const filterLabel = document.getElementById('oo-filter-label');
   if(filterBar && filterLabel){
     if(_ooFilter==='all'){
-      filterBar.style.display = 'none';
+      filterBar.style.cssText = 'display:none;margin-bottom:10px;align-items:center;gap:8px';
     } else {
-      filterBar.style.display = 'flex';
+      filterBar.style.cssText = 'display:flex;margin-bottom:10px;align-items:center;gap:8px';
       filterLabel.textContent = _ooFilter==='pending' ? '⏳ 顯示待處理' : '✓ 顯示已完成';
       filterLabel.style.background = _ooFilter==='pending' ? 'rgba(220,38,38,.1)' : 'rgba(5,150,105,.1)';
       filterLabel.style.color      = _ooFilter==='pending' ? 'var(--red)' : 'var(--green)';
