@@ -129,15 +129,15 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .t-row{display:grid;grid-template-columns:30px 1fr 90px 120px 34px;padding:13px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background .12s;animation:rowIn .18s ease;}
 
 /* ── NOBC CATEGORY GRID (in POS modal) ── */
-.nobc-cat-grid{display:flex;flex-direction:column;gap:0;}
-.nobc-cat-btn{display:flex;flex-direction:row;align-items:center;gap:14px;padding:18px 20px;background:var(--surface);border:none;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;font-family:var(--zh);text-align:left;width:100%;}
-.nobc-cat-btn:last-child{border-bottom:none;}
-.nobc-cat-btn:hover{background:var(--surface2);}
+.nobc-cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px;}
+.nobc-cat-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px 10px;min-height:90px;background:var(--surface);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:background .15s,border-color .15s,transform .12s;font-family:var(--zh);text-align:center;width:100%;box-shadow:var(--sh);}
+.nobc-cat-btn:hover{background:var(--surface2);border-color:var(--accent);transform:translateY(-1px);}
+.nobc-cat-btn:active{transform:scale(.97);}
 .nobc-cat-btn.empty{opacity:.4;pointer-events:none;}
-.nobc-cat-btn .cat-icon{font-size:33px;line-height:1;flex-shrink:0;}
-.nobc-cat-btn .cat-th{font-size:18px;color:var(--muted);font-family:var(--th);line-height:1.3;}
-.nobc-cat-btn .cat-zh{font-size:21px;font-weight:700;color:var(--text);flex:1;}
-.nobc-cat-btn .cat-count{font-size:17px;color:var(--muted2);font-family:var(--mono);background:var(--surface3);border-radius:8px;padding:3px 12px;flex-shrink:0;}
+.nobc-cat-btn .cat-icon{font-size:32px;line-height:1;flex-shrink:0;}
+.nobc-cat-btn .cat-th{display:none;}
+.nobc-cat-btn .cat-zh{font-size:15px;font-weight:700;color:var(--text);line-height:1.3;}
+.nobc-cat-btn .cat-count{display:none;}
 
 /* ── NOBC LIST (in POS modal after category select) ── */
 .nobc-product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:10px;background:var(--surface2);}
@@ -435,7 +435,7 @@ nav::-webkit-scrollbar{display:none;}
   .prod-cat-row .pct-arrow{position:absolute;right:7px;top:7px;font-size:13px;}
   /* 平板：分類3欄，只顯示圖示+名稱，隱藏數量和泰文 */
   .nobc-cat-grid{grid-template-columns:repeat(3,1fr)!important;gap:8px;padding:10px;}
-  .nobc-cat-btn{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:6px!important;padding:14px 8px!important;min-height:80px;border-bottom:1px solid var(--border)!important;text-align:center;}
+  .nobc-cat-btn{flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:6px!important;padding:14px 8px!important;min-height:80px;border-bottom:none!important;border-radius:10px!important;text-align:center;}
   .nobc-cat-btn .cat-icon{font-size:28px!important;line-height:1;}
   .nobc-cat-btn .cat-th{display:none!important;}
   .nobc-cat-btn .cat-zh{font-size:14px!important;line-height:1.3;font-weight:700;text-align:center;}
@@ -1068,7 +1068,7 @@ nav::-webkit-scrollbar{display:none;}
 
 <!-- ═══ Modal: 無條碼商品清單（分類選擇 + 商品清單）═══ -->
 <div class="overlay" id="m-nobc-list">
-  <div class="mbox" style="width:520px;padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:90vh;">
+  <div class="mbox" style="width:95vw;max-width:95vw;padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:95vh;">
     <!-- 標題列 -->
     <div style="padding:16px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);flex-shrink:0;">
       <div>
