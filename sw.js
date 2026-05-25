@@ -7,7 +7,7 @@
        Firebase RTDB → Network First（即時資料）
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION    = 'v1.2.0';
+const APP_VERSION    = 'v1.2.1'; // fix: 移除 install 裡的 skipWaiting，防止無限刷新
 const STATIC_CACHE   = `shop-static-${APP_VERSION}`;
 const FONT_CACHE     = `shop-fonts-${APP_VERSION}`;
 const FIREBASE_CACHE = `shop-firebase-${APP_VERSION}`;
@@ -25,11 +25,13 @@ const PRECACHE_ASSETS = [
 /* ── Install ── */
 self.addEventListener('install', event => {
   console.log('[SW] Installing', APP_VERSION);
+  // ⚠️ 不在此呼叫 skipWaiting()！
+  // 新版 SW 安裝後會進入「等待」狀態，直到使用者按「立即更新」才切換。
+  // 自動 skipWaiting → controllerchange → location.reload() 會造成無限刷新。
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then(cache => cache.addAll(PRECACHE_ASSETS))
-      .then(() => self.skipWaiting())
-      .catch(() => self.skipWaiting())
+      .catch(err => console.warn('[SW] Precache partial failure (non-fatal):', err))
   );
 });
 
