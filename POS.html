@@ -1852,7 +1852,11 @@ function confirmCheckout(){
   const txList=getTx();txList.push(tx);saveTx(txList);
   cart=[];renderCart();stopScanner();
   showToast('ชำระเงินเรียบร้อย! / 結帳完成 ✓','ok');
-  setTimeout(()=>speak('ขอบคุณที่ใช้บริการครับ'),300);
+  // 雙音提示音（結帳成功）
+  playBeep(880, 0.08);
+  setTimeout(()=>playBeep(1100, 0.12), 100);
+  // 直接呼叫（不用 setTimeout），保持在用戶手勢範圍內才能觸發 iOS 語音
+  speak('ขอบคุณที่ใช้บริการครับ');
 }
 
 // ═══ 新條碼開關 ═══
@@ -2245,7 +2249,37 @@ document.querySelectorAll('.overlay').forEach(ol=>{
 // ═══ 工具函式 ═══
 function setSt(msg,type=''){const el=document.getElementById('scan-st');el.textContent=msg;el.className='scan-st'+(type?' '+type:'');}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='show '+type;clearTimeout(t._t);t._t=setTimeout(()=>t.className='',3000);}
-function playBeep(){try{const ctx=new(window.AudioContext||window.webkitAudioContext)();const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=960;o.type='sine';g.gain.setValueAtTime(.18,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.1);o.start();o.stop(ctx.currentTime+.1);}catch(e){}}
+/* ── 共用 AudioContext（避免超過瀏覽器 6 個上限導致靜音）── */
+let _audioCtx = null;
+function _getAudioCtx(){
+  if(!_audioCtx || _audioCtx.state==='closed'){
+    _audioCtx = new(window.AudioContext||window.webkitAudioContext)();
+  }
+  return _audioCtx;
+}
+/* 在任何用戶手勢後解鎖 AudioContext（iOS / Chrome autoplay policy）*/
+function _unlockAudio(){
+  try{
+    const ctx = _getAudioCtx();
+    if(ctx.state==='suspended') ctx.resume();
+  }catch(e){}
+}
+['touchstart','touchend','mousedown','keydown'].forEach(ev=>
+  document.addEventListener(ev, _unlockAudio, {once:false, passive:true})
+);
+function playBeep(freq=960, dur=0.12){
+  try{
+    const ctx = _getAudioCtx();
+    if(ctx.state==='suspended'){ ctx.resume().then(()=>playBeep(freq,dur)); return; }
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value=freq; o.type='sine';
+    const t=ctx.currentTime;
+    g.gain.setValueAtTime(.20,t);
+    g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.start(t); o.stop(t+dur);
+  }catch(e){}
+}
 function fd(d){return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;}
 function fm(d){return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;}
 // 週鍵：以週一為第一天，取當週週一的日期作為唯一鍵
@@ -2562,19 +2596,75 @@ document.addEventListener('touchmove',e=>{
 },{passive:false});
 
 // ═══ TTS 語音合成 ═══
-function speak(text){
-  if(!window.speechSynthesis)return;
-  window.speechSynthesis.cancel();
-  const utt=new SpeechSynthesisUtterance(text);
-  const voices=window.speechSynthesis.getVoices();
-  const thVoice=voices.find(v=>v.lang&&v.lang.startsWith('th'));
-  if(thVoice)utt.voice=thVoice;
-  utt.lang='th-TH'; utt.rate=0.92; utt.pitch=1;
-  window.speechSynthesis.speak(utt);
+let _ttsVoices = [];
+let _ttsReady  = false;
+
+function _loadVoices(){
+  const vs = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  if(vs.length){ _ttsVoices = vs; _ttsReady = true; }
 }
 if(window.speechSynthesis){
-  window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
-  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = _loadVoices;
+  _loadVoices();
+  // 有些瀏覽器不觸發 onvoiceschanged，延遲再試一次
+  setTimeout(_loadVoices, 500);
+  setTimeout(_loadVoices, 2000);
+}
+
+function _pickVoice(){
+  // 優先：泰語 → 中文（zh）→ 英語
+  return _ttsVoices.find(v=>v.lang&&v.lang.startsWith('th'))
+      || _ttsVoices.find(v=>v.lang&&v.lang.startsWith('zh'))
+      || null;
+}
+
+function speak(text){
+  if(!window.speechSynthesis || !text) return;
+
+  // Chrome bug：speechSynthesis 有時卡在 paused 或 speaking 狀態
+  try{
+    if(window.speechSynthesis.paused)  window.speechSynthesis.resume();
+    if(window.speechSynthesis.speaking) window.speechSynthesis.cancel();
+  }catch(e){}
+
+  function _doSpeak(){
+    const utt = new SpeechSynthesisUtterance(text);
+    const v = _pickVoice();
+    if(v) utt.voice = v;
+    utt.lang  = 'th-TH';
+    utt.rate  = 0.90;
+    utt.pitch = 1;
+
+    // Chrome 15 分鐘後卡死的 workaround：如果 0.8s 後還沒開始就重試一次
+    let started = false;
+    utt.onstart = () => { started = true; };
+    utt.onerror = () => {
+      if(!started){
+        try{ window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(text)); }catch(e){}
+      }
+    };
+    try{ window.speechSynthesis.speak(utt); }catch(e){}
+
+    setTimeout(()=>{
+      if(!started && window.speechSynthesis){
+        try{
+          window.speechSynthesis.cancel();
+          const utt2 = new SpeechSynthesisUtterance(text);
+          if(v) utt2.voice = v;
+          utt2.lang='th-TH'; utt2.rate=0.90; utt2.pitch=1;
+          window.speechSynthesis.speak(utt2);
+        }catch(e){}
+      }
+    }, 800);
+  }
+
+  // 若 voices 尚未載入，等 voices 就緒再說
+  if(!_ttsReady){
+    const wait = setTimeout(()=>{ _loadVoices(); _doSpeak(); }, 600);
+    window.speechSynthesis.onvoiceschanged = ()=>{ _loadVoices(); clearTimeout(wait); _doSpeak(); };
+  } else {
+    _doSpeak();
+  }
 }
 function amountToThai(total){
   const u=['','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
@@ -3285,6 +3375,13 @@ function initPosPWA() {
         _posSwReg = reg;
         console.log('[POS-SW] registered:', reg.scope);
 
+        // ★ 防止無限刷新：若是 SW 更新後自動 reload 進來的，跳過這次更新偵測
+        if (sessionStorage.getItem('pos-sw-reloading')) {
+          sessionStorage.removeItem('pos-sw-reloading');
+          console.log('[POS-SW] skipping update check after self-reload');
+          return;
+        }
+
         // 偵測新版本
         reg.addEventListener('updatefound', () => {
           const nw = reg.installing;
@@ -3303,9 +3400,13 @@ function initPosPWA() {
       })
       .catch(e => console.warn('[POS-SW] registration failed:', e));
 
-    // 新版 SW 接管後自動 reload
+    // 新版 SW 接管後自動 reload（★ 先寫 sessionStorage 旗標再 reload，防止迴圈）
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!_posSwRefreshing) { _posSwRefreshing = true; location.reload(); }
+      if (!_posSwRefreshing) {
+        _posSwRefreshing = true;
+        sessionStorage.setItem('pos-sw-reloading', '1'); // ★ 關鍵：防止 reload 後再次觸發
+        location.reload();
+      }
     });
   }
 
