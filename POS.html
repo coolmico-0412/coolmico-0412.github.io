@@ -872,9 +872,9 @@ nav::-webkit-scrollbar{display:none;}
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
     <div>
       <div style="font-size:27px;font-weight:700;color:var(--text)">🛒 ออเดอร์ออนไลน์ <span style="font-family:var(--zh);font-size:21px;color:var(--muted)">線上訂單</span></div>
-      <div style="font-size:18px;color:var(--muted);margin-top:3px;font-family:var(--zh)">客戶透過線上商店送出的訂單</div>
+
     </div>
-    <button class="btn btn-ghost" onclick="loadOnlineOrders()" style="font-size:13px;padding:7px 14px">🔄 รีเฟรช</button>
+
   </div>
 
   <!-- Stats buttons -->
@@ -3008,10 +3008,14 @@ function updateOnlineBadge(){
   badge.textContent   = pending>99 ? '99+' : String(pending);
 }
 
-/* 統計按鈕切換 filter */
+/* 統計按鈕切換 filter：點擊待處理時同時重新拉取最新訂單 */
 function ooSetFilter(f){
-  _ooFilter = f;  // 直接切換，不再 toggle 回 all
-  renderOnlineOrders();
+  _ooFilter = f;
+  if(f === 'pending'){
+    loadOnlineOrders(); // 自動刷新
+  } else {
+    renderOnlineOrders();
+  }
 }
 
 function renderOnlineOrders(){
@@ -3082,6 +3086,11 @@ function renderOnlineOrders(){
 
 /* 開啟訂單明細 */
 function openOnlineOrder(orderId){
+  openModal('m-online-order');
+  _renderOrderDetail(orderId);
+}
+
+function _renderOrderDetail(orderId){
   const o = _onlineOrders.find(x=>x.id===orderId);
   if(!o) return;
   const isPending = (o.status||'pending')==='pending';
@@ -3089,6 +3098,23 @@ function openOnlineOrder(orderId){
   const body = document.getElementById('ood-body');
   const acts = document.getElementById('ood-acts');
   if(!body||!acts) return;
+
+  // 計算目前總金額（可能已被刪商品修改）
+  const currentTotal = (o.items||[]).reduce((s,i)=>s+(i.price*i.qty),0);
+
+  const itemRows = (o.items||[]).map((item,idx)=>`<tr>
+    <td style="padding:8px;border-bottom:1px solid var(--border)">${item.name||''}</td>
+    <td style="text-align:center;padding:8px;border-bottom:1px solid var(--border);color:var(--muted)">${item.qty}</td>
+    <td style="text-align:right;padding:8px;border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:600">NT$${item.price*item.qty}</td>
+    ${isPending ? `<td style="padding:8px;border-bottom:1px solid var(--border);text-align:center">
+      <button onclick="ooDeleteOrderItem('${orderId}',${idx})" style="
+        background:transparent;border:1.5px solid transparent;color:var(--muted2);
+        cursor:pointer;border-radius:6px;padding:3px 7px;font-size:13px;transition:all .15s;
+      " onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='#fef2f2'"
+         onmouseout="this.style.borderColor='transparent';this.style.color='var(--muted2)';this.style.background='transparent'"
+         title="刪除此商品">✕</button>
+    </td>` : '<td></td>'}
+  </tr>`).join('');
 
   body.innerHTML = `
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center">
@@ -3118,19 +3144,14 @@ function openOnlineOrder(orderId){
           <th style="text-align:left;padding:7px 8px;font-size:17px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)">สินค้า / 商品</th>
           <th style="text-align:center;padding:7px 8px;font-size:17px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)">จำนวน / 數量</th>
           <th style="text-align:right;padding:7px 8px;font-size:17px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)">รวม / 小計</th>
+          <th style="width:40px;border-bottom:1px solid var(--border)"></th>
         </tr>
       </thead>
-      <tbody>
-        ${(o.items||[]).map(i=>`<tr>
-          <td style="padding:8px;border-bottom:1px solid var(--border)">${i.name||''}</td>
-          <td style="text-align:center;padding:8px;border-bottom:1px solid var(--border);color:var(--muted)">${i.qty}</td>
-          <td style="text-align:right;padding:8px;border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:600">NT$${i.price*i.qty}</td>
-        </tr>`).join('')}
-      </tbody>
+      <tbody>${itemRows}</tbody>
     </table>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:2px solid var(--border)">
       <span style="font-size:21px;font-weight:600;font-family:var(--zh)">訂單總金額</span>
-      <span style="font-size:30px;font-weight:700;font-family:var(--mono);color:var(--accent)">NT$${o.total||0}</span>
+      <span id="ood-total" style="font-size:30px;font-weight:700;font-family:var(--mono);color:var(--accent)">NT$${currentTotal}</span>
     </div>`;
 
   if(isPending){
@@ -3144,7 +3165,29 @@ function openOnlineOrder(orderId){
       <button class="btn btn-ghost" onclick="revertOrderPending('${o.id}')">↩ 退回待處理</button>
       <button class="btn btn-ghost" onclick="closeModal('m-online-order')">ปิด</button>`;
   }
-  openModal('m-online-order');
+}
+
+/* 刪除待處理訂單中的單一商品並更新總金額 */
+async function ooDeleteOrderItem(orderId, itemIdx){
+  const o = _onlineOrders.find(x=>x.id===orderId);
+  if(!o || !o.items) return;
+  if(o.items.length <= 1){
+    showToast('至少保留一項商品，如需刪除整筆請用「刪訂單」','err');
+    return;
+  }
+  o.items.splice(itemIdx, 1);
+  // 重新計算總金額
+  o.total = o.items.reduce((s,i)=>s+(i.price*i.qty), 0);
+  // 更新 Firebase
+  if(window._fbSet){
+    try{
+      await window._fbSet(`shop/online_orders/${orderId}/items`, o.items);
+      await window._fbSet(`shop/online_orders/${orderId}/total`, o.total);
+    }catch(e){ console.warn('[POS] ooDeleteOrderItem Firebase fail:',e); }
+  }
+  // 重新渲染訂單明細（不關閉 modal）
+  _renderOrderDetail(orderId);
+  showToast('已刪除商品，總金額已更新','ok');
 }
 
 /* 確認刪除訂單（含 Firebase）*/
@@ -3276,20 +3319,15 @@ async function ooOpenMemberList(){
   }
 
   body.innerHTML = list.map(m=>{
-    const orderCount = _onlineOrders.filter(o=>o.memberId===m.memberId).length;
     return `<div onclick="ooOpenMemberHistory('${m.memberId}')" style="
-      display:grid;grid-template-columns:auto 1fr auto;gap:6px 12px;align-items:center;
+      display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;
       padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;
     " onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
       <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--purple);
-        background:rgba(124,58,237,.08);border-radius:6px;padding:4px 8px">${m.memberId||'—'}</div>
+        background:rgba(124,58,237,.08);border-radius:6px;padding:4px 8px;white-space:nowrap">${m.memberId||'—'}</div>
       <div>
         <div style="font-size:13px;font-weight:600;color:var(--text)">${m.name||'—'}</div>
         <div style="font-size:11px;color:var(--muted)">${m.phone||''}</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:13px;font-weight:700;color:var(--accent);font-family:var(--mono)">NT$${m.totalSpent||0}</div>
-        <div style="font-size:10px;color:var(--muted2)">${orderCount} ออเดอร์</div>
       </div>
     </div>`;
   }).join('');
