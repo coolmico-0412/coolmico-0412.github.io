@@ -135,7 +135,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .nobc-cat-btn:active{transform:scale(.97);}
 .nobc-cat-btn.empty{opacity:.4;pointer-events:none;}
 .nobc-cat-btn .cat-icon{font-size:32px;line-height:1;flex-shrink:0;}
-.nobc-cat-btn .cat-th{display:none;}
+.nobc-cat-btn .cat-th{display:block;font-size:15px;color:var(--muted);font-family:var(--th);line-height:1.3;}
 .nobc-cat-btn .cat-zh{font-size:15px;font-weight:700;color:var(--text);line-height:1.3;}
 .nobc-cat-btn .cat-count{display:none;}
 
@@ -175,7 +175,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .cat-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:1px 7px;border-radius:10px;font-family:var(--zh);font-weight:600;background:var(--surface3);color:var(--muted);border:1px solid var(--border);white-space:nowrap;}
 
 /* ── PRODUCTS CATEGORY-FIRST LAYOUT (緊湊格狀模式) ── */
-.prod-cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:6px;padding:10px;border:1px solid var(--border);border-radius:14px;background:var(--surface);box-shadow:var(--sh);}
+.prod-cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px;border:1px solid var(--border);border-radius:14px;background:var(--surface);box-shadow:var(--sh);}
 .prod-cat-row{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 6px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:background .15s,border-color .15s,transform .12s;background:var(--surface);text-align:center;}
 .prod-cat-row:hover{background:var(--surface2);border-color:var(--accent);transform:translateY(-1px);}
 .prod-cat-row:active{transform:scale(.96);}
@@ -184,8 +184,8 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .prod-cat-row .pci{font-size:24px;line-height:1;}
 .prod-cat-row .pct{display:contents;}
 .prod-cat-row .pct-th{display:none;}
-.prod-cat-row .pct-zh{font-size:12px;font-weight:700;color:var(--text);font-family:var(--zh);line-height:1.3;word-break:break-all;}
-.prod-cat-row.all-row .pct-zh{color:var(--accent);}
+.prod-cat-row .pct-zh{font-size:24px;font-weight:700;color:var(--text);font-family:var(--zh);line-height:1.3;word-break:break-all;}
+.prod-cat-row.all-row .pct-zh{color:var(--accent);font-size:24px;}
 .prod-cat-row .pct-counts{display:none;}
 .pct-badge{display:none;}
 .prod-cat-row .pct-arrow{display:none;}
@@ -418,13 +418,13 @@ nav::-webkit-scrollbar{display:none;}
 
 @media(min-width:641px) and (max-width:1100px){
   /* ── 平板：分類緊湊模式（已全局套用，僅調整欄寬） ── */
-  .prod-cat-grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:7px;padding:10px;}
+  .prod-cat-grid{grid-template-columns:repeat(3,1fr);gap:7px;padding:10px;}
   .prod-cat-row{padding:10px 8px;}
   /* 平板：分類3欄，只顯示圖示+名稱，隱藏數量和泰文 */
   .nobc-cat-grid{grid-template-columns:repeat(3,1fr)!important;gap:8px;padding:10px;}
   .nobc-cat-btn{flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:6px!important;padding:14px 8px!important;min-height:80px;border-bottom:none!important;border-radius:10px!important;text-align:center;}
   .nobc-cat-btn .cat-icon{font-size:28px!important;line-height:1;}
-  .nobc-cat-btn .cat-th{display:none!important;}
+  .nobc-cat-btn .cat-th{display:block!important;font-size:14px!important;}
   .nobc-cat-btn .cat-zh{font-size:14px!important;line-height:1.3;font-weight:700;text-align:center;}
   .nobc-cat-btn .cat-count{display:none!important;}
   .nobc-product-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;padding:6px;}
@@ -444,7 +444,7 @@ nav::-webkit-scrollbar{display:none;}
   .left-col{gap:10px;}
   .card-hd{padding:9px 14px;}
   .prod-cat-row{padding:9px 6px;gap:4px;}
-  .prod-cat-grid{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:5px;padding:8px;}
+  .prod-cat-grid{grid-template-columns:repeat(3,1fr);gap:5px;padding:8px;}
 }
 
 @media(max-width:640px){
@@ -469,6 +469,7 @@ nav::-webkit-scrollbar{display:none;}
   #file-status-prod,#fb-status,.btn-row>div[style*="display:flex"],.btn-row .btn{flex:1 1 100%;justify-content:center;}
   .prod-cat-row{padding:9px 6px;gap:4px;}
   .nobc-cat-btn{padding:15px 14px;gap:10px;}
+  .nobc-cat-btn .cat-th{font-size:18px;}
   .nobc-cat-btn .cat-zh{font-size:18px;}
   .nobc-product-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:7px;padding:8px;}
   .nobc-list-item{min-height:82px;padding:11px 12px;}
@@ -892,11 +893,7 @@ nav::-webkit-scrollbar{display:none;}
     </button>
   </div>
 
-  <!-- Filter indicator -->
-  <div id="oo-filter-bar" style="display:none;margin-bottom:10px;align-items:center;gap:8px">
-    <span id="oo-filter-label" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:50px;background:var(--surface2);color:var(--muted)"></span>
-    <button onclick="ooSetFilter('all')" style="font-size:11px;color:var(--muted2);background:none;border:none;cursor:pointer;text-decoration:underline">顯示全部</button>
-  </div>
+  <!-- Filter indicator removed -->
 
   <!-- Order list -->
   <div class="card" id="oo-list-wrap">
@@ -2965,7 +2962,7 @@ waitFbReady(async()=>{
 //  線上訂單管理
 // ══════════════════════════════════════════════════════════
 let _onlineOrders  = [];
-let _ooFilter      = 'all';   // 'all' | 'pending' | 'done'
+let _ooFilter      = 'pending';   // 'all' | 'pending' | 'done'
 
 /* 西元年 + 阿拉伯數字月份 */
 function fmtDateTh(iso){
@@ -3013,7 +3010,7 @@ function updateOnlineBadge(){
 
 /* 統計按鈕切換 filter */
 function ooSetFilter(f){
-  _ooFilter = (_ooFilter === f) ? 'all' : f;  // 再按一次取消篩選
+  _ooFilter = f;  // 直接切換，不再 toggle 回 all
   renderOnlineOrders();
 }
 
@@ -3034,19 +3031,7 @@ function renderOnlineOrders(){
   if(bPending) bPending.style.borderColor = _ooFilter==='pending' ? 'var(--red)'   : 'transparent';
   if(bDone)    bDone.style.borderColor    = _ooFilter==='done'    ? 'var(--green)' : 'transparent';
 
-  // 篩選提示列
-  const filterBar   = document.getElementById('oo-filter-bar');
-  const filterLabel = document.getElementById('oo-filter-label');
-  if(filterBar && filterLabel){
-    if(_ooFilter==='all'){
-      filterBar.style.cssText = 'display:none;margin-bottom:10px;align-items:center;gap:8px';
-    } else {
-      filterBar.style.cssText = 'display:flex;margin-bottom:10px;align-items:center;gap:8px';
-      filterLabel.textContent = _ooFilter==='pending' ? '⏳ 顯示待處理' : '✓ 顯示已完成';
-      filterLabel.style.background = _ooFilter==='pending' ? 'rgba(220,38,38,.1)' : 'rgba(5,150,105,.1)';
-      filterLabel.style.color      = _ooFilter==='pending' ? 'var(--red)' : 'var(--green)';
-    }
-  }
+  // 篩選提示列已移除
 
   const filtered = _ooFilter==='all' ? _onlineOrders
     : _onlineOrders.filter(o=>(o.status||'pending')===_ooFilter);
