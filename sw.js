@@ -170,11 +170,11 @@ async function cacheFirst(request, cacheName) {
 /* ── Stale While Revalidate ── */
 async function staleWhileRevalidate(request, cacheName) {
   const cached = await caches.match(request);
-  const update = fetch(request).then(async r => {
+  const networkPromise = fetch(request).then(async r => {
     if (r.ok) { const c = await caches.open(cacheName); c.put(request, r.clone()); }
     return r;
-  }).catch(() => cached);
-  return cached || update;
+  }).catch(() => cached || new Response('Offline', { status: 503 }));
+  return cached || networkPromise;
 }
 
 /* ── Message: SKIP_WAITING ── */

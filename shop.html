@@ -1736,6 +1736,9 @@ body::after {
           <button class="geo-btn geo-btn-secondary" id="map-pick-btn" onclick="openMapPicker()" type="button">地圖選點</button>
         </div>
         <div class="geo-status" id="geo-status"></div>
+        <input class="field-input" id="delivery-remark" type="text"
+               placeholder="備註收貨地點，例如：3樓、門口停車場旁"
+               style="margin-top:7px;font-size:13px">
         <div class="field-hint" id="modal-delivery-err" style="color:var(--primary);display:none">กรุณากรอกสถานที่จัดส่ง</div>
         <div class="field-hint" id="delivery-range-hint" style="margin-top:4px;line-height:1.7;display:none"></div>
       </div>
@@ -1802,7 +1805,7 @@ body::after {
 ═══════════════════════════════════════════════════════════════════ */
 import { initializeApp }
   from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-import { getDatabase, ref, get, set, runTransaction }
+import { getDatabase, ref, get, set, update, query, orderByChild, equalTo, limitToLast, runTransaction }
   from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
 
 const FIREBASE_CONFIG = {
@@ -2035,16 +2038,20 @@ async function lookupMemberById(memberId) {
   } catch(e) { return null; }
 }
 
-// Fetch this member's orders from Firebase
+// Fetch this member's orders from Firebase（使用索引查詢，避免掃描全表）
 async function fetchMemberOrders(memberId) {
   if (!_fbOK || !memberId) return [];
   try {
-    const snap = await get(ref(_db, FB.ORDERS));
+    const q = query(
+      ref(_db, FB.ORDERS),
+      orderByChild('memberId'),
+      equalTo(memberId),
+      limitToLast(20)
+    );
+    const snap = await get(q);
     if (!snap.exists()) return [];
     return Object.values(snap.val())
-      .filter(o => o?.memberId === memberId)
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 20);
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
   } catch(e) { return []; }
 }
 
@@ -2840,7 +2847,9 @@ function applyLang() {
 
   // Success modal
   set('success-title-text', L.successTitle);
-  set('success-msg-text', L.successMsg.replace('\n','\n'));
+  // 換行符轉 <br> 才能在 HTML 中正確顯示
+  const smEl = document.getElementById('success-msg-text');
+  if (smEl) smEl.innerHTML = h(L.successMsg).replace(/\n/g, '<br>');
   set('btn-done-text', L.btnContinue);
 
   // Member drawer
@@ -3248,7 +3257,9 @@ async function submitOrder() {
     showToast(t('deliveryRequired'), 'err');
     return;
   }
-  const deliveryVal = (document.getElementById('order-delivery')?.value || deliveryCoordsForSubmit.address || `${deliveryCoordsForSubmit.lat}, ${deliveryCoordsForSubmit.lng}`).trim();
+  const _deliveryBase   = (document.getElementById('order-delivery')?.value || deliveryCoordsForSubmit.address || `${deliveryCoordsForSubmit.lat}, ${deliveryCoordsForSubmit.lng}`).trim();
+  const _deliveryRemark = (document.getElementById('delivery-remark')?.value || '').trim();
+  const deliveryVal     = _deliveryRemark ? `${_deliveryBase}【${_deliveryRemark}】` : _deliveryBase;
   // 記住本次地點
   try{ localStorage.setItem('shop_last_delivery', deliveryVal); }catch(e){}
 
@@ -3317,7 +3328,7 @@ async function submitOrder() {
 
     if(currentMember && memberOpen) renderMemberDrawer();
     try {
-      ['customer-name','customer-phone','order-note','order-delivery'].forEach(id=>{
+      ['customer-name','customer-phone','order-note','order-delivery','delivery-remark'].forEach(id=>{
         const el=document.getElementById(id); if(el) el.value='';
       });
       resetDeliveryCoords({ clearDisplay: true });
@@ -3377,9 +3388,10 @@ async function saveEditProfile() {
     // Update Firebase
     if (_fbOK && _db && currentMember.memberId) {
       try {
-        await set(ref(_db, `${FB.MEMBERS}/${currentMember.memberId}/name`),        name);
-        await set(ref(_db, `${FB.MEMBERS}/${currentMember.memberId}/phone`),       phone);
-        await set(ref(_db, `${FB.MEMBERS}/${currentMember.memberId}/nationality`), nat);
+        // 一次 update() 取代三次 set()，減少 3 倍網路往返
+        await update(ref(_db, `${FB.MEMBERS}/${currentMember.memberId}`), {
+          name, phone, nationality: nat,
+        });
       } catch(e) { console.warn('[Shop] saveEditProfile Firebase:', e); }
     }
     // 依新國籍切語言
@@ -3443,9 +3455,8 @@ async function init() {
   const authNat = document.getElementById('auth-nationality');
   if (authNat) authNat.innerHTML = `<option value="">— ${(LANGS[_lang]||LANGS.th).labelNationality||'Select'} —</option>` + natOpts;
 
-  // ⑤ 套用語言 + 設定頁面標題（依語言顯示）
+  // ⑤ 套用語言 + 設定頁面標題（applyLang 內已呼叫 updatePageTitle，無需重複）
   applyLang();
-  updatePageTitle();
 
   // ⑥ 立即從本機快取渲染商品（不等 Firebase）
   allProducts = loadAllProducts();
