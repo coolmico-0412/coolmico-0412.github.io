@@ -2373,6 +2373,9 @@ const LANGS = {
     submitting:'กำลังส่ง…',
     geoNoCoords:'กรุณากด "พิกัดปัจจุบัน" ก่อน\nหากระบุตำแหน่งไม่ได้ ใช้ "ปักหมุดแผนที่"',
     minOrderShort:'ขาดอีก NT$%n',
+    placeholderDeliveryRemark:'หมายเหตุสถานที่รับ เช่น ชั้น 3 หน้าลานจอดรถ',
+    updateMsg:'🔄 มีเวอร์ชันใหม่！',
+    btnUpdate:'อัปเดตเลย',
   },
   vi: {
     flag:'🇻🇳', label:'Tiếng Việt',
@@ -2464,6 +2467,9 @@ const LANGS = {
     submitting:'Đang gửi…',
     geoNoCoords:'Vui lòng nhấn "Vị trí hiện tại" trước\nNếu không định vị được, dùng "Chọn trên bản đồ"',
     minOrderShort:'Còn thiếu NT$%n',
+    placeholderDeliveryRemark:'Ghi chú địa điểm nhận hàng, vd: tầng 3, gần bãi đỗ xe',
+    updateMsg:'🔄 Có phiên bản mới！',
+    btnUpdate:'Cập nhật ngay',
   },
   id: {
     flag:'🇮🇩', label:'Bahasa Indonesia',
@@ -2555,6 +2561,9 @@ const LANGS = {
     submitting:'Mengirim…',
     geoNoCoords:'Tekan "Lokasi saat ini" terlebih dahulu\nJika tidak bisa, gunakan "Pilih peta"',
     minOrderShort:'Kurang NT$%n lagi',
+    placeholderDeliveryRemark:'Catatan lokasi pengiriman, mis. lantai 3, dekat parkir',
+    updateMsg:'🔄 Ada versi baru！',
+    btnUpdate:'Perbarui sekarang',
   },
   ph: {
     flag:'🇵🇭', label:'English',
@@ -2646,6 +2655,9 @@ const LANGS = {
     submitting:'Submitting…',
     geoNoCoords:'Please press "Current location" first\nIf location fails, use "Map PIN"',
     minOrderShort:'NT$%n more needed',
+    placeholderDeliveryRemark:'Delivery notes, e.g. 3rd floor, near parking lot',
+    updateMsg:'🔄 New version available！',
+    btnUpdate:'Update now',
   },
   tw: {
     flag:'🇹🇼', label:'中文',
@@ -2737,6 +2749,9 @@ const LANGS = {
     submitting:'送出中…',
     geoNoCoords:'請先按「取得目前座標」，讓訂單存入送貨座標\n若瀏覽器無法定位，可使用「地圖選點」。',
     minOrderShort:'還差 NT$%n',
+    placeholderDeliveryRemark:'備註收貨地點，例如：3樓、門口停車場旁',
+    updateMsg:'🔄 有新版本！',
+    btnUpdate:'立即更新',
   },
 };
 
@@ -2837,6 +2852,7 @@ function applyLang() {
   set('map-pick-btn', L.btnMapPick);
   set('modal-note-label', L.labelNote);
   setP('order-note', L.placeholderNote);
+  setP('delivery-remark', L.placeholderDeliveryRemark);
   set('modal-summary-title', L.orderSummary);
   set('modal-th-product', L.thProduct);
   set('modal-th-qty', L.thQty);
@@ -3624,12 +3640,12 @@ function showUpdateBar(reg) {
     box-shadow:0 3px 12px rgba(0,0,0,.2);animation:slide-dn .3s ease;
   `;
   bar.innerHTML = `
-    <span style="flex:1">🔄 มีเวอร์ชันใหม่！/ 有新版本！</span>
+    <span style="flex:1">${t('updateMsg')}</span>
     <button onclick="applySwUpdate()" style="
       background:rgba(255,255,255,.25);border:1.5px solid rgba(255,255,255,.5);
       color:#fff;border-radius:50px;padding:6px 14px;font-size:12px;
       font-weight:700;cursor:pointer;white-space:nowrap">
-      อัปเดตเลย / 立即更新
+      ${t('btnUpdate')}
     </button>
     <button onclick="this.parentNode.remove()" style="
       background:transparent;border:none;color:rgba(255,255,255,.7);
