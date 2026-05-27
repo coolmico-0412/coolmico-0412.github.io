@@ -2052,7 +2052,10 @@ async function fetchMemberOrders(memberId) {
     if (!snap.exists()) return [];
     return Object.values(snap.val())
       .sort((a, b) => new Date(b.date) - new Date(a.date));
-  } catch(e) { return []; }
+  } catch(e) {
+    console.error('[Shop] fetchMemberOrders 查詢失敗（可能缺 Firebase index）:', e.message, e);
+    return [];
+  }
 }
 
 // Write order, update member stats
@@ -2165,11 +2168,18 @@ function setMember(member) {
   currentMember = member;
   isGuest = false;
   safeSetLS(LS.MEMBER, member);
-  // 依會員國籍設語言
-  if (member?.nationality && LANGS[member.nationality]) {
-    _lang = member.nationality;
-    try { localStorage.setItem('shop_lang', _lang); } catch(e) {}
+  // 依會員國籍設語言，但尊重用戶手動選擇（localStorage 優先）
+  const userChosenLang = (() => {
+    try { return localStorage.getItem('shop_lang'); } catch(e) { return null; }
+  })();
+  if (!userChosenLang || !LANGS[userChosenLang]) {
+    // 用戶未曾手動切語言 → 依國籍推斷
+    if (member?.nationality && LANGS[member.nationality]) {
+      _lang = member.nationality;
+      try { localStorage.setItem('shop_lang', _lang); } catch(e) {}
+    }
   }
+  // else：有手動選語言紀錄 → 不覆蓋，保留用戶的選擇
   updateAuthUI();
   applyLang(); // 含 buildLangSwitcher (→折疊) + renderTabs
 }
@@ -2243,8 +2253,21 @@ async function renderMemberDrawer() {
 
   const histEl = document.getElementById('m-order-hist');
   if (histEl) histEl.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:12px">กำลังโหลด… / 載入中…</div>`;
-  const orders = await fetchMemberOrders(m.memberId);
+  let orders = await fetchMemberOrders(m.memberId);
   if (!histEl) return;
+
+  // ⚠️ Fix: 合併本機 localStorage 暫存訂單作保底。
+  //         即使 Firebase 寫入延遲或查詢 index 尚未更新，
+  //         本機已儲存的訂單仍會正確顯示在歷史列表裡。
+  try {
+    const localAll = safeGetLS('pos_online_orders', []) || [];
+    const localMine = localAll.filter(o => o.memberId === m.memberId);
+    const fbIds = new Set(orders.map(o => o.id));
+    const missing = localMine.filter(o => !fbIds.has(o.id));
+    if (missing.length) {
+      orders = [...missing, ...orders].sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+  } catch(e) {}
 
   if (!orders.length) {
     histEl.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:16px">
@@ -3331,8 +3354,11 @@ async function submitOrder() {
     safeSetLS('pos_transactions',Array.isArray(tx)?tx:[orderObj]);
 
     // Firebase 非同步寫入
+    // ⚠️ Fix: renderMemberDrawer() 必須在 Firebase 寫入完成後才呼叫，
+    //         否則查詢時訂單還不存在，導致歷史看不到剛送出的訂單。
     writeOrderToFirebase(orderObj).then(ok=>{
       if(ok) showToast(t('toastOrderSent'),'ok');
+      if(currentMember && memberOpen) renderMemberDrawer();
     });
 
     const si=document.getElementById('success-order-id');
@@ -3341,8 +3367,6 @@ async function submitOrder() {
     cart=[]; updateAllCartUI(); renderProducts();
     closeModal('order-modal');
     setTimeout(()=>openModal('success-modal'),300);
-
-    if(currentMember && memberOpen) renderMemberDrawer();
     try {
       ['customer-name','customer-phone','order-note','order-delivery','delivery-remark'].forEach(id=>{
         const el=document.getElementById(id); if(el) el.value='';
