@@ -1531,7 +1531,7 @@ function stopScanner(){
 function addByBarcode(code){
   const prods=getProds();
   if(!prods[code]){
-    if(allowNewBc){
+    if(allowNewBc || _editMode){
       pendingBC=code;
       document.getElementById('np-bc').textContent='條碼：'+code;
       document.getElementById('np-name').value='';
