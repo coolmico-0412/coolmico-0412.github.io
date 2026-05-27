@@ -2399,6 +2399,9 @@ const LANGS = {
     placeholderDeliveryRemark:'หมายเหตุสถานที่รับ เช่น ชั้น 3 หน้าลานจอดรถ',
     updateMsg:'🔄 มีเวอร์ชันใหม่！',
     btnUpdate:'อัปเดตเลย',
+    geoAutoStart:'กำลังตรวจหาตำแหน่งอัตโนมัติ…',
+    geoAutoFailed:'ไม่สามารถรับพิกัดอัตโนมัติ — กรุณากด "ปักหมุดแผนที่" หรือพิมพ์ที่อยู่จัดส่งสมบูรณ์ในช่องด้านล่าง',
+    placeholderDeliveryManual:'พิมพ์ที่อยู่จัดส่งสมบูรณ์ เช่น บ้านเลขที่ ถนน ตำบล อำเภอ',
   },
   vi: {
     flag:'🇻🇳', label:'Tiếng Việt',
@@ -2493,6 +2496,9 @@ const LANGS = {
     placeholderDeliveryRemark:'Ghi chú địa điểm nhận hàng, vd: tầng 3, gần bãi đỗ xe',
     updateMsg:'🔄 Có phiên bản mới！',
     btnUpdate:'Cập nhật ngay',
+    geoAutoStart:'Đang tự động xác định vị trí…',
+    geoAutoFailed:'Không lấy được tọa độ tự động — nhấn "Chọn trên bản đồ" hoặc nhập địa chỉ giao hàng đầy đủ bên dưới',
+    placeholderDeliveryManual:'Địa chỉ giao hàng đầy đủ: số nhà, đường, phường/xã, quận/huyện',
   },
   id: {
     flag:'🇮🇩', label:'Bahasa Indonesia',
@@ -2587,6 +2593,9 @@ const LANGS = {
     placeholderDeliveryRemark:'Catatan lokasi pengiriman, mis. lantai 3, dekat parkir',
     updateMsg:'🔄 Ada versi baru！',
     btnUpdate:'Perbarui sekarang',
+    geoAutoStart:'Mendeteksi lokasi secara otomatis…',
+    geoAutoFailed:'Koordinat tidak bisa diambil otomatis — gunakan "Pilih peta" atau ketik alamat pengiriman lengkap di bawah',
+    placeholderDeliveryManual:'Alamat pengiriman lengkap: no. rumah, jalan, kelurahan, kecamatan',
   },
   ph: {
     flag:'🇵🇭', label:'English',
@@ -2681,6 +2690,9 @@ const LANGS = {
     placeholderDeliveryRemark:'Delivery notes, e.g. 3rd floor, near parking lot',
     updateMsg:'🔄 New version available！',
     btnUpdate:'Update now',
+    geoAutoStart:'Auto-detecting your location…',
+    geoAutoFailed:'Auto location failed — tap "Map PIN" or type your full delivery address below',
+    placeholderDeliveryManual:'Full delivery address: house no., street, barangay, city',
   },
   tw: {
     flag:'🇹🇼', label:'中文',
@@ -2775,6 +2787,9 @@ const LANGS = {
     placeholderDeliveryRemark:'備註收貨地點，例如：3樓、門口停車場旁',
     updateMsg:'🔄 有新版本！',
     btnUpdate:'立即更新',
+    geoAutoStart:'正在自動取得目前位置…',
+    geoAutoFailed:'無法自動取得座標 — 請使用「地圖選點」，或直接在下方輸入完整送貨地址',
+    placeholderDeliveryManual:'輸入完整送貨地址，例：中山路109號1樓、通霄鎮…',
   },
 };
 
@@ -3270,6 +3285,11 @@ function openOrderModal() {
     chip.textContent=currentMember?`🪪 ${currentMember.memberId} · ${currentMember.name}`:'';
   }
   openModal('order-modal');
+
+  // 開啟後自動靜默定位（delay 讓 Modal 動畫先完成再開始 GPS 請求）
+  if (!getDeliveryCoords()) {
+    setTimeout(() => autoDetectLocation(), 420);
+  }
 }
 
 /* ══════════════════════════════════════════════
@@ -3286,9 +3306,10 @@ async function submitOrder() {
     return;
   }
 
-  // 送貨座標必填驗證：不再要求手動輸入地址。
+  // 送貨地點驗證：優先使用 GPS/地圖座標；若無座標，允許手動填寫的文字地址作降級
   const deliveryCoordsForSubmit = getDeliveryCoords();
-  if(!deliveryCoordsForSubmit) {
+  const manualAddressVal = (document.getElementById('order-delivery')?.value || '').trim();
+  if (!deliveryCoordsForSubmit && !manualAddressVal) {
     const errEl = document.getElementById('modal-delivery-err');
     if(errEl) errEl.style.display = '';
     setGeoStatus(t('geoNoCoords'), 'err');
@@ -3296,7 +3317,9 @@ async function submitOrder() {
     showToast(t('deliveryRequired'), 'err');
     return;
   }
-  const _deliveryBase   = (document.getElementById('order-delivery')?.value || deliveryCoordsForSubmit.address || `${deliveryCoordsForSubmit.lat}, ${deliveryCoordsForSubmit.lng}`).trim();
+  const _deliveryBase = deliveryCoordsForSubmit
+    ? (document.getElementById('order-delivery')?.value || deliveryCoordsForSubmit.address || `${deliveryCoordsForSubmit.lat}, ${deliveryCoordsForSubmit.lng}`).trim()
+    : manualAddressVal;
   const _deliveryRemark = (document.getElementById('delivery-remark')?.value || '').trim();
   const deliveryVal     = _deliveryRemark ? `${_deliveryBase}【${_deliveryRemark}】` : _deliveryBase;
   // 記住本次地點
@@ -3331,11 +3354,11 @@ async function submitOrder() {
       customerName:     nameVal  || currentMember?.name  || 'แขก / 訪客',
       customerPhone:    phoneVal || currentMember?.phone || '',
       deliveryLocation: deliveryVal,
-      deliveryCoords:   coords,
-      deliveryLat:      coords.lat,
-      deliveryLng:      coords.lng,
-      deliveryGeoSource: coords.source,
-      deliveryResolvedAddress: coords.address,
+      deliveryCoords:   coords || null,
+      deliveryLat:      coords ? coords.lat : null,
+      deliveryLng:      coords ? coords.lng : null,
+      deliveryGeoSource: coords ? coords.source : 'manual',
+      deliveryResolvedAddress: coords ? coords.address : manualAddressVal,
       deliveryKm:       distKm !== null ? Math.round(distKm * 10) / 10 : null,
       storeAddress:     STORE.name,
       storeCoords:      { lat: STORE.lat, lng: STORE.lng },
@@ -3820,6 +3843,15 @@ function resetDeliveryCoords(options = {}) {
   if (options.clearDisplay) setDeliveryDisplay('');
   const mapBtn = document.getElementById('map-confirm-btn');
   if (mapBtn) mapBtn.disabled = true;
+  // 還原為「等待 GPS/地圖選點」的 readonly 狀態
+  const addrEl = document.getElementById('order-delivery');
+  if (addrEl) {
+    addrEl.readOnly = true;
+    addrEl.style.background = '';
+    addrEl.style.cursor = '';
+    addrEl.style.color = '';
+    addrEl.placeholder = t('placeholderDelivery');
+  }
 }
 
 function commitDeliveryCoords(lat, lng, options = {}) {
@@ -3832,6 +3864,15 @@ function commitDeliveryCoords(lat, lng, options = {}) {
 
   if (options.updateInput !== false) {
     setDeliveryDisplay(shortAddress(_pinAddress) || formatCoords(_pinLat, _pinLng));
+  }
+
+  // 座標已確認 → 欄位回到 readonly（防止手動篡改）
+  const addrEl = document.getElementById('order-delivery');
+  if (addrEl) {
+    addrEl.readOnly = true;
+    addrEl.style.background = '';
+    addrEl.style.cursor = '';
+    addrEl.style.color = '';
   }
 
   const distKm = calcDistKm(STORE.lat, STORE.lng, _pinLat, _pinLng);
@@ -3964,6 +4005,85 @@ async function getCurrentLocation() {
       btn.disabled = false;
       btn.textContent = originalText;
     }
+  }
+}
+
+/* ── 手動地址輸入模式（GPS 失敗時的降級方案） ── */
+function enableManualDeliveryInput() {
+  const addrEl = document.getElementById('order-delivery');
+  if (!addrEl) return;
+  addrEl.readOnly = false;
+  addrEl.placeholder = t('placeholderDeliveryManual');
+  addrEl.style.background = 'var(--surface)';
+  addrEl.style.cursor = 'text';
+  addrEl.style.color = 'var(--text)';
+  addrEl.focus();
+}
+
+/* ── 開啟訂單 Modal 時自動靜默定位 ──
+   流程：① 已有座標 → 跳過
+         ② 取得成功 → 填入座標（同手動按鈕邏輯）
+         ③ 取得失敗 → 解鎖輸入框，提示手動填寫或地圖選點      */
+async function autoDetectLocation() {
+  // ① 已有確認座標則不重複觸發
+  if (getDeliveryCoords()) return;
+
+  // ② 瀏覽器不支援 → 直接進入手動模式
+  if (!navigator.geolocation) {
+    enableManualDeliveryInput();
+    setGeoStatus(t('geoAutoFailed'), 'err');
+    return;
+  }
+
+  setGeoStatus(t('geoAutoStart'), 'loading');
+
+  try {
+    const pos = await getCurrentPositionAsync();
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    const accuracy = pos.coords.accuracy;
+    let displayName = '';
+    let reverseFailed = false;
+
+    try {
+      setGeoStatus(t('geoConfirming'), 'loading');
+      const rev = await nominatimReverse(lat, lng);
+      displayName = rev?.display_name || '';
+    } catch(e) {
+      reverseFailed = true;
+    }
+
+    // ③-a 在台灣但超出配送範圍 → 拒絕並提示地圖選點 / 手動輸入
+    if (displayName && !isAddressAllowed(displayName)) {
+      resetDeliveryCoords({ clearDisplay: true });
+      showTooFarStatus(getTaiwanRegionMention(displayName));
+      return;
+    }
+
+    // ③-b 成功 → 提交座標
+    const distKm = commitDeliveryCoords(lat, lng, {
+      address: displayName || formatCoords(lat, lng),
+      source: 'current',
+      accuracy,
+    });
+    const accuracyText = Number.isFinite(accuracy)
+      ? t('geoAccuracy').replace('%a', Math.round(accuracy)) : '';
+    const locationText = shortAddress(displayName) || formatCoords(lat, lng);
+    const reverseText  = reverseFailed ? t('geoReverseFailed') : '';
+    setGeoStatus(
+      t('geoSuccess')
+        .replace('%a', accuracyText)
+        .replace('%loc', locationText)
+        .replace('%d', distKm.toFixed(1))
+        .replace('%rev', reverseText),
+      'ok'
+    );
+
+  } catch(e) {
+    // ④ 定位失敗 → 解鎖手動輸入，並提示備選方案
+    resetDeliveryCoords({ clearDisplay: true });
+    setGeoStatus(t('geoAutoFailed'), 'err');
+    enableManualDeliveryInput();
   }
 }
 
@@ -4112,6 +4232,7 @@ Object.assign(window, {
   setLang, onNatChange,
   openEditProfile, saveEditProfile,
   getCurrentLocation, geocodeAddress, openMapPicker, closeMapPicker, confirmMapPin,
+  autoDetectLocation, enableManualDeliveryInput,
   lsExpand, lsCollapse, updatePageTitle,
 });
 
