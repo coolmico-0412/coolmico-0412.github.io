@@ -110,11 +110,11 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 /* ── CHECKOUT PANEL ── */
 .co-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh);overflow:hidden;}
 .grand{display:flex;align-items:center;padding:18px;background:linear-gradient(135deg,#1e3a8a,#2563eb);gap:14px;flex-wrap:wrap;}
-.glbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);white-space:nowrap;}
-.glbl .zh{font-family:var(--zh);font-size:10px;letter-spacing:0;text-transform:none;display:block;margin-top:1px;font-weight:400;}
-.gamt{font-family:var(--mono);font-size:26px;font-weight:700;color:#fff;white-space:nowrap;}
+.glbl{font-size:22px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.7);white-space:nowrap;}
+.glbl .zh{font-family:var(--zh);font-size:20px;letter-spacing:0;text-transform:none;display:block;margin-top:1px;font-weight:400;}
+.gamt{font-family:var(--mono);font-size:39px;font-weight:700;color:#fff;white-space:nowrap;}
 .co-actions{padding:13px 18px;display:flex;flex-direction:column;gap:8px;}
-.btn-checkout{width:100%;padding:14px;background:var(--gold);color:#fff;font-weight:700;font-size:15px;border:none;border-radius:10px;cursor:pointer;font-family:var(--th);transition:all .2s;box-shadow:0 2px 8px rgba(217,119,6,.2);}
+.btn-checkout{width:100%;padding:14px;background:var(--gold);color:#fff;font-weight:700;font-size:23px;border:none;border-radius:10px;cursor:pointer;font-family:var(--th);transition:all .2s;box-shadow:0 2px 8px rgba(217,119,6,.2);}
 .btn-checkout:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 6px 16px rgba(217,119,6,.32);}
 .btn-checkout:disabled{background:var(--border);color:var(--muted2);cursor:not-allowed;transform:none;box-shadow:none;}
 
@@ -260,7 +260,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .rv-total-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
 .rv-total-row .rtl{font-size:16px;font-weight:700;color:var(--text);font-family:var(--th);white-space:nowrap;}
 .rv-total-row .rtl .zh{font-family:var(--zh);font-size:12px;color:var(--muted);font-weight:400;display:block;}
-.rv-total-row .rta{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--gold);white-space:nowrap;}
+.rv-total-row .rta{font-family:var(--mono);font-size:45px;font-weight:700;color:var(--gold);white-space:nowrap;}
 .rv-change-hint{font-size:12px;color:var(--green);font-family:var(--zh);display:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:7px 13px;border-radius:8px;margin-left:auto;line-height:1.8;}
 .btn-confirm{width:100%;padding:16px;background:var(--green);color:#fff;font-weight:700;font-size:16px;border:none;border-radius:12px;cursor:pointer;font-family:var(--th);transition:all .2s;}
 .btn-confirm:hover{background:#047857;transform:translateY(-1px);box-shadow:0 6px 16px rgba(5,150,105,.28);}
@@ -789,14 +789,6 @@ nav::-webkit-scrollbar{display:none;}
         <span id="fb-icon">☁️</span>
         <span id="fb-label">Firebase 未連線</span>
       </div>
-      <!-- 新條碼開關 -->
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:9px;margin-right:4px">
-        <span style="font-size:12px;font-family:var(--zh);color:var(--text2);white-space:nowrap">新條碼自動新增</span>
-        <button id="toggle-new-bc" onclick="toggleNewBcMode()" style="position:relative;width:42px;height:24px;border-radius:12px;border:none;cursor:pointer;transition:background .2s;background:var(--muted2);flex-shrink:0" title="ON：掃到未知條碼時彈出新增視窗 / OFF：靜默忽略">
-          <span id="toggle-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span>
-        </button>
-        <span id="toggle-label" style="font-size:11px;font-family:var(--mono);color:var(--muted);font-weight:700">OFF</span>
-      </div>
       <button class="btn btn-accent" onclick="openModal('m-addprod')">+ เพิ่มสินค้า / 新增條碼商品</button>
       <button class="btn btn-ghost" style="border-color:var(--purple);color:var(--purple)" onclick="openModal('m-addnobc')">+ สินค้าไม่มีบาร์โค้ด / 新增無條碼商品</button>
       <button class="btn btn-green" onclick="exportProducts()">⬇ CSV / 匯出全部商品</button>
@@ -830,11 +822,21 @@ nav::-webkit-scrollbar{display:none;}
         <div class="ssub"><span id="stat-month-count">0</span> รายการ / 筆交易</div>
       </div>
     </div>
-    <div class="btn-row">
-      <button class="btn btn-green" style="font-size:12px;padding:7px 12px" onclick="exportCSV()">⬇ ส่งออก CSV / 匯出報表</button>
-      <button class="btn btn-ghost" style="font-size:12px;padding:7px 12px" onclick="document.getElementById('imp-report').click()">⬆ นำเข้า / 匯入</button>
-      <input type="file" id="imp-report" accept=".json" style="display:none" onchange="importReport(event)">
-      <button class="btn btn-danger" style="font-size:12px;padding:7px 12px" onclick="clearAllData()">🗑 ลบทั้งหมด / 清除</button>
+    <div class="btn-row" style="align-items:center">
+      <!-- 編輯模式開關 -->
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:9px">
+        <span style="font-size:12px;font-family:var(--zh);color:var(--text2);white-space:nowrap">✏ 編輯模式</span>
+        <button id="toggle-edit-mode" onclick="toggleEditMode()" style="position:relative;width:42px;height:24px;border-radius:12px;border:none;cursor:pointer;transition:background .2s;background:var(--muted2);flex-shrink:0" title="ON：顯示商品管理與報表匯入匯出 / OFF：隱藏">
+          <span id="toggle-edit-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span>
+        </button>
+        <span id="toggle-edit-label" style="font-size:11px;font-family:var(--mono);color:var(--muted);font-weight:700">OFF</span>
+      </div>
+      <div id="report-edit-btns" style="display:none;gap:7px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-green" style="font-size:12px;padding:7px 12px" onclick="exportCSV()">⬇ ส่งออก CSV / 匯出報表</button>
+        <button class="btn btn-ghost" style="font-size:12px;padding:7px 12px" onclick="document.getElementById('imp-report').click()">⬆ นำเข้า / 匯入</button>
+        <input type="file" id="imp-report" accept=".json" style="display:none" onchange="importReport(event)">
+        <button class="btn btn-danger" style="font-size:12px;padding:7px 12px" onclick="clearAllData()">🗑 ลบทั้งหมด / 清除</button>
+      </div>
     </div>
   </div>
   <div class="report-cols">
@@ -1622,8 +1624,17 @@ function addToCart(bc,name,price,qty=1){
   if(ex){ex.qty+=qty;}else{cart.push({barcode:bc,name,price,qty,noBarcode:bc.startsWith('NOBC-')});}
   renderCart();
 }
-function removeItem(bc){cart=cart.filter(i=>i.barcode!==bc);renderCart();}
-function clearCart(){cart=[];renderCart();}
+function removeItem(bc){
+  const item=cart.find(i=>i.barcode===bc);
+  if(!item)return;
+  if(!confirm('確定從購物車移除「'+item.name+'」嗎？\n確定要繼續？'))return;
+  cart=cart.filter(i=>i.barcode!==bc);renderCart();
+}
+function clearCart(){
+  if(!cart.length)return;
+  if(!confirm('確定清除整個購物車？\n共 '+cart.reduce((s,i)=>s+i.qty,0)+' 件商品將被移除，此操作無法復原。'))return;
+  cart=[];renderCart();
+}
 
 function renderCart(){
   const body=document.getElementById('cart-body');
@@ -1878,6 +1889,50 @@ function confirmCheckout(){
   // 直接呼叫（不用 setTimeout），保持在用戶手勢範圍內才能觸發 iOS 語音
   speak('ขอบคุณที่ใช้บริการครับ');
 }
+
+// ═══ 編輯模式 ═══
+let _editMode = false;
+
+function toggleEditMode(){
+  _editMode = !_editMode;
+  applyEditMode();
+}
+
+function applyEditMode(){
+  const btn   = document.getElementById('toggle-edit-mode');
+  const knob  = document.getElementById('toggle-edit-knob');
+  const lbl   = document.getElementById('toggle-edit-label');
+  const prodTab  = document.querySelector("button.nav-tab[onclick*=\"'products'\"]");
+  const editBtns = document.getElementById('report-edit-btns');
+
+  if(_editMode){
+    if(btn)  btn.style.background = 'var(--green)';
+    if(knob) knob.style.left = '21px';
+    if(lbl)  { lbl.style.color = 'var(--green)'; lbl.textContent = 'ON'; }
+    if(prodTab)  prodTab.style.display = '';
+    if(editBtns) editBtns.style.display = 'flex';
+  } else {
+    if(btn)  btn.style.background = 'var(--muted2)';
+    if(knob) knob.style.left = '3px';
+    if(lbl)  { lbl.style.color = 'var(--muted)'; lbl.textContent = 'OFF'; }
+    // 若目前在商品管理頁，切回收銀台
+    if(prodTab){
+      if(prodTab.classList.contains('active')){
+        const posBtn = document.querySelector("button.nav-tab[onclick*=\"'pos'\"]");
+        showPage('pos', posBtn);
+      }
+      prodTab.style.display = 'none';
+    }
+    if(editBtns) editBtns.style.display = 'none';
+  }
+}
+
+// 初始化：預設 OFF，隱藏商品管理頁籤與編輯按鈕
+document.addEventListener('DOMContentLoaded', function(){
+  applyEditMode();
+});
+// 若 DOMContentLoaded 已觸發，立即執行
+if(document.readyState !== 'loading') applyEditMode();
 
 // ═══ 新條碼開關 ═══
 function toggleNewBcMode(){
@@ -3320,15 +3375,15 @@ async function ooOpenMemberList(){
 
   body.innerHTML = list.map(m=>{
     return `<div onclick="ooOpenMemberHistory('${m.memberId}')" style="
-      display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;
+      display:grid;grid-template-columns:auto 1fr auto;gap:6px 12px;align-items:center;
       padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;
     " onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
       <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--purple);
         background:rgba(124,58,237,.08);border-radius:6px;padding:4px 8px;white-space:nowrap">${m.memberId||'—'}</div>
       <div>
         <div style="font-size:13px;font-weight:600;color:var(--text)">${m.name||'—'}</div>
-        <div style="font-size:11px;color:var(--muted)">${m.phone||''}</div>
       </div>
+      <div style="font-size:11px;color:var(--muted);white-space:nowrap;text-align:right">${m.phone||''}</div>
     </div>`;
   }).join('');
 }
