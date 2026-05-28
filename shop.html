@@ -182,7 +182,31 @@ button { cursor:pointer; font-family:var(--th); }
   height: var(--tab-h);
   display: flex;
   align-items: center;
+  overflow: hidden;
 }
+/* Edge-fade overlays */
+.tabs-wrap::before,
+.tabs-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 48px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+.tabs-wrap::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(255,248,242,.98) 10%, transparent);
+}
+.tabs-wrap::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(255,248,242,.98) 10%, transparent);
+}
+.tabs-wrap.fade-left::before  { opacity: 1; }
+.tabs-wrap.fade-right::after  { opacity: 1; }
 .tabs-inner {
   display: flex;
   align-items: center;
@@ -4512,6 +4536,30 @@ Object.assign(window, {
 });
 
 document.addEventListener('DOMContentLoaded', init);
+
+/* ── Category tabs edge-fade ── */
+document.addEventListener('DOMContentLoaded', () => {
+  const inner = document.getElementById('tabs-container');
+  if (!inner) return;
+  const wrap  = inner.closest('.tabs-wrap');
+  if (!wrap)  return;
+
+  function updateFade() {
+    const sl  = inner.scrollLeft;
+    const max = inner.scrollWidth - inner.clientWidth;
+    wrap.classList.toggle('fade-left',  sl > 4);
+    wrap.classList.toggle('fade-right', sl < max - 4);
+  }
+
+  inner.addEventListener('scroll', updateFade, { passive: true });
+
+  // Re-check whenever tabs are (re)rendered by JS
+  const obs = new MutationObserver(updateFade);
+  obs.observe(inner, { childList: true });
+
+  // Initial check after first render tick
+  setTimeout(updateFade, 100);
+});
 document.addEventListener('input', (e) => {
   if (e.target && e.target.id === 'order-delivery' && !e.target.readOnly) {
     resetDeliveryCoords();
