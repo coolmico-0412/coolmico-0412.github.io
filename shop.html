@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <!-- ── PWA Core ── -->
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="shop-manifest.json">
 <meta name="theme-color" content="#C94E6E">
 
 <!-- ── iOS PWA ── -->
@@ -1516,6 +1516,7 @@ body::after {
                placeholder="ชื่อ-นามสกุล (บังคับ)" autocomplete="name">
         <input class="field-input" id="auth-phone" type="tel"
                placeholder="เบอร์โทรศัพท์ (บังคับ)" autocomplete="tel">
+        <div id="auth-register-phone-err" style="display:none;font-size:12px;padding:8px 12px;border-radius:var(--r-sm);background:rgba(201,78,110,.08);border:1px solid rgba(201,78,110,.25);color:var(--primary);line-height:1.5"></div>
         <!-- 國籍選單 -->
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:12px;font-weight:600;color:var(--text2)" id="auth-nat-label">สัญชาติ</label>
@@ -1731,11 +1732,19 @@ body::after {
       <div class="field-group">
         <label class="field-label" id="modal-delivery-label">📍 สถานที่จัดส่ง <span style="color:var(--primary);font-size:12px">*</span></label>
         <div class="geo-row">
-          <input class="field-input" id="order-delivery" type="text" placeholder="請按「取得目前座標」" autocomplete="off" readonly>
+          <input class="field-input" id="order-delivery" type="text" placeholder="請按「取得目前座標」" autocomplete="off" readonly
+                 style="background:var(--surface2);cursor:default;color:var(--muted)">
           <button class="geo-btn" id="geo-btn" onclick="getCurrentLocation()" type="button">取得目前座標</button>
           <button class="geo-btn geo-btn-secondary" id="map-pick-btn" onclick="openMapPicker()" type="button">地圖選點</button>
         </div>
         <div class="geo-status" id="geo-status"></div>
+        <!-- 手動輸入送貨地址（僅在無法自動定位時顯示）-->
+        <div id="manual-address-wrap" style="display:none;margin-top:7px">
+          <input class="field-input" id="manual-address-input" type="text"
+                 placeholder="請輸入完整送貨地址，例：中山路109號1樓、通霄鎮…"
+                 autocomplete="street-address"
+                 style="font-size:13px">
+        </div>
         <input class="field-input" id="delivery-remark" type="text"
                placeholder="備註收貨地點，例如：3樓、門口停車場旁"
                style="margin-top:7px;font-size:13px">
@@ -2137,6 +2146,21 @@ async function registerMember() {
   const btn = document.getElementById('auth-register-btn');
   if (btn) { btn.disabled = true; btn.textContent = t('registering'); }
   try {
+    // ── 先檢查電話號碼是否已註冊 ──
+    if (_fbOK && _db) {
+      const phoneKey = String(phone).replace(/\D/g, '').slice(-10);
+      if (phoneKey) {
+        const existSnap = await get(ref(_db, `shop/phoneIndex/${phoneKey}`));
+        if (existSnap.exists()) {
+          const existId = existSnap.val();
+          const dupMsg = `${t('foundExisting')}（${existId}）— ${t('authDescLookup')}`;
+          showRegisterPhoneErr(dupMsg, existId);
+          showToast(dupMsg, 'err');
+          return;
+        }
+      }
+    }
+
     const member = await createMember(name, phone, nat);
     // 依國籍自動設語言
     if (nat && NAT_TO_LANG[nat]) setLang(NAT_TO_LANG[nat]);
@@ -2155,6 +2179,15 @@ async function registerMember() {
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = t('btnRegister'); }
   }
+}
+
+function showRegisterPhoneErr(msg, existingId) {
+  const el = document.getElementById('auth-register-phone-err');
+  if (!el) return;
+  el.style.display = '';
+  el.innerHTML = `⚠ ${h(msg)}`;
+  // 自動捲動到查詢區
+  try { document.getElementById('auth-mid-field')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e){}
 }
 
 function continueAsGuest() {
@@ -2241,6 +2274,25 @@ function closeMemberDrawer() {
 function handleMemberOutsideClick(e) {
   if (e.target === document.getElementById('member-overlay')) closeMemberDrawer();
 }
+/* ── 將 Firebase 中已完成的訂單同步寫入本機資料庫 ── */
+function syncCompletedOrdersToLocal(firebaseOrders) {
+  try {
+    const completed = firebaseOrders.filter(o => o.status === 'completed');
+    if (!completed.length) return;
+    const lo = safeGetLS('pos_online_orders', []) || [];
+    const tx = safeGetLS('pos_transactions', []) || [];
+    const loIds = new Set(lo.map(o => o.id));
+    const txIds = new Set(tx.map(o => o.id));
+    let loChanged = false, txChanged = false;
+    for (const o of completed) {
+      if (!loIds.has(o.id)) { lo.push(o); loChanged = true; }
+      if (!txIds.has(o.id)) { tx.push(o); txChanged = true; }
+    }
+    if (loChanged) safeSetLS('pos_online_orders', lo);
+    if (txChanged) safeSetLS('pos_transactions', tx);
+  } catch(e) { console.warn('[Shop] syncCompletedOrdersToLocal:', e); }
+}
+
 async function renderMemberDrawer() {
   if (!currentMember) return;
   const m = currentMember;
@@ -2253,21 +2305,31 @@ async function renderMemberDrawer() {
 
   const histEl = document.getElementById('m-order-hist');
   if (histEl) histEl.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:12px">กำลังโหลด… / 載入中…</div>`;
-  let orders = await fetchMemberOrders(m.memberId);
+
+  // 每次開啟都向 Firebase 取得最新訂單（包含最新 status）
+  const firebaseOrders = await fetchMemberOrders(m.memberId);
+
+  // 同步已完成訂單到本機資料庫
+  syncCompletedOrdersToLocal(firebaseOrders);
+
   if (!histEl) return;
 
-  // ⚠️ Fix: 合併本機 localStorage 暫存訂單作保底。
-  //         即使 Firebase 寫入延遲或查詢 index 尚未更新，
-  //         本機已儲存的訂單仍會正確顯示在歷史列表裡。
+  // pending：只顯示 Firebase 的資料
+  const pendingOrders = firebaseOrders.filter(o => (o.status || 'pending') !== 'completed');
+
+  // completed：從本機資料庫讀取（已由 syncCompletedOrdersToLocal 寫入）
+  let completedOrders = [];
   try {
     const localAll = safeGetLS('pos_online_orders', []) || [];
-    const localMine = localAll.filter(o => o.memberId === m.memberId);
-    const fbIds = new Set(orders.map(o => o.id));
-    const missing = localMine.filter(o => !fbIds.has(o.id));
-    if (missing.length) {
-      orders = [...missing, ...orders].sort((a, b) => new Date(b.date) - new Date(a.date));
-    }
+    completedOrders = localAll
+      .filter(o => o.memberId === m.memberId && o.status === 'completed')
+      .filter(o => !pendingOrders.find(p => p.id === o.id)); // 去重
   } catch(e) {}
+
+  const orders = [
+    ...pendingOrders,
+    ...completedOrders,
+  ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   if (!orders.length) {
     histEl.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:16px">
@@ -2283,6 +2345,11 @@ async function renderMemberDrawer() {
         <span style="font-family:'Courier New',monospace;color:var(--muted)">×${i.qty} NT$${(i.price||0)*i.qty}</span>
       </div>`).join('');
 
+    const status = o.status || 'pending';
+    const statusBadge = status === 'completed'
+      ? `<span style="font-size:10px;padding:2px 7px;border-radius:50px;background:rgba(45,155,111,.12);color:var(--green);font-weight:700">✓ 完成</span>`
+      : `<span style="font-size:10px;padding:2px 7px;border-radius:50px;background:rgba(232,137,43,.12);color:var(--accent);font-weight:700">⏳ 待處理</span>`;
+
     return `<div class="order-hist-item" style="cursor:pointer" onclick="this.querySelector('.ohi-detail').style.display=this.querySelector('.ohi-detail').style.display==='none'?'block':'none'">
       <div class="ohi-top">
         <span class="ohi-id">${h(o.id)}</span>
@@ -2290,7 +2357,7 @@ async function renderMemberDrawer() {
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
         <span class="ohi-total">NT$ ${h(String(o.total ?? 0))}</span>
-        <span style="font-size:10px;color:var(--muted2)">${(o.items||[]).length} รายการ ▾</span>
+        <div style="display:flex;align-items:center;gap:6px">${statusBadge}<span style="font-size:10px;color:var(--muted2)">${(o.items||[]).length} รายการ ▾</span></div>
       </div>
       <div class="ohi-detail" style="display:none;margin-top:8px;padding-top:6px;border-top:1px dashed var(--border2)">
         ${itemsHtml}
@@ -3245,6 +3312,11 @@ function openOrderModal() {
   }
   const deliveryEl = document.getElementById('order-delivery');
   if(deliveryEl && !getDeliveryCoords()) deliveryEl.value = '';
+  // 隱藏手動地址欄位（每次開啟重置）
+  const manualWrap = document.getElementById('manual-address-wrap');
+  const manualInp  = document.getElementById('manual-address-input');
+  if (manualWrap) manualWrap.style.display = 'none';
+  if (manualInp)  manualInp.value = '';
   const errEl = document.getElementById('modal-delivery-err');
   if(errEl) errEl.style.display = 'none';
 
@@ -3308,7 +3380,7 @@ async function submitOrder() {
 
   // 送貨地點驗證：優先使用 GPS/地圖座標；若無座標，允許手動填寫的文字地址作降級
   const deliveryCoordsForSubmit = getDeliveryCoords();
-  const manualAddressVal = (document.getElementById('order-delivery')?.value || '').trim();
+  const manualAddressVal = (document.getElementById('manual-address-input')?.value || '').trim();
   if (!deliveryCoordsForSubmit && !manualAddressVal) {
     const errEl = document.getElementById('modal-delivery-err');
     if(errEl) errEl.style.display = '';
@@ -3368,13 +3440,9 @@ async function submitOrder() {
       subtotal:total, total, status:'pending',
     };
 
-    // 本機先存
-    const lo=safeGetLS('pos_online_orders',[]);
-    if(Array.isArray(lo)) lo.push(orderObj);
-    safeSetLS('pos_online_orders',Array.isArray(lo)?lo:[orderObj]);
-    const tx=safeGetLS('pos_transactions',[]);
-    if(Array.isArray(tx)) tx.push(orderObj);
-    safeSetLS('pos_transactions',Array.isArray(tx)?tx:[orderObj]);
+    // ⚠️ 不在此寫入 localStorage：
+    //    pending 訂單只存 Firebase；
+    //    僅當狀態變為 completed 時才寫入本機資料庫（由 syncCompletedOrdersToLocal 處理）
 
     // Firebase 非同步寫入
     // ⚠️ Fix: renderMemberDrawer() 必須在 Firebase 寫入完成後才呼叫，
@@ -3391,9 +3459,11 @@ async function submitOrder() {
     closeModal('order-modal');
     setTimeout(()=>openModal('success-modal'),300);
     try {
-      ['customer-name','customer-phone','order-note','order-delivery','delivery-remark'].forEach(id=>{
+      ['customer-name','customer-phone','order-note','order-delivery','delivery-remark','manual-address-input'].forEach(id=>{
         const el=document.getElementById(id); if(el) el.value='';
       });
+      const wrap = document.getElementById('manual-address-wrap');
+      if (wrap) wrap.style.display = 'none';
       resetDeliveryCoords({ clearDisplay: true });
       clearGeoStatus();
     } catch(e){}
@@ -3594,7 +3664,7 @@ let _swRefreshing = false;
 function initPWA() {
   // Register Service Worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js', { scope: './' })
+    navigator.serviceWorker.register('./shop-sw.js', { scope: './' })
       .then(reg => {
         console.log('[PWA] SW registered:', reg.scope);
 
@@ -3976,14 +4046,14 @@ async function getCurrentLocation() {
 
 /* ── 手動地址輸入模式（GPS 失敗時的降級方案） ── */
 function enableManualDeliveryInput() {
-  const addrEl = document.getElementById('order-delivery');
-  if (!addrEl) return;
-  addrEl.readOnly = false;
-  addrEl.placeholder = t('placeholderDeliveryManual');
-  addrEl.style.background = 'var(--surface)';
-  addrEl.style.cursor = 'text';
-  addrEl.style.color = 'var(--text)';
-  addrEl.focus();
+  // coord display field stays permanently read-only
+  const wrap = document.getElementById('manual-address-wrap');
+  const inp  = document.getElementById('manual-address-input');
+  if (wrap) wrap.style.display = '';
+  if (inp)  {
+    inp.placeholder = t('placeholderDeliveryManual');
+    inp.focus();
+  }
 }
 
 /* ── 開啟訂單 Modal 時自動靜默定位 ──
@@ -4207,6 +4277,10 @@ document.addEventListener('input', (e) => {
   if (e.target && e.target.id === 'order-delivery' && !e.target.readOnly) {
     resetDeliveryCoords();
     clearGeoStatus();
+  }
+  if (e.target && e.target.id === 'auth-phone') {
+    const errEl = document.getElementById('auth-register-phone-err');
+    if (errEl) errEl.style.display = 'none';
   }
 });
 </script>
