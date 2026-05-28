@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -1502,21 +1502,17 @@ body::after {
 <body>
 
 <!-- ── PWA: Offline Bar ── -->
-<div class="offline-bar" id="offline-bar">
-  📵 ไม่มีอินเทอร์เน็ต — ใช้ข้อมูลที่แคชไว้ / 離線模式，使用快取資料
-</div>
+<div class="offline-bar" id="offline-bar"></div>
 
 <!-- ── PWA: Install Banner ── -->
 <div class="pwa-banner" id="pwa-banner">
   <div class="pwa-banner-icon">🛍</div>
   <div class="pwa-banner-text">
-    <div class="pwa-banner-title">ติดตั้งแอปบนหน้าจอหลัก</div>
-    <div class="pwa-banner-sub">加到主畫面，像 App 一樣開啟</div>
+    <div class="pwa-banner-title" id="pwa-banner-title"></div>
+    <div class="pwa-banner-sub" id="pwa-banner-sub"></div>
   </div>
-  <button class="pwa-banner-install" id="pwa-install-btn" onclick="pwaInstall()">
-    ติดตั้ง
-  </button>
-  <button class="pwa-banner-dismiss" onclick="pwaDismiss()" aria-label="ปิด">×</button>
+  <button class="pwa-banner-install" id="pwa-install-btn" onclick="pwaInstall()"></button>
+  <button class="pwa-banner-dismiss" onclick="pwaDismiss()" id="pwa-banner-dismiss" aria-label="close">×</button>
 </div>
 
 <!-- ── Auth: Member Overlay ── -->
@@ -1591,7 +1587,7 @@ body::after {
           <button class="minfo-edit-btn" id="minfo-name-btn" onclick="toggleMemberField('name')" title="แก้ไข">✏</button>
         </div>
         <div class="member-info-cell">
-          <div class="minfo-label">รหัส</div>
+          <div class="minfo-label" id="minfo-label-id">รหัส</div>
           <span class="minfo-display" id="minfo-mid-display"
                 style="font-family:'Courier New',monospace;font-size:11px;letter-spacing:.5px">—</span>
         </div>
@@ -1606,9 +1602,7 @@ body::after {
     </div>
     <div class="member-body">
       <div class="member-section-title" id="m-history-title">ประวัติ</div>
-      <div id="m-order-hist">
-        <div style="text-align:center;color:var(--muted2);font-size:13px;padding:20px 0">ยังไม่มีประวัติการสั่งซื้อ</div>
-      </div>
+      <div id="m-order-hist"></div>
     </div>
     <div class="member-ft" style="display:flex;flex-direction:column;gap:8px">
       <button class="logout-btn" id="m-logout-btn" onclick="logout()">🚪 ออกจากระบบ</button>
@@ -1636,7 +1630,7 @@ body::after {
         <label class="field-label" id="ep-nat-label">สัญชาติ / ภาษา</label>
         <select class="field-input" id="ep-nationality" style="cursor:pointer"
                 onchange="onNatChange(this.value)">
-          <option value="">— Select —</option>
+          <option value=""></option>
         </select>
         <div class="field-hint" style="margin-top:4px" id="ep-nat-hint">เลือกสัญชาติเพื่อเปลี่ยนภาษา</div>
       </div>
@@ -1851,7 +1845,7 @@ body::after {
 </div>
 
 <!-- ── Firebase 狀態指示點 ── -->
-<div id="fb-indicator" title="กำลังเชื่อมต่อ Firebase…"
+<div id="fb-indicator" title=""
   style="position:fixed;bottom:16px;right:16px;width:10px;height:10px;border-radius:50%;
          background:#f59e0b;z-index:999;box-shadow:0 0 6px rgba(0,0,0,.25);
          transition:background .5s;pointer-events:none;">
@@ -1947,14 +1941,14 @@ function setFbIndicator(state) {
   const el = document.getElementById('fb-indicator');
   if (!el) return;
   const MAP = {
-    connecting:{ color:'#f59e0b', title:'กำลังเชื่อมต่อ…' },
-    synced:    { color:'#10b981', title:'ซิงค์แล้ว ✓' },
-    local:     { color:'#94a3b8', title:'ใช้ข้อมูลในเครื่อง' },
-    error:     { color:'#ef4444', title:'Firebase ไม่พร้อม' },
+    connecting:{ color:'#f59e0b', key:'fbConnecting' },
+    synced:    { color:'#10b981', key:'fbSynced' },
+    local:     { color:'#94a3b8', key:'fbLocal' },
+    error:     { color:'#ef4444', key:'fbError' },
   };
   const s = MAP[state] || MAP.local;
   el.style.background = s.color;
-  el.title = s.title;
+  el.title = t(s.key);
 }
 
 /* ══════════════════════════════════════════════
@@ -2231,7 +2225,7 @@ async function registerMember() {
     }
     try { ['auth-name','auth-phone'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; }); } catch(e){}
   } catch(e) {
-    showToast('เกิดข้อผิดพลาด: ' + (e.message || ''), 'err');
+    showToast(t('genericError') + ': ' + (e.message || ''), 'err');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = t('btnRegister'); }
   }
@@ -2370,7 +2364,7 @@ async function renderMemberDrawer() {
   setText('minfo-phone-display', m.phone     || '—');
 
   const histEl = document.getElementById('m-order-hist');
-  if (histEl) histEl.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:12px">กำลังโหลด… / 載入中…</div>`;
+  if (histEl) histEl.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:12px">${t('drawerLoading')}</div>`;
 
   // 每次開啟都向 Firebase 取得最新訂單（包含最新 status）
   const firebaseOrders = await fetchMemberOrders(m.memberId);
@@ -2399,7 +2393,7 @@ async function renderMemberDrawer() {
 
   if (!orders.length) {
     histEl.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:16px">
-      ยังไม่มีประวัติ<br><span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">尚無訂單記錄</span>
+      ${t('historyEmpty')}
     </div>`;
     return;
   }
@@ -2413,8 +2407,8 @@ async function renderMemberDrawer() {
 
     const status = o.status || 'pending';
     const statusBadge = status === 'completed'
-      ? `<span style="font-size:10px;padding:2px 7px;border-radius:50px;background:rgba(45,155,111,.12);color:var(--green);font-weight:700">✓ 完成</span>`
-      : `<span style="font-size:10px;padding:2px 7px;border-radius:50px;background:rgba(232,137,43,.12);color:var(--accent);font-weight:700">⏳ 待處理</span>`;
+      ? `<span style="font-size:10px;padding:2px 7px;border-radius:50px;background:rgba(45,155,111,.12);color:var(--green);font-weight:700">${t('statusCompleted')}</span>`
+      : `<span style="font-size:10px;padding:2px 7px;border-radius:50px;background:rgba(232,137,43,.12);color:var(--accent);font-weight:700">${t('statusPending')}</span>`;
 
     return `<div class="order-hist-item" style="cursor:pointer" onclick="this.querySelector('.ohi-detail').style.display=this.querySelector('.ohi-detail').style.display==='none'?'block':'none'">
       <div class="ohi-top">
@@ -2423,7 +2417,7 @@ async function renderMemberDrawer() {
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
         <span class="ohi-total">NT$ ${h(String(o.total ?? 0))}</span>
-        <div style="display:flex;align-items:center;gap:6px">${statusBadge}<span style="font-size:10px;color:var(--muted2)">${(o.items||[]).length} รายการ ▾</span></div>
+        <div style="display:flex;align-items:center;gap:6px">${statusBadge}<span style="font-size:10px;color:var(--muted2)">${(o.items||[]).length} ${t('orderItemsCount')} ▾</span></div>
       </div>
       <div class="ohi-detail" style="display:none;margin-top:8px;padding-top:6px;border-top:1px dashed var(--border2)">
         ${itemsHtml}
@@ -2535,6 +2529,27 @@ const LANGS = {
     geoAutoStart:'กำลังตรวจหาตำแหน่งอัตโนมัติ…',
     geoAutoFailed:'ไม่สามารถรับพิกัดอัตโนมัติ — กรุณากด "ปักหมุดแผนที่" หรือพิมพ์ที่อยู่จัดส่งสมบูรณ์ในช่องด้านล่าง',
     placeholderDeliveryManual:'พิมพ์ที่อยู่จัดส่งสมบูรณ์ เช่น บ้านเลขที่ ถนน ตำบล อำเภอ',
+    offlineBar:'📵 ไม่มีอินเทอร์เน็ต — ใช้ข้อมูลที่แคชไว้',
+    pwaTitle:'ติดตั้งแอปบนหน้าจอหลัก',
+    pwaSub:'เปิดใช้งานเหมือนแอปทั่วไป',
+    pwaInstall:'ติดตั้ง',
+    pwaClose:'ปิด',
+    appInstalled:'ติดตั้งแอปสำเร็จ！🎉',
+    fbConnecting:'กำลังเชื่อมต่อ…',
+    fbSynced:'ซิงค์แล้ว ✓',
+    fbLocal:'ใช้ข้อมูลในเครื่อง',
+    fbError:'Firebase ไม่พร้อม',
+    drawerLoading:'กำลังโหลด…',
+    statusCompleted:'✓ เสร็จแล้ว',
+    statusPending:'⏳ รอดำเนินการ',
+    orderItemsCount:'รายการ',
+    emptyCatMsg:'ไม่มีสินค้าในหมวดนี้',
+    emptyCatHint:'กรุณาเพิ่มสินค้าในระบบ POS แล้วรีเฟรช',
+    minfoName:'ชื่อ',
+    minfoId:'รหัส',
+    minfoPhone:'โทร',
+    selectNat:'— เลือกสัญชาติ —',
+    genericError:'เกิดข้อผิดพลาด',
   },
   vi: {
     flag:'🇻🇳', label:'Tiếng Việt',
@@ -2632,6 +2647,27 @@ const LANGS = {
     geoAutoStart:'Đang tự động xác định vị trí…',
     geoAutoFailed:'Không lấy được tọa độ tự động — nhấn "Chọn trên bản đồ" hoặc nhập địa chỉ giao hàng đầy đủ bên dưới',
     placeholderDeliveryManual:'Địa chỉ giao hàng đầy đủ: số nhà, đường, phường/xã, quận/huyện',
+    offlineBar:'📵 Không có Internet — Đang dùng dữ liệu đã lưu',
+    pwaTitle:'Cài ứng dụng lên màn hình chính',
+    pwaSub:'Mở như app thông thường',
+    pwaInstall:'Cài đặt',
+    pwaClose:'Đóng',
+    appInstalled:'Cài đặt ứng dụng thành công！🎉',
+    fbConnecting:'Đang kết nối…',
+    fbSynced:'Đã đồng bộ ✓',
+    fbLocal:'Dùng dữ liệu ngoại tuyến',
+    fbError:'Firebase không sẵn sàng',
+    drawerLoading:'Đang tải…',
+    statusCompleted:'✓ Hoàn thành',
+    statusPending:'⏳ Đang xử lý',
+    orderItemsCount:'sản phẩm',
+    emptyCatMsg:'Không có sản phẩm trong danh mục này',
+    emptyCatHint:'Vui lòng thêm sản phẩm trong hệ thống POS rồi làm mới trang',
+    minfoName:'Họ tên',
+    minfoId:'Mã',
+    minfoPhone:'ĐT',
+    selectNat:'— Chọn quốc tịch —',
+    genericError:'Đã xảy ra lỗi',
   },
   id: {
     flag:'🇮🇩', label:'Bahasa Indonesia',
@@ -2729,6 +2765,27 @@ const LANGS = {
     geoAutoStart:'Mendeteksi lokasi secara otomatis…',
     geoAutoFailed:'Koordinat tidak bisa diambil otomatis — gunakan "Pilih peta" atau ketik alamat pengiriman lengkap di bawah',
     placeholderDeliveryManual:'Alamat pengiriman lengkap: no. rumah, jalan, kelurahan, kecamatan',
+    offlineBar:'📵 Tidak ada Internet — Menggunakan data tersimpan',
+    pwaTitle:'Pasang app di layar utama',
+    pwaSub:'Buka seperti aplikasi biasa',
+    pwaInstall:'Pasang',
+    pwaClose:'Tutup',
+    appInstalled:'Aplikasi berhasil dipasang！🎉',
+    fbConnecting:'Menghubungkan…',
+    fbSynced:'Tersinkronisasi ✓',
+    fbLocal:'Menggunakan data lokal',
+    fbError:'Firebase tidak siap',
+    drawerLoading:'Memuat…',
+    statusCompleted:'✓ Selesai',
+    statusPending:'⏳ Menunggu',
+    orderItemsCount:'item',
+    emptyCatMsg:'Tidak ada produk di kategori ini',
+    emptyCatHint:'Tambahkan produk di sistem POS lalu refresh',
+    minfoName:'Nama',
+    minfoId:'Kode',
+    minfoPhone:'HP',
+    selectNat:'— Pilih Kebangsaan —',
+    genericError:'Terjadi kesalahan',
   },
   ph: {
     flag:'🇵🇭', label:'English',
@@ -2826,6 +2883,27 @@ const LANGS = {
     geoAutoStart:'Auto-detecting your location…',
     geoAutoFailed:'Auto location failed — tap "Map PIN" or type your full delivery address below',
     placeholderDeliveryManual:'Full delivery address: house no., street, barangay, city',
+    offlineBar:'📵 No Internet — Using cached data',
+    pwaTitle:'Add app to home screen',
+    pwaSub:'Open it like a regular app',
+    pwaInstall:'Install',
+    pwaClose:'Close',
+    appInstalled:'App installed successfully！🎉',
+    fbConnecting:'Connecting…',
+    fbSynced:'Synced ✓',
+    fbLocal:'Using local data',
+    fbError:'Firebase unavailable',
+    drawerLoading:'Loading…',
+    statusCompleted:'✓ Completed',
+    statusPending:'⏳ Pending',
+    orderItemsCount:'items',
+    emptyCatMsg:'No products in this category',
+    emptyCatHint:'Please add products in the POS system then refresh',
+    minfoName:'Name',
+    minfoId:'Code',
+    minfoPhone:'Phone',
+    selectNat:'— Select Nationality —',
+    genericError:'An error occurred',
   },
   tw: {
     flag:'🇹🇼', label:'中文',
@@ -2923,6 +3001,27 @@ const LANGS = {
     geoAutoStart:'正在自動取得目前位置…',
     geoAutoFailed:'無法自動取得座標 — 請使用「地圖選點」，或直接在下方輸入完整送貨地址',
     placeholderDeliveryManual:'輸入完整送貨地址，例：中山路109號1樓、通霄鎮…',
+    offlineBar:'📵 無網路連線 — 使用快取資料',
+    pwaTitle:'加入主畫面',
+    pwaSub:'像 App 一樣快速開啟',
+    pwaInstall:'安裝',
+    pwaClose:'關閉',
+    appInstalled:'已成功安裝 App！🎉',
+    fbConnecting:'連線中…',
+    fbSynced:'已同步 ✓',
+    fbLocal:'使用本機資料',
+    fbError:'Firebase 無法連線',
+    drawerLoading:'載入中…',
+    statusCompleted:'✓ 完成',
+    statusPending:'⏳ 待處理',
+    orderItemsCount:'項',
+    emptyCatMsg:'此分類沒有商品',
+    emptyCatHint:'請至 POS 系統新增商品後重新整理',
+    minfoName:'姓名',
+    minfoId:'編號',
+    minfoPhone:'電話',
+    selectNat:'— 選擇國籍 —',
+    genericError:'發生錯誤',
   },
 };
 
@@ -3049,13 +3148,38 @@ function applyLang() {
   set('ep-name-label', L.labelName);
   set('ep-phone-label', L.labelPhone);
   set('ep-nat-label', L.labelNationality);
-  set('ep-nat-hint', L.authTagline);
-  set('ep-save-btn', L.btnSaveProfile);
+  set('ep-nat-hint',  L.labelNationality);
+  set('ep-save-btn',  L.btnSaveProfile);
+  const epNatEl = document.getElementById('ep-nationality');
+  if (epNatEl && epNatEl.options.length > 0) epNatEl.options[0].text = L.selectNat;
 
   // Map overlay
   set('map-title-text', L.mapTitle);
   set('map-cancel-btn', L.btnCancel);
   set('map-confirm-btn', L.btnConfirmPos);
+
+  // Offline bar
+  const offBar = document.getElementById('offline-bar');
+  if (offBar) offBar.textContent = L.offlineBar;
+
+  // PWA banner
+  set('pwa-banner-title', L.pwaTitle);
+  set('pwa-banner-sub',   L.pwaSub);
+  set('pwa-install-btn',  L.pwaInstall);
+  const pwaDismissBtn = document.getElementById('pwa-banner-dismiss');
+  if (pwaDismissBtn) pwaDismissBtn.setAttribute('aria-label', L.pwaClose);
+
+  // Member drawer header labels
+  set('minfo-label-name',  L.minfoName);
+  set('minfo-label-id',    L.minfoId);
+  set('minfo-label-phone', L.minfoPhone);
+
+  // Auth nationality select placeholder
+  const authNatEl = document.getElementById('auth-nationality');
+  if (authNatEl && authNatEl.options.length > 0) authNatEl.options[0].text = L.selectNat;
+
+  // manual-address-input placeholder
+  setP('manual-address-input', L.placeholderDeliveryManual);
 
   // Update delivery range hint if order modal is open
   const hintEl = document.getElementById('delivery-range-hint');
@@ -3217,10 +3341,9 @@ function renderProducts() {
   const filtered = allProducts.filter(p => (p.category||'other') === activeCat);
   if (!filtered.length) {
     grid.innerHTML = `<div class="empty-state">
-      <div class="ei">🔍</div><div class="et">ไม่มีสินค้าในหมวดนี้</div>
-      <div class="es">กรุณาเพิ่มสินค้าในระบบ POS แล้วรีเฟรช<br>
-        <span style="font-family:'Noto Sans TC',sans-serif;font-size:12px">請至 POS 系統新增商品後重新整理</span>
-      </div></div>`; return;
+      <div class="ei">🔍</div><div class="et">${t('emptyCatMsg')}</div>
+      <div class="es">${t('emptyCatHint')}</div>
+    </div>`; return;
   }
   grid.innerHTML = filtered.map((p, i) => {
     const qty  = (cart.find(c=>c.id===p.id)||{}).qty||0;
@@ -3610,7 +3733,7 @@ function openEditProfile() {
   const natEl   = document.getElementById('ep-nationality');
   if (nameEl)  nameEl.value  = m.name  || '';
   if (phoneEl) phoneEl.value = m.phone || '';
-  if (natEl)   natEl.innerHTML = `<option value="">— Select —</option>` + buildNatOptions(m.nationality || '');
+  if (natEl)   natEl.innerHTML = `<option value="">${t('selectNat')}</option>` + buildNatOptions(m.nationality || '');
   // Update labels in current language
   setText('edit-profile-title', t('editProfileTitle'));
   setText('ep-name-label',  t('labelName'));
@@ -3702,7 +3825,7 @@ async function init() {
   // ④ 填充國籍/語言下拉選單（Auth + Edit Profile）
   const natOpts = buildNatOptions('');
   const authNat = document.getElementById('auth-nationality');
-  if (authNat) authNat.innerHTML = `<option value="">— ${(LANGS[_lang]||LANGS.th).labelNationality||'Select'} —</option>` + natOpts;
+  if (authNat) authNat.innerHTML = `<option value="">${(LANGS[_lang]||LANGS.th).selectNat}</option>` + natOpts;
 
   // ⑤ 套用語言 + 設定頁面標題（applyLang 內已呼叫 updatePageTitle，無需重複）
   applyLang();
@@ -3855,7 +3978,7 @@ function initPWA() {
     const banner = document.getElementById('pwa-banner');
     if (banner) banner.classList.remove('show');
     _deferredInstallPrompt = null;
-    showToast('ติดตั้งแอปสำเร็จ！🎉 / 已成功安裝 App！', 'ok');
+    showToast(t('appInstalled'), 'ok');
   });
 }
 
@@ -4426,6 +4549,3 @@ document.addEventListener('input', (e) => {
 
 </body>
 </html>
-
-
-
