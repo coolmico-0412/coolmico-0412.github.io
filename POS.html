@@ -44,7 +44,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--th);min-height:100
 
 /* ── NAV ── */
 nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:54px;position:sticky;top:0;z-index:200;gap:3px;box-shadow:var(--sh);}
-.brand{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--accent);letter-spacing:3px;margin-right:auto;}
+.brand{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--accent);letter-spacing:3px;margin-right:auto;display:flex;flex-direction:column;line-height:1.1;}
+.brand-ver{font-size:9px;font-weight:400;letter-spacing:1px;color:var(--muted2);font-family:var(--mono);}
 .nav-tab{padding:7px 13px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .18s;font-family:var(--th);line-height:1.3;text-align:center;}
 .nav-tab .zh{font-family:var(--zh);font-size:10px;display:block;opacity:.7;}
 .nav-tab:hover{color:var(--text2);background:var(--surface2);}
@@ -667,7 +668,7 @@ body.pwa-offline .pwa-update-bar.show {
 </div>
 
 <nav>
-  <div class="brand">POS SYSTEM</div>
+  <div class="brand">POS SYSTEM<span class="brand-ver" id="app-ver-display"></span></div>
   <button class="nav-tab active" onclick="showPage('pos',this)">🏪 แคชเชียร์<span class="zh">收銀台</span></button>
   <button class="nav-tab" onclick="showPage('online-orders',this)" id="nav-online">🛒 ออนไลน์<span class="zh">線上訂單</span><span id="online-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:50%;font-size:10px;padding:1px 5px;font-family:var(--mono)">0</span></button>
   <button class="nav-tab" onclick="showPage('products',this)">📦 สินค้า<span class="zh">商品管理</span></button>
@@ -2828,6 +2829,15 @@ function renderHoldBar(){
 //  Firebase Realtime Database 整合
 // ═══════════════════════════════════════════════════════
 // ═══ Firebase v12 模組化整合 ═══
+// ★ 應用程式版本號（與 pos-sw.js VER 保持一致，方便對照）
+const APP_VERSION = '1.2.0';
+
+// 將版本號顯示於 nav brand（DOMContentLoaded 後確保元素存在）
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('app-ver-display');
+  if(el) el.textContent = 'v' + APP_VERSION;
+});
+
 const FB_CFG_KEY = 'pos_firebase_cfg';
 let _fbConnected = false;
 let _fbListeners = {};
@@ -2918,7 +2928,12 @@ function fbListenAll(){
   [['pos/products','pos_products',0],['pos/nobc_products','pos_nobc_products',1],['pos/transactions','pos_transactions',2],['pos/product_order',PROD_ORDER_KEY,3]]
   .forEach(([path,lsKey,type])=>{
     if(_fbListeners[path]) try{_fbListeners[path]();}catch(e){}
+    // ★ Fix: Firebase onValue 訂閱時會立即觸發一次（含當前值），
+    //   因為 fbPullAll() 剛剛已拉過全量資料，這次 initial fire 完全多餘，
+    //   用 _firstFire flag 跳過，只處理後續真正的資料變更。
+    let _firstFire = true;
     const unsub = window._fbOnValue(path, snap=>{
+      if(_firstFire){ _firstFire=false; return; } // ★ 跳過 initial redundant fire
       const val=snap.val(); if(val===null) return;
       const toStore = (type===2||type===3) ? (Array.isArray(val)?val:Object.values(val)) : val;
       localStorage.setItem(lsKey, JSON.stringify(toStore));
@@ -3052,7 +3067,9 @@ async function loadOnlineOrders(){
 
 function listenOnlineOrders(){
   if(!window._fbOnValue) return;
-  window._fbOnValue('shop/online_orders', snap=>{
+  // ★ Fix: 先 unsubscribe 舊監聽器，防止重複呼叫時堆疊多個 listener
+  if(window._ooUnsubscribe){ try{ window._ooUnsubscribe(); }catch(e){} }
+  window._ooUnsubscribe = window._fbOnValue('shop/online_orders', snap=>{
     _onlineOrders = snap && snap.val()
       ? Object.values(snap.val()).filter(o=>o&&o.id).sort((a,b)=>new Date(b.date)-new Date(a.date))
       : [];
@@ -3468,6 +3485,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.fbPullAll = async function() {
       if (_origFbPullAllRef.fn) await _origFbPullAllRef.fn();
       await loadOnlineOrders();
+      // ★ Fix: listenOnlineOrders 內部已做 unsubscribe + re-subscribe，
+      //   多次呼叫 fbPullAll 不會堆疊 listener。
       listenOnlineOrders();
     };
   }
