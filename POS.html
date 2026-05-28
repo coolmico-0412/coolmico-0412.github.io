@@ -1888,6 +1888,19 @@ function confirmCheckout(){
     total:sub,
   };
   const txList=getTx();txList.push(tx);saveTx(txList);
+
+  // ── 填充並顯示收據 ──
+  document.getElementById('rcpt-date').textContent=now.toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('rcpt-id').textContent='# '+tx.id;
+  document.getElementById('rcpt-items').innerHTML=tx.items.map(item=>`
+    <div class="rcpt-item">
+      <div class="rcpt-iname">${h(item.name)}</div>
+      <div class="rcpt-qty">× ${item.qty}</div>
+      <div class="rcpt-iprice">NT$ ${item.price*item.qty}</div>
+    </div>`).join('');
+  document.getElementById('rcpt-total-amt').textContent='NT$ '+sub;
+  openModal('m-receipt');
+
   cart=[];renderCart();stopScanner();
   showToast('ชำระเงินเรียบร้อย! / 結帳完成 ✓','ok');
   // 雙音提示音（結帳成功）
@@ -2126,7 +2139,7 @@ function saveEditProduct(){
   const name=document.getElementById('ep-name').value.trim();
   const price=parseFloat(document.getElementById('ep-price').value);
   const category=document.getElementById('ep-cat').value||'other';
-  if(!name||isNaN(price)){showToast('請填寫完整資料','err');return;}
+  if(!name||isNaN(price)||price<0){showToast('請填寫完整資料','err');return;}
   const prods=getProds();prods[editingBC]={name,price,category};saveProds(prods);
   closeModal('m-editprod');renderProdGrid();
   showToast('已更新：'+name,'ok');editingBC=null;
@@ -2301,7 +2314,7 @@ function importReport(e){
     }catch{showToast('檔案格式錯誤','err');}
     e.target.value='';
   };
-  reader.readAsText(file);
+  reader.readAsText(file,'UTF-8');
 }
 function clearAllData(){
   if(!confirm('確定清除所有銷售資料？此操作無法復原。'))return;
@@ -2348,12 +2361,18 @@ function _unlockAudio(){
   if(_audioUnlocked) return;
   try{
     const ctx = _getAudioCtx();
-    if(ctx.state==='suspended') ctx.resume().then(()=>{ _audioUnlocked=true; });
-    else _audioUnlocked=true;
+    const done = ()=>{
+      _audioUnlocked = true;
+      // 解鎖成功後移除所有監聽器，避免後續互動繼續觸發無用的 handler
+      _audioUnlockEvents.forEach(ev=>document.removeEventListener(ev, _unlockAudio));
+    };
+    if(ctx.state==='suspended') ctx.resume().then(done).catch(done);
+    else done();
   }catch(e){}
 }
-['touchstart','touchend','mousedown','keydown'].forEach(ev=>
-  document.addEventListener(ev, _unlockAudio, {once:false, passive:true})
+const _audioUnlockEvents = ['touchstart','touchend','mousedown','keydown'];
+_audioUnlockEvents.forEach(ev=>
+  document.addEventListener(ev, _unlockAudio, {passive:true})
 );
 function playBeep(freq=960, dur=0.12){
   try{
@@ -2493,7 +2512,7 @@ function initHwInput(){
 
   inp.addEventListener('keydown', function(e){
     if(e.key === 'Enter'){ e.preventDefault(); hwSubmit(); return; }
-    if(e.key === 'Backspace'){ e.preventDefault(); return; } // 讓瀏覽器自然處理退格
+    if(e.key === 'Backspace'){ e.preventDefault(); return; } // 阻止退格鍵，防止誤刪 input 中累積的條碼字元
 
     let ch = '';
     if(e.key.length === 1 && /[\x20-\x7E]/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey){
@@ -2618,7 +2637,7 @@ function attachInnerScrollTop(el){
 
 // 靜態容器：報表列表、結帳 review
 function initStaticScrollTops(){
-  ['monthly-list','daily-list','review-body'].forEach(id=>{
+  ['monthly-list','weekly-list','daily-list','review-body'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) attachInnerScrollTop(el);
   });
@@ -2759,11 +2778,13 @@ function amountToThai(total){
   const t=['','สิบ','ยี่สิบ','สามสิบ','สี่สิบ','ห้าสิบ','หกสิบ','เจ็ดสิบ','แปดสิบ','เก้าสิบ'];
   if(total===0)return'ศูนย์';
   let n=Math.round(total),res='';
-  if(n>=10000){res+=u[Math.floor(n/10000)]+'หมื่น';n%=10000;}
-  if(n>=1000) {res+=u[Math.floor(n/1000)] +'พัน'; n%=1000;}
-  if(n>=100)  {res+=u[Math.floor(n/100)]  +'ร้อย';n%=100;}
-  if(n>=10)   {res+=t[Math.floor(n/10)];  n%=10;}
-  if(n>0)     res+=u[n];
+  if(n>=1000000){res+=u[Math.min(Math.floor(n/1000000),9)]+'ล้าน';n%=1000000;}
+  if(n>=100000) {res+=u[Math.floor(n/100000)]+'แสน';n%=100000;}
+  if(n>=10000)  {res+=u[Math.floor(n/10000)] +'หมื่น';n%=10000;}
+  if(n>=1000)   {res+=u[Math.floor(n/1000)]  +'พัน'; n%=1000;}
+  if(n>=100)    {res+=u[Math.floor(n/100)]   +'ร้อย';n%=100;}
+  if(n>=10)     {res+=t[Math.floor(n/10)];   n%=10;}
+  if(n>0)       res+=u[n];
   return res;
 }
 let heldCarts = []; // [{id, items, savedAt}]
