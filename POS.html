@@ -2863,6 +2863,10 @@ const FB_CFG_KEY = 'pos_firebase_cfg';
 let _fbConnected = false;
 let _fbListeners = {};
 let _fbSaveTimer = null;
+// ★ 防止「自迴響」：正在寫入 Firebase 期間，監聽器回呼一律忽略
+let _fbWriting = false;
+// ★ 分鍵追蹤：只寫真正變動的子路徑，避免整棵樹全量覆寫
+const _pendingSaveKeys = new Set();
 
 function setFbStatus(cls, label){
   const el=document.getElementById('fb-status'), lb=document.getElementById('fb-label');
@@ -2955,6 +2959,7 @@ function fbListenAll(){
     let _firstFire = true;
     const unsub = window._fbOnValue(path, snap=>{
       if(_firstFire){ _firstFire=false; return; } // ★ 跳過 initial redundant fire
+      if(_fbWriting) return; // ★ 自迴響防護：本機寫入引發的回呼一律忽略
       const val=snap.val(); if(val===null) return;
       const toStore = (type===2||type===3) ? (Array.isArray(val)?val:Object.values(val)) : val;
       localStorage.setItem(lsKey, JSON.stringify(toStore));
@@ -2965,52 +2970,77 @@ function fbListenAll(){
   });
 }
 
-// ── 寫入 Firebase（防抖 600ms）──
-function fbScheduleSave(){
+// ── 寫入 Firebase（防抖 600ms，分鍵寫入）──
+// key = 'products' | 'nobc_products' | 'transactions' | 'product_order'
+// 傳入 key 時只把該路徑加入待寫清單；600ms 內不再有新變動才批次寫入，
+// 且只寫真正變動的子路徑，避免整棵樹全量覆寫觸發所有監聽器。
+function fbScheduleSave(key){
   if(!_fbConnected||!window._fbSet) return;
+  if(key) _pendingSaveKeys.add(key);
   clearTimeout(_fbSaveTimer);
   _fbSaveTimer=setTimeout(async()=>{
+    // 若沒有指定 key（舊呼叫點），預設全部寫
+    const keys = _pendingSaveKeys.size
+      ? [..._pendingSaveKeys]
+      : ['products','nobc_products','transactions','product_order'];
+    _pendingSaveKeys.clear();
+
     setFbStatus('connecting','☁ 儲存中...');
+    // ★ 設旗標：讓監聽器忽略自己引發的回呼（防自迴響）
+    _fbWriting = true;
     try{
       const now = new Date().toISOString();
-      const prods = getProds();
-      const nobcProds = getNobcProds();
-      const txList = getTx();
-      const prodOrder = getProdOrder(prods);
+      const needProds  = keys.includes('products');
+      const needNobc   = keys.includes('nobc_products');
+      const needTx     = keys.includes('transactions');
+      const needOrder  = keys.includes('product_order');
 
-      // ── 1. 原有 pos/ 路徑（維持向下相容）──
-      await window._fbSet('pos',{
-        updatedAt: now,
-        products: prods,
-        product_order: prodOrder,
-        nobc_products: nobcProds,
-        transactions: txList,
-      });
+      const prods     = (needProds||needOrder) ? getProds()     : null;
+      const nobcProds = needNobc               ? getNobcProds() : null;
+      const txList    = needTx                 ? getTx()        : null;
+      const prodOrder = needOrder              ? getProdOrder(prods) : null;
+
+      // ── 1. pos/ 路徑：只寫有變動的子節點 ──
+      const posWrites = [];
+      if(needProds)  posWrites.push(window._fbSet('pos/products',      prods));
+      if(needNobc)   posWrites.push(window._fbSet('pos/nobc_products', nobcProds));
+      if(needTx)     posWrites.push(window._fbSet('pos/transactions',  txList));
+      if(needOrder)  posWrites.push(window._fbSet('pos/product_order', prodOrder));
+      posWrites.push(window._fbSet('pos/updatedAt', now));
+      await Promise.all(posWrites);
 
       // ── 2. shop/ 路徑（供客戶端 Shop 系統使用）──
-      await window._fbSet('shop/products',     prods);
-      await window._fbSet('shop/nobc_products', nobcProds);
-      // meta.updatedAt 讓 Shop 端做差異比對（只讀這個小節點省流量）
-      await window._fbSet('shop/meta', {
-        updatedAt: now,
-        productCount: Object.keys(prods).length,
-        nobcCount: nobcProds.length,
-      });
+      const shopWrites = [];
+      if(needProds) shopWrites.push(window._fbSet('shop/products',     prods));
+      if(needNobc)  shopWrites.push(window._fbSet('shop/nobc_products', nobcProds));
+      if(needProds||needNobc){
+        const p = prods || getProds();
+        const n = nobcProds || getNobcProds();
+        shopWrites.push(window._fbSet('shop/meta',{
+          updatedAt: now,
+          productCount: Object.keys(p).length,
+          nobcCount: n.length,
+        }));
+      }
+      if(shopWrites.length) await Promise.all(shopWrites);
 
       setFbStatus('connected','☁ Firebase 已連線');
     }catch(e){
       console.error('[Firebase save]',e);
       setFbStatus('error','☁ 儲存失敗：'+e.message);
+    } finally {
+      // 略延遲才清旗標，確保 Firebase push 的 listener 回呼都已被忽略
+      setTimeout(()=>{ _fbWriting = false; }, 800);
     }
   },600);
 }
 
-// ── 覆寫 save 函式 ──
+// ── 覆寫 save 函式（傳入對應 key，只寫變動路徑）──
 const _origSaveProds2=saveProds, _origSaveProdOrder2=saveProdOrder, _origSaveNobcProds2=saveNobcProds, _origSaveTx2=saveTx;
-window.saveProds     = function(o){ _origSaveProds2(o);       fbScheduleSave(); };
-window.saveProdOrder = function(a){ _origSaveProdOrder2(a);   fbScheduleSave(); };
-window.saveNobcProds = function(a){ _origSaveNobcProds2(a);   fbScheduleSave(); };
-window.saveTx        = function(a){ _origSaveTx2(a);          fbScheduleSave(); };
+window.saveProds     = function(o){ _origSaveProds2(o);       fbScheduleSave('products'); };
+window.saveProdOrder = function(a){ _origSaveProdOrder2(a);   fbScheduleSave('product_order'); };
+window.saveNobcProds = function(a){ _origSaveNobcProds2(a);   fbScheduleSave('nobc_products'); };
+window.saveTx        = function(a){ _origSaveTx2(a);          fbScheduleSave('transactions'); };
 
 // ── 等待 module 就緒後連線 ──
 function waitFbReady(cb){
@@ -3557,8 +3587,13 @@ function initPosPWA() {
         }, 30 * 60 * 1000);
 
         // ★ 切回前台時（App 從背景恢復）也主動 check 一次
+        // ★ Fix: 加節流，同一分鐘內重複切回前台只檢查一次，避免頻繁請求
+        let _lastSwUpdateCheck = 0;
         document.addEventListener('visibilitychange', () => {
           if (document.visibilityState === 'visible') {
+            const now = Date.now();
+            if (now - _lastSwUpdateCheck < 60 * 1000) return; // 60 秒內不重複檢查
+            _lastSwUpdateCheck = now;
             reg.update().catch(() => {});
           }
         });
