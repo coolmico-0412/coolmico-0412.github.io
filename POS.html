@@ -699,7 +699,7 @@ body.pwa-offline .pwa-update-bar.show {
                 id="hw-input"
                 class="scanner-hw-input"
                 type="text"
-                readonly
+                inputmode="none"
                 tabindex="-1"
                 autocomplete="off"
                 spellcheck="false"
@@ -1600,9 +1600,9 @@ let _npBc=null, _npVal='';
 
 function openNumpad(bc, currentQty, itemName){
   _npBc=bc;
-  _npVal='0';
+  _npVal=String(currentQty >= 1 ? currentQty : 1); // ★ Fix: 顯示當前數量而非固定 0
   document.getElementById('numpad-title').textContent=(itemName||'') + ' — 數量 / จำนวน';
-  document.getElementById('numpad-display').textContent='0';
+  document.getElementById('numpad-display').textContent=_npVal;
   document.getElementById('numpad-overlay').classList.add('open');
 }
 function closeNumpad(){
@@ -1901,7 +1901,10 @@ function confirmCheckout(){
   document.getElementById('rcpt-total-amt').textContent='NT$ '+sub;
   openModal('m-receipt');
 
-  cart=[];renderCart();stopScanner();
+  cart=[];renderCart();
+  // ★ Fix: 只在相機模式才停止掃描器；HW 模式僅重設狀態文字，不改變掃描器狀態
+  if(scanMode === 'cam') stopScanner();
+  else setSt('รอสแกน... / 等待掃描');
   showToast('ชำระเงินเรียบร้อย! / 結帳完成 ✓','ok');
   // 雙音提示音（結帳成功）
   playBeep(880, 0.08);
@@ -2216,6 +2219,16 @@ function clearAllProducts(){
   if(!confirm('⚠ 警告：即將清空所有商品資料！\n\n・條碼商品：'+bcCount+' 種\n・無條碼商品：'+nbCount+' 種\n\n此操作無法復原，建議先匯出備份。\n\n確定要繼續嗎？'))return;
   if(!confirm('再次確認：確定要刪除全部 '+total+' 種商品嗎？'))return;
   localStorage.removeItem('pos_products');localStorage.removeItem('pos_nobc_products');
+  // ★ Fix: 同步清空 Firebase，防止重新載入或其他裝置將資料還原
+  if(window._fbSet){
+    Promise.all([
+      window._fbSet('pos/products', {}),
+      window._fbSet('pos/nobc_products', []),
+      window._fbSet('pos/product_order', []),
+      window._fbSet('shop/products', {}),
+      window._fbSet('shop/nobc_products', []),
+    ]).catch(e=>console.warn('[POS] clearAllProducts Firebase fail:',e));
+  }
   renderProdGrid();showToast('已清空所有商品資料','ok');
 }
 
@@ -2319,6 +2332,11 @@ function importReport(e){
 function clearAllData(){
   if(!confirm('確定清除所有銷售資料？此操作無法復原。'))return;
   localStorage.removeItem('pos_transactions');
+  // ★ Fix: 同步清空 Firebase，防止重新載入或其他裝置將資料還原
+  if(window._fbSet){
+    window._fbSet('pos/transactions', [])
+      .catch(e=>console.warn('[POS] clearAllData Firebase fail:',e));
+  }
   renderStats();renderMonthly();renderWeekly();renderDaily();
   showToast('已清除所有資料','ok');
 }
@@ -2851,7 +2869,28 @@ function renderHoldBar(){
 // ═══════════════════════════════════════════════════════
 // ═══ Firebase v12 模組化整合 ═══
 // ★ 應用程式版本號（與 pos-sw.js VER 保持一致，方便對照）
-const APP_VERSION = '1.2.0';
+// ══════════════════════════════════════════════════════════
+// 版本更新紀錄 CHANGELOG
+// ──────────────────────────────────────────────────────────
+// v1.2.1 (Bug fixes)
+//   1. [Bug] hw-input: 移除 readonly，改用 inputmode="none"
+//      → 修正輸入框被點擊取得焦點後，HID 掃描器字元無法累積至
+//        inp.value，Enter 提交讀到空值的問題
+//   2. [Bug] openNumpad: 數字鍵盤開啟時正確顯示當前數量（currentQty），
+//      而非固定顯示 0
+//   3. [Bug] confirmCheckout: 結帳後僅在相機模式呼叫 stopScanner()；
+//      HW 掃描器模式只重設狀態文字，不顯示「已停止掃描」
+//   4. [Bug] clearAllProducts: 同步清空 Firebase pos/ 與 shop/ 路徑，
+//      防止重載或其他裝置將商品資料從雲端還原
+//   5. [Bug] clearAllData: 同步清空 Firebase pos/transactions，
+//      防止重載或其他裝置將交易紀錄從雲端還原
+// ──────────────────────────────────────────────────────────
+// v1.2.0
+//   - 配合前端定時 / 切前台更新偵測
+//   - Firebase onValue 跳過 initial fire，防止自迴響
+//   - 分鍵追蹤寫入，避免全量覆寫
+// ══════════════════════════════════════════════════════════
+const APP_VERSION = '1.2.1';
 
 // 將版本號顯示於 nav brand（DOMContentLoaded 後確保元素存在）
 document.addEventListener('DOMContentLoaded', () => {

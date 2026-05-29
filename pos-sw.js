@@ -1,11 +1,21 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.0
+   POS Service Worker  v1.2.1
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
-   ★ v1.2.0: 配合前端定時 / 切前台更新偵測
-══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.0';
+   ──────────────────────────────────────────
+   版本更新紀錄 CHANGELOG
+   v1.2.1
+     - 配合 POS.html v1.2.1 同步版號
+       (Bug fixes: hw-input readonly→inputmode、
+        numpad currentQty、stopScanner 模式判斷、
+        clearAll 同步 Firebase)
+   v1.2.0
+     - 配合前端定時 / 切前台更新偵測
+   ★ 維護人員注意：每次修改請將版本最後數字 +1，
+     並在 CHANGELOG 補充說明異動內容。
+   ══════════════════════════════════════════ */
+const VER          = 'pos-v1.2.1';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;
