@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -266,7 +266,7 @@ button { cursor:pointer; font-family:var(--th); }
 .tab-btn.active .tab-count { background:rgba(255,255,255,.28); }
 .tab-btn:not(.active) .tab-count { background:var(--surface2); color:var(--muted2); }
 
-/* ── Swipe hint (right edge bounce + fade) ── */
+/* ── Swipe hint (right edge bounce) — persistent while right content exists ── */
 .tabs-swipe-hint {
   position: absolute;
   right: 0;
@@ -278,8 +278,7 @@ button { cursor:pointer; font-family:var(--th); }
   justify-content: center;
   pointer-events: none;
   z-index: 3;
-  /* Fade out after ~2.8 s total (0.6 s delay + 2.2 s fade) */
-  animation: tsb-lifetime 2.8s ease forwards;
+  transition: opacity .25s;
 }
 .tabs-swipe-hint.hidden { display: none; }
 .tsb-icon {
@@ -293,12 +292,7 @@ button { cursor:pointer; font-family:var(--th); }
   from { transform: translateX(-2px) scale(1);   opacity: .9; }
   to   { transform: translateX( 5px) scale(1.15); opacity: 1; }
 }
-@keyframes tsb-lifetime {
-  0%   { opacity: 0; }
-  15%  { opacity: 1; }        /* 快速淡入 */
-  72%  { opacity: 1; }        /* 停留一段時間 */
-  100% { opacity: 0; }        /* 慢慢消失 */
-}
+
 
 /* ── Main Layout ── */
 .main-wrap {
@@ -1757,7 +1751,7 @@ body::after {
   <div class="tabs-inner" id="tabs-container">
     <!-- Tabs injected by JS -->
   </div>
-  <!-- Swipe hint: shown once, fades after 2.8s, hidden on first scroll -->
+  <!-- Swipe hint: visible while right-side tabs exist; hides only when fully scrolled right or no overflow -->
   <div class="tabs-swipe-hint" id="tabs-swipe-hint" aria-hidden="true">
     <span class="tsb-icon">›</span>
   </div>
@@ -4603,18 +4597,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const max = inner.scrollWidth - inner.clientWidth;
     wrap.classList.toggle('fade-left',  sl > 4);
     wrap.classList.toggle('fade-right', sl < max - 4);
-    // 沒有可捲動空間時隱藏滑動提示
+    // Show hint only when right-side content exists; hide once fully scrolled or no overflow
     const hint = document.getElementById('tabs-swipe-hint');
-    if (hint && max <= 4) hint.classList.add('hidden');
+    if (hint) {
+      if (max <= 4 || sl >= max - 4) {
+        hint.classList.add('hidden');
+      } else {
+        hint.classList.remove('hidden');
+      }
+    }
   }
 
   inner.addEventListener('scroll', updateFade, { passive: true });
-
-  // Hide swipe hint on first user scroll
-  inner.addEventListener('scroll', () => {
-    const hint = document.getElementById('tabs-swipe-hint');
-    if (hint) hint.classList.add('hidden');
-  }, { once: true, passive: true });
 
   // Re-check whenever tabs are (re)rendered by JS
   const obs = new MutationObserver(updateFade);
@@ -4660,3 +4654,6 @@ document.addEventListener('input', (e) => {
 
 </body>
 </html>
+
+
+
