@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -3968,53 +3968,75 @@ window.addEventListener('storage', e => {
    PWA: Service Worker Registration
 ══════════════════════════════════════════════ */
 let _deferredInstallPrompt = null;
-// 模組層級旗標：防止同一次 controllerchange 觸發多次 reload
-// （reload 後頁面重建，自然歸零，不需 sessionStorage）
-let _swRefreshing = false;
+// 模組層級旗標（reload 後頁面重建，自然歸零，不需 sessionStorage）
+// ⚠️ Bug fix #1（已有）：_swRefreshing 防止同頁面 controllerchange 觸發多次 reload
+let _swRefreshing    = false;
+// ⚠️ Bug fix #2（新增）：_swUpdatePending 防止 Trigger A + B + C 雙重呼叫 autoApplySwUpdate
+let _swUpdatePending = false;
 
 function initPWA() {
   // Register Service Worker
   if ('serviceWorker' in navigator) {
+    // ⚠️ Bug fix #3：在加入任何監聽器之前，先捕捉「目前是否已有 controller」
+    //   首次安裝：SW activate → self.clients.claim() → controllerchange(null→v1)
+    //   此時 hadController = false → controllerchange handler 直接 return，不 reload。
+    //   版本更新：hadController = true（v1 仍在控制）→ reload 正常觸發。
+    const hadController = !!navigator.serviceWorker.controller;
+
     navigator.serviceWorker.register('./shop-sw.js', { scope: './' })
       .then(reg => {
         console.log('[PWA] SW registered:', reg.scope);
 
-        // ── 偵測新版 SW 安裝中 ──
+        // ── 偵測新版 SW 安裝中（Trigger A）──
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           if (!newWorker) return;
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               // 自動更新：直接觸發，不需用戶點擊
-              autoApplySwUpdate(reg);
+              autoApplySwUpdate(reg);  // Trigger A
             }
           });
         });
 
-        // ── 頁面載入時，若已有 waiting worker → 自動更新
-        //    ⚠️ Bug fix #2：加 sessionStorage 防護
-        //    skipWaiting → controllerchange → reload 後，新頁面 reg.waiting
-        //    在 race window 內仍可能非空，若不防護會立刻再次觸發更新。
+        // ── 頁面載入時，若已有 waiting worker → 自動更新（Trigger B）──
+        // ⚠️ Bug fix（已有）：sessionStorage 防護，避免 reload 後再次觸發
         if (reg.waiting && navigator.serviceWorker.controller) {
           if (sessionStorage.getItem('sw-just-updated')) {
             // 這次 reload 是因為我們自己觸發的更新，跳過並清除旗標
             sessionStorage.removeItem('sw-just-updated');
           } else {
-            autoApplySwUpdate(reg);
+            autoApplySwUpdate(reg);  // Trigger B
           }
         }
 
-        // 定期背景檢查更新（每 60 秒）
-        setInterval(() => reg.update().catch(() => {}), 60_000);
+        // ── 定期背景更新 + 補齊「updatefound 被錯過」的情形（Trigger C）──
+        // ⚠️ Bug fix #4：若頁面載入時 SW v2 仍在 installing 狀態（Trigger B 沒抓到），
+        //   且 updatefound 在監聽器加入前就發出（Trigger A 也沒抓到），
+        //   v2 會永遠停在 waiting。interval 內再次檢查 reg.waiting 作為保底。
+        setInterval(() => {
+          reg.update().catch(() => {});
+          // 若有 waiting worker 但雙重觸發保護旗標都未設定 → 保底觸發
+          if (
+            reg.waiting &&
+            navigator.serviceWorker.controller &&
+            !_swUpdatePending &&
+            !sessionStorage.getItem('sw-just-updated')
+          ) {
+            autoApplySwUpdate(reg);  // Trigger C（保底）
+          }
+        }, 60_000);
       })
       .catch(err => console.warn('[PWA] SW registration failed:', err));
 
     // ── SW 控制權切換時 reload（唯一的 reload 觸發點）──
-    // ⚠️ Bug fix #1：_swRefreshing 移到模組層級，避免 initPWA 重入時重置
+    // ⚠️ Bug fix #1（已有）：_swRefreshing 在模組層級，防止同頁面多次 reload
+    // ⚠️ Bug fix #3（新增）：hadController 防護首次安裝無謂 reload
     navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController) return;  // 首次安裝：clients.claim() 觸發，不需重整頁面
       if (_swRefreshing) return;
       _swRefreshing = true;
-      // 標記此次 reload 由 SW 更新引發，讓新頁面跳過 showUpdateBar
+      // 標記此次 reload 由 SW 更新引發，讓新頁面跳過 Trigger B
       sessionStorage.setItem('sw-just-updated', '1');
       location.reload();
     });
@@ -4057,16 +4079,25 @@ function initPWA() {
 /* ── 自動套用新版 SW（無需用戶確認）──
    流程：postMessage(SKIP_WAITING) → SW skipWaiting()
          → controllerchange → sessionStorage 標記 → location.reload()
-   由 controllerchange handler 統一負責 reload，確保只 reload 一次。    */
+   由 controllerchange handler 統一負責 reload，確保只 reload 一次。
+   ⚠️ Bug fix #2：_swUpdatePending 旗標防止 Trigger A/B/C 同時觸發（雙重 skipWaiting）
+   ⚠️ Bug fix #3（else 分支移除）：
+      舊的 else 分支：reg.waiting 為 null 時直接 location.reload() + setSessionStorage
+      問題：reload 後新頁面的 _swRefreshing 歸零，若 controllerchange 在新頁仍觸發
+            → 再 reload 一次，造成多次更新。
+      新做法：一律不在此 reload，完全依賴 controllerchange handler 統一處理。      */
 function autoApplySwUpdate(reg) {
+  if (_swUpdatePending) return;   // 防止 Trigger A + B + C 雙重觸發
+  _swUpdatePending = true;
+
   if (reg?.waiting) {
     showToast(t('updateMsg') + ' 🔄', 'ok');
     reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-  } else {
-    // 沒有 waiting worker（極罕見：SW 已自動接管）直接 reload
-    sessionStorage.setItem('sw-just-updated', '1');
-    location.reload();
+    // reload 統一由 controllerchange handler 處理，不在此直接呼叫 location.reload()
   }
+  // else 分支已移除：
+  //   若 reg.waiting 為 null，代表 SW 已自行完成切換（極罕見）。
+  //   此時 controllerchange 已觸發（或即將觸發），由 handler 統一 reload 即可。
 }
 
 function pwaInstall() {
@@ -4654,6 +4685,3 @@ document.addEventListener('input', (e) => {
 
 </body>
 </html>
-
-
-
