@@ -449,24 +449,6 @@ async function syncFromFirebase(db, ref, get) {
   </div>
 
   <div class="restock-panel">
-    <!-- header bar -->
-    <div class="rk-hd">
-      <div class="rk-hd-info">
-        <div class="rk-hd-title">📦 庫存建議清單 <span id="rk-week-label" style="font-size:12px;opacity:.85"></span></div>
-      </div>
-      <div class="rk-hd-actions">
-        <div style="display:flex;align-items:center;gap:5px">
-          <span style="font-size:11px;color:rgba(255,255,255,.75)">庫存週期</span>
-          <input id="rk-period" type="number" value="7" min="1" max="30"
-            style="width:46px;padding:4px 6px;border:1.5px solid rgba(255,255,255,.5);
-                   border-radius:6px;font-size:12px;font-family:var(--mono);
-                   background:rgba(255,255,255,.15);color:#fff;text-align:center;"
-            onchange="renderRestock()">
-          <span style="font-size:11px;color:rgba(255,255,255,.75)">天</span>
-        </div>
-        <button class="rk-btn solid" onclick="renderRestock()">🔄 重新計算</button>
-      </div>
-    </div>
     <!-- filters -->
     <div class="rk-controls">
       <span style="font-size:11px;color:var(--muted);font-weight:600;font-family:var(--zh)">分類篩選</span>
@@ -486,6 +468,7 @@ async function syncFromFirebase(db, ref, get) {
             <th class="rk-th num" data-sort="thisWeek" onclick="sortRestock('thisWeek')">本週銷量</th>
             <th class="rk-th num" data-sort="trend" onclick="sortRestock('trend')">趨勢</th>
             <th class="rk-th num" data-sort="dailyAvg" onclick="sortRestock('dailyAvg')">日均</th>
+            <th class="rk-th num" data-sort="weeklyAvg" onclick="sortRestock('weeklyAvg')">週均</th>
             <th class="rk-th num sorted" data-sort="suggested" onclick="sortRestock('suggested')">📦 建議庫存 ▾</th>
             <th class="rk-th">狀態</th>
             <th class="rk-th">近 7 天走勢</th>
@@ -696,7 +679,7 @@ function showPage(id, btn){
 /* ══════════════════════════════
    RESTOCK CALCULATION ENGINE
    ══════════════════════════════ */
-function calcRestock(periodDays){
+function calcRestock(){
   const now    = new Date();
   const txList = getTx();
   const prods  = getProds();
@@ -717,10 +700,11 @@ function calcRestock(periodDays){
   txList.forEach(tx=>{
     const age = (now - new Date(tx.date)) / MS_DAY;
     tx.items.forEach(item=>{
-      if(!map[item.name]) map[item.name] = {thisWeek:0, lastWeek:0, daily:new Array(7).fill(0)};
+      if(!map[item.name]) map[item.name] = {thisWeek:0, lastWeek:0, last30:0, daily:new Array(7).fill(0)};
       const m = map[item.name];
       if(age < 7)  m.thisWeek  += item.qty;
       else if(age < 14) m.lastWeek += item.qty;
+      if(age < 30) m.last30 += item.qty;
       const dayIdx = Math.floor(age);
       if(dayIdx >= 0 && dayIdx < 7) m.daily[dayIdx] += item.qty;
     });
@@ -728,13 +712,17 @@ function calcRestock(periodDays){
 
   return Object.entries(map)
     .map(([name, s])=>{
-      const dailyAvg  = (s.thisWeek + s.lastWeek) / 14;
-      const suggested = Math.max(1, Math.ceil(dailyAvg * periodDays));
+      // 日均：近30天銷量 ÷ 30
+      const dailyAvg  = +(s.last30 / 30).toFixed(1);
+      // 週均：日均 × 7
+      const weeklyAvg = +(dailyAvg * 7).toFixed(1);
+      // 建議庫存：近30天銷量 × 1.5 ÷ 30 × 7
+      const suggested = Math.max(1, Math.ceil(s.last30 * 1.5 / 30 * 7));
       const trend     = pct(s.thisWeek, s.lastWeek);
       const info      = prodInfo[name] || {category:'other', outOfStock:false, barcode:null};
       return {
         name, thisWeek:s.thisWeek, lastWeek:s.lastWeek,
-        dailyAvg: +dailyAvg.toFixed(1), suggested, trend,
+        dailyAvg, weeklyAvg, suggested, trend,
         sparkline:[...s.daily].reverse(), // index 0 = 6 days ago, index 6 = today
         ...info
       };
@@ -860,12 +848,11 @@ function sortRestock(key){
 }
 
 function renderRestock(){
-  const periodDays = parseInt(document.getElementById('rk-period').value) || 7;
   const now = new Date();
-  _restockData = calcRestock(periodDays);
+  _restockData = calcRestock();
   // Week label
-  document.getElementById('rk-week-label').textContent =
-    `— ${fweekLabel(now)} 庫存參考`;
+  document.getElementById('rk-week-label') &&
+    (document.getElementById('rk-week-label').textContent = `— ${fweekLabel(now)} 庫存參考`);
   buildCatFilters();
   applyRestockFilter();
 }
@@ -893,7 +880,7 @@ function applyRestockFilter(){
   const maxSparkVal  = Math.max(...data.flatMap(p=>p.sparkline), 1);
 
   if(!data.length){
-    tbody.innerHTML = `<tr><td class="rk-td" colspan="9" style="text-align:center;padding:32px;color:var(--muted);font-family:var(--zh)">尚無銷售資料，或此分類無商品</td></tr>`;
+    tbody.innerHTML = `<tr><td class="rk-td" colspan="10" style="text-align:center;padding:32px;color:var(--muted);font-family:var(--zh)">尚無銷售資料，或此分類無商品</td></tr>`;
   } else {
     tbody.innerHTML = data.map(p=>{
       const cat     = getCatInfo(p.category);
@@ -925,6 +912,7 @@ function applyRestockFilter(){
         <td class="rk-td num">${p.thisWeek}</td>
         <td class="rk-td num">${trendHtml}</td>
         <td class="rk-td num">${p.dailyAvg}</td>
+        <td class="rk-td num">${p.weeklyAvg}</td>
         <td class="rk-td">
           <div class="suggest-cell">
             <span class="suggest-num${isHigh?' high':''}">${p.suggested}</span>
@@ -943,13 +931,12 @@ function applyRestockFilter(){
 
 /* ── Export restock CSV ── */
 function exportRestockCSV(){
-  const periodDays = parseInt(document.getElementById('rk-period').value)||7;
-  const data = calcRestock(periodDays);
-  const rows=[['商品名稱','條碼','分類','上週銷量','本週銷量','趨勢%','日均','建議庫存','狀態']];
+  const data = calcRestock();
+  const rows=[['商品名稱','條碼','分類','上週銷量','本週銷量','趨勢%','日均','週均','建議庫存','狀態']];
   data.forEach(p=>{
     const cat=getCatInfo(p.category);
     const status=p.outOfStock?'缺貨':p.trend>=20?'需注意':'穩定';
-    rows.push([p.name,p.barcode||'無條碼',cat.zh,p.lastWeek,p.thisWeek,p.trend,p.dailyAvg,p.suggested,status]);
+    rows.push([p.name,p.barcode||'無條碼',cat.zh,p.lastWeek,p.thisWeek,p.trend,p.dailyAvg,p.weeklyAvg,p.suggested,status]);
   });
   downloadCSV(rows, 'inventory_'+fd(new Date()).replace(/-/g,'')+'.csv');
   showToast('已匯出庫存清單 CSV','ok');
