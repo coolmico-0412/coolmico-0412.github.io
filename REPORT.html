@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<link rel="manifest" href="pos-manifest.json">
+<link rel="manifest" id="pwa-manifest">
 <meta name="theme-color" content="#1e3a8a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -46,10 +46,10 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .nav-tab .zh{font-family:var(--zh);font-size:10px;display:block;opacity:.7;}
 .nav-tab:hover{color:var(--text2);background:var(--surface2);}
 .nav-tab.active{color:var(--accent);background:var(--aglow);}
-.nav-back{padding:6px 13px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;
-  border:1.5px solid var(--border2);background:transparent;color:var(--muted);margin-left:auto;
+.nav-install{padding:6px 13px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;
+  border:1.5px solid var(--accent);background:var(--aglow);color:var(--accent);margin-left:auto;
   font-family:var(--zh);white-space:nowrap;transition:all .18s;}
-.nav-back:hover{border-color:var(--accent);color:var(--accent);background:var(--aglow);}
+.nav-install:hover{background:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(37,99,235,.28);}
 
 /* ── PAGES ── */
 .page{display:none;padding:18px 18px;max-width:1440px;margin:0 auto;}
@@ -318,6 +318,19 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .m-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;
   border-top:1px solid var(--border);}
 
+/* ── PWA STANDALONE ── */
+.pwa-standalone nav{
+  padding-top: env(safe-area-inset-top, 0px);
+  height: calc(54px + env(safe-area-inset-top, 0px));
+}
+.pwa-standalone body{
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (display-mode: standalone){
+  nav{ padding-top: env(safe-area-inset-top,0); }
+  body{ padding-bottom: env(safe-area-inset-bottom,0); }
+}
+
 /* PRINT STYLES */
 @media print {
   nav,.rk-hd-actions,.rk-controls,.rk-footer,.sec-ml{display:none!important;}
@@ -383,6 +396,112 @@ async function syncFromFirebase(db, ref, get) {
   document.dispatchEvent(new Event('report-data-ready'));
 }
 </script>
+<script>
+/* ══════════════════════════════
+   PWA — Inline Manifest (no external file needed)
+   ══════════════════════════════ */
+(function(){
+  const manifest = {
+    name: "POS 報表系統",
+    short_name: "POS報表",
+    description: "銷售報表 · 庫存 · 趨勢 · 排行",
+    start_url: "./REPORT.html",
+    display: "standalone",
+    orientation: "any",
+    background_color: "#f1f5f9",
+    theme_color: "#1e3a8a",
+    lang: "zh-TW",
+    icons: [
+      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='38' fill='%232563eb'/%3E%3Ctext x='96' y='138' text-anchor='middle' font-size='110' fill='white'%3E%F0%9F%93%8A%3C/text%3E%3C/svg%3E",
+        sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" },
+      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%232563eb'/%3E%3Ctext x='256' y='360' text-anchor='middle' font-size='290' fill='white'%3E%F0%9F%93%8A%3C/text%3E%3C/svg%3E",
+        sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+    ],
+    screenshots: [],
+    categories: ["productivity", "business"],
+    shortcuts: [
+      { name:"總覽", short_name:"Dashboard", url:"./REPORT.html#overview", description:"核心 KPI 總覽" },
+      { name:"庫存清單", short_name:"Inventory", url:"./REPORT.html#restock", description:"補貨建議表" }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+  document.getElementById('pwa-manifest').href = URL.createObjectURL(blob);
+})();
+
+/* ══════════════════════════════
+   PWA — Service Worker (inline blob)
+   ══════════════════════════════ */
+(function(){
+  if (!('serviceWorker' in navigator)) return;
+  const SW_VERSION = 'report-v1';
+  const swCode = `
+const CACHE = '${SW_VERSION}';
+const ASSETS = [self.location.href.replace(/\\/[^/]*$/, '') + '/REPORT.html'];
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
+  );
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    fetch(e.request).then(res => {
+      const clone = res.clone();
+      caches.open(CACHE).then(c => c.put(e.request, clone));
+      return res;
+    }).catch(() => caches.match(e.request))
+  );
+});
+`;
+  try {
+    const swBlob = new Blob([swCode], {type:'application/javascript'});
+    const swUrl  = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swUrl).catch(()=>{
+      /* blob SW may be restricted in some browsers; silent fallback */
+    });
+  } catch(e){}
+})();
+
+/* ══════════════════════════════
+   PWA — Install Prompt
+   ══════════════════════════════ */
+let _pwaPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _pwaPrompt = e;
+  const btn = document.getElementById('btn-pwa-install');
+  if (btn) btn.style.display = '';
+});
+window.addEventListener('appinstalled', () => {
+  const btn = document.getElementById('btn-pwa-install');
+  if (btn) btn.style.display = 'none';
+  _pwaPrompt = null;
+});
+function pwaTriggerInstall(){
+  if (!_pwaPrompt) return;
+  _pwaPrompt.prompt();
+  _pwaPrompt.userChoice.then(r => {
+    if(r.outcome==='accepted'){
+      document.getElementById('btn-pwa-install').style.display='none';
+      _pwaPrompt = null;
+    }
+  });
+}
+
+/* ══════════════════════════════
+   PWA — Standalone detection
+   ══════════════════════════════ */
+if (window.matchMedia('(display-mode: standalone)').matches
+    || navigator.standalone === true) {
+  document.documentElement.classList.add('pwa-standalone');
+}
+</script>
 </head>
 <body>
 
@@ -394,7 +513,7 @@ async function syncFromFirebase(db, ref, get) {
   <button class="nav-tab" onclick="showPage('trends',this)">📈 趨勢<span class="zh">Trends</span></button>
   <button class="nav-tab" onclick="showPage('ranking',this)">🏆 排行<span class="zh">Ranking</span></button>
   <button class="nav-tab" onclick="showPage('transactions',this)">📋 明細<span class="zh">Transactions</span></button>
-  <button class="nav-back" onclick="window.location.href='POS.html'">← 返回 POS</button>
+  <button class="nav-install" id="btn-pwa-install" onclick="pwaTriggerInstall()" style="display:none">⬇ 安裝應用</button>
 </nav>
 
 <!-- ════════════════════════════════════════
