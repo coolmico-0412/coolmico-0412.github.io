@@ -390,7 +390,7 @@ async function syncFromFirebase(db, ref, get) {
 <nav>
   <div class="brand">REPORT<span class="brand-ver">v1.0.0</span></div>
   <button class="nav-tab active" onclick="showPage('overview',this)">📊 總覽<span class="zh">Dashboard</span></button>
-  <button class="nav-tab" onclick="showPage('restock',this)">📦 補貨清單<span class="zh">Restock</span></button>
+  <button class="nav-tab" onclick="showPage('restock',this)">📦 庫存清單<span class="zh">Inventory</span></button>
   <button class="nav-tab" onclick="showPage('trends',this)">📈 趨勢<span class="zh">Trends</span></button>
   <button class="nav-tab" onclick="showPage('ranking',this)">🏆 排行<span class="zh">Ranking</span></button>
   <button class="nav-tab" onclick="showPage('transactions',this)">📋 明細<span class="zh">Transactions</span></button>
@@ -419,51 +419,28 @@ async function syncFromFirebase(db, ref, get) {
   <!-- KPI -->
   <div class="kpi-grid" id="kpi-grid">
     <div class="kpi gold-kpi"><div class="kpi-lbl">今日收入</div><div class="kpi-val" id="kpi-today" style="color:var(--gold)">—</div><div class="kpi-diff" id="kpi-today-diff">—</div></div>
+    <div class="kpi"><div class="kpi-lbl">昨日收入</div><div class="kpi-val" id="kpi-yesterday">—</div><div class="kpi-diff" id="kpi-yesterday-diff">—</div></div>
     <div class="kpi accent-kpi"><div class="kpi-lbl">本週收入</div><div class="kpi-val" id="kpi-week" style="color:var(--accent)">—</div><div class="kpi-diff" id="kpi-week-diff">—</div></div>
     <div class="kpi"><div class="kpi-lbl">本月收入</div><div class="kpi-val" id="kpi-month">—</div><div class="kpi-diff" id="kpi-month-diff">—</div></div>
     <div class="kpi"><div class="kpi-lbl">期間筆數</div><div class="kpi-val" id="kpi-count">—</div><div class="kpi-sub" id="kpi-count-sub">—</div></div>
     <div class="kpi"><div class="kpi-lbl">平均單筆</div><div class="kpi-val" id="kpi-avg">—</div><div class="kpi-sub" id="kpi-avg-sub">—</div></div>
-    <div class="kpi red-kpi"><div class="kpi-lbl">缺貨商品</div><div class="kpi-val" id="kpi-oos" style="color:var(--red)">—</div><div class="kpi-sub" id="kpi-oos-sub">—</div></div>
-  </div>
-
-  <!-- Charts -->
-  <div class="mini-chart-grid">
-    <!-- 14-day bar chart -->
-    <div class="chart-panel">
-      <div class="cp-title">每日銷售 <span class="sub">最近 14 天</span></div>
-      <div class="bar-chart" id="ov-bar-chart"></div>
-      <div class="bar-labels" id="ov-bar-labels"></div>
-      <div class="legend-row" style="margin-top:10px">
-        <div class="legend-item"><div class="legend-dot" style="background:#bfdbfe"></div>上週</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>本週</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>今日</div>
-      </div>
-    </div>
-    <!-- Hourly heatmap + peak info -->
-    <div class="chart-panel">
-      <div class="cp-title">尖峰時段 <span class="sub">近 7 天 熱圖</span></div>
-      <div class="heatmap-wrap"><div class="heatmap" id="ov-heatmap"></div></div>
-      <div id="ov-peak-info" style="margin-top:10px;background:var(--aglow);border:1px solid #bfdbfe;
-        border-radius:8px;padding:8px 12px;font-size:11px;font-family:var(--zh);color:var(--text2)"></div>
-    </div>
   </div>
 
   <!-- DoW stats -->
   <div class="sec-hd" style="margin-top:20px">
     <span class="sec-title">📅 星期銷售分佈</span>
-    <span class="sec-sub">過去 4 週平均</span>
+    <span class="sec-sub">過去 12 週平均</span>
   </div>
   <div class="dow-grid" id="ov-dow-grid"></div>
 </div>
 
 <!-- ════════════════════════════════════════
-     PAGE 2: RESTOCK（補貨清單）
+     PAGE 2: RESTOCK（庫存清單）
      ════════════════════════════════════════ -->
 <div class="page" id="page-restock">
   <div class="sec-hd" style="margin-top:4px">
-    <span class="sec-title">📦 每週補貨清單</span>
-    <span class="sec-badge">補貨參考</span>
-    <span class="sec-sub">依近 30 天銷量自動計算建議補貨數（週均 × 1.5）</span>
+    <span class="sec-title">📦 每週庫存清單</span>
+    <span class="sec-badge">庫存參考</span>
     <div class="sec-ml">
       <button class="btn btn-ghost btn-sm" onclick="printRestock()">🖨 列印</button>
       <button class="btn btn-green btn-sm" onclick="exportRestockCSV()">⬇ CSV</button>
@@ -475,8 +452,19 @@ async function syncFromFirebase(db, ref, get) {
     <!-- header bar -->
     <div class="rk-hd">
       <div class="rk-hd-info">
-        <div class="rk-hd-title">📦 補貨建議清單 <span id="rk-week-label" style="font-size:12px;opacity:.85"></span></div>
-        <div class="rk-hd-sub">計算公式：近 30 天銷量 × 1.5 ÷ 30 天 × 7 = 建議補貨數（補貨週期固定 7 天）</div>
+        <div class="rk-hd-title">📦 庫存建議清單 <span id="rk-week-label" style="font-size:12px;opacity:.85"></span></div>
+      </div>
+      <div class="rk-hd-actions">
+        <div style="display:flex;align-items:center;gap:5px">
+          <span style="font-size:11px;color:rgba(255,255,255,.75)">庫存週期</span>
+          <input id="rk-period" type="number" value="7" min="1" max="30"
+            style="width:46px;padding:4px 6px;border:1.5px solid rgba(255,255,255,.5);
+                   border-radius:6px;font-size:12px;font-family:var(--mono);
+                   background:rgba(255,255,255,.15);color:#fff;text-align:center;"
+            onchange="renderRestock()">
+          <span style="font-size:11px;color:rgba(255,255,255,.75)">天</span>
+        </div>
+        <button class="rk-btn solid" onclick="renderRestock()">🔄 重新計算</button>
       </div>
     </div>
     <!-- filters -->
@@ -498,8 +486,7 @@ async function syncFromFirebase(db, ref, get) {
             <th class="rk-th num" data-sort="thisWeek" onclick="sortRestock('thisWeek')">本週銷量</th>
             <th class="rk-th num" data-sort="trend" onclick="sortRestock('trend')">趨勢</th>
             <th class="rk-th num" data-sort="dailyAvg" onclick="sortRestock('dailyAvg')">日均</th>
-            <th class="rk-th num" data-sort="weeklyAvg" onclick="sortRestock('weeklyAvg')">週均</th>
-            <th class="rk-th num sorted" data-sort="suggested" onclick="sortRestock('suggested')">📦 建議補貨 ▾</th>
+            <th class="rk-th num sorted" data-sort="suggested" onclick="sortRestock('suggested')">📦 建議庫存 ▾</th>
             <th class="rk-th">狀態</th>
             <th class="rk-th">近 7 天走勢</th>
           </tr>
@@ -510,7 +497,7 @@ async function syncFromFirebase(db, ref, get) {
     <div class="rk-footer">
       <span id="rk-footer-info">載入中...</span>
       <div style="margin-left:auto;display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" onclick="exportRestockCSV()">⬇ 匯出補貨清單 CSV</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportRestockCSV()">⬇ 匯出庫存清單 CSV</button>
       </div>
     </div>
   </div>
@@ -539,7 +526,7 @@ async function syncFromFirebase(db, ref, get) {
     </div>
     <!-- hourly -->
     <div class="chart-panel">
-      <div class="cp-title">每小時銷售分佈 <span class="sub">近 30 天</span></div>
+      <div class="cp-title">每小時銷售分佈 <span class="sub">近 90 天</span></div>
       <div class="hourly-bar-wrap" id="tr-hourly"></div>
       <div class="hr-labels" id="tr-hourly-labels"></div>
     </div>
@@ -709,7 +696,7 @@ function showPage(id, btn){
 /* ══════════════════════════════
    RESTOCK CALCULATION ENGINE
    ══════════════════════════════ */
-function calcRestock(){
+function calcRestock(periodDays){
   const now    = new Date();
   const txList = getTx();
   const prods  = getProds();
@@ -730,11 +717,10 @@ function calcRestock(){
   txList.forEach(tx=>{
     const age = (now - new Date(tx.date)) / MS_DAY;
     tx.items.forEach(item=>{
-      if(!map[item.name]) map[item.name] = {thisWeek:0, lastWeek:0, last30:0, daily:new Array(7).fill(0)};
+      if(!map[item.name]) map[item.name] = {thisWeek:0, lastWeek:0, daily:new Array(7).fill(0)};
       const m = map[item.name];
       if(age < 7)  m.thisWeek  += item.qty;
       else if(age < 14) m.lastWeek += item.qty;
-      if(age < 30) m.last30 += item.qty;
       const dayIdx = Math.floor(age);
       if(dayIdx >= 0 && dayIdx < 7) m.daily[dayIdx] += item.qty;
     });
@@ -742,14 +728,13 @@ function calcRestock(){
 
   return Object.entries(map)
     .map(([name, s])=>{
-      const dailyAvg   = s.last30 / 30;
-      const weeklyAvg  = +(dailyAvg * 7).toFixed(1);
-      const suggested  = Math.max(1, Math.ceil(s.last30 * 1.5 / 30 * 7));
-      const trend      = pct(s.thisWeek, s.lastWeek);
-      const info       = prodInfo[name] || {category:'other', outOfStock:false, barcode:null};
+      const dailyAvg  = (s.thisWeek + s.lastWeek) / 14;
+      const suggested = Math.max(1, Math.ceil(dailyAvg * periodDays));
+      const trend     = pct(s.thisWeek, s.lastWeek);
+      const info      = prodInfo[name] || {category:'other', outOfStock:false, barcode:null};
       return {
         name, thisWeek:s.thisWeek, lastWeek:s.lastWeek,
-        dailyAvg: +dailyAvg.toFixed(1), weeklyAvg, suggested, trend,
+        dailyAvg: +dailyAvg.toFixed(1), suggested, trend,
         sparkline:[...s.daily].reverse(), // index 0 = 6 days ago, index 6 = today
         ...info
       };
@@ -773,12 +758,14 @@ function renderOverview(){
 
   /* KPIs */
   let tTotal=0, tCount=0, wTotal=0, wCount=0, mTotal=0, mCount=0;
-  let prevWTotal=0, prevMTotal=0, yestTotal=0;
+  let prevWTotal=0, prevMTotal=0, yestTotal=0, dayBefore2Total=0;
   const yesterday = new Date(now); yesterday.setDate(now.getDate()-1); const yesterdayStr = fd(yesterday);
+  const dayBefore2 = new Date(now); dayBefore2.setDate(now.getDate()-2); const dayBefore2Str = fd(dayBefore2);
   txList.forEach(tx=>{
     const d=new Date(tx.date); const ds=fd(d); const ms=fm(d); const ws=fweek(d);
     if(ds===todayStr){tTotal+=tx.total;tCount++;}
     if(ds===yesterdayStr) yestTotal+=tx.total;
+    if(ds===dayBefore2Str) dayBefore2Total+=tx.total;
     if(ws===weekStr){wTotal+=tx.total;wCount++;}
     if(ms===monthStr){mTotal+=tx.total;mCount++;}
     // prev week
@@ -788,7 +775,6 @@ function renderOverview(){
     const pm=new Date(now);pm.setMonth(pm.getMonth()-1);
     if(fm(d)===fm(pm)) prevMTotal+=tx.total;
   });
-  const allOos = [...Object.values(prods).filter(p=>p.outOfStock), ...nobcPs.filter(p=>p.outOfStock)];
 
   const diff = (a,b,prefix='NT$ ')=>{
     const p=pct(a,b);
@@ -800,6 +786,8 @@ function renderOverview(){
 
   document.getElementById('kpi-today').textContent    = 'NT$ '+tTotal;
   document.getElementById('kpi-today-diff').innerHTML  = diff(tTotal, yestTotal);
+  document.getElementById('kpi-yesterday').textContent = 'NT$ '+yestTotal;
+  document.getElementById('kpi-yesterday-diff').innerHTML = diff(yestTotal, dayBefore2Total);
   document.getElementById('kpi-week').textContent     = 'NT$ '+wTotal;
   document.getElementById('kpi-week-diff').innerHTML   = diff(wTotal, prevWTotal);
   document.getElementById('kpi-month').textContent    = 'NT$ '+mTotal;
@@ -808,85 +796,18 @@ function renderOverview(){
   document.getElementById('kpi-count-sub').textContent = '日均 '+(wCount/7).toFixed(1)+' 筆';
   document.getElementById('kpi-avg').textContent      = wCount ? 'NT$ '+Math.round(wTotal/wCount) : '—';
   document.getElementById('kpi-avg-sub').textContent   = '本週平均單筆';
-  document.getElementById('kpi-oos').textContent      = allOos.length + ' 種';
-  document.getElementById('kpi-oos-sub').textContent   = allOos.length ? '立即補貨' : '庫存正常';
-
-  /* 14-day bar chart */
-  const dailyMap = {};
-  txList.forEach(tx=>{
-    const ds=fd(new Date(tx.date));
-    if(!dailyMap[ds]) dailyMap[ds]=0;
-    dailyMap[ds]+=tx.total;
-  });
-  const dates14 = [];
-  for(let i=13;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i);dates14.push(fd(d));}
-  const vals14 = dates14.map(d=>dailyMap[d]||0);
-  const maxVal = Math.max(...vals14, 1);
-  const barEl = document.getElementById('ov-bar-chart');
-  const lblEl = document.getElementById('ov-bar-labels');
-  barEl.innerHTML = vals14.map((v,i)=>{
-    const pct = (v/maxVal*100).toFixed(1);
-    const cls = dates14[i]===todayStr ? 'today-bar' : i<7 ? 'last-week' : 'this-week';
-    const isEmpty = v===0;
-    return `<div class="bc-bar ${isEmpty?'empty-bar':cls}" style="height:${isEmpty?'4':pct}%" title="NT$ ${v}">
-      <div class="bbc-tip">NT$ ${v}</div></div>`;
-  }).join('');
-  lblEl.innerHTML = dates14.map(d=>{
-    const mm=d.slice(5,7), dd=d.slice(8);
-    return `<div class="bar-lbl">${mm}/${dd}</div>`;
-  }).join('');
-
-  /* Heatmap: days × hours */
-  const HOURS = [9,10,11,12,13,14,15,16,17,18,19,20];
-  const DAYS  = ['一','二','三','四','五','六','日'];
-  const heatData = Array.from({length:7},()=>new Array(12).fill(0));
-  txList.forEach(tx=>{
-    const d=new Date(tx.date);
-    const age=(now-d)/MS_DAY;
-    if(age>7) return;
-    const dow = (d.getDay()+6)%7; // 0=Mon
-    const hr  = d.getHours();
-    const hIdx = HOURS.indexOf(hr);
-    if(hIdx>=0) heatData[dow][hIdx] += tx.total;
-  });
-  const heatMax = Math.max(...heatData.flat(), 1);
-  const heatColors = ['#f8fafc','#dbeafe','#93c5fd','#60a5fa','#3b82f6','#1d4ed8','#1e3a8a'];
-  const hmEl = document.getElementById('ov-heatmap');
-  // Header row
-  let hmHtml = `<div class="hm-lbl"></div>`;
-  HOURS.forEach(h=>{ hmHtml+=`<div class="hm-hdr">${h}</div>`; });
-  DAYS.forEach((day,di)=>{
-    hmHtml+=`<div class="hm-lbl">${day}</div>`;
-    HOURS.forEach((_,hi)=>{
-      const val=heatData[di][hi];
-      const lvl=Math.min(6,Math.floor(val/heatMax*7));
-      hmHtml+=`<div class="hm-cell" style="background:${heatColors[lvl]}" title="${HOURS[hi]}:00 NT$ ${val}"></div>`;
-    });
-  });
-  hmEl.innerHTML = hmHtml;
-
-  // Peak hour info
-  let peakHour=-1, peakVal=0;
-  HOURS.forEach((h,hi)=>{
-    const sum=heatData.reduce((s,row)=>s+row[hi],0);
-    if(sum>peakVal){peakVal=sum;peakHour=h;}
-  });
-  document.getElementById('ov-peak-info').innerHTML =
-    peakHour>=0
-    ? `🔥 <b>尖峰時段：${peakHour}:00–${peakHour+1}:00</b><br>建議在 ${Math.max(9,peakHour-2)}:00 前完成補貨`
-    : '尚無足夠資料';
 
   /* DoW distribution */
   const dowData = new Array(7).fill(0);
   const dowCount= new Array(7).fill(0);
-  const fourWeeksAgo = new Date(now); fourWeeksAgo.setDate(now.getDate()-28);
+  const twelveWeeksAgo = new Date(now); twelveWeeksAgo.setDate(now.getDate()-84);
   txList.forEach(tx=>{
     const d=new Date(tx.date);
-    if(d<fourWeeksAgo) return;
+    if(d<twelveWeeksAgo) return;
     const dow=(d.getDay()+6)%7;
     dowData[dow]+=tx.total; dowCount[dow]++;
   });
-  const dowAvg = dowData.map((v,i)=>dowCount[i]>0 ? Math.round(v/4) : 0);
+  const dowAvg = dowData.map((v,i)=>dowCount[i]>0 ? Math.round(v/12) : 0);
   const maxDow = Math.max(...dowAvg, 1);
   const dowNames=['週一','週二','週三','週四','週五','週六','週日'];
   const dowEl = document.getElementById('ov-dow-grid');
@@ -939,11 +860,12 @@ function sortRestock(key){
 }
 
 function renderRestock(){
+  const periodDays = parseInt(document.getElementById('rk-period').value) || 7;
   const now = new Date();
-  _restockData = calcRestock();
+  _restockData = calcRestock(periodDays);
   // Week label
   document.getElementById('rk-week-label').textContent =
-    `— ${fweekLabel(now)} 補貨參考`;
+    `— ${fweekLabel(now)} 庫存參考`;
   buildCatFilters();
   applyRestockFilter();
 }
@@ -971,7 +893,7 @@ function applyRestockFilter(){
   const maxSparkVal  = Math.max(...data.flatMap(p=>p.sparkline), 1);
 
   if(!data.length){
-    tbody.innerHTML = `<tr><td class="rk-td" colspan="10" style="text-align:center;padding:32px;color:var(--muted);font-family:var(--zh)">尚無銷售資料，或此分類無商品</td></tr>`;
+    tbody.innerHTML = `<tr><td class="rk-td" colspan="9" style="text-align:center;padding:32px;color:var(--muted);font-family:var(--zh)">尚無銷售資料，或此分類無商品</td></tr>`;
   } else {
     tbody.innerHTML = data.map(p=>{
       const cat     = getCatInfo(p.category);
@@ -1003,7 +925,6 @@ function applyRestockFilter(){
         <td class="rk-td num">${p.thisWeek}</td>
         <td class="rk-td num">${trendHtml}</td>
         <td class="rk-td num">${p.dailyAvg}</td>
-        <td class="rk-td num">${p.weeklyAvg}</td>
         <td class="rk-td">
           <div class="suggest-cell">
             <span class="suggest-num${isHigh?' high':''}">${p.suggested}</span>
@@ -1017,20 +938,21 @@ function applyRestockFilter(){
   }
 
   document.getElementById('rk-footer-info').innerHTML =
-    `共 <b>${data.length}</b> 種商品　・　總建議補貨 <b>${data.reduce((s,p)=>s+p.suggested,0)}</b> 件`;
+    `共 <b>${data.length}</b> 種商品　・　總建議庫存 <b>${data.reduce((s,p)=>s+p.suggested,0)}</b> 件`;
 }
 
 /* ── Export restock CSV ── */
 function exportRestockCSV(){
-  const data = calcRestock();
-  const rows=[['商品名稱','條碼','分類','上週銷量','本週銷量','趨勢%','日均','週均','建議補貨','狀態']];
+  const periodDays = parseInt(document.getElementById('rk-period').value)||7;
+  const data = calcRestock(periodDays);
+  const rows=[['商品名稱','條碼','分類','上週銷量','本週銷量','趨勢%','日均','建議庫存','狀態']];
   data.forEach(p=>{
     const cat=getCatInfo(p.category);
     const status=p.outOfStock?'缺貨':p.trend>=20?'需注意':'穩定';
-    rows.push([p.name,p.barcode||'無條碼',cat.zh,p.lastWeek,p.thisWeek,p.trend,p.dailyAvg,p.weeklyAvg,p.suggested,status]);
+    rows.push([p.name,p.barcode||'無條碼',cat.zh,p.lastWeek,p.thisWeek,p.trend,p.dailyAvg,p.suggested,status]);
   });
-  downloadCSV(rows, 'restock_'+fd(new Date()).replace(/-/g,'')+'.csv');
-  showToast('已匯出補貨清單 CSV','ok');
+  downloadCSV(rows, 'inventory_'+fd(new Date()).replace(/-/g,'')+'.csv');
+  showToast('已匯出庫存清單 CSV','ok');
 }
 function printRestock(){window.print();}
 
@@ -1087,7 +1009,7 @@ function renderTrends(){
 
   /* Hourly */
   const hourMap=new Array(24).fill(0);
-  const cutoff=new Date(now); cutoff.setDate(now.getDate()-30);
+  const cutoff=new Date(now); cutoff.setDate(now.getDate()-90);
   txList.forEach(tx=>{
     const d=new Date(tx.date);
     if(d<cutoff)return;
