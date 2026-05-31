@@ -288,21 +288,6 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .fi:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--aglow);}
 .m-acts{display:flex;gap:8px;margin-top:18px;}
 
-/* ── RECEIPT ── */
-.rcpt-wrap{width:360px;}
-.rcpt-hd{text-align:center;margin-bottom:16px;}
-.rcpt-logo{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);letter-spacing:4px;}
-.rcpt-date{font-size:11px;color:var(--muted);margin-top:4px;font-family:var(--mono);}
-.rcpt-id{font-size:10px;color:var(--purple);margin-top:2px;font-family:var(--mono);}
-.rdiv{border:none;border-top:1px dashed var(--border2);margin:12px 0;}
-.rcpt-item{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px;font-size:13px;}
-.rcpt-iname{flex:1;font-family:var(--zh);color:var(--text);}
-.rcpt-qty{color:var(--muted);font-size:11px;margin:0 8px;white-space:nowrap;}
-.rcpt-iprice{font-family:var(--mono);font-weight:700;color:var(--text);}
-.rcpt-total-row{display:flex;justify-content:space-between;align-items:center;}
-.rcpt-total-row .rl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-family:var(--zh);}
-.rcpt-total-row .ra{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--gold);}
-.rcpt-ft{text-align:center;font-size:11px;color:var(--muted);margin-top:14px;font-family:var(--zh);}
 
 /* ── DRILL-DOWN ── */
 .drill-table{width:100%;border-collapse:collapse;margin-top:10px;}
@@ -1129,30 +1114,6 @@ body.pwa-offline .pwa-update-bar.show {
   </div>
 </div>
 
-<!-- ═══ Modal: 收據 ═══ -->
-<div class="overlay" id="m-receipt">
-  <div class="mbox rcpt-wrap">
-    <div id="rcpt-content">
-      <div class="rcpt-hd">
-        <div class="rcpt-logo">POS SYSTEM</div>
-        <div class="rcpt-date" id="rcpt-date"></div>
-        <div class="rcpt-id" id="rcpt-id"></div>
-      </div>
-      <hr class="rdiv">
-      <div id="rcpt-items"></div>
-      <hr class="rdiv">
-      <div class="rcpt-total-row">
-        <div class="rl">ยอดรวมทั้งหมด / 總計金額</div>
-        <div class="ra" id="rcpt-total-amt"></div>
-      </div>
-      <div class="rcpt-ft">ขอบคุณที่ใช้บริการ / 感謝您的惠顧 ♥</div>
-    </div>
-    <div class="m-acts" style="margin-top:16px">
-      <button class="btn btn-accent" style="flex:1" onclick="closeModal('m-receipt')">ตกลง / 確認</button>
-      <button class="btn btn-ghost" onclick="closeModal('m-receipt');showPage('report',null)">รายงาน / 報表</button>
-    </div>
-  </div>
-</div>
 
 <!-- ═══ Modal: 報表明細 ═══ -->
 <div class="overlay" id="m-drill">
@@ -1460,6 +1421,19 @@ function h(value){
 function jsArg(value){
   return h(JSON.stringify(String(value ?? '')));
 }
+function num(value, fallback=0){
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  }
+function money(value){
+    return num(value).toLocaleString('en-US');
+  }
+function safeArray(value){
+    return Array.isArray(value) ? value : [];
+  }
+function sumItems(items){
+    return safeArray(items).reduce((s,item)=>s + num(item?.price) * num(item?.qty), 0);
+  }
 
 // EAN-13 checksum 檢查（僅用於新增商品欄位的額外提示，非強制）
 function checkEAN13(code){
@@ -1889,18 +1863,7 @@ function confirmCheckout(){
   };
   const txList=getTx();txList.push(tx);saveTx(txList);
 
-  // ── 填充並顯示收據 ──
-  document.getElementById('rcpt-date').textContent=now.toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  document.getElementById('rcpt-id').textContent='# '+tx.id;
-  document.getElementById('rcpt-items').innerHTML=tx.items.map(item=>`
-    <div class="rcpt-item">
-      <div class="rcpt-iname">${h(item.name)}</div>
-      <div class="rcpt-qty">× ${item.qty}</div>
-      <div class="rcpt-iprice">NT$ ${item.price*item.qty}</div>
-    </div>`).join('');
-  document.getElementById('rcpt-total-amt').textContent='NT$ '+sub;
-  openModal('m-receipt');
-
+  // ── 寫入交易紀錄 ──
   cart=[];renderCart();
   // ★ Fix: 只在相機模式才停止掃描器；HW 模式僅重設狀態文字，不改變掃描器狀態
   if(scanMode === 'cam') stopScanner();
@@ -2564,6 +2527,12 @@ function initHwInput(){
   });
 }
 
+function ensureHwInputReady(){
+  setTimeout(initHwInput, 80);
+}
+document.addEventListener('DOMContentLoaded', ensureHwInputReady);
+if(document.readyState !== 'loading') ensureHwInputReady();
+
 // ── document keydown 保底（焦點不在 hw-input 時）──
 document.addEventListener('keydown', function(e){
   if(!document.getElementById('page-pos').classList.contains('active')) return;
@@ -2872,6 +2841,11 @@ function renderHoldBar(){
 // ══════════════════════════════════════════════════════════
 // 版本更新紀錄 CHANGELOG
 // ──────────────────────────────────────────────────────────
+// v1.2.2
+//   1. [Security] 線上訂單 / 會員欄位輸出統一轉義，避免 Firebase 資料造成破版或注入
+//   2. [PWA] 預快取 POS.html，並讓 HTML Network First 逾時後快速使用快取
+//   3. [Bug] 初始載入即初始化硬體掃描輸入框，避免第一次進頁 Enter 不提交
+//
 // v1.2.1 (Bug fixes)
 //   1. [Bug] hw-input: 移除 readonly，改用 inputmode="none"
 //      → 修正輸入框被點擊取得焦點後，HID 掃描器字元無法累積至
@@ -2890,7 +2864,7 @@ function renderHoldBar(){
 //   - Firebase onValue 跳過 initial fire，防止自迴響
 //   - 分鍵追蹤寫入，避免全量覆寫
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.2.1';
+const APP_VERSION = '1.2.2';
 
 // 將版本號顯示於 nav brand（DOMContentLoaded 後確保元素存在）
 document.addEventListener('DOMContentLoaded', () => {
@@ -3187,70 +3161,74 @@ function ooSetFilter(f){
 }
 
 function renderOnlineOrders(){
-  // 更新統計數字
-  const pending = _onlineOrders.filter(o=>(o.status||'pending')==='pending').length;
-  const done    = _onlineOrders.filter(o=>o.status==='done').length;
-  const members = new Set(_onlineOrders.filter(o=>o.memberId).map(o=>o.memberId)).size;
+    // 更新統計數字
+    const pending = _onlineOrders.filter(o=>(o.status||'pending')==='pending').length;
+    const done    = _onlineOrders.filter(o=>o.status==='done').length;
+    const members = new Set(_onlineOrders.filter(o=>o.memberId).map(o=>o.memberId)).size;
 
-  const sp = id=>{ const el=document.getElementById(id); return el||{textContent:''}; };
-  sp('oo-stat-pending').textContent = pending;
-  sp('oo-stat-done').textContent    = done;
-  sp('oo-stat-members').textContent = members;
+    const sp = id=>{ const el=document.getElementById(id); return el||{textContent:''}; };
+    sp('oo-stat-pending').textContent = pending;
+    sp('oo-stat-done').textContent    = done;
+    sp('oo-stat-members').textContent = members;
 
-  // 按鈕高亮
-  const bPending = document.getElementById('oo-btn-pending');
-  const bDone    = document.getElementById('oo-btn-done');
-  if(bPending) bPending.style.borderColor = _ooFilter==='pending' ? 'var(--red)'   : 'transparent';
-  if(bDone)    bDone.style.borderColor    = _ooFilter==='done'    ? 'var(--green)' : 'transparent';
+    // 按鈕高亮
+    const bPending = document.getElementById('oo-btn-pending');
+    const bDone    = document.getElementById('oo-btn-done');
+    if(bPending) bPending.style.borderColor = _ooFilter==='pending' ? 'var(--red)'   : 'transparent';
+    if(bDone)    bDone.style.borderColor    = _ooFilter==='done'    ? 'var(--green)' : 'transparent';
 
-  // 篩選提示列已移除
+    // 篩選提示列已移除
 
-  const filtered = _ooFilter==='all' ? _onlineOrders
-    : _onlineOrders.filter(o=>(o.status||'pending')===_ooFilter);
+    const filtered = _ooFilter==='all' ? _onlineOrders
+      : _onlineOrders.filter(o=>(o.status||'pending')===_ooFilter);
 
-  const list = document.getElementById('oo-list');
-  if(!list) return;
+    const list = document.getElementById('oo-list');
+    if(!list) return;
 
-  if(!filtered.length){
-    const msg = _ooFilter==='pending' ? '目前沒有待處理訂單 🎉'
-              : _ooFilter==='done'    ? '尚無已完成訂單'
-              : '尚無線上訂單';
-    list.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--muted2)">
-      <div style="font-size:32px;margin-bottom:8px">🛒</div>
-      <div style="font-family:var(--zh);font-size:13px">${msg}</div>
-    </div>`;
-    return;
+    if(!filtered.length){
+      const msg = _ooFilter==='pending' ? '目前沒有待處理訂單 🎉'
+                : _ooFilter==='done'    ? '尚無已完成訂單'
+                : '尚無線上訂單';
+      list.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--muted2)">
+        <div style="font-size:32px;margin-bottom:8px">🛒</div>
+        <div style="font-family:var(--zh);font-size:13px">${msg}</div>
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map(o=>{
+      const orderId = String(o.id ?? '');
+      const items = safeArray(o.items);
+      const isPending = (o.status||'pending')==='pending';
+      const memberTag = o.memberId
+        ? `<span style="font-size:15px;background:rgba(124,58,237,.1);color:var(--purple);border-radius:4px;padding:1px 6px;font-family:var(--mono)">${h(o.memberId)}</span>`
+        : `<span style="font-size:15px;background:var(--surface2);color:var(--muted2);border-radius:4px;padding:1px 6px">แขก/訪客</span>`;
+      const statusTag = isPending
+        ? `<span style="font-size:17px;background:rgba(220,38,38,.1);color:var(--red);border-radius:4px;padding:2px 8px;font-weight:600">⏳ รอดำเนินการ</span>`
+        : `<span style="font-size:17px;background:rgba(5,150,105,.1);color:var(--green);border-radius:4px;padding:2px 8px;font-weight:600">✓ เสร็จสิ้น</span>`;
+      const itemSummary = items.slice(0,2).map(i=>h(i?.name||'')).filter(Boolean).join('、')
+        + (items.length>2 ? ` +${items.length-2}...` : '');
+      const total = o.total != null ? o.total : sumItems(items);
+      const totalLabel = (o.total != null || items.length) ? `NT$${money(total)}` : '';
+
+      return `<div onclick="openOnlineOrder(${jsArg(orderId)})" style="
+          display:grid;grid-template-columns:1fr auto;gap:5px 12px;
+          padding:12px 14px;border-bottom:1px solid var(--border);
+          cursor:pointer;transition:background .15s;
+          border-left:3px solid ${isPending?'var(--red)':'var(--green)'};
+        " onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+          <span style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent)">${h(orderId)}</span>
+          ${statusTag} ${memberTag}
+        </div>
+        <div style="text-align:right;font-family:var(--mono);font-size:23px;font-weight:700;color:var(--text)">${totalLabel}</div>
+        <div style="font-size:18px;color:var(--muted)">${h(o.customerName||'')} ${o.customerPhone?'· '+h(o.customerPhone):''}</div>
+        <div style="font-size:17px;color:var(--muted2);text-align:right">${fmtDateTh(o.date)}</div>
+        ${itemSummary?`<div style="font-size:18px;color:var(--text2);grid-column:1/-1">📦 ${itemSummary}</div>`:''}
+        ${o.note?`<div style="font-size:17px;color:var(--gold);grid-column:1/-1">💬 ${h(o.note)}</div>`:''}
+      </div>`;
+    }).join('');
   }
-
-  list.innerHTML = filtered.map(o=>{
-    const isPending = (o.status||'pending')==='pending';
-    const memberTag = o.memberId
-      ? `<span style="font-size:15px;background:rgba(124,58,237,.1);color:var(--purple);border-radius:4px;padding:1px 6px;font-family:var(--mono)">${o.memberId}</span>`
-      : `<span style="font-size:15px;background:var(--surface2);color:var(--muted2);border-radius:4px;padding:1px 6px">แขก/訪客</span>`;
-    const statusTag = isPending
-      ? `<span style="font-size:17px;background:rgba(220,38,38,.1);color:var(--red);border-radius:4px;padding:2px 8px;font-weight:600">⏳ รอดำเนินการ</span>`
-      : `<span style="font-size:17px;background:rgba(5,150,105,.1);color:var(--green);border-radius:4px;padding:2px 8px;font-weight:600">✓ เสร็จสิ้น</span>`;
-    const itemSummary = (o.items||[]).slice(0,2).map(i=>i.name).join('、')
-      + ((o.items||[]).length>2 ? ` +${(o.items||[]).length-2}...` : '');
-
-    return `<div onclick="openOnlineOrder('${o.id}')" style="
-        display:grid;grid-template-columns:1fr auto;gap:5px 12px;
-        padding:12px 14px;border-bottom:1px solid var(--border);
-        cursor:pointer;transition:background .15s;
-        border-left:3px solid ${isPending?'var(--red)':'var(--green)'};
-      " onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-        <span style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent)">${o.id}</span>
-        ${statusTag} ${memberTag}
-      </div>
-      <div style="text-align:right;font-family:var(--mono);font-size:23px;font-weight:700;color:var(--text)">${o.total!=null?'NT$'+o.total:''}</div>
-      <div style="font-size:18px;color:var(--muted)">${o.customerName||''} ${o.customerPhone?'· '+o.customerPhone:''}</div>
-      <div style="font-size:17px;color:var(--muted2);text-align:right">${fmtDateTh(o.date)}</div>
-      ${itemSummary?`<div style="font-size:18px;color:var(--text2);grid-column:1/-1">📦 ${itemSummary}</div>`:''}
-      ${o.note?`<div style="font-size:17px;color:var(--gold);grid-column:1/-1">💬 ${o.note}</div>`:''}
-    </div>`;
-  }).join('');
-}
 
 /* 開啟訂單明細 */
 function openOnlineOrder(orderId){
@@ -3259,81 +3237,90 @@ function openOnlineOrder(orderId){
 }
 
 function _renderOrderDetail(orderId){
-  const o = _onlineOrders.find(x=>x.id===orderId);
-  if(!o) return;
-  const isPending = (o.status||'pending')==='pending';
+    const o = _onlineOrders.find(x=>x.id===orderId);
+    if(!o) return;
+    const isPending = (o.status||'pending')==='pending';
+    const orderIdValue = String(o.id ?? orderId ?? '');
+    const orderIdArg = jsArg(orderIdValue);
+    const items = safeArray(o.items);
 
-  const body = document.getElementById('ood-body');
-  const acts = document.getElementById('ood-acts');
-  if(!body||!acts) return;
+    const body = document.getElementById('ood-body');
+    const acts = document.getElementById('ood-acts');
+    if(!body||!acts) return;
 
-  // 計算目前總金額（可能已被刪商品修改）
-  const currentTotal = (o.items||[]).reduce((s,i)=>s+(i.price*i.qty),0);
+    // 計算目前總金額（可能已被刪商品修改）
+    const currentTotal = sumItems(items);
 
-  const itemRows = (o.items||[]).map((item,idx)=>`<tr>
-    <td style="padding:8px;border-bottom:1px solid var(--border)">${item.name||''}</td>
-    <td style="text-align:center;padding:8px;border-bottom:1px solid var(--border);color:var(--muted)">${item.qty}</td>
-    <td style="text-align:right;padding:8px;border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:600">NT$${item.price*item.qty}</td>
-    ${isPending ? `<td style="padding:8px;border-bottom:1px solid var(--border);text-align:center">
-      <button onclick="ooDeleteOrderItem('${orderId}',${idx})" style="
-        background:transparent;border:1.5px solid transparent;color:var(--muted2);
-        cursor:pointer;border-radius:6px;padding:3px 7px;font-size:13px;transition:all .15s;
-      " onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='#fef2f2'"
-         onmouseout="this.style.borderColor='transparent';this.style.color='var(--muted2)';this.style.background='transparent'"
-         title="刪除此商品">✕</button>
-    </td>` : '<td></td>'}
-  </tr>`).join('');
+    const itemRows = items.map((item,idx)=>{
+      const qty = num(item?.qty);
+      const lineTotal = num(item?.price) * qty;
+      return `<tr>
+      <td style="padding:8px;border-bottom:1px solid var(--border)">${h(item?.name||'')}</td>
+      <td style="text-align:center;padding:8px;border-bottom:1px solid var(--border);color:var(--muted)">${qty}</td>
+      <td style="text-align:right;padding:8px;border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:600">NT$${money(lineTotal)}</td>
+      ${isPending ? `<td style="padding:8px;border-bottom:1px solid var(--border);text-align:center">
+        <button onclick="ooDeleteOrderItem(${orderIdArg},${idx})" style="
+          background:transparent;border:1.5px solid transparent;color:var(--muted2);
+          cursor:pointer;border-radius:6px;padding:3px 7px;font-size:13px;transition:all .15s;
+        " onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='#fef2f2'"
+           onmouseout="this.style.borderColor='transparent';this.style.color='var(--muted2)';this.style.background='transparent'"
+           title="刪除此商品">✕</button>
+      </td>` : '<td></td>'}
+    </tr>`;
+    }).join('');
 
-  body.innerHTML = `
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center">
-      ${isPending
-        ? `<span style="background:rgba(220,38,38,.1);color:var(--red);border-radius:6px;padding:3px 10px;font-size:18px;font-weight:600">⏳ รอดำเนินการ / 待處理</span>`
-        : `<span style="background:rgba(5,150,105,.1);color:var(--green);border-radius:6px;padding:3px 10px;font-size:18px;font-weight:600">✓ เสร็จสิ้น / 已完成</span>`}
-      <span style="font-family:var(--mono);font-size:17px;color:var(--muted)">${o.id}</span>
-      <span style="font-size:17px;color:var(--muted2)">${fmtDateTh(o.date)}</span>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-      <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
-        <div style="font-size:15px;color:var(--muted);margin-bottom:2px;font-family:var(--zh)">顧客</div>
-        <div style="font-size:19px;font-weight:600">${o.customerName||'—'}</div>
-        <div style="font-size:17px;color:var(--muted)">${o.customerPhone||''}</div>
+    const deliveryExtra = o.deliveryKm ? ` &nbsp;·&nbsp; 🛵 ${h(o.deliveryKm)}km / ${h(o.deliveryDays)}日內` : '';
+
+    body.innerHTML = `
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center">
+        ${isPending
+          ? `<span style="background:rgba(220,38,38,.1);color:var(--red);border-radius:6px;padding:3px 10px;font-size:18px;font-weight:600">⏳ รอดำเนินการ / 待處理</span>`
+          : `<span style="background:rgba(5,150,105,.1);color:var(--green);border-radius:6px;padding:3px 10px;font-size:18px;font-weight:600">✓ เสร็จสิ้น / 已完成</span>`}
+        <span style="font-family:var(--mono);font-size:17px;color:var(--muted)">${h(orderIdValue)}</span>
+        <span style="font-size:17px;color:var(--muted2)">${fmtDateTh(o.date)}</span>
       </div>
-      <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
-        <div style="font-size:15px;color:var(--muted);margin-bottom:2px;font-family:var(--zh)">會員</div>
-        <div style="font-size:19px;font-weight:600;font-family:var(--mono);color:var(--purple)">${o.memberId||'訪客'}</div>
-        <div style="font-size:17px;color:var(--muted)">${o.memberName||''}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:15px;color:var(--muted);margin-bottom:2px;font-family:var(--zh)">顧客</div>
+          <div style="font-size:19px;font-weight:600">${h(o.customerName||'—')}</div>
+          <div style="font-size:17px;color:var(--muted)">${h(o.customerPhone||'')}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:15px;color:var(--muted);margin-bottom:2px;font-family:var(--zh)">會員</div>
+          <div style="font-size:19px;font-weight:600;font-family:var(--mono);color:var(--purple)">${h(o.memberId||'訪客')}</div>
+          <div style="font-size:17px;color:var(--muted)">${h(o.memberName||'')}</div>
+        </div>
       </div>
-    </div>
-    ${o.note?`<div style="background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:19px;color:var(--gold)">💬 ${o.note}</div>`:''}
-    ${o.deliveryLocation?`<div style="background:var(--surface2);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:18px;color:var(--text2)">📍 ${o.deliveryLocation}${o.deliveryKm?` &nbsp;·&nbsp; 🛵 ${o.deliveryKm}km / ${o.deliveryDays}日內`:''}</div>`:''}
-    <table style="width:100%;border-collapse:collapse;font-size:19px;margin-bottom:14px">
-      <thead>
-        <tr style="background:var(--surface2)">
-          <th style="text-align:left;padding:7px 8px;font-size:17px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)">สินค้า / 商品</th>
-          <th style="text-align:center;padding:7px 8px;font-size:17px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)">จำนวน / 數量</th>
-          <th style="text-align:right;padding:7px 8px;font-size:17px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)">รวม / 小計</th>
-          <th style="width:40px;border-bottom:1px solid var(--border)"></th>
-        </tr>
-      </thead>
-      <tbody>${itemRows}</tbody>
-    </table>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:2px solid var(--border)">
-      <span style="font-size:21px;font-weight:600;font-family:var(--zh)">訂單總金額</span>
-      <span id="ood-total" style="font-size:30px;font-weight:700;font-family:var(--mono);color:var(--accent)">NT$${currentTotal}</span>
-    </div>`;
+      ${o.note?`<div style="background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:19px;color:var(--gold)">💬 ${h(o.note)}</div>`:''}
+      ${o.deliveryLocation?`<div style="background:var(--surface2);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:18px;color:var(--text2)">📍 ${h(o.deliveryLocation)}${deliveryExtra}</div>`:''}
+      <table style="width:100%;border-collapse:collapse;font-size:19px;margin-bottom:14px">
+        <thead>
+          <tr style="background:var(--surface2)">
+            <th style="text-align:left;padding:7px 8px;font-size:17px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)">สินค้า / 商品</th>
+            <th style="text-align:center;padding:7px 8px;font-size:17px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)">จำนวน / 數量</th>
+            <th style="text-align:right;padding:7px 8px;font-size:17px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)">รวม / 小計</th>
+            <th style="width:40px;border-bottom:1px solid var(--border)"></th>
+          </tr>
+        </thead>
+        <tbody>${itemRows}</tbody>
+      </table>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:2px solid var(--border)">
+        <span style="font-size:21px;font-weight:600;font-family:var(--zh)">訂單總金額</span>
+        <span id="ood-total" style="font-size:30px;font-weight:700;font-family:var(--mono);color:var(--accent)">NT$${money(currentTotal)}</span>
+      </div>`;
 
-  if(isPending){
-    acts.innerHTML = `
-      <button class="btn btn-accent" style="flex:1" onclick="markOrderDone('${o.id}')">✓ ยืนยันเสร็จสิ้น / 確認完成</button>
-      <button class="btn" style="background:var(--red);color:#fff;border:none" onclick="confirmDeleteOrder('${o.id}')">🗑 ลบ / 刪訂單</button>
-      <button class="btn btn-ghost" onclick="closeModal('m-online-order')">ปิด</button>`;
-  } else {
-    acts.innerHTML = `
-      <button class="btn" style="background:var(--green);color:#fff;border:none" onclick="confirmReportOrder('${o.id}')">📊 計入報表</button>
-      <button class="btn btn-ghost" onclick="revertOrderPending('${o.id}')">↩ 退回待處理</button>
-      <button class="btn btn-ghost" onclick="closeModal('m-online-order')">ปิด</button>`;
+    if(isPending){
+      acts.innerHTML = `
+        <button class="btn btn-accent" style="flex:1" onclick="markOrderDone(${orderIdArg})">✓ ยืนยันเสร็จสิ้น / 確認完成</button>
+        <button class="btn" style="background:var(--red);color:#fff;border:none" onclick="confirmDeleteOrder(${orderIdArg})">🗑 ลบ / 刪訂單</button>
+        <button class="btn btn-ghost" onclick="closeModal('m-online-order')">ปิด</button>`;
+    } else {
+      acts.innerHTML = `
+        <button class="btn" style="background:var(--green);color:#fff;border:none" onclick="confirmReportOrder(${orderIdArg})">📊 計入報表</button>
+        <button class="btn btn-ghost" onclick="revertOrderPending(${orderIdArg})">↩ 退回待處理</button>
+        <button class="btn btn-ghost" onclick="closeModal('m-online-order')">ปิด</button>`;
+    }
   }
-}
 
 /* 刪除待處理訂單中的單一商品並更新總金額 */
 async function ooDeleteOrderItem(orderId, itemIdx){
@@ -3345,7 +3332,7 @@ async function ooDeleteOrderItem(orderId, itemIdx){
   }
   o.items.splice(itemIdx, 1);
   // 重新計算總金額
-  o.total = o.items.reduce((s,i)=>s+(i.price*i.qty), 0);
+  o.total = sumItems(o.items);
   // 更新 Firebase
   if(window._fbSet){
     try{
@@ -3394,14 +3381,16 @@ async function executeReportOrder(orderId){
 
   // 1. 計入當日報表（建立一筆 TX 記錄，source 標記為 online）
   const now = new Date();
+  const orderItems = safeArray(o.items);
+  const orderTotal = o.total != null ? num(o.total) : sumItems(orderItems);
   const tx = {
     id:       o.id,
     date:     now.toISOString(),
     source:   'online',
     memberId: o.memberId||null,
-    items:    o.items||[],
-    subtotal: o.total||0,
-    total:    o.total||0,
+    items:    orderItems,
+    subtotal: orderTotal,
+    total:    orderTotal,
   };
   const txList = getTx();
   // 防止重複計入
@@ -3421,8 +3410,8 @@ async function executeReportOrder(orderId){
         const mSnap = await window._fbGet(`shop/members/${o.memberId}`);
         if(mSnap && mSnap.val()){
           const m = mSnap.val();
-          await window._fbSet(`shop/members/${o.memberId}/orderCount`, (m.orderCount||0)+1);
-          await window._fbSet(`shop/members/${o.memberId}/totalSpent`, (m.totalSpent||0)+(o.total||0));
+          await window._fbSet(`shop/members/${o.memberId}/orderCount`, num(m.orderCount)+1);
+          await window._fbSet(`shop/members/${o.memberId}/totalSpent`, num(m.totalSpent)+orderTotal);
         }
       }
     }catch(e){ console.warn('[POS] reportOrder member update fail:',e); }
@@ -3462,109 +3451,112 @@ async function updateOrderStatus(orderId,status){
 
 /* 會員列表 */
 async function ooOpenMemberList(){
-  const body = document.getElementById('member-list-body');
-  if(!body) return;
-  body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted2)">กำลังโหลด… / 載入中…</div>`;
-  openModal('m-member-list');
+    const body = document.getElementById('member-list-body');
+    if(!body) return;
+    body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted2)">กำลังโหลด… / 載入中…</div>`;
+    openModal('m-member-list');
 
-  let members = {};
-  // 從 Firebase 讀取 shop/members
-  if(window._fbGet){
-    try{
-      const snap = await window._fbGet('shop/members');
-      if(snap && snap.val()) members = snap.val();
-    }catch(e){ console.warn('[POS] load members fail:',e); }
+    let members = {};
+    // 從 Firebase 讀取 shop/members
+    if(window._fbGet){
+      try{
+        const snap = await window._fbGet('shop/members');
+        if(snap && snap.val()) members = snap.val();
+      }catch(e){ console.warn('[POS] load members fail:',e); }
+    }
+    // 從訂單中補充沒有 Firebase 記錄的會員
+    _onlineOrders.filter(o=>o.memberId && !members[o.memberId]).forEach(o=>{
+      members[o.memberId] = { memberId:o.memberId, name:o.memberName||o.customerName||'—', phone:o.customerPhone||'', orderCount:0, totalSpent:0 };
+    });
+
+    const list = Object.values(members).sort((a,b)=>(a.memberId||'').localeCompare(b.memberId||''));
+    if(!list.length){
+      body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted2);font-family:var(--zh)">尚無會員資料</div>`;
+      return;
+    }
+
+    body.innerHTML = list.map(m=>{
+      const memberId = String(m.memberId || '');
+      return `<div onclick="ooOpenMemberHistory(${jsArg(memberId)})" style="
+        display:grid;grid-template-columns:auto 1fr auto;gap:6px 12px;align-items:center;
+        padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;
+      " onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--purple);
+          background:rgba(124,58,237,.08);border-radius:6px;padding:4px 8px;white-space:nowrap">${h(memberId||'—')}</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${h(m.name||'—')}</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);white-space:nowrap;text-align:right">${h(m.phone||'')}</div>
+      </div>`;
+    }).join('');
   }
-  // 從訂單中補充沒有 Firebase 記錄的會員
-  _onlineOrders.filter(o=>o.memberId && !members[o.memberId]).forEach(o=>{
-    members[o.memberId] = { memberId:o.memberId, name:o.memberName||o.customerName||'—', phone:o.customerPhone||'', orderCount:0, totalSpent:0 };
-  });
-
-  const list = Object.values(members).sort((a,b)=>(a.memberId||'').localeCompare(b.memberId||''));
-  if(!list.length){
-    body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted2);font-family:var(--zh)">尚無會員資料</div>`;
-    return;
-  }
-
-  body.innerHTML = list.map(m=>{
-    return `<div onclick="ooOpenMemberHistory('${m.memberId}')" style="
-      display:grid;grid-template-columns:auto 1fr auto;gap:6px 12px;align-items:center;
-      padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;
-    " onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--purple);
-        background:rgba(124,58,237,.08);border-radius:6px;padding:4px 8px;white-space:nowrap">${m.memberId||'—'}</div>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text)">${m.name||'—'}</div>
-      </div>
-      <div style="font-size:11px;color:var(--muted);white-space:nowrap;text-align:right">${m.phone||''}</div>
-    </div>`;
-  }).join('');
-}
 
 /* 會員訂單歷史 */
 async function ooOpenMemberHistory(memberId){
-  closeModal('m-member-list');
-  const titleEl = document.getElementById('mh-title');
-  const body    = document.getElementById('mh-body');
-  if(!body) return;
-  if(titleEl) titleEl.innerHTML = `📋 ประวัติออเดอร์ <span style="font-family:var(--mono);color:var(--purple)">${memberId}</span>`;
-  body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted2)">กำลังโหลด…</div>`;
-  openModal('m-member-history');
+    closeModal('m-member-list');
+    const titleEl = document.getElementById('mh-title');
+    const body    = document.getElementById('mh-body');
+    if(!body) return;
+    if(titleEl) titleEl.innerHTML = `📋 ประวัติออเดอร์ <span style="font-family:var(--mono);color:var(--purple)">${h(memberId)}</span>`;
+    body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted2)">กำลังโหลด…</div>`;
+    openModal('m-member-history');
 
-  // 從本機訂單過濾
-  const memberOrders = _onlineOrders.filter(o=>o.memberId===memberId)
-    .sort((a,b)=>new Date(b.date)-new Date(a.date));
+    // 從本機訂單過濾
+    const memberOrders = _onlineOrders.filter(o=>o.memberId===memberId)
+      .sort((a,b)=>new Date(b.date)-new Date(a.date));
 
-  // 從 Firebase 讀取 orderHistory
-  let historyOrders = [];
-  if(window._fbGet){
-    try{
-      const snap = await window._fbGet(`shop/members/${memberId}/orderHistory`);
-      if(snap && snap.val()){
-        historyOrders = Object.values(snap.val()).filter(o=>o&&o.id)
-          .filter(o=>!memberOrders.find(mo=>mo.id===o.id)); // 去重
-      }
-    }catch(e){}
-  }
+    // 從 Firebase 讀取 orderHistory
+    let historyOrders = [];
+    if(window._fbGet){
+      try{
+        const snap = await window._fbGet(`shop/members/${memberId}/orderHistory`);
+        if(snap && snap.val()){
+          historyOrders = Object.values(snap.val()).filter(o=>o&&o.id)
+            .filter(o=>!memberOrders.find(mo=>mo.id===o.id)); // 去重
+        }
+      }catch(e){}
+    }
 
-  const allOrders = [...memberOrders, ...historyOrders]
-    .sort((a,b)=>new Date(b.date)-new Date(a.date));
+    const allOrders = [...memberOrders, ...historyOrders]
+      .sort((a,b)=>new Date(b.date)-new Date(a.date));
 
-  if(!allOrders.length){
-    body.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted2);font-family:var(--zh)">此會員尚無訂單記錄</div>`;
-    return;
-  }
+    if(!allOrders.length){
+      body.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted2);font-family:var(--zh)">此會員尚無訂單記錄</div>`;
+      return;
+    }
 
-  const totalSpent = allOrders.reduce((s,o)=>s+(o.total||0),0);
-  body.innerHTML = `
-    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <div style="background:var(--surface2);border-radius:8px;padding:10px 16px;flex:1;text-align:center">
-        <div style="font-size:20px;font-weight:700;color:var(--accent);font-family:var(--mono)">NT$${totalSpent}</div>
-        <div style="font-size:11px;color:var(--muted);font-family:var(--zh)">累計消費</div>
-      </div>
-      <div style="background:var(--surface2);border-radius:8px;padding:10px 16px;flex:1;text-align:center">
-        <div style="font-size:20px;font-weight:700;color:var(--purple)">${allOrders.length}</div>
-        <div style="font-size:11px;color:var(--muted);font-family:var(--zh)">訂單總數</div>
-      </div>
-    </div>
-    ${allOrders.map(o=>{
-      const status = o.status||'pending';
-      const statusColor = status==='pending'?'var(--red)':status==='done'?'var(--green)':'var(--muted)';
-      const statusLabel = status==='pending'?'⏳ 待處理':status==='done'?'✓ 已完成':'📊 已計入';
-      return `<div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px">
-          <span style="font-family:var(--mono);font-size:11px;color:var(--accent)">${o.id}</span>
-          <span style="font-size:11px;font-weight:600;color:${statusColor}">${statusLabel}</span>
+    const totalSpent = allOrders.reduce((s,o)=>s+num(o.total),0);
+    body.innerHTML = `
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="background:var(--surface2);border-radius:8px;padding:10px 16px;flex:1;text-align:center">
+          <div style="font-size:20px;font-weight:700;color:var(--accent);font-family:var(--mono)">NT$${money(totalSpent)}</div>
+          <div style="font-size:11px;color:var(--muted);font-family:var(--zh)">累計消費</div>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="font-size:11px;color:var(--muted2)">${fmtDateTh(o.date)}</div>
-          <div style="font-family:var(--mono);font-weight:700;color:var(--text)">NT$${o.total||0}</div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px 16px;flex:1;text-align:center">
+          <div style="font-size:20px;font-weight:700;color:var(--purple)">${allOrders.length}</div>
+          <div style="font-size:11px;color:var(--muted);font-family:var(--zh)">訂單總數</div>
         </div>
-        <div style="font-size:12px;color:var(--text2);margin-top:4px">${(o.items||[]).slice(0,3).map(i=>i.name).join('、')}${(o.items||[]).length>3?` +${(o.items||[]).length-3}...`:''}</div>
-        ${o.note?`<div style="font-size:11px;color:var(--gold);margin-top:3px">💬 ${o.note}</div>`:''}
-      </div>`;
-    }).join('')}`;
-}
+      </div>
+      ${allOrders.map(o=>{
+        const status = o.status||'pending';
+        const statusColor = status==='pending'?'var(--red)':status==='done'?'var(--green)':'var(--muted)';
+        const statusLabel = status==='pending'?'⏳ 待處理':status==='done'?'✓ 已完成':'📊 已計入';
+        const items = safeArray(o.items);
+        const itemSummary = items.slice(0,3).map(i=>h(i?.name||'')).filter(Boolean).join('、') + (items.length>3?` +${items.length-3}...`:'' );
+        return `<div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px">
+            <span style="font-family:var(--mono);font-size:11px;color:var(--accent)">${h(o.id)}</span>
+            <span style="font-size:11px;font-weight:600;color:${statusColor}">${statusLabel}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:11px;color:var(--muted2)">${fmtDateTh(o.date)}</div>
+            <div style="font-family:var(--mono);font-weight:700;color:var(--text)">NT$${money(o.total)}</div>
+          </div>
+          <div style="font-size:12px;color:var(--text2);margin-top:4px">${itemSummary}</div>
+          ${o.note?`<div style="font-size:11px;color:var(--gold);margin-top:3px">💬 ${h(o.note)}</div>`:''}
+        </div>`;
+      }).join('')}`;
+  }
 
 // ── fbPullAll 擴充 ──
 window._fbPullAllExtended = true;

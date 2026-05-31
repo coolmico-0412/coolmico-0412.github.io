@@ -1,10 +1,13 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.1
+   POS Service Worker  v1.2.2
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
    ──────────────────────────────────────────
    版本更新紀錄 CHANGELOG
+   v1.2.2
+     - 預快取 POS.html，首次離線也能打開收銀台
+     - HTML Network First 增加逾時 fallback，網路卡住時更快使用快取
    v1.2.1
      - 配合 POS.html v1.2.1 同步版號
        (Bug fixes: hw-input readonly→inputmode、
@@ -15,13 +18,14 @@
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.1';
+const VER          = 'pos-v1.2.2';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;
 const ALL_CACHES   = [STATIC_CACHE, FONT_CACHE, FB_CACHE];
 
 const PRECACHE = [
+  './POS.html',
   './pos-manifest.json',
   './pos-icons/pos-icon-72.png',
   './pos-icons/pos-icon-96.png',
@@ -82,7 +86,7 @@ self.addEventListener('fetch', e => {
   }
   // HTML → Network First（確保永遠最新）
   if (url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname === '/') {
-    e.respondWith(networkFirstHTML(request, STATIC_CACHE));
+    e.respondWith(networkFirstHTML(request, STATIC_CACHE, 4500));
     return;
   }
   // 其他靜態資源 → Cache First
@@ -90,51 +94,58 @@ self.addEventListener('fetch', e => {
 });
 
 /* ── Network First ── */
-async function networkFirst(req, cache, timeout) {
+async function fetchWithTimeout(req, timeout = 8000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeout);
   try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), timeout);
-    const res = await fetch(req, { signal: ctrl.signal });
+    return await fetch(req, { signal: ctrl.signal });
+  } finally {
     clearTimeout(t);
-    if (res.ok) (await caches.open(cache)).put(req, res.clone());
-    return res;
-  } catch(e) {
-    return (await caches.match(req)) ||
-      new Response(JSON.stringify({ offline:true }), { status:503,
-        headers:{'Content-Type':'application/json'} });
   }
 }
 
-/* ── Network First HTML（含離線 fallback）── */
-async function networkFirstHTML(req, cache) {
-  try {
-    const res = await fetch(req);
-    if (res.ok) (await caches.open(cache)).put(req, res.clone());
-    return res;
-  } catch(e) {
-    const cached = await caches.match(req) ||
-                   await caches.match('./POS.html');
-    if (cached) return cached;
-    return new Response(
-      `<!DOCTYPE html><html lang="th"><head>
-        <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-        <title>Offline - POS</title>
-        <style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;
-          align-items:center;justify-content:center;gap:16px;background:#f1f5f9;
-          font-family:sans-serif;text-align:center;padding:20px}
-          h2{color:#2563eb;margin:0}p{color:#64748b;font-size:14px;margin:0;line-height:1.6}
-          button{padding:12px 28px;border:none;border-radius:50px;background:#2563eb;
-            color:#fff;font-size:15px;cursor:pointer;margin-top:8px}
-        </style></head><body>
-        <div style="font-size:52px">📵</div>
-        <h2>ไม่มีอินเทอร์เน็ต / 離線中</h2>
-        <p>กรุณาเชื่อมต่อเน็ตแล้วลองใหม่<br>請連接網路後重試</p>
-        <button onclick="location.reload()">ลองใหม่ / 重試</button>
-      </body></html>`,
-      { headers:{'Content-Type':'text/html;charset=utf-8'}, status:503 }
-    );
+async function networkFirst(req, cache, timeout = 10000) {
+    try {
+      const res = await fetchWithTimeout(req, timeout);
+      if (res.ok) (await caches.open(cache)).put(req, res.clone());
+      return res;
+    } catch(e) {
+      return (await caches.match(req)) ||
+        new Response(JSON.stringify({ offline:true }), { status:503,
+          headers:{'Content-Type':'application/json'} });
+    }
   }
-}
+
+/* ── Network First HTML（含離線 fallback）── */
+async function networkFirstHTML(req, cache, timeout = 4500) {
+    try {
+      const res = await fetchWithTimeout(req, timeout);
+      if (res.ok) (await caches.open(cache)).put(req, res.clone());
+      return res;
+    } catch(e) {
+      const cached = await caches.match(req) ||
+                     await caches.match('./POS.html');
+      if (cached) return cached;
+      return new Response(
+        `<!DOCTYPE html><html lang="th"><head>
+          <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>Offline - POS</title>
+          <style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;
+            align-items:center;justify-content:center;gap:16px;background:#f1f5f9;
+            font-family:sans-serif;text-align:center;padding:20px}
+            h2{color:#2563eb;margin:0}p{color:#64748b;font-size:14px;margin:0;line-height:1.6}
+            button{padding:12px 28px;border:none;border-radius:50px;background:#2563eb;
+              color:#fff;font-size:15px;cursor:pointer;margin-top:8px}
+          </style></head><body>
+          <div style="font-size:52px">📵</div>
+          <h2>ไม่มีอินเทอร์เน็ต / 離線中</h2>
+          <p>กรุณาเชื่อมต่อเน็ตแล้วลองใหม่<br>請連接網路後重試</p>
+          <button onclick="location.reload()">ลองใหม่ / 重試</button>
+        </body></html>`,
+        { headers:{'Content-Type':'text/html;charset=utf-8'}, status:503 }
+      );
+    }
+  }
 
 /* ── Cache First ── */
 async function cacheFirst(req, cache) {
