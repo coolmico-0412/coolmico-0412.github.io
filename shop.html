@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -419,6 +419,19 @@ button { cursor:pointer; font-family:var(--th); }
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+/* 翻譯後顯示原始名稱（小字輔助）—  vi / id 語系使用 */
+.card-name-orig {
+  font-size: 10.5px;
+  color: var(--muted2);
+  margin-top: 2px;
+  font-family: var(--zh);
+  font-weight: 400;
+  letter-spacing: .2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;        /* 脫離 -webkit-box clamp 限制 */
 }
 .card-cat {
   font-size: 11px;
@@ -1938,6 +1951,7 @@ import { initializeApp }
   from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
 import { getDatabase, ref, get, set, update, query, orderByChild, equalTo, limitToLast, runTransaction }
   from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
+import { PRODUCT_NAME_MAP } from "./shop-names.js";
 
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyCXL_BPUqT5UA2Ufxo8Byulm6-ATNxTr4c",
@@ -2473,7 +2487,7 @@ async function renderMemberDrawer() {
   histEl.innerHTML = orders.map(o => {
     const itemsHtml = (o.items||[]).map(i => `
       <div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text2)">
-        <span>${h(i.name||'')}</span>
+        <span>${h(getProductName(i.name||''))}</span>
         <span style="font-family:'Courier New',monospace;color:var(--muted)">×${i.qty} NT$${(i.price||0)*i.qty}</span>
       </div>`).join('');
 
@@ -3320,6 +3334,24 @@ function buildNatOptions(selectedCode) {
     `<option value="${o.code}"${o.code===selectedCode?' selected':''}>${o.flag} ${o.label}</option>`
   ).join('');
 }
+/* ── 取得本地化商品名稱 ─────────────────────────
+   vi / id 語系：先查 PRODUCT_NAME_MAP → 若有翻譯回傳翻譯名稱
+   th / tw / ph：直接回傳原始名稱（無需翻譯）
+   找不到翻譯 → fallback 回傳原始名稱              */
+function getProductName(origName) {
+  if (!origName) return origName;
+  if (_lang !== 'vi' && _lang !== 'id') return origName;
+  const entry = PRODUCT_NAME_MAP[origName.trim()];
+  return (entry && entry[_lang]) ? entry[_lang] : origName;
+}
+
+/* 商品是否有本地化翻譯（用於決定是否顯示原文輔助字幕）*/
+function hasTranslation(origName) {
+  if (!origName || (_lang !== 'vi' && _lang !== 'id')) return false;
+  const entry = PRODUCT_NAME_MAP[origName.trim()];
+  return !!(entry && entry[_lang]);
+}
+
 const CATEGORIES = [
   {id:'frozen',    icon:'🧊',  th:'อาหารแช่แข็ง',              zh:'冷凍食品'},
   {id:'seasoning', icon:'🌶',  th:'เครื่องปรุง',               zh:'調味品'},
@@ -3422,6 +3454,9 @@ function renderProducts() {
     const grad = CAT_GRAD[p.category||'other']||'grad-other';
     const icon = getCatIcon(p.category||'other');
     const init = (p.name||'?')[0];
+    // ── 翻譯商品名稱（vi / id 語系）──
+    const dName   = getProductName(p.name);
+    const showOrig = hasTranslation(p.name);   // 是否顯示原文輔助字幕
     const imgHtml = p.image
       ? `<img class="card-img" src="${h(p.image)}" alt="${h(p.name)}" loading="lazy"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -3436,7 +3471,7 @@ function renderProducts() {
         ${qty>0?`<div class="in-cart-badge">${qty}</div>`:''}
       </div>
       <div class="card-body">
-        <div class="card-name">${h(p.name)}</div>
+        <div class="card-name">${h(dName)}${showOrig?`<span class="card-name-orig">${h(p.name)}</span>`:''}</div>
         <div class="card-footer">
           <div class="card-price"><span>NT$</span> ${h(String(p.price))}</div>
           <button class="add-btn" onclick="event.stopPropagation();addToCart('${h(p.id)}')" aria-label="เพิ่ม">＋</button>
@@ -3455,7 +3490,7 @@ function addToCart(id) {
     const ex = cart.find(c=>c.id===id);
     if (ex) ex.qty+=1; else cart.push({id:p.id,name:p.name,price:p.price,category:p.category,qty:1});
     updateAllCartUI(); renderProducts();
-    showToast(`${t('toastAdded')}：${p.name}`,'ok');
+    showToast(`${t('toastAdded')}：${getProductName(p.name)}`,'ok');
     const b = document.getElementById('hdr-badge');
     if (b) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
   } catch(e) {}
@@ -3481,7 +3516,7 @@ function buildCartHTML() {
     <div class="cart-empty-text">${t('cartEmpty').replace('\n','<br>')}</div></div>`;
   return cart.map(item=>`
     <div class="cart-item">
-      <div class="ci-name">${h(item.name)}</div>
+      <div class="ci-name">${h(getProductName(item.name))}</div>
       <button class="ci-remove" onclick="removeFromCart('${h(item.id)}')">×</button>
       <div class="ci-controls">
         <button class="qty-btn-sm" onclick="changeQty('${h(item.id)}',-1)">−</button>
@@ -3602,7 +3637,7 @@ function openOrderModal() {
   if(tb) tb.innerHTML=cart.map(item=>{
     const sub=item.price*item.qty;
     return `<tr>
-      <td class="item-name">${h(item.name)}</td>
+      <td class="item-name">${h(getProductName(item.name))}</td>
       <td class="item-qty">${item.qty}</td>
       <td>NT$ ${sub}</td>
     </tr>`;
@@ -4685,3 +4720,6 @@ document.addEventListener('input', (e) => {
 
 </body>
 </html>
+
+
+

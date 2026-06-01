@@ -7,13 +7,14 @@
        Firebase RTDB → Network First（即時資料）
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION    = 'v1.2.1'; // fix: 移除 install 裡的 skipWaiting，防止無限刷新
+const APP_VERSION    = 'v1.3.0'; // feat: 商品名稱翻譯獨立為 shop-names.js
 const STATIC_CACHE   = `shop-static-${APP_VERSION}`;
 const FONT_CACHE     = `shop-fonts-${APP_VERSION}`;
 const FIREBASE_CACHE = `shop-firebase-${APP_VERSION}`;
 const ALL_CACHES     = [STATIC_CACHE, FONT_CACHE, FIREBASE_CACHE];
 
 const PRECACHE_ASSETS = [
+  './shop-names.js',         // ← 翻譯對照表（每次更新翻譯後重新抓取）
   './shop-manifest.json',
   './icons/icon-72.png',
   './icons/icon-96.png',
@@ -82,6 +83,12 @@ self.addEventListener('fetch', event => {
   // Google Fonts 字型 → Cache First
   if (url.hostname === 'fonts.gstatic.com') {
     event.respondWith(cacheFirst(request, FONT_CACHE));
+    return;
+  }
+
+  // shop-names.js 翻譯檔 → Network First（修改翻譯後馬上生效）
+  if (url.pathname.endsWith('shop-names.js')) {
+    event.respondWith(networkFirstHTML(request, STATIC_CACHE));
     return;
   }
 
