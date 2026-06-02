@@ -138,4 +138,7 @@ export const PRODUCT_NAME_MAP = {
   '棉花棒':           { en: 'Cotton Buds',                 vi: 'Tăm bông',                   id: 'Cotton Bud' },
   '剃鬚刀':           { en: 'Razor',                       vi: 'Dao cạo râu',                id: 'Pisau Cukur' },
 
+  // ── 其他 ───────────────────────────────────
+  '橡皮圈':           { en: '1',                     vi: '2',                id: '3' },
+  '平口夾':           { en: '1',                     vi: '2',                id: '3' },
 };
