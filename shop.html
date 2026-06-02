@@ -3335,21 +3335,29 @@ function buildNatOptions(selectedCode) {
   ).join('');
 }
 /* ── 取得本地化商品名稱 ─────────────────────────
-   vi / id 語系：先查 PRODUCT_NAME_MAP → 若有翻譯回傳翻譯名稱
-   th / tw / ph：直接回傳原始名稱（無需翻譯）
+   語系 → 對照表 key 對應：
+     vi  → entry.vi   越南文
+     id  → entry.id   印尼文
+     ph  → entry.en   英文（菲律賓）
+     th / tw → 直接回傳原文（泰文/中文商店，不需翻譯）
    找不到翻譯 → fallback 回傳原始名稱              */
+const LANG_TO_MAP_KEY = { vi:'vi', id:'id', ph:'en' };
+
 function getProductName(origName) {
   if (!origName) return origName;
-  if (_lang !== 'vi' && _lang !== 'id') return origName;
+  const mapKey = LANG_TO_MAP_KEY[_lang];
+  if (!mapKey) return origName;                      // th / tw → 原文
   const entry = PRODUCT_NAME_MAP[origName.trim()];
-  return (entry && entry[_lang]) ? entry[_lang] : origName;
+  return (entry && entry[mapKey]) ? entry[mapKey] : origName;
 }
 
 /* 商品是否有本地化翻譯（用於決定是否顯示原文輔助字幕）*/
 function hasTranslation(origName) {
-  if (!origName || (_lang !== 'vi' && _lang !== 'id')) return false;
+  if (!origName) return false;
+  const mapKey = LANG_TO_MAP_KEY[_lang];
+  if (!mapKey) return false;
   const entry = PRODUCT_NAME_MAP[origName.trim()];
-  return !!(entry && entry[_lang]);
+  return !!(entry && entry[mapKey]);
 }
 
 const CATEGORIES = [

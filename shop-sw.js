@@ -7,7 +7,7 @@
        Firebase RTDB → Network First（即時資料）
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION    = 'v1.3.0'; // feat: 商品名稱翻譯獨立為 shop-names.js
+const APP_VERSION    = 'v1.3.1'; // feat: 新增菲律賓 PH 英文商品名稱翻譯
 const STATIC_CACHE   = `shop-static-${APP_VERSION}`;
 const FONT_CACHE     = `shop-fonts-${APP_VERSION}`;
 const FIREBASE_CACHE = `shop-firebase-${APP_VERSION}`;
