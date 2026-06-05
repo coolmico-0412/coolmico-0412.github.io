@@ -36,7 +36,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--th);min-height:100
 
 /* ── NAV ── */
 nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--border);
-  padding:0 16px;height:54px;position:sticky;top:0;z-index:200;gap:2px;box-shadow:var(--sh);flex-wrap:wrap;}
+  padding:0 16px;min-height:54px;position:sticky;top:0;z-index:200;gap:2px;box-shadow:var(--sh);flex-wrap:wrap;}
 .brand{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:3px;
   margin-right:10px;display:flex;flex-direction:column;line-height:1.1;white-space:nowrap;}
 .brand-ver{font-size:9px;font-weight:400;letter-spacing:1px;color:var(--muted2);}
@@ -52,7 +52,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .nav-install:hover{background:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(37,99,235,.28);}
 
 /* ── PAGES ── */
-.page{display:none;padding:18px 18px;max-width:1440px;margin:0 auto;}
+.page{display:none;padding:18px;max-width:1440px;margin:0 auto;}
 .page.active{display:block;animation:fadeIn .2s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
@@ -118,13 +118,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   display:flex;align-items:center;gap:8px;}
 .cp-title .sub{font-size:10px;color:var(--muted);font-weight:400;}
 
-.bar-chart{display:flex;align-items:flex-end;gap:4px;height:90px;}
-.bc-bar{flex:1;border-radius:4px 4px 0 0;min-width:0;position:relative;transition:opacity .2s;}
-.bc-bar:hover{opacity:.8;}
-.bc-bar.this-week{background:var(--accent);}
-.bc-bar.last-week{background:#bfdbfe;}
-.bc-bar.today-bar{background:var(--gold);}
-.bc-bar.empty-bar{background:var(--surface3);}
+.big-bar-chart{display:flex;align-items:flex-end;gap:4px;height:90px;}
 .bar-labels{display:flex;gap:4px;margin-top:5px;}
 .bar-lbl{flex:1;font-size:8px;color:var(--muted2);text-align:center;overflow:hidden;
   white-space:nowrap;text-overflow:ellipsis;}
@@ -289,7 +283,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .dl-val{font-family:var(--mono);font-size:10px;color:var(--muted);font-weight:700;}
 
 /* ════════════════════════
-   PAGE 5: TRANSACTIONS
+   PAGE 4: TRANSACTIONS
    ════════════════════════ */
 .tx-filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
 .tx-filter-bar input[type=date]{padding:6px 10px;border:1.5px solid var(--border2);
@@ -750,7 +744,6 @@ const CATEGORIES = [
   {id:'shelf7',   icon:'📦', zh:'貨架7'},
   {id:'shelf8',   icon:'📦', zh:'貨架8'},
   {id:'shelf9',   icon:'📦', zh:'貨架9'},
-  {id:'shelf10',  icon:'📦', zh:'貨架10'},
   {id:'fridge1',  icon:'🥶', zh:'冷藏櫃1'},
   {id:'fridge2',  icon:'🥶', zh:'冷藏櫃2'},
   {id:'freezer1', icon:'🧊', zh:'冷凍櫃1'},
@@ -810,10 +803,20 @@ function calcRestock(){
 
   /* Build product info map: name → {category, outOfStock, barcode} */
   const prodInfo = {};
+  const bcPriceByName = {};
   Object.entries(prods).forEach(([bc,p])=>{
     prodInfo[p.name] = {category:p.category||'shelf1', outOfStock:p.outOfStock===true, barcode:bc};
+    bcPriceByName[p.name] = p.price;
   });
+  /* 同名但不同價的無條碼商品，稍後另行加入獨立列 */
+  const nobcSameNameDiffPrice = [];
   nobcPs.forEach(p=>{
+    if(prodInfo[p.name] && prodInfo[p.name].barcode !== null){
+      /* 同名條碼商品已存在：名稱且價格皆相同才隱藏無條碼商品 */
+      if(bcPriceByName[p.name] === p.price) return; // 重複 → 隱藏
+      nobcSameNameDiffPrice.push(p);                // 同名但價格不同 → 另行顯示
+      return;
+    }
     if(!prodInfo[p.name])
       prodInfo[p.name] = {category:p.category||'shelf1', outOfStock:p.outOfStock===true, barcode:null};
   });
@@ -829,7 +832,7 @@ function calcRestock(){
     });
   });
 
-  return Object.entries(map)
+  const baseResult = Object.entries(map)
     .map(([name, s])=>{
       const dailyAvg  = +(s.total / calcDays).toFixed(2);
       const weeklyAvg = +(dailyAvg * 7).toFixed(1);
@@ -837,8 +840,21 @@ function calcRestock(){
       const info      = prodInfo[name] || {category:'shelf1', outOfStock:false, barcode:null};
       return { name, dailyAvg, weeklyAvg, suggested, ...info };
     })
-    .filter(p => p.dailyAvg > 0)
-    .sort((a,b) => b.suggested - a.suggested);
+    .filter(p => p.dailyAvg > 0);
+
+  /* 同名但不同價的無條碼商品：共用相同銷售數據，另外加入獨立列 */
+  nobcSameNameDiffPrice.forEach(nobc=>{
+    const s = map[nobc.name];
+    if(!s) return;
+    const dailyAvg = +(s.total / calcDays).toFixed(2);
+    if(dailyAvg <= 0) return;
+    const weeklyAvg = +(dailyAvg * 7).toFixed(1);
+    const suggested = Math.max(1, Math.ceil(s.total / calcDays * 7 * 1.5));
+    baseResult.push({ name:nobc.name, dailyAvg, weeklyAvg, suggested,
+      category:nobc.category||'shelf1', outOfStock:nobc.outOfStock===true, barcode:null });
+  });
+
+  return baseResult.sort((a,b) => b.suggested - a.suggested);
 }
 
 /* ══════════════════════════════
@@ -891,7 +907,7 @@ function renderOverview(){
     if(p===0) return `<span class="kpi-diff eq">→ 持平</span>`;
     return p>0
       ? `<span class="kpi-diff up">↑ +${p}% 較前期</span>`
-      : `<span class="kpi-diff dn">↓ ${p}% 較前期</span>`;
+      : `<span class="kpi-diff dn">↓ ${Math.abs(p)}% 較前期</span>`;
   };
 
   document.getElementById('kpi-today').textContent    = 'NT$ '+tTotal;
@@ -1406,7 +1422,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const init = ()=>{
     renderOverview();
   };
-  if(document.readyState==='complete') init();
+  init(); // DOMContentLoaded fires when readyState is 'interactive', not 'complete'
   document.addEventListener('report-data-ready', ()=>{
     init();
     showToast('資料已同步','ok');
