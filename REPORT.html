@@ -345,6 +345,40 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   .restock-qty-input{border:none;background:transparent;font-size:14px;width:auto;}
 }
 
+/* ════════════════════════
+   CATEGORY MANAGER MODAL
+   ════════════════════════ */
+.cat-mgr-list{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto;padding-right:2px;}
+.cat-mgr-row{display:flex;align-items:center;gap:8px;padding:8px 10px;
+  border:1px solid var(--border);border-radius:9px;background:var(--surface2);}
+.cat-mgr-icon-input{width:42px;text-align:center;font-size:17px;border:1.5px solid var(--border);
+  border-radius:7px;padding:4px 2px;background:var(--surface);cursor:text;}
+.cat-mgr-icon-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+.cat-mgr-name-input{flex:1;font-size:12px;font-family:var(--zh);border:1.5px solid var(--border);
+  border-radius:7px;padding:5px 9px;background:var(--surface);}
+.cat-mgr-name-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+.cat-mgr-locked{font-size:10px;color:var(--muted2);white-space:nowrap;margin-left:auto;}
+.cat-add-row{display:flex;align-items:center;gap:8px;padding:10px 12px;
+  border:2px dashed var(--border2);border-radius:9px;margin-top:10px;}
+
+/* export dropdown */
+.export-wrap{position:relative;display:inline-flex;}
+.export-menu{display:none;position:absolute;top:calc(100% + 5px);right:0;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  box-shadow:var(--sh-md);overflow:hidden;z-index:300;min-width:170px;}
+.export-menu.open{display:block;}
+.export-menu-item{display:block;width:100%;padding:9px 14px;font-size:12px;font-family:var(--zh);
+  text-align:left;border:none;background:transparent;color:var(--text2);cursor:pointer;
+  border-bottom:1px solid var(--border);}
+.export-menu-item:last-child{border-bottom:none;}
+.export-menu-item:hover{background:var(--aglow);color:var(--accent);}
+
+/* import result kpi mini */
+.import-kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;}
+.import-not-found{max-height:110px;overflow-y:auto;font-size:11px;color:var(--text2);
+  background:var(--surface2);border-radius:6px;padding:8px 10px;border:1px solid var(--border);
+  line-height:1.8;font-family:var(--zh);}
+
 /* RESPONSIVE */
 @media(max-width:900px){
   .kpi-grid{grid-template-columns:repeat(3,1fr);}
@@ -587,8 +621,18 @@ if (window.matchMedia('(display-mode: standalone)').matches
     <span class="sec-badge">庫存參考</span>
     <div class="sec-ml">
       <button class="btn btn-ghost btn-sm" onclick="clearAllRestockQty()" title="將所有補貨數量歸零">🗑 清空補貨數</button>
+      <button class="btn btn-ghost btn-sm" onclick="openCategoryManager()">🏷 分類管理</button>
+      <button class="btn btn-ghost btn-sm" onclick="triggerImportCSV()" title="從 CSV 匯入補貨數量 / 分類">⬆ 匯入</button>
+      <input type="file" id="import-csv-input" accept=".csv" style="display:none" onchange="importRestockCSV(event)">
+      <div class="export-wrap">
+        <button class="btn btn-green btn-sm" onclick="toggleExportMenu(event)">⬇ 匯出 ▾</button>
+        <div class="export-menu" id="export-menu">
+          <button class="export-menu-item" onclick="exportRestockCSV();closeExportMenu()">📋 補貨清單（有填數量）</button>
+          <button class="export-menu-item" onclick="exportAllRestockCSV();closeExportMenu()">📦 完整庫存清單（全部）</button>
+          <button class="export-menu-item" onclick="downloadImportTemplate();closeExportMenu()">📄 下載匯入範本</button>
+        </div>
+      </div>
       <button class="btn btn-accent btn-sm" onclick="printRestockOnly()">🖨 僅補貨</button>
-      <button class="btn btn-green btn-sm" onclick="exportRestockCSV()">⬇ CSV</button>
       <button class="btn btn-ghost btn-sm" id="btn-oos-only" onclick="toggleOosOnly()">🔴 僅缺貨</button>
     </div>
   </div>
@@ -621,7 +665,8 @@ if (window.matchMedia('(display-mode: standalone)').matches
     <div class="rk-footer">
       <span id="rk-footer-info">載入中...</span>
       <div style="margin-left:auto;display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" onclick="exportRestockCSV()">⬇ 匯出補貨清單 CSV</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportRestockCSV()">⬇ 補貨清單 CSV</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportAllRestockCSV()">⬇ 完整匯出 CSV</button>
       </div>
     </div>
   </div>
@@ -725,6 +770,38 @@ if (window.matchMedia('(display-mode: standalone)').matches
   </div>
 </div>
 
+<!-- ── Modal: 分類管理 ── -->
+<div class="overlay" id="m-cat-manager" onclick="if(event.target===this)closeModal('m-cat-manager')">
+  <div class="mbox" style="max-width:500px">
+    <div class="m-title">🏷 分類管理</div>
+    <p style="font-size:11px;color:var(--muted);font-family:var(--zh);margin-bottom:14px;line-height:1.6">
+      🔒 內建分類不可刪除，但可編輯名稱與圖示。<br>
+      自訂分類可完全新增 / 刪除，儲存於本機 localStorage。
+    </p>
+    <div id="cat-mgr-list" class="cat-mgr-list"></div>
+    <!-- 新增列 -->
+    <div class="cat-add-row">
+      <input type="text" id="new-cat-icon" class="cat-mgr-icon-input" value="🏷" maxlength="2" title="圖示 Emoji">
+      <input type="text" id="new-cat-name" class="cat-mgr-name-input" placeholder="輸入新分類名稱…" maxlength="20">
+      <button class="btn btn-accent btn-sm" onclick="addCustomCategory()">＋ 新增</button>
+    </div>
+    <div style="margin-top:16px;text-align:right">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('m-cat-manager')">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: 匯入結果 ── -->
+<div class="overlay" id="m-import-result" onclick="if(event.target===this)closeModal('m-import-result')">
+  <div class="mbox" style="max-width:460px">
+    <div class="m-title">⬆ 匯入結果</div>
+    <div id="import-result-body"></div>
+    <div style="margin-top:16px;text-align:right">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('m-import-result')">關閉</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <!-- ══════════════════════════════════════════════
@@ -733,22 +810,33 @@ if (window.matchMedia('(display-mode: standalone)').matches
 <script>
 'use strict';
 
-/* ── CATEGORIES ── */
-const CATEGORIES = [
-  {id:'shelf1',   icon:'📦', zh:'貨架1'},
-  {id:'shelf2',   icon:'📦', zh:'貨架2'},
-  {id:'shelf3',   icon:'📦', zh:'貨架3'},
-  {id:'shelf4',   icon:'📦', zh:'貨架4'},
-  {id:'shelf5',   icon:'📦', zh:'貨架5'},
-  {id:'shelf6',   icon:'📦', zh:'貨架6'},
-  {id:'shelf7',   icon:'📦', zh:'貨架7'},
-  {id:'shelf8',   icon:'📦', zh:'貨架8'},
-  {id:'shelf9',   icon:'📦', zh:'貨架9'},
-  {id:'fridge1',  icon:'🥶', zh:'冷藏櫃1'},
-  {id:'fridge2',  icon:'🥶', zh:'冷藏櫃2'},
-  {id:'freezer1', icon:'🧊', zh:'冷凍櫃1'},
-  {id:'freezer2', icon:'🧊', zh:'冷凍櫃2'},
+/* ── CATEGORIES（動態：內建 + 自訂） ── */
+const BASE_CATEGORIES = [
+  {id:'shelf1',   icon:'📦', zh:'貨架1',  locked:true},
+  {id:'shelf2',   icon:'📦', zh:'貨架2',  locked:true},
+  {id:'shelf3',   icon:'📦', zh:'貨架3',  locked:true},
+  {id:'shelf4',   icon:'📦', zh:'貨架4',  locked:true},
+  {id:'shelf5',   icon:'📦', zh:'貨架5',  locked:true},
+  {id:'shelf6',   icon:'📦', zh:'貨架6',  locked:true},
+  {id:'shelf7',   icon:'📦', zh:'貨架7',  locked:true},
+  {id:'shelf8',   icon:'📦', zh:'貨架8',  locked:true},
+  {id:'shelf9',   icon:'📦', zh:'貨架9',  locked:true},
+  {id:'fridge1',  icon:'🥶', zh:'冷藏櫃1', locked:true},
+  {id:'fridge2',  icon:'🥶', zh:'冷藏櫃2', locked:true},
+  {id:'freezer1', icon:'🧊', zh:'冷凍櫃1', locked:true},
+  {id:'freezer2', icon:'🧊', zh:'冷凍櫃2', locked:true},
 ];
+let CATEGORIES = [...BASE_CATEGORIES];
+const CUSTOM_CATS_KEY = 'pos_custom_categories';
+
+function loadCategories(){
+  try{
+    const custom = JSON.parse(localStorage.getItem(CUSTOM_CATS_KEY)||'[]');
+    CATEGORIES = [...BASE_CATEGORIES, ...custom];
+  } catch(e){ CATEGORIES = [...BASE_CATEGORIES]; }
+}
+loadCategories();
+
 function getCatInfo(id){
   return CATEGORIES.find(c=>c.id===id) || {icon:'📦', zh: id||'其他'};
 }
@@ -1413,6 +1501,251 @@ function downloadCSV(rows, filename){
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
   a.download=filename; a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ══════════════════════════════════════════
+   CATEGORY MANAGER
+   ══════════════════════════════════════════ */
+function openCategoryManager(){
+  renderCatManagerList();
+  openModal('m-cat-manager');
+}
+
+function renderCatManagerList(){
+  const el = document.getElementById('cat-mgr-list');
+  el.innerHTML = CATEGORIES.map(c=>`
+    <div class="cat-mgr-row">
+      <input type="text" class="cat-mgr-icon-input" value="${h(c.icon)}"
+        maxlength="2" ${c.locked?'':''}
+        onchange="updateCatField('${c.id}','icon',this.value)"
+        title="圖示 Emoji">
+      <input type="text" class="cat-mgr-name-input" value="${h(c.zh)}"
+        maxlength="20"
+        onchange="updateCatField('${c.id}','zh',this.value)"
+        placeholder="分類名稱">
+      ${c.locked
+        ? `<span class="cat-mgr-locked">🔒 內建</span>`
+        : `<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red);flex-shrink:0"
+             onclick="deleteCustomCategory('${c.id}')">✕ 刪除</button>`
+      }
+    </div>`).join('');
+}
+
+function updateCatField(id, field, value){
+  const cat = CATEGORIES.find(c=>c.id===id);
+  if(!cat) return;
+  const v = value.trim();
+  if(!v){ showToast('名稱不可為空','err'); return; }
+  cat[field] = v;
+  saveCustomCategories();
+  buildCatFilters();       // 重建篩選列
+  applyRestockFilter();    // 重繪表格（更新 select 顯示）
+}
+
+function addCustomCategory(){
+  const iconEl = document.getElementById('new-cat-icon');
+  const nameEl = document.getElementById('new-cat-name');
+  const icon = iconEl.value.trim() || '🏷';
+  const zh   = nameEl.value.trim();
+  if(!zh){ showToast('請輸入分類名稱','err'); nameEl.focus(); return; }
+  if(CATEGORIES.find(c=>c.zh===zh)){ showToast('分類名稱已存在','err'); return; }
+  const id = 'custom_' + Date.now();
+  CATEGORIES.push({id, icon, zh, locked:false});
+  saveCustomCategories();
+  renderCatManagerList();
+  buildCatFilters();
+  nameEl.value=''; iconEl.value='🏷';
+  showToast(`已新增：${icon} ${zh}`,'ok');
+}
+
+function deleteCustomCategory(id){
+  const inUse = _restockData.some(p=>p.category===id);
+  if(inUse){ showToast('此分類仍有商品在使用，無法刪除','err'); return; }
+  if(!confirm('確定刪除此自訂分類？')) return;
+  CATEGORIES = CATEGORIES.filter(c=>c.id!==id);
+  saveCustomCategories();
+  renderCatManagerList();
+  buildCatFilters();
+  showToast('已刪除分類','ok');
+}
+
+function saveCustomCategories(){
+  const custom = CATEGORIES.filter(c=>!c.locked);
+  localStorage.setItem(CUSTOM_CATS_KEY, JSON.stringify(custom));
+}
+
+/* ══════════════════════════════════════════
+   EXPORT DROPDOWN
+   ══════════════════════════════════════════ */
+function toggleExportMenu(e){
+  e.stopPropagation();
+  document.getElementById('export-menu').classList.toggle('open');
+}
+function closeExportMenu(){
+  document.getElementById('export-menu').classList.remove('open');
+}
+document.addEventListener('click', ()=>closeExportMenu());
+
+/* ══════════════════════════════════════════
+   EXPORT ALL（不限補貨數量）
+   ══════════════════════════════════════════ */
+function exportAllRestockCSV(){
+  const data = _currentFilteredData.length ? _currentFilteredData : _restockData;
+  if(!data.length){ showToast('尚無庫存資料','err'); return; }
+  const rows = [['商品名稱','條碼','分類','補貨數','日均','週均','建議庫存']];
+  data.forEach(p=>{
+    const cat = getCatInfo(p.category);
+    rows.push([p.name, p.barcode||'無條碼', cat.zh,
+               _restockQty[p.name]||0, p.dailyAvg, p.weeklyAvg, p.suggested]);
+  });
+  downloadCSV(rows, 'inventory_all_'+fd(new Date()).replace(/-/g,'')+'.csv');
+  showToast(`已匯出 ${rows.length-1} 種商品`,'ok');
+}
+
+/* ══════════════════════════════════════════
+   DOWNLOAD IMPORT TEMPLATE
+   ══════════════════════════════════════════ */
+function downloadImportTemplate(){
+  const data = _restockData.length ? _restockData : [];
+  const rows = [['商品名稱','補貨數','分類']];
+  if(data.length){
+    data.forEach(p=>{
+      const cat = getCatInfo(p.category);
+      rows.push([p.name, '', cat.zh]);
+    });
+  } else {
+    rows.push(['（請從完整匯出取得商品名稱）','10','貨架1']);
+  }
+  downloadCSV(rows, 'import_template.csv');
+  showToast('已下載匯入範本 CSV','ok');
+}
+
+/* ══════════════════════════════════════════
+   IMPORT FROM CSV
+   ══════════════════════════════════════════ */
+function triggerImportCSV(){
+  document.getElementById('import-csv-input').click();
+}
+
+function importRestockCSV(event){
+  const file = event.target.files[0];
+  event.target.value = '';
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      let text = e.target.result;
+      if(text.charCodeAt(0)===0xFEFF) text=text.slice(1); // strip BOM
+      parseAndApplyImportCSV(text);
+    } catch(err){
+      showToast('檔案讀取失敗','err');
+      console.error(err);
+    }
+  };
+  reader.readAsText(file,'utf-8');
+}
+
+function parseCSVRow(row){
+  const result=[]; let cur='', inQ=false;
+  for(let i=0;i<row.length;i++){
+    const c=row[i];
+    if(c==='"'){ if(inQ&&row[i+1]==='"'){cur+='"';i++;} else inQ=!inQ; }
+    else if(c===','&&!inQ){ result.push(cur);cur=''; }
+    else cur+=c;
+  }
+  result.push(cur);
+  return result.map(s=>s.trim());
+}
+
+function parseAndApplyImportCSV(csvText){
+  const rows = csvText.split(/\r?\n/).map(r=>r.trim()).filter(Boolean);
+  if(rows.length<2){ showToast('CSV 格式錯誤或無資料','err'); return; }
+
+  const header = parseCSVRow(rows[0]);
+  const colName = header.findIndex(h=>/商品名稱|名稱|name/i.test(h));
+  const colQty  = header.findIndex(h=>/補貨數|數量|qty|quantity/i.test(h));
+  const colCat  = header.findIndex(h=>/分類|category|cat/i.test(h));
+
+  if(colName===-1){
+    showImportResult({error:'找不到「商品名稱」欄位，請確認 CSV 包含正確表頭。'});
+    return;
+  }
+
+  // 建立以商品名稱為 key 的 prodMap
+  const prodMap={};
+  _restockData.forEach(p=>{ prodMap[p.name]=p; });
+
+  let matched=0, notFound=0, qtySet=0, catSet=0;
+  const notFoundList=[];
+
+  for(let i=1;i<rows.length;i++){
+    const cols = parseCSVRow(rows[i]);
+    const name = cols[colName]||'';
+    if(!name) continue;
+
+    const prod = prodMap[name];
+    if(!prod){ notFound++; notFoundList.push(name); continue; }
+    matched++;
+
+    // 更新補貨數
+    if(colQty!==-1){
+      const qty = Math.max(0, parseInt(cols[colQty])||0);
+      if(qty>0){ _restockQty[name]=qty; qtySet++; }
+    }
+
+    // 更新分類
+    if(colCat!==-1){
+      const catZh = cols[colCat]||'';
+      if(catZh){
+        const cat = CATEGORIES.find(c=>c.zh===catZh);
+        if(cat){
+          // 更新記憶體
+          _restockData.forEach(p=>{ if(p.name===name) p.category=cat.id; });
+          // 持久化 pos_products
+          const prods=getProds(); let updP=false;
+          for(const [,p] of Object.entries(prods)){
+            if(p.name===name){ p.category=cat.id; updP=true; }
+          }
+          if(updP) localStorage.setItem('pos_products',JSON.stringify(prods));
+          // 持久化 pos_nobc_products
+          const nobcPs=getNobcProds(); let updN=false;
+          nobcPs.forEach(p=>{ if(p.name===name){ p.category=cat.id; updN=true; } });
+          if(updN) localStorage.setItem('pos_nobc_products',JSON.stringify(nobcPs));
+          catSet++;
+        }
+      }
+    }
+  }
+
+  applyRestockFilter();
+  showImportResult({matched, notFound, qtySet, catSet, notFoundList});
+}
+
+function showImportResult({error, matched=0, notFound=0, qtySet=0, catSet=0, notFoundList=[]}){
+  const el = document.getElementById('import-result-body');
+  if(error){
+    el.innerHTML=`<div style="color:var(--red);font-family:var(--zh);padding:16px;text-align:center;font-size:13px">${h(error)}</div>`;
+  } else {
+    const kpis=[
+      {lbl:'已匹配商品', val:matched, col:'var(--accent)'},
+      {lbl:'未找到商品', val:notFound, col:notFound?'var(--red)':'var(--muted2)'},
+      ...(qtySet?[{lbl:'更新補貨數', val:qtySet, col:'var(--green)'}]:[]),
+      ...(catSet?[{lbl:'更新分類',   val:catSet, col:'var(--purple)'}]:[]),
+    ];
+    const notFoundHtml = notFoundList.length
+      ? `<div style="margin-top:10px">
+           <div style="font-size:11px;color:var(--muted);font-family:var(--zh);margin-bottom:5px">未找到的商品（${notFoundList.length} 種）：</div>
+           <div class="import-not-found">${notFoundList.map(n=>h(n)).join('、')}</div>
+         </div>` : '';
+    el.innerHTML=`
+      <div class="import-kpi-grid">
+        ${kpis.map(k=>`<div class="kpi">
+          <div class="kpi-lbl">${k.lbl}</div>
+          <div class="kpi-val" style="color:${k.col}">${k.val}</div>
+        </div>`).join('')}
+      </div>${notFoundHtml}`;
+  }
+  openModal('m-import-result');
 }
 
 /* ── INIT ── */
