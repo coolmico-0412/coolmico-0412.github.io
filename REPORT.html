@@ -172,7 +172,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 
 /* restock table */
 .rk-scroll{overflow-x:auto;}
-.rk-table{width:100%;border-collapse:collapse;min-width:780px;}
+.rk-table{width:100%;border-collapse:collapse;min-width:520px;}
 .rk-th{padding:9px 12px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
   color:var(--muted);background:var(--surface2);border-bottom:2px solid var(--border);
   text-align:left;white-space:nowrap;cursor:pointer;user-select:none;}
@@ -191,6 +191,16 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .cat-tag{display:inline-flex;align-items:center;gap:2px;font-size:9px;padding:2px 7px;
   border-radius:8px;background:var(--surface3);color:var(--muted);border:1px solid var(--border);
   font-weight:600;font-family:var(--zh);white-space:nowrap;}
+.cat-select{
+  font-size:11px;border:1.5px solid var(--border);border-radius:8px;
+  padding:4px 6px;background:var(--surface);color:var(--text2);
+  font-family:var(--zh);cursor:pointer;max-width:120px;
+  transition:border-color .15s,box-shadow .15s;
+}
+.cat-select:hover{border-color:var(--accent);}
+.cat-select:focus{outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+.cat-select.changed{border-color:var(--green);background:#f0fdf4;}
 
 .trend-up{color:var(--green);font-weight:700;}
 .trend-dn{color:var(--red);font-weight:700;}
@@ -201,28 +211,28 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .suggest-num.high{color:var(--red);}
 .suggest-unit{font-size:10px;color:var(--muted);font-family:var(--zh);}
 
-.badge-oos{display:inline-flex;align-items:center;gap:3px;font-size:10px;
-  background:#fef2f2;color:var(--red);border:1px solid #fecaca;border-radius:6px;
-  padding:2px 8px;font-weight:700;white-space:nowrap;}
-.badge-warn{display:inline-flex;align-items:center;gap:3px;font-size:10px;
-  background:#fffbeb;color:var(--gold);border:1px solid #fde68a;border-radius:6px;
-  padding:2px 8px;font-weight:700;white-space:nowrap;}
-.badge-ok{display:inline-flex;align-items:center;gap:3px;font-size:10px;
-  background:#f0fdf4;color:var(--green);border:1px solid #bbf7d0;border-radius:6px;
-  padding:2px 8px;font-weight:700;white-space:nowrap;}
-
-.sparkline{display:flex;align-items:flex-end;gap:2px;height:24px;}
-.sp-bar{width:7px;border-radius:2px 2px 0 0;background:var(--accent);opacity:.6;transition:opacity .15s;}
-.sparkline:hover .sp-bar{opacity:.9;}
-
 .rk-footer{padding:10px 16px;background:var(--surface2);border-top:1px solid var(--border);
   display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--muted);}
 
+/* restock qty input */
+.restock-qty-input{
+  width:62px;text-align:center;font-family:var(--mono);font-size:15px;font-weight:700;
+  color:var(--muted2);border:1.5px solid var(--border2);border-radius:7px;
+  padding:5px 3px;background:var(--surface);cursor:pointer;
+  transition:border-color .15s,color .15s,box-shadow .15s;display:block;
+}
+.restock-qty-input:hover{border-color:var(--accent);}
+.restock-qty-input:focus{outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+.restock-qty-input.has-val{border-color:var(--green);color:var(--green);}
+/* remove number input arrows */
+.restock-qty-input::-webkit-inner-spin-button,
+.restock-qty-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.restock-qty-input{-moz-appearance:textfield;}
+
 /* ════════════════════════
-   PAGE 3: TRENDS
+   PAGE 3: RANKING
    ════════════════════════ */
-.trends-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.big-bar-chart{display:flex;align-items:flex-end;gap:5px;height:130px;padding:0 4px;}
 .bbc-bar{flex:1;border-radius:4px 4px 0 0;min-width:0;cursor:pointer;position:relative;
   transition:opacity .2s;}
 .bbc-bar:hover{opacity:.8;}
@@ -260,7 +270,6 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
    ════════════════════════ */
 .rank-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .rank-table{width:100%;border-collapse:collapse;}
-.rank-tr{}
 .rank-td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
 .rank-tr:last-child .rank-td{border-bottom:none;}
 .rank-tr:hover .rank-td{background:var(--surface2);}
@@ -338,12 +347,14 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   .page{display:block!important;padding:10px;}
   .restock-panel{border:1px solid #ccc;box-shadow:none;}
   .rk-hd{background:#1e3a8a!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .print-hide-row{display:none!important;}
+  .restock-qty-input{border:none;background:transparent;font-size:14px;width:auto;}
 }
 
 /* RESPONSIVE */
 @media(max-width:900px){
   .kpi-grid{grid-template-columns:repeat(3,1fr);}
-  .mini-chart-grid,.trends-grid,.rank-grid{grid-template-columns:1fr;}
+  .mini-chart-grid,.rank-grid{grid-template-columns:1fr;}
 }
 @media(max-width:600px){
   .kpi-grid{grid-template-columns:repeat(2,1fr);}
@@ -510,7 +521,6 @@ if (window.matchMedia('(display-mode: standalone)').matches
   <div class="brand">REPORT<span class="brand-ver">v1.0.0</span></div>
   <button class="nav-tab active" onclick="showPage('overview',this)">📊 總覽<span class="zh">Dashboard</span></button>
   <button class="nav-tab" onclick="showPage('restock',this)">📦 庫存清單<span class="zh">Inventory</span></button>
-  <button class="nav-tab" onclick="showPage('trends',this)">📈 趨勢<span class="zh">Trends</span></button>
   <button class="nav-tab" onclick="showPage('ranking',this)">🏆 排行<span class="zh">Ranking</span></button>
   <button class="nav-tab" onclick="showPage('transactions',this)">📋 明細<span class="zh">Transactions</span></button>
   <button class="nav-install" id="btn-pwa-install" onclick="pwaTriggerInstall()" style="display:none">⬇ 安裝應用</button>
@@ -528,7 +538,7 @@ if (window.matchMedia('(display-mode: standalone)').matches
       <select id="ov-range" onchange="renderOverview()"
         style="font-size:11px;border:1.5px solid var(--border2);border-radius:7px;
                padding:4px 9px;background:var(--surface);color:var(--text2);">
-        <option value="7">本週 7 天</option>
+        <option value="7">最近 7 天</option>
         <option value="14">最近 14 天</option>
         <option value="30">最近 30 天</option>
       </select>
@@ -551,6 +561,27 @@ if (window.matchMedia('(display-mode: standalone)').matches
     <span class="sec-sub">過去 12 週平均</span>
   </div>
   <div class="dow-grid" id="ov-dow-grid"></div>
+
+  <!-- Charts (moved from Trends) -->
+  <div class="sec-hd" style="margin-top:20px">
+    <span class="sec-title">📈 銷售圖表</span>
+  </div>
+  <div class="mini-chart-grid">
+    <div class="chart-panel">
+      <div class="cp-title">30 天銷售 <span class="sub">橘=今日</span></div>
+      <div class="big-bar-chart" id="ov-30day"></div>
+      <div class="bar-labels" id="ov-30day-labels"></div>
+    </div>
+    <div class="chart-panel">
+      <div class="cp-title">近 8 週比較</div>
+      <div class="wk-compare" id="ov-wk-compare"></div>
+    </div>
+  </div>
+  <div class="chart-panel" style="margin-top:12px">
+    <div class="cp-title">每小時銷售分佈 <span class="sub">近 90 天</span></div>
+    <div class="hourly-bar-wrap" id="ov-hourly"></div>
+    <div class="hr-labels" id="ov-hourly-labels"></div>
+  </div>
 </div>
 
 <!-- ════════════════════════════════════════
@@ -561,9 +592,10 @@ if (window.matchMedia('(display-mode: standalone)').matches
     <span class="sec-title">📦 每週庫存清單</span>
     <span class="sec-badge">庫存參考</span>
     <div class="sec-ml">
-      <button class="btn btn-ghost btn-sm" onclick="printRestock()">🖨 列印</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearAllRestockQty()" title="將所有補貨數量歸零">🗑 清空補貨數</button>
+      <button class="btn btn-accent btn-sm" onclick="printRestockOnly()">🖨 僅補貨</button>
       <button class="btn btn-green btn-sm" onclick="exportRestockCSV()">⬇ CSV</button>
-      <button class="btn btn-accent btn-sm" id="btn-oos-only" onclick="toggleOosOnly()">🔴 僅缺貨</button>
+      <button class="btn btn-ghost btn-sm" id="btn-oos-only" onclick="toggleOosOnly()">🔴 僅缺貨</button>
     </div>
   </div>
 
@@ -581,16 +613,12 @@ if (window.matchMedia('(display-mode: standalone)').matches
       <table class="rk-table">
         <thead>
           <tr>
+            <th class="rk-th num" style="width:74px">補貨數</th>
             <th class="rk-th" data-sort="name" onclick="sortRestock('name')">商品名稱 ▴</th>
             <th class="rk-th">分類</th>
-            <th class="rk-th num" data-sort="lastWeek" onclick="sortRestock('lastWeek')">上週銷量</th>
-            <th class="rk-th num" data-sort="thisWeek" onclick="sortRestock('thisWeek')">本週銷量</th>
-            <th class="rk-th num" data-sort="trend" onclick="sortRestock('trend')">趨勢</th>
             <th class="rk-th num" data-sort="dailyAvg" onclick="sortRestock('dailyAvg')">日均</th>
             <th class="rk-th num" data-sort="weeklyAvg" onclick="sortRestock('weeklyAvg')">週均</th>
             <th class="rk-th num sorted" data-sort="suggested" onclick="sortRestock('suggested')">📦 建議庫存 ▾</th>
-            <th class="rk-th">狀態</th>
-            <th class="rk-th">近 7 天走勢</th>
           </tr>
         </thead>
         <tbody id="rk-tbody"></tbody>
@@ -599,49 +627,14 @@ if (window.matchMedia('(display-mode: standalone)').matches
     <div class="rk-footer">
       <span id="rk-footer-info">載入中...</span>
       <div style="margin-left:auto;display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" onclick="exportRestockCSV()">⬇ 匯出庫存清單 CSV</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportRestockCSV()">⬇ 匯出補貨清單 CSV</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ════════════════════════════════════════
-     PAGE 3: TRENDS（銷售趨勢）
-     ════════════════════════════════════════ -->
-<div class="page" id="page-trends">
-  <div class="sec-hd" style="margin-top:4px">
-    <span class="sec-title">📈 銷售趨勢</span>
-    <span class="sec-sub">週對週比較、每小時分佈</span>
-  </div>
-
-  <div class="trends-grid">
-    <!-- 30-day trend -->
-    <div class="chart-panel">
-      <div class="cp-title">30 天銷售 <span class="sub">橘=今日</span></div>
-      <div class="big-bar-chart" id="tr-30day"></div>
-      <div class="bar-labels" id="tr-30day-labels"></div>
-    </div>
-    <!-- week compare -->
-    <div class="chart-panel">
-      <div class="cp-title">近 8 週比較</div>
-      <div class="wk-compare" id="tr-wk-compare"></div>
-    </div>
-    <!-- hourly -->
-    <div class="chart-panel">
-      <div class="cp-title">每小時銷售分佈 <span class="sub">近 90 天</span></div>
-      <div class="hourly-bar-wrap" id="tr-hourly"></div>
-      <div class="hr-labels" id="tr-hourly-labels"></div>
-    </div>
-    <!-- category trend -->
-    <div class="chart-panel">
-      <div class="cp-title">各分類 本週 vs 上週</div>
-      <div id="tr-cat-compare" style="display:flex;flex-direction:column;gap:9px;margin-top:8px"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════
-     PAGE 4: RANKING（商品排行）
+     PAGE 3: RANKING（商品排行）
      ════════════════════════════════════════ -->
 <div class="page" id="page-ranking">
   <div class="sec-hd" style="margin-top:4px">
@@ -748,16 +741,24 @@ if (window.matchMedia('(display-mode: standalone)').matches
 
 /* ── CATEGORIES ── */
 const CATEGORIES = [
-  {id:'frozen',    icon:'🧊', zh:'冷凍食品'},
-  {id:'seasoning', icon:'🧂', zh:'調味料'},
-  {id:'drink',     icon:'🥤', zh:'飲料'},
-  {id:'rice',      icon:'🌾', zh:'米'},
-  {id:'alcohol',   icon:'🍶', zh:'酒'},
-  {id:'cleaning',  icon:'🧴', zh:'清潔保養品'},
-  {id:'food',      icon:'🍱', zh:'食品'},
-  {id:'other',     icon:'📦', zh:'其他'},
+  {id:'shelf1',   icon:'📦', zh:'貨架1'},
+  {id:'shelf2',   icon:'📦', zh:'貨架2'},
+  {id:'shelf3',   icon:'📦', zh:'貨架3'},
+  {id:'shelf4',   icon:'📦', zh:'貨架4'},
+  {id:'shelf5',   icon:'📦', zh:'貨架5'},
+  {id:'shelf6',   icon:'📦', zh:'貨架6'},
+  {id:'shelf7',   icon:'📦', zh:'貨架7'},
+  {id:'shelf8',   icon:'📦', zh:'貨架8'},
+  {id:'shelf9',   icon:'📦', zh:'貨架9'},
+  {id:'shelf10',  icon:'📦', zh:'貨架10'},
+  {id:'fridge1',  icon:'🥶', zh:'冷藏櫃1'},
+  {id:'fridge2',  icon:'🥶', zh:'冷藏櫃2'},
+  {id:'freezer1', icon:'🧊', zh:'冷凍櫃1'},
+  {id:'freezer2', icon:'🧊', zh:'冷凍櫃2'},
 ];
-function getCatInfo(id){ return CATEGORIES.find(c=>c.id===id) || {icon:'📦',zh:'其他'}; }
+function getCatInfo(id){
+  return CATEGORIES.find(c=>c.id===id) || {icon:'📦', zh: id||'其他'};
+}
 
 /* ── DATA ACCESS（與 POS.html 完全一致）── */
 function getProds(){try{return JSON.parse(localStorage.getItem('pos_products')||'{}')}catch{return {};}}
@@ -790,7 +791,6 @@ function showPage(id, btn){
   if(btn) btn.classList.add('active');
   if(id==='overview')     renderOverview();
   if(id==='restock')      renderRestock();
-  if(id==='trends')       renderTrends();
   if(id==='ranking')      renderRanking();
   if(id==='transactions') renderTransactions();
 }
@@ -804,49 +804,40 @@ function calcRestock(){
   const prods  = getProds();
   const nobcPs = getNobcProds();
 
+  /* 日均/週均計算起始日：2026-05-01 */
+  const CALC_START = new Date('2026-05-01T00:00:00');
+  const calcDays   = Math.max(1, Math.ceil((now - CALC_START) / MS_DAY));
+
   /* Build product info map: name → {category, outOfStock, barcode} */
   const prodInfo = {};
   Object.entries(prods).forEach(([bc,p])=>{
-    prodInfo[p.name] = {category:p.category||'other', outOfStock:p.outOfStock===true, barcode:bc};
+    prodInfo[p.name] = {category:p.category||'shelf1', outOfStock:p.outOfStock===true, barcode:bc};
   });
   nobcPs.forEach(p=>{
     if(!prodInfo[p.name])
-      prodInfo[p.name] = {category:p.category||'other', outOfStock:p.outOfStock===true, barcode:null};
+      prodInfo[p.name] = {category:p.category||'shelf1', outOfStock:p.outOfStock===true, barcode:null};
   });
 
-  /* Aggregate by product name */
+  /* 累計從 CALC_START 起的銷量 */
   const map = {};
   txList.forEach(tx=>{
-    const age = (now - new Date(tx.date)) / MS_DAY;
+    const txDate = new Date(tx.date);
+    if(txDate < CALC_START) return;
     tx.items.forEach(item=>{
-      if(!map[item.name]) map[item.name] = {thisWeek:0, lastWeek:0, last30:0, daily:new Array(7).fill(0)};
-      const m = map[item.name];
-      if(age < 7)  m.thisWeek  += item.qty;
-      else if(age < 14) m.lastWeek += item.qty;
-      if(age < 30) m.last30 += item.qty;
-      const dayIdx = Math.floor(age);
-      if(dayIdx >= 0 && dayIdx < 7) m.daily[dayIdx] += item.qty;
+      if(!map[item.name]) map[item.name] = {total:0};
+      map[item.name].total += item.qty;
     });
   });
 
   return Object.entries(map)
     .map(([name, s])=>{
-      // 日均：近30天銷量 ÷ 30
-      const dailyAvg  = +(s.last30 / 30).toFixed(1);
-      // 週均：日均 × 7
+      const dailyAvg  = +(s.total / calcDays).toFixed(2);
       const weeklyAvg = +(dailyAvg * 7).toFixed(1);
-      // 建議庫存：近30天銷量 × 1.5 ÷ 30 × 7
-      const suggested = Math.max(1, Math.ceil(s.last30 * 1.5 / 30 * 7));
-      const trend     = pct(s.thisWeek, s.lastWeek);
-      const info      = prodInfo[name] || {category:'other', outOfStock:false, barcode:null};
-      return {
-        name, thisWeek:s.thisWeek, lastWeek:s.lastWeek,
-        dailyAvg, weeklyAvg, suggested, trend,
-        sparkline:[...s.daily].reverse(), // index 0 = 6 days ago, index 6 = today
-        ...info
-      };
+      const suggested = Math.max(1, Math.ceil(s.total / calcDays * 7 * 1.5));
+      const info      = prodInfo[name] || {category:'shelf1', outOfStock:false, barcode:null};
+      return { name, dailyAvg, weeklyAvg, suggested, ...info };
     })
-    .filter(p => p.thisWeek > 0 || p.lastWeek > 0)
+    .filter(p => p.dailyAvg > 0)
     .sort((a,b) => b.suggested - a.suggested);
 }
 
@@ -862,28 +853,40 @@ function renderOverview(){
   const monthStr = fm(now);
   const weekStr  = fweek(now);
   const rangeDays = parseInt(document.getElementById('ov-range').value || '7');
+  const rangeCutoff = daysAgo(rangeDays - 1);
 
-  /* KPIs */
+  /* 日期範圍標示 */
+  document.getElementById('ov-date-range').textContent = `${rangeCutoff} ～ ${todayStr}`;
+
+  /* KPIs — 上月字串在迴圈外計算，避免重複建立 Date 物件 */
+  const pm = new Date(now); pm.setMonth(pm.getMonth()-1);
+  const prevMonthStr = fm(pm);
+
   let tTotal=0, tCount=0, wTotal=0, wCount=0, mTotal=0, mCount=0;
   let prevWTotal=0, prevMTotal=0, yestTotal=0, dayBefore2Total=0;
-  const yesterday = new Date(now); yesterday.setDate(now.getDate()-1); const yesterdayStr = fd(yesterday);
-  const dayBefore2 = new Date(now); dayBefore2.setDate(now.getDate()-2); const dayBefore2Str = fd(dayBefore2);
+  let rangeTotal=0, rangeCount=0;
+  const yesterday  = new Date(now); yesterday.setDate(now.getDate()-1);
+  const dayBefore2 = new Date(now); dayBefore2.setDate(now.getDate()-2);
+  const yesterdayStr  = fd(yesterday);
+  const dayBefore2Str = fd(dayBefore2);
+
   txList.forEach(tx=>{
-    const d=new Date(tx.date); const ds=fd(d); const ms=fm(d); const ws=fweek(d);
+    const ds = tx.date.substring(0,10);
+    const d  = new Date(tx.date);
+    const ms = fm(d);
+    const ws = fweek(d);
     if(ds===todayStr){tTotal+=tx.total;tCount++;}
-    if(ds===yesterdayStr) yestTotal+=tx.total;
+    if(ds===yesterdayStr)  yestTotal    +=tx.total;
     if(ds===dayBefore2Str) dayBefore2Total+=tx.total;
     if(ws===weekStr){wTotal+=tx.total;wCount++;}
     if(ms===monthStr){mTotal+=tx.total;mCount++;}
-    // prev week
+    if(ds>=rangeCutoff && ds<=todayStr){rangeTotal+=tx.total;rangeCount++;}
     const age=(now-d)/MS_DAY;
     if(age>=7&&age<14) prevWTotal+=tx.total;
-    // prev month
-    const pm=new Date(now);pm.setMonth(pm.getMonth()-1);
-    if(fm(d)===fm(pm)) prevMTotal+=tx.total;
+    if(ms===prevMonthStr)  prevMTotal   +=tx.total;
   });
 
-  const diff = (a,b,prefix='NT$ ')=>{
+  const diff = (a,b)=>{
     const p=pct(a,b);
     if(p===0) return `<span class="kpi-diff eq">→ 持平</span>`;
     return p>0
@@ -899,22 +902,26 @@ function renderOverview(){
   document.getElementById('kpi-week-diff').innerHTML   = diff(wTotal, prevWTotal);
   document.getElementById('kpi-month').textContent    = 'NT$ '+mTotal;
   document.getElementById('kpi-month-diff').innerHTML  = diff(mTotal, prevMTotal);
-  document.getElementById('kpi-count').textContent    = wCount+' 筆';
-  document.getElementById('kpi-count-sub').textContent = '日均 '+(wCount/7).toFixed(1)+' 筆';
-  document.getElementById('kpi-avg').textContent      = wCount ? 'NT$ '+Math.round(wTotal/wCount) : '—';
-  document.getElementById('kpi-avg-sub').textContent   = '本週平均單筆';
+  /* 期間筆數 & 平均單筆現在依 ov-range 選取的天數計算 */
+  document.getElementById('kpi-count').textContent    = rangeCount+' 筆';
+  document.getElementById('kpi-count-sub').textContent = '日均 '+(rangeCount/rangeDays).toFixed(1)+' 筆';
+  document.getElementById('kpi-avg').textContent      = rangeCount ? 'NT$ '+Math.round(rangeTotal/rangeCount) : '—';
+  document.getElementById('kpi-avg-sub').textContent   = `近 ${rangeDays} 天平均單筆`;
 
-  /* DoW distribution */
-  const dowData = new Array(7).fill(0);
-  const dowCount= new Array(7).fill(0);
+  /* DoW distribution — 以實際有資料的週數做分母，避免資料不足時平均偏低 */
+  const dowData    = new Array(7).fill(0);
+  const dowCount   = new Array(7).fill(0);
+  const dowWeekSet = new Set();
   const twelveWeeksAgo = new Date(now); twelveWeeksAgo.setDate(now.getDate()-84);
   txList.forEach(tx=>{
     const d=new Date(tx.date);
     if(d<twelveWeeksAgo) return;
+    dowWeekSet.add(fweek(d));
     const dow=(d.getDay()+6)%7;
     dowData[dow]+=tx.total; dowCount[dow]++;
   });
-  const dowAvg = dowData.map((v,i)=>dowCount[i]>0 ? Math.round(v/12) : 0);
+  const actualWeeks = Math.max(1, dowWeekSet.size);
+  const dowAvg = dowData.map((v,i)=>dowCount[i]>0 ? Math.round(v/actualWeeks) : 0);
   const maxDow = Math.max(...dowAvg, 1);
   const dowNames=['週一','週二','週三','週四','週五','週六','週日'];
   const dowEl = document.getElementById('ov-dow-grid');
@@ -926,16 +933,143 @@ function renderOverview(){
       <div class="dow-sub">${isPeak?'🔥 最高':'週平均'}</div>
     </div>`;
   }).join('');
+
+  /* ── 圖表（原趨勢頁）── */
+
+  /* 30-day bar */
+  const dailyMap={};
+  txList.forEach(tx=>{
+    const ds=tx.date.substring(0,10);
+    if(!dailyMap[ds]) dailyMap[ds]=0;
+    dailyMap[ds]+=tx.total;
+  });
+  const dates30=[];
+  for(let i=29;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i);dates30.push(fd(d));}
+  const vals30=dates30.map(d=>dailyMap[d]||0);
+  const max30=Math.max(...vals30,1);
+  const el30=document.getElementById('ov-30day');
+  const el30l=document.getElementById('ov-30day-labels');
+  if(el30){
+    el30.innerHTML=vals30.map((v,i)=>{
+      const p=(v/max30*100).toFixed(1);
+      const isToday=dates30[i]===todayStr;
+      const bg=isToday?'var(--gold)':v===0?'var(--surface3)':'var(--accent)';
+      return `<div class="bbc-bar" style="height:${Math.max(2,p)}%;background:${bg};flex:1;border-radius:3px 3px 0 0">
+        <div class="bbc-tip">${dates30[i].slice(5)} NT$${v}</div></div>`;
+    }).join('');
+    el30l.innerHTML=dates30.map((d,i)=>i%5===0
+      ?`<div class="bar-lbl">${d.slice(5,10)}</div>`
+      :`<div class="bar-lbl"></div>`).join('');
+  }
+
+  /* 8-week compare */
+  const wkMap={};
+  txList.forEach(tx=>{
+    const txDate=new Date(tx.date);
+    const k=fweek(txDate);
+    if(!wkMap[k])wkMap[k]={total:0,label:fweekLabel(txDate)};
+    wkMap[k].total+=tx.total;
+  });
+  const wkKeys=Object.keys(wkMap).sort().reverse().slice(0,8);
+  const maxWk=Math.max(...wkKeys.map(k=>wkMap[k].total),1);
+  const wkEl=document.getElementById('ov-wk-compare');
+  const curWkKey=fweek(now);
+  if(wkEl){
+    wkEl.innerHTML=wkKeys.map((k,i)=>{
+      const w=wkMap[k];
+      const p=(w.total/maxWk*100).toFixed(1);
+      const isCur=k===curWkKey;
+      return `<div class="wk-row">
+        <div class="wk-lbl" style="${isCur?'color:var(--accent);font-weight:700':''}">${i===0?'本週':i===1?'上週':w.label}</div>
+        <div class="wk-track"><div class="wk-fill" style="width:${p}%;background:${isCur?'var(--accent)':i<2?'#93c5fd':'#dbeafe'}"></div></div>
+        <div class="wk-val" style="${isCur?'color:var(--accent)':''}">NT$ ${w.total.toLocaleString()}</div>
+      </div>`;
+    }).join('');
+  }
+
+  /* Hourly */
+  const hourMap=new Array(24).fill(0);
+  const cutoff90=new Date(now);cutoff90.setDate(now.getDate()-90);
+  txList.forEach(tx=>{
+    const d=new Date(tx.date);
+    if(d<cutoff90)return;
+    hourMap[d.getHours()]+=tx.total;
+  });
+  const hr9to21=hourMap.slice(9,22);
+  const maxHr=Math.max(...hr9to21,1);
+  const hrEl=document.getElementById('ov-hourly');
+  const hrLEl=document.getElementById('ov-hourly-labels');
+  if(hrEl){
+    hrEl.innerHTML=hr9to21.map(v=>`<div class="hr-bar" style="flex:1;height:${Math.max(2,(v/maxHr*100)).toFixed(1)}%;background:var(--accent);opacity:${0.35+v/maxHr*0.65}"></div>`).join('');
+    hrLEl.innerHTML=[...Array(13)].map((_,i)=>`<div class="hr-lbl">${9+i}</div>`).join('');
+  }
 }
 
 /* ══════════════════════════════
    PAGE 2: RESTOCK
    ══════════════════════════════ */
-let _restockData   = [];
-let _restockCatFilter = 'all';
-let _restockOosOnly   = false;
-let _restockSortKey   = 'suggested';
-let _restockSortAsc   = false;
+let _restockData         = [];
+let _restockCatFilter    = 'all';
+let _restockOosOnly      = false;
+let _restockSortKey      = 'suggested';
+let _restockSortAsc      = false;
+let _currentFilteredData = [];   // 僅供記憶體內使用，不寫入雲端
+
+/* 點貨數量：純記憶體暫存，刷新後清空，不同步到 Firebase */
+let _restockQty = {};  // { productName: number }
+
+function setRestockQtyByIdx(idx, rawVal){
+  const prod = _currentFilteredData[idx];
+  if(!prod) return;
+  const val = Math.max(0, parseInt(rawVal)||0);
+  _restockQty[prod.name] = val;
+  // 更新輸入框外觀
+  const inp = document.querySelector(`#rk-tbody .rk-tr[data-rk-idx="${idx}"] .restock-qty-input`);
+  if(inp){
+    inp.value = val;
+    inp.classList.toggle('has-val', val > 0);
+  }
+}
+
+/* 清空所有補貨數量歸零 */
+function clearAllRestockQty(){
+  _restockQty = {};
+  document.querySelectorAll('.restock-qty-input').forEach(inp=>{
+    inp.value = 0;
+    inp.classList.remove('has-val');
+  });
+  showToast('已清空所有補貨數','ok');
+}
+
+/* 儲存分類更改至 localStorage */
+function setCategoryForProduct(el){
+  const name   = el.dataset.prodName;
+  const newCat = el.value;
+
+  // 更新記憶體陣列
+  _restockData.forEach(p=>{ if(p.name===name) p.category=newCat; });
+  _currentFilteredData.forEach(p=>{ if(p.name===name) p.category=newCat; });
+
+  // 持久化至 localStorage：pos_products（有條碼商品）
+  const prods = getProds();
+  let updProd = false;
+  for(const [,p] of Object.entries(prods)){
+    if(p.name===name){ p.category=newCat; updProd=true; }
+  }
+  if(updProd) localStorage.setItem('pos_products', JSON.stringify(prods));
+
+  // 持久化至 localStorage：pos_nobc_products（無條碼商品）
+  const nobcPs = getNobcProds();
+  let updNbc = false;
+  nobcPs.forEach(p=>{ if(p.name===name){ p.category=newCat; updNbc=true; } });
+  if(updNbc) localStorage.setItem('pos_nobc_products', JSON.stringify(nobcPs));
+
+  // 視覺回饋
+  el.classList.add('changed');
+  setTimeout(()=>el.classList.remove('changed'), 1200);
+  const cat = getCatInfo(newCat);
+  showToast(`${name} → ${cat.icon} ${cat.zh}`,'ok');
+}
 
 function buildCatFilters(){
   const el = document.getElementById('rk-cat-filters');
@@ -953,8 +1087,8 @@ function setRestockCat(id, el){
 function toggleOosOnly(){
   _restockOosOnly = !_restockOosOnly;
   const btn = document.getElementById('btn-oos-only');
-  btn.style.background = _restockOosOnly ? 'var(--red)' : '';
-  btn.style.borderColor= _restockOosOnly ? 'var(--red)' : '';
+  btn.style.background  = _restockOosOnly ? 'var(--red)' : '';
+  btn.style.borderColor = _restockOosOnly ? 'var(--red)' : '';
   applyRestockFilter();
 }
 function sortRestock(key){
@@ -967,11 +1101,12 @@ function sortRestock(key){
 }
 
 function renderRestock(){
-  const now = new Date();
   _restockData = calcRestock();
-  // Week label
-  document.getElementById('rk-week-label') &&
-    (document.getElementById('rk-week-label').textContent = `— ${fweekLabel(now)} 庫存參考`);
+  /* 每次重新渲染時重置篩選狀態，避免視覺選中與實際篩選不一致 */
+  _restockCatFilter = 'all';
+  _restockOosOnly   = false;
+  const oosBtnEl = document.getElementById('btn-oos-only');
+  if(oosBtnEl){ oosBtnEl.style.background=''; oosBtnEl.style.borderColor=''; }
   buildCatFilters();
   applyRestockFilter();
 }
@@ -981,55 +1116,45 @@ function applyRestockFilter(){
   if(_restockCatFilter !== 'all') data = data.filter(p=>p.category===_restockCatFilter);
   if(_restockOosOnly)             data = data.filter(p=>p.outOfStock);
 
-  // Sort
   data.sort((a,b)=>{
     let av=a[_restockSortKey], bv=b[_restockSortKey];
     if(typeof av==='string') return _restockSortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
     return _restockSortAsc ? av-bv : bv-av;
   });
 
-  const oosCount  = data.filter(p=>p.outOfStock).length;
-  const warnCount = data.filter(p=>!p.outOfStock&&p.trend>=20).length;
+  _currentFilteredData = data;  // 記憶體暫存，供點貨操作使用
+
+  const oosCount = data.filter(p=>p.outOfStock).length;
   document.getElementById('rk-summary').innerHTML =
-    `<span style="color:var(--red);font-weight:700">🔴 缺貨 ${oosCount}</span>　` +
-    `<span style="color:var(--gold);font-weight:700">🟡 上升趨勢 ${warnCount}</span>`;
+    oosCount > 0
+      ? `<span style="color:var(--red);font-weight:700">🔴 缺貨 ${oosCount}</span>　<span style="color:var(--muted)">共 ${data.length} 種</span>`
+      : `<span style="color:var(--muted);font-family:var(--zh)">共 ${data.length} 種商品</span>`;
 
   const tbody = document.getElementById('rk-tbody');
-  const maxSuggested = Math.max(...data.map(p=>p.suggested), 1);
-  const maxSparkVal  = Math.max(...data.flatMap(p=>p.sparkline), 1);
 
   if(!data.length){
-    tbody.innerHTML = `<tr><td class="rk-td" colspan="10" style="text-align:center;padding:32px;color:var(--muted);font-family:var(--zh)">尚無銷售資料，或此分類無商品</td></tr>`;
+    tbody.innerHTML = `<tr><td class="rk-td" colspan="6" style="text-align:center;padding:32px;color:var(--muted);font-family:var(--zh)">尚無銷售資料，或此分類無商品</td></tr>`;
   } else {
-    tbody.innerHTML = data.map(p=>{
-      const cat     = getCatInfo(p.category);
-      const trendHtml = p.trend > 15
-        ? `<span class="trend-up">↑ +${p.trend}%</span>`
-        : p.trend < -15
-          ? `<span class="trend-dn">↓ ${p.trend}%</span>`
-          : `<span class="trend-eq">→ ${p.trend>=0?'+':''}${p.trend}%</span>`;
-
-      const isHigh  = p.outOfStock || p.suggested > 50;
-      const badge   = p.outOfStock
-        ? '<span class="badge-oos">🔴 缺貨</span>'
-        : p.trend >= 20
-          ? '<span class="badge-warn">🟡 需注意</span>'
-          : '<span class="badge-ok">✓ 穩定</span>';
-
-      const spark = p.sparkline.map(v=>{
-        const h = maxSparkVal > 0 ? Math.round(v/maxSparkVal*22) : 0;
-        return `<div class="sp-bar" style="height:${Math.max(2,h)}px;opacity:${0.4+v/maxSparkVal*0.6}"></div>`;
-      }).join('');
-
-      return `<tr class="rk-tr${p.outOfStock?' oos-row':''}">
+    tbody.innerHTML = data.map((p, i)=>{
+      const cat    = getCatInfo(p.category);
+      const qty    = _restockQty[p.name] || 0;   // 從記憶體取得點貨數
+      const isHigh = p.outOfStock || p.suggested > 50;
+      return `<tr class="rk-tr${p.outOfStock?' oos-row':''}" data-rk-idx="${i}">
+        <td class="rk-td" style="text-align:center">
+          <input type="number" class="restock-qty-input${qty>0?' has-val':''}"
+            min="0" value="${qty}" data-rk-idx="${i}"
+            oninput="setRestockQtyByIdx(${i}, this.value)"
+            onclick="this.select()">
+        </td>
         <td class="rk-td">
           <div class="pname">${h(p.name)}</div>
           <div class="pbc">${p.barcode||'無條碼'}</div>
         </td>
-        <td class="rk-td"><span class="cat-tag">${cat.icon} ${cat.zh}</span></td>
-        <td class="rk-td num">${p.lastWeek}</td>
-        <td class="rk-td num">${p.thisWeek}</td>
-        <td class="rk-td num">${trendHtml}</td>
+        <td class="rk-td">
+          <select class="cat-select" data-prod-name="${h(p.name)}" onchange="setCategoryForProduct(this)">
+            ${CATEGORIES.map(c=>`<option value="${c.id}"${c.id===p.category?' selected':''}>${c.icon} ${c.zh}</option>`).join('')}
+          </select>
+        </td>
         <td class="rk-td num">${p.dailyAvg}</td>
         <td class="rk-td num">${p.weeklyAvg}</td>
         <td class="rk-td">
@@ -1038,8 +1163,6 @@ function applyRestockFilter(){
             <span class="suggest-unit">件</span>
           </div>
         </td>
-        <td class="rk-td">${badge}</td>
-        <td class="rk-td"><div class="sparkline">${spark}</div></td>
       </tr>`;
     }).join('');
   }
@@ -1048,126 +1171,41 @@ function applyRestockFilter(){
     `共 <b>${data.length}</b> 種商品　・　總建議庫存 <b>${data.reduce((s,p)=>s+p.suggested,0)}</b> 件`;
 }
 
-/* ── Export restock CSV ── */
+/* ── 僅補貨列印：只列印補貨數 > 0 的列（純前端，不寫 Firebase）── */
+function printRestockOnly(){
+  const hasItems = Object.values(_restockQty).some(v=>v>0);
+  if(!hasItems){ showToast('尚無補貨項目，請先輸入數量','err'); return; }
+
+  document.querySelectorAll('#rk-tbody .rk-tr').forEach(tr=>{
+    const idx  = parseInt(tr.dataset.rkIdx);
+    const prod = _currentFilteredData[idx];
+    const qty  = prod ? (_restockQty[prod.name]||0) : 0;
+    if(qty === 0) tr.classList.add('print-hide-row');
+  });
+
+  window.print();
+
+  setTimeout(()=>{
+    document.querySelectorAll('.print-hide-row').forEach(el=>el.classList.remove('print-hide-row'));
+  }, 1500);
+}
+
+/* ── CSV 匯出：只輸出補貨數 > 0 的品項（純記憶體，不寫 Firebase）── */
 function exportRestockCSV(){
-  const data = calcRestock();
-  const rows=[['商品名稱','條碼','分類','上週銷量','本週銷量','趨勢%','日均','週均','建議庫存','狀態']];
-  data.forEach(p=>{
-    const cat=getCatInfo(p.category);
-    const status=p.outOfStock?'缺貨':p.trend>=20?'需注意':'穩定';
-    rows.push([p.name,p.barcode||'無條碼',cat.zh,p.lastWeek,p.thisWeek,p.trend,p.dailyAvg,p.weeklyAvg,p.suggested,status]);
+  const rows = [['補貨數','商品名稱','條碼','分類','日均','週均','建議庫存']];
+  _currentFilteredData.forEach(p=>{
+    const qty = _restockQty[p.name]||0;
+    if(qty === 0) return;   // 數量為 0 不輸出
+    const cat = getCatInfo(p.category);
+    rows.push([qty, p.name, p.barcode||'無條碼', cat.zh, p.dailyAvg, p.weeklyAvg, p.suggested]);
   });
-  downloadCSV(rows, 'inventory_'+fd(new Date()).replace(/-/g,'')+'.csv');
-  showToast('已匯出庫存清單 CSV','ok');
-}
-function printRestock(){window.print();}
-
-/* ══════════════════════════════
-   PAGE 3: TRENDS
-   ══════════════════════════════ */
-function renderTrends(){
-  const txList = getTx();
-  const now    = new Date();
-
-  /* 30-day bar */
-  const dailyMap={};
-  txList.forEach(tx=>{
-    const ds=fd(new Date(tx.date));
-    if(!dailyMap[ds]) dailyMap[ds]=0;
-    dailyMap[ds]+=tx.total;
-  });
-  const dates30=[]; for(let i=29;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i);dates30.push(fd(d));}
-  const vals30=dates30.map(d=>dailyMap[d]||0);
-  const max30=Math.max(...vals30,1);
-  const todayStr=fd(now);
-  const el30=document.getElementById('tr-30day');
-  const el30l=document.getElementById('tr-30day-labels');
-  el30.innerHTML=vals30.map((v,i)=>{
-    const pct=(v/max30*100).toFixed(1);
-    const isToday=dates30[i]===todayStr;
-    const bg=isToday?'var(--gold)':v===0?'var(--surface3)':'var(--accent)';
-    return `<div class="bbc-bar" style="height:${Math.max(2,pct)}%;background:${bg};flex:1;border-radius:3px 3px 0 0">
-      <div class="bbc-tip">${dates30[i].slice(5)} NT$${v}</div></div>`;
-  }).join('');
-  el30l.innerHTML=dates30.map((d,i)=>i%5===0?`<div class="bar-lbl">${d.slice(5,10)}</div>`:`<div class="bar-lbl"></div>`).join('');
-
-  /* 8-week compare */
-  const wkMap={};
-  txList.forEach(tx=>{
-    const k=fweek(new Date(tx.date));
-    if(!wkMap[k])wkMap[k]={total:0,label:fweekLabel(new Date(tx.date))};
-    wkMap[k].total+=tx.total;
-  });
-  const wkKeys=Object.keys(wkMap).sort().reverse().slice(0,8);
-  const maxWk=Math.max(...wkKeys.map(k=>wkMap[k].total),1);
-  const wkEl=document.getElementById('tr-wk-compare');
-  const curWkKey=fweek(now);
-  wkEl.innerHTML=wkKeys.map((k,i)=>{
-    const w=wkMap[k];
-    const pct=(w.total/maxWk*100).toFixed(1);
-    const isCur=k===curWkKey;
-    return `<div class="wk-row">
-      <div class="wk-lbl" style="${isCur?'color:var(--accent);font-weight:700':''}">${i===0?'本週':i===1?'上週':w.label}</div>
-      <div class="wk-track"><div class="wk-fill" style="width:${pct}%;background:${isCur?'var(--accent)':i<2?'#93c5fd':'#dbeafe'}"></div></div>
-      <div class="wk-val" style="${isCur?'color:var(--accent)':''}">NT$ ${w.total.toLocaleString()}</div>
-    </div>`;
-  }).join('');
-
-  /* Hourly */
-  const hourMap=new Array(24).fill(0);
-  const cutoff=new Date(now); cutoff.setDate(now.getDate()-90);
-  txList.forEach(tx=>{
-    const d=new Date(tx.date);
-    if(d<cutoff)return;
-    hourMap[d.getHours()]+=tx.total;
-  });
-  const hr9to21=hourMap.slice(9,22);
-  const maxHr=Math.max(...hr9to21,1);
-  const hrEl=document.getElementById('tr-hourly');
-  const hrLEl=document.getElementById('tr-hourly-labels');
-  hrEl.innerHTML=hr9to21.map(v=>`<div class="hr-bar" style="flex:1;height:${Math.max(2,(v/maxHr*100)).toFixed(1)}%;background:var(--accent);opacity:${0.35+v/maxHr*0.65}"></div>`).join('');
-  hrLEl.innerHTML=[...Array(13)].map((_,i)=>`<div class="hr-lbl">${9+i}</div>`).join('');
-
-  /* Category compare: this week vs last week */
-  const catThis={}, catLast={};
-  CATEGORIES.forEach(c=>{catThis[c.id]=0;catLast[c.id]=0;});
-  // Build product→category map
-  const prodCat={};
-  const prods=getProds(); const nobcPs=getNobcProds();
-  Object.entries(prods).forEach(([,p])=>{prodCat[p.name]=p.category||'other';});
-  nobcPs.forEach(p=>{if(!prodCat[p.name])prodCat[p.name]=p.category||'other';});
-  txList.forEach(tx=>{
-    const age=(now-new Date(tx.date))/MS_DAY;
-    tx.items.forEach(item=>{
-      const cat=prodCat[item.name]||'other';
-      if(age<7)  catThis[cat]=(catThis[cat]||0)+item.price*item.qty;
-      else if(age<14) catLast[cat]=(catLast[cat]||0)+item.price*item.qty;
-    });
-  });
-  const maxCatVal=Math.max(...CATEGORIES.map(c=>Math.max(catThis[c.id]||0,catLast[c.id]||0)),1);
-  const ccEl=document.getElementById('tr-cat-compare');
-  ccEl.innerHTML=CATEGORIES.map(c=>{
-    const tw=catThis[c.id]||0, lw=catLast[c.id]||0;
-    if(tw===0&&lw===0)return '';
-    const p=pct(tw,lw);
-    const twPct=(tw/maxCatVal*100).toFixed(1);
-    const lwPct=(lw/maxCatVal*100).toFixed(1);
-    const diffHtml=p===0?'<span style="color:var(--muted2)">→</span>':p>0?`<span style="color:var(--green)">↑ +${p}%</span>`:`<span style="color:var(--red)">↓ ${p}%</span>`;
-    return `<div class="wk-row" style="grid-template-columns:70px 1fr 90px">
-      <div class="wk-lbl">${c.icon} ${c.zh}</div>
-      <div>
-        <div style="display:flex;gap:4px;align-items:flex-end;height:16px">
-          <div style="width:${twPct}%;max-width:100%;height:10px;background:var(--accent);border-radius:2px 2px 0 0;transition:width .4s"></div>
-          <div style="width:${lwPct}%;max-width:100%;height:7px;background:#bfdbfe;border-radius:2px 2px 0 0;transition:width .4s"></div>
-        </div>
-      </div>
-      <div style="font-family:var(--mono);font-size:10px;text-align:right">${diffHtml}</div>
-    </div>`;
-  }).join('');
+  if(rows.length <= 1){ showToast('尚無補貨項目','err'); return; }
+  downloadCSV(rows, 'restock_'+fd(new Date()).replace(/-/g,'')+'.csv');
+  showToast('已匯出補貨清單 CSV','ok');
 }
 
 /* ══════════════════════════════
-   PAGE 4: RANKING
+   PAGE 3 (was 4): RANKING
    ══════════════════════════════ */
 function renderRanking(){
   const days    = parseInt(document.getElementById('rank-range').value)||7;
@@ -1257,10 +1295,10 @@ function getCatForName(name, prods, nobcPs){
 function renderRankTable(id, entries, unit, maxVal, color, isMoney=false){
   const el=document.getElementById(id);
   if(!entries.length){
-    el.innerHTML=`<tr><td style="padding:20px;text-align:center;color:var(--muted);font-family:var(--zh)">尚無資料</td></tr>`;return;
+    el.innerHTML=`<tbody><tr><td colspan="3" style="padding:20px;text-align:center;color:var(--muted);font-family:var(--zh)">尚無資料</td></tr></tbody>`;return;
   }
   const rankClasses=['g1','g2','g3'];
-  el.innerHTML=entries.map(([name,v],i)=>{
+  el.innerHTML=`<tbody>${entries.map(([name,v],i)=>{
     const barPct=(v/maxVal*100).toFixed(1);
     const rCls=i<3?rankClasses[i]:'';
     const valStr=isMoney?'NT$ '+v.toLocaleString():v+' '+unit;
@@ -1274,7 +1312,7 @@ function renderRankTable(id, entries, unit, maxVal, color, isMoney=false){
         <div class="rank-val" style="color:${color}">${valStr}</div>
       </td>
     </tr>`;
-  }).join('');
+  }).join('')}</tbody>`;
 }
 
 /* ══════════════════════════════
@@ -1300,7 +1338,7 @@ function renderTransactions(){
   const from=document.getElementById('tx-from').value;
   const to  =document.getElementById('tx-to').value;
   _txFiltered=getTx()
-    .filter(tx=>{ const d=fd(new Date(tx.date)); return d>=from && d<=to; })
+    .filter(tx=>{ const d=tx.date.substring(0,10); return d>=from && d<=to; })
     .sort((a,b)=>new Date(b.date)-new Date(a.date));
   const total=_txFiltered.reduce((s,tx)=>s+tx.total,0);
   document.getElementById('tx-count-label').textContent=`${_txFiltered.length} 筆交易`;
@@ -1309,14 +1347,15 @@ function renderTransactions(){
 }
 function txLoadMore(){ _txOffset+=TX_PAGE_SIZE; renderTxPage(false); }
 function renderTxPage(reset){
-  const slice=_txFiltered.slice(_txOffset, _txOffset+TX_PAGE_SIZE);
+  const startIdx=_txOffset;
+  const slice=_txFiltered.slice(startIdx, startIdx+TX_PAGE_SIZE);
   const tbody=document.getElementById('tx-tbody');
-  const rows=slice.map(tx=>{
+  const rows=slice.map((tx, si)=>{
     const d=new Date(tx.date);
     const dateStr=d.toLocaleDateString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
     const summary=tx.items.slice(0,3).map(i=>`${h(i.name)}×${i.qty}`).join('、')+(tx.items.length>3?'…':'');
     const srcBadge=tx.source==='online'?'<span class="tx-badge-online">線上</span>':'<span class="tx-badge-pos">POS</span>';
-    return `<tr class="tx-tr" onclick="showTxDetail(${JSON.stringify(JSON.stringify(tx))})">
+    return `<tr class="tx-tr" onclick="showTxDetail(${startIdx+si})">
       <td class="tx-td" style="font-family:var(--mono);font-size:11px;color:var(--muted)">${dateStr}</td>
       <td class="tx-td" style="font-family:var(--zh)">${summary}</td>
       <td class="tx-td num" style="font-family:var(--mono);font-weight:700;color:var(--gold)">NT$ ${tx.total}</td>
@@ -1326,10 +1365,10 @@ function renderTxPage(reset){
   if(reset) tbody.innerHTML=rows;
   else tbody.innerHTML+=rows;
   const moreBtn=document.getElementById('tx-load-more');
-  moreBtn.style.display=_txOffset+TX_PAGE_SIZE<_txFiltered.length?'block':'none';
+  moreBtn.style.display=startIdx+TX_PAGE_SIZE<_txFiltered.length?'block':'none';
 }
-function showTxDetail(txJson){
-  const tx=JSON.parse(txJson);
+function showTxDetail(idx){
+  const tx=_txFiltered[idx];
   const d=new Date(tx.date);
   document.getElementById('m-tx-id').textContent=`# ${tx.id}`;
   document.getElementById('m-tx-date').textContent=d.toLocaleString('zh-TW');
@@ -1366,7 +1405,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   // Wait for Firebase sync, or render immediately from localStorage
   const init = ()=>{
     renderOverview();
-    buildCatFilters();
   };
   if(document.readyState==='complete') init();
   document.addEventListener('report-data-ready', ()=>{

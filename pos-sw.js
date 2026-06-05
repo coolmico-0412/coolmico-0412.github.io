@@ -1,10 +1,13 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.2
+   POS Service Worker  v1.2.3
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
    ──────────────────────────────────────────
    版本更新紀錄 CHANGELOG
+   v1.2.3
+     - [UI] 暫存此客人購物車按鈕文字放大 1.3 倍
+     - [UI] 暫存列表（hold-bar）內所有文字放大 1.3 倍
    v1.2.2
      - 預快取 POS.html，首次離線也能打開收銀台
      - HTML Network First 增加逾時 fallback，網路卡住時更快使用快取
@@ -18,7 +21,7 @@
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.2';
+const VER          = 'pos-v1.2.3';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;
