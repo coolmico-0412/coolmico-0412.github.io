@@ -7,9 +7,9 @@
 <meta name="theme-color" content="#1e3a8a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="POS 報表">
+<meta name="apple-mobile-web-app-title" content="REPORT">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Crect width='30' height='30' rx='6' fill='%232563eb'/%3E%3Ctext x='15' y='22' text-anchor='middle' font-size='18' fill='white'%3E📊%3C/text%3E%3C/svg%3E">
-<title>POS 報表系統</title>
+<title>REPORT</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════
@@ -441,8 +441,9 @@ async function syncFromFirebase(db, ref, get) {
    ══════════════════════════════ */
 (function(){
   const manifest = {
-    name: "POS 報表系統",
-    short_name: "POS報表",
+    id: "/REPORT",
+    name: "REPORT",
+    short_name: "REPORT",
     description: "銷售報表 · 庫存 · 趨勢 · 排行",
     start_url: "./REPORT.html",
     display: "standalone",
@@ -472,7 +473,7 @@ async function syncFromFirebase(db, ref, get) {
    ══════════════════════════════ */
 (function(){
   if (!('serviceWorker' in navigator)) return;
-  const SW_VERSION = 'report-v1';
+  const SW_VERSION = 'report-app-v1';
   const swCode = `
 const CACHE = '${SW_VERSION}';
 const ASSETS = [self.location.href.replace(/\\/[^/]*$/, '') + '/REPORT.html'];
