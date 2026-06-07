@@ -178,7 +178,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .rk-tr:last-child .rk-td{border-bottom:none;}
 .rk-tr{transition:background .12s;}
 .rk-tr:hover .rk-td{background:#fafbff;}
-.rk-tr.oos-row .rk-td{background:#fef2f208;}
+.rk-tr.oos-row .rk-td{background:#fef2f2;}
 
 .pname{font-size:12px;font-weight:600;color:var(--text);}
 .pbc{font-family:var(--mono);font-size:9px;color:var(--muted2);margin-top:2px;}
@@ -260,7 +260,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .dow-card.peak .dow-val{color:var(--gold);}
 
 /* ════════════════════════
-   PAGE 4: RANKING
+   PAGE 3: RANKING
    ════════════════════════ */
 .rank-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .rank-table{width:100%;border-collapse:collapse;}
@@ -563,14 +563,7 @@ if (window.matchMedia('(display-mode: standalone)').matches
     <span class="sec-title">📊 核心指標</span>
     <span class="sec-sub" id="ov-date-range"></span>
     <div class="sec-ml">
-      <span style="font-size:11px;color:var(--muted)">時間範圍</span>
-      <select id="ov-range" onchange="renderOverview()"
-        style="font-size:11px;border:1.5px solid var(--border2);border-radius:7px;
-               padding:4px 9px;background:var(--surface);color:var(--text2);">
-        <option value="7">最近 7 天</option>
-        <option value="14">最近 14 天</option>
-        <option value="30">最近 30 天</option>
-      </select>
+      <span style="font-size:11px;color:var(--muted);font-family:var(--zh)">近 30 天</span>
     </div>
   </div>
 
@@ -715,7 +708,7 @@ if (window.matchMedia('(display-mode: standalone)').matches
 </div>
 
 <!-- ════════════════════════════════════════
-     PAGE 5: TRANSACTIONS（交易明細）
+     PAGE 4: TRANSACTIONS（交易明細）
      ════════════════════════════════════════ -->
 <div class="page" id="page-transactions">
   <div class="sec-hd" style="margin-top:4px">
@@ -828,12 +821,17 @@ const BASE_CATEGORIES = [
   {id:'freezer2', icon:'🧊', zh:'冷凍櫃2', locked:true},
 ];
 let CATEGORIES = [...BASE_CATEGORIES];
-const CUSTOM_CATS_KEY = 'pos_custom_categories';
+const CUSTOM_CATS_KEY        = 'pos_custom_categories';
+const LOCKED_CAT_OVERRIDES_KEY = 'pos_locked_cat_overrides';
 
 function loadCategories(){
   try{
-    const custom = JSON.parse(localStorage.getItem(CUSTOM_CATS_KEY)||'[]');
-    CATEGORIES = [...BASE_CATEGORIES, ...custom];
+    const custom    = JSON.parse(localStorage.getItem(CUSTOM_CATS_KEY)||'[]');
+    const overrides = JSON.parse(localStorage.getItem(LOCKED_CAT_OVERRIDES_KEY)||'{}');
+    CATEGORIES = [
+      ...BASE_CATEGORIES.map(c => overrides[c.id] ? {...c, ...overrides[c.id]} : c),
+      ...custom
+    ];
   } catch(e){ CATEGORIES = [...BASE_CATEGORIES]; }
 }
 loadCategories();
@@ -890,16 +888,23 @@ function calcRestock(){
   const CALC_START = new Date('2026-05-01T00:00:00');
   const calcDays   = Math.max(1, Math.ceil((now - CALC_START) / MS_DAY));
 
+  /* 特殊商品名稱集合（不為獨立商品，庫存清單略過不顯示） */
+  const specialNames = new Set();
+  Object.values(prods).forEach(p=>{ if(p.special) specialNames.add(p.name); });
+  nobcPs.forEach(p=>{ if(p.special) specialNames.add(p.name); });
+
   /* Build product info map: name → {category, outOfStock, barcode} */
   const prodInfo = {};
   const bcPriceByName = {};
   Object.entries(prods).forEach(([bc,p])=>{
+    if(p.special) return;  // 略過特殊商品
     prodInfo[p.name] = {category:p.category||'shelf1', outOfStock:p.outOfStock===true, barcode:bc};
     bcPriceByName[p.name] = p.price;
   });
   /* 同名但不同價的無條碼商品，稍後另行加入獨立列 */
   const nobcSameNameDiffPrice = [];
   nobcPs.forEach(p=>{
+    if(p.special) return;  // 略過特殊商品
     if(prodInfo[p.name] && prodInfo[p.name].barcode !== null){
       /* 同名條碼商品已存在：名稱且價格皆相同才隱藏無條碼商品 */
       if(bcPriceByName[p.name] === p.price) return; // 重複 → 隱藏
@@ -916,6 +921,7 @@ function calcRestock(){
     const txDate = new Date(tx.date);
     if(txDate < CALC_START) return;
     tx.items.forEach(item=>{
+      if(specialNames.has(item.name)) return;  // 略過特殊商品
       if(!map[item.name]) map[item.name] = {total:0};
       map[item.name].total += item.qty;
     });
@@ -929,7 +935,7 @@ function calcRestock(){
       const info      = prodInfo[name] || {category:'shelf1', outOfStock:false, barcode:null};
       return { name, dailyAvg, weeklyAvg, suggested, ...info };
     })
-    .filter(p => p.dailyAvg > 0);
+    .filter(p => p.dailyAvg > 0 && !specialNames.has(p.name));
 
   /* 同名但不同價的無條碼商品：共用相同銷售數據，另外加入獨立列 */
   nobcSameNameDiffPrice.forEach(nobc=>{
@@ -957,7 +963,7 @@ function renderOverview(){
   const todayStr = fd(now);
   const monthStr = fm(now);
   const weekStr  = fweek(now);
-  const rangeDays = parseInt(document.getElementById('ov-range').value || '7');
+  const rangeDays = 30;
   const rangeCutoff = daysAgo(rangeDays - 1);
 
   /* 日期範圍標示 */
@@ -1007,7 +1013,7 @@ function renderOverview(){
   document.getElementById('kpi-week-diff').innerHTML   = diff(wTotal, prevWTotal);
   document.getElementById('kpi-month').textContent    = 'NT$ '+mTotal;
   document.getElementById('kpi-month-diff').innerHTML  = diff(mTotal, prevMTotal);
-  /* 期間筆數 & 平均單筆現在依 ov-range 選取的天數計算 */
+  /* 期間筆數 & 平均單筆固定以近 30 天計算 */
   document.getElementById('kpi-count').textContent    = rangeCount+' 筆';
   document.getElementById('kpi-count-sub').textContent = '日均 '+(rangeCount/rangeDays).toFixed(1)+' 筆';
   document.getElementById('kpi-avg').textContent      = rangeCount ? 'NT$ '+Math.round(rangeTotal/rangeCount) : '—';
@@ -1194,6 +1200,7 @@ function toggleOosOnly(){
   const btn = document.getElementById('btn-oos-only');
   btn.style.background  = _restockOosOnly ? 'var(--red)' : '';
   btn.style.borderColor = _restockOosOnly ? 'var(--red)' : '';
+  btn.style.color       = _restockOosOnly ? '#fff' : '';
   applyRestockFilter();
 }
 function sortRestock(key){
@@ -1310,7 +1317,7 @@ function exportRestockCSV(){
 }
 
 /* ══════════════════════════════
-   PAGE 3 (was 4): RANKING
+   PAGE 3: RANKING
    ══════════════════════════════ */
 function renderRanking(){
   const days    = parseInt(document.getElementById('rank-range').value)||7;
@@ -1320,10 +1327,16 @@ function renderRanking(){
   const prods   = getProds(); const nobcPs=getNobcProds();
 
   const qtyMap={}, revMap={}, catRevMap={};
+  /* 特殊商品名稱集合（排行內略過不顯示） */
+  const specialNames = new Set();
+  Object.values(prods).forEach(p=>{ if(p.special) specialNames.add(p.name); });
+  nobcPs.forEach(p=>{ if(p.special) specialNames.add(p.name); });
+
   txList.forEach(tx=>{
     const d=new Date(tx.date);
     if(d<cutoff)return;
     tx.items.forEach(item=>{
+      if(specialNames.has(item.name)) return;  // 略過特殊商品
       qtyMap[item.name]=(qtyMap[item.name]||0)+item.qty;
       revMap[item.name]=(revMap[item.name]||0)+item.price*item.qty;
       const cat=getCatForName(item.name,prods,nobcPs);
@@ -1372,8 +1385,8 @@ function renderRanking(){
   /* Slow movers */
   const soldNames=new Set(Object.keys(qtyMap));
   const allProds=[
-    ...Object.values(prods).map(p=>({name:p.name,cat:p.category||'other'})),
-    ...nobcPs.map(p=>({name:p.name,cat:p.category||'other'}))
+    ...Object.values(prods).filter(p=>!p.special).map(p=>({name:p.name,cat:p.category||'other'})),
+    ...nobcPs.filter(p=>!p.special).map(p=>({name:p.name,cat:p.category||'other'}))
   ];
   const slow=allProds.filter(p=>!soldNames.has(p.name));
   const slowEl=document.getElementById('rank-slow');
@@ -1421,7 +1434,7 @@ function renderRankTable(id, entries, unit, maxVal, color, isMoney=false){
 }
 
 /* ══════════════════════════════
-   PAGE 5: TRANSACTIONS
+   PAGE 4: TRANSACTIONS
    ══════════════════════════════ */
 let _txOffset = 0;
 const TX_PAGE_SIZE = 50;
@@ -1457,7 +1470,7 @@ function renderTxPage(reset){
   const tbody=document.getElementById('tx-tbody');
   const rows=slice.map((tx, si)=>{
     const d=new Date(tx.date);
-    const dateStr=d.toLocaleDateString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const dateStr=d.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
     const summary=tx.items.slice(0,3).map(i=>`${h(i.name)}×${i.qty}`).join('、')+(tx.items.length>3?'…':'');
     const srcBadge=tx.source==='online'?'<span class="tx-badge-online">線上</span>':'<span class="tx-badge-pos">POS</span>';
     return `<tr class="tx-tr" onclick="showTxDetail(${startIdx+si})">
@@ -1517,7 +1530,7 @@ function renderCatManagerList(){
   el.innerHTML = CATEGORIES.map(c=>`
     <div class="cat-mgr-row">
       <input type="text" class="cat-mgr-icon-input" value="${h(c.icon)}"
-        maxlength="2" ${c.locked?'':''}
+        maxlength="2"
         onchange="updateCatField('${c.id}','icon',this.value)"
         title="圖示 Emoji">
       <input type="text" class="cat-mgr-name-input" value="${h(c.zh)}"
@@ -1573,6 +1586,15 @@ function deleteCustomCategory(id){
 function saveCustomCategories(){
   const custom = CATEGORIES.filter(c=>!c.locked);
   localStorage.setItem(CUSTOM_CATS_KEY, JSON.stringify(custom));
+  // 儲存內建分類的名稱 / 圖示覆寫（若有修改）
+  const overrides = {};
+  BASE_CATEGORIES.forEach(base=>{
+    const cur = CATEGORIES.find(c=>c.id===base.id);
+    if(cur && (cur.icon!==base.icon || cur.zh!==base.zh)){
+      overrides[base.id] = {icon:cur.icon, zh:cur.zh};
+    }
+  });
+  localStorage.setItem(LOCKED_CAT_OVERRIDES_KEY, JSON.stringify(overrides));
 }
 
 /* ══════════════════════════════════════════
