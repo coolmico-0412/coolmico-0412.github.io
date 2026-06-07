@@ -115,7 +115,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .glbl .zh{font-family:var(--zh);font-size:20px;letter-spacing:0;text-transform:none;display:block;margin-top:1px;font-weight:400;}
 .gamt{font-family:var(--mono);font-size:39px;font-weight:700;color:#fff;white-space:nowrap;}
 .co-actions{padding:13px 18px;display:flex;flex-direction:column;gap:8px;}
-.btn-checkout{width:100%;padding:14px;background:var(--gold);color:#fff;font-weight:700;font-size:23px;border:none;border-radius:10px;cursor:pointer;font-family:var(--th);transition:all .2s;box-shadow:0 2px 8px rgba(217,119,6,.2);}
+.btn-checkout{width:100%;padding:14px;background:var(--gold);color:#fff;font-weight:700;font-size:29.9px;border:none;border-radius:10px;cursor:pointer;font-family:var(--th);transition:all .2s;box-shadow:0 2px 8px rgba(217,119,6,.2);}
 .btn-checkout:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 6px 16px rgba(217,119,6,.32);}
 .btn-checkout:disabled{background:var(--border);color:var(--muted2);cursor:not-allowed;transform:none;box-shadow:none;}
 
@@ -346,14 +346,14 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .inner-fab:hover{background:var(--accent2);}
 
 .hold-bar{display:flex;gap:7px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--border);background:var(--surface2);}
-.hold-bar-empty{padding:10px 14px;border-top:1px solid var(--border);background:var(--surface2);font-size:18.6px;color:var(--muted2);font-family:var(--zh);text-align:center;}
+.hold-bar-empty{padding:10px 14px;border-top:1px solid var(--border);background:var(--surface2);font-size:16.7px;color:var(--muted2);font-family:var(--zh);text-align:center;}
 .hold-slot{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--surface);border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;transition:all .15s;min-width:0;}
 .hold-slot:hover{border-color:var(--gold);background:#fffbeb;}
-.hold-slot .hs-num{font-family:var(--mono);font-size:16.9px;color:var(--muted2);font-weight:700;flex-shrink:0;}
+.hold-slot .hs-num{font-family:var(--mono);font-size:15.2px;color:var(--muted2);font-weight:700;flex-shrink:0;}
 .hold-slot .hs-info{display:flex;flex-direction:column;gap:1px;min-width:0;}
-.hold-slot .hs-count{font-size:18.6px;color:var(--text);font-family:var(--zh);white-space:nowrap;}
-.hold-slot .hs-amt{font-family:var(--mono);font-size:18.6px;font-weight:700;color:var(--gold);white-space:nowrap;}
-.hold-slot .hs-del{font-size:22px;color:var(--muted2);margin-left:4px;flex-shrink:0;line-height:1;padding:0 2px;}
+.hold-slot .hs-count{font-size:16.7px;color:var(--text);font-family:var(--zh);white-space:nowrap;}
+.hold-slot .hs-amt{font-family:var(--mono);font-size:16.7px;font-weight:700;color:var(--gold);white-space:nowrap;}
+.hold-slot .hs-del{font-size:19.8px;color:var(--muted2);margin-left:4px;flex-shrink:0;line-height:1;padding:0 2px;}
 .hold-slot .hs-del:hover{color:var(--red);}
 .btn-hold{width:100%;padding:10px 12px;background:transparent;border:1.5px solid var(--border2);color:var(--muted);border-radius:8px;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px;}
 .btn-hold:hover{border-color:var(--gold);color:var(--gold);background:#fffbeb;}
@@ -1574,26 +1574,29 @@ function editQty(bc){
 }
 
 // ── Custom Numpad ──
-let _npBc=null, _npVal='';
+let _npBc=null, _npVal='', _npFirstPress=false;
 
 function openNumpad(bc, currentQty, itemName){
   _npBc=bc;
   _npVal=String(currentQty >= 1 ? currentQty : 1); // ★ Fix: 顯示當前數量而非固定 0
+  _npFirstPress=true; // ★ 開啟時標記第一次按鍵需先清除顯示值
   document.getElementById('numpad-title').textContent=(itemName||'') + ' — 數量 / จำนวน';
   document.getElementById('numpad-display').textContent=_npVal;
   document.getElementById('numpad-overlay').classList.add('open');
 }
 function closeNumpad(){
   document.getElementById('numpad-overlay').classList.remove('open');
-  _npBc=null; _npVal='';
+  _npBc=null; _npVal=''; _npFirstPress=false;
 }
 function npKey(k){
+  if(_npFirstPress){ _npVal=''; _npFirstPress=false; } // ★ 第一次按任何數字鍵先清除當前值
   if(_npVal==='0') _npVal=k;
   else if(_npVal.length<4) _npVal+=k;
   document.getElementById('numpad-display').textContent=_npVal||'0';
 }
 function npDel(){
-  _npVal=_npVal.slice(0,-1)||'0';
+  if(_npFirstPress){ _npVal='0'; _npFirstPress=false; } // ★ 第一次按刪除鍵先清除為空
+  else _npVal=_npVal.slice(0,-1)||'0';
   document.getElementById('numpad-display').textContent=_npVal;
 }
 function npConfirm(){
@@ -2886,6 +2889,14 @@ function renderHoldBar(){
 // ══════════════════════════════════════════════════════════
 // 版本更新紀錄 CHANGELOG
 // ──────────────────────────────────────────────────────────
+// v1.2.7
+//   1. [UI] 暫存購物車列表（hold-slot）所有文字縮小為 0.9 倍
+//      (.hs-num 16.9→15.2px / .hs-count & .hs-amt 18.6→16.7px /
+//       .hs-del 22→19.8px / .hold-bar-empty 18.6→16.7px)
+//   2. [UI] 結帳按鈕（btn-checkout）字體放大 1.3 倍（23→29.9px）
+//   3. [UX] 數量小鍵盤：開啟後第一次按任何按鍵前先清除顯示數字
+//      (新增 _npFirstPress 旗標，npKey / npDel 均適用)
+//
 // v1.2.6
 //   1. [Bug] renderHoldBar: map 參數 h 遮蔽全域 h() XSS 轉義函式 → 改名 hc
 //   2. [Bug] openModal('m-firebase') 從未呼叫 loadFbConfigToModal()
@@ -2941,7 +2952,7 @@ function renderHoldBar(){
 //   - Firebase onValue 跳過 initial fire，防止自迴響
 //   - 分鍵追蹤寫入，避免全量覆寫
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.2.6';
+const APP_VERSION = '1.2.7';
 
 // 將版本號顯示於 nav brand（DOMContentLoaded 後確保元素存在）
 document.addEventListener('DOMContentLoaded', () => {

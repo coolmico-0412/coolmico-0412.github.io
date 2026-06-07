@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.6
+   POS Service Worker  v1.2.7
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
@@ -21,7 +21,7 @@
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.6';
+const VER          = 'pos-v1.2.7';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;
