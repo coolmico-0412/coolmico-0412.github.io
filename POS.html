@@ -2299,10 +2299,12 @@ function importReport(e){
 function clearAllData(){
   if(!confirm('確定清除所有銷售資料？此操作無法復原。'))return;
   localStorage.removeItem('pos_transactions');
-  // ★ Fix: 同步清空 Firebase，防止重新載入或其他裝置將資料還原
+  // ★ Fix: 同步清空 Firebase pos/ 與 shop/ 交易紀錄，防止其他裝置將資料還原
   if(window._fbSet){
-    window._fbSet('pos/transactions', [])
-      .catch(e=>console.warn('[POS] clearAllData Firebase fail:',e));
+    Promise.all([
+      window._fbSet('pos/transactions', []),
+      window._fbSet('shop/transactions', []),
+    ]).catch(e=>console.warn('[POS] clearAllData Firebase fail:',e));
   }
   renderStats();renderMonthly();renderWeekly();renderDaily();
   showToast('已清除所有資料','ok');
@@ -2735,16 +2737,25 @@ function speak(text){
 
     // Chrome 15 分鐘後卡死的 workaround：如果 0.8s 後還沒開始就重試一次
     let started = false;
+    let errFired = false; // ★ Fix: 防止 onerror 和 800ms timeout 同時重試
     utt.onstart = () => { started = true; };
     utt.onerror = () => {
-      if(!started){
-        try{ window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(text)); }catch(e){}
+      if(!started && !errFired){
+        errFired = true;
+        try{
+          window.speechSynthesis.cancel();
+          const uttErr = new SpeechSynthesisUtterance(text);
+          if(v) uttErr.voice = v;
+          uttErr.lang='th-TH'; uttErr.rate=0.90; uttErr.pitch=1;
+          window.speechSynthesis.speak(uttErr);
+        }catch(e){}
       }
     };
     try{ window.speechSynthesis.speak(utt); }catch(e){}
 
     setTimeout(()=>{
-      if(!started && window.speechSynthesis){
+      // ★ Fix: 若 onerror 已處理過，不再重試
+      if(!started && !errFired && window.speechSynthesis){
         try{
           window.speechSynthesis.cancel();
           const utt2 = new SpeechSynthesisUtterance(text);
@@ -2757,25 +2768,46 @@ function speak(text){
   }
 
   // 若 voices 尚未載入，等 voices 就緒再說
+  // ★ Fix: 不覆寫全域 onvoiceschanged，改用一次性 listener 避免污染初始化的 handler
   if(!_ttsReady){
     const wait = setTimeout(()=>{ _loadVoices(); _doSpeak(); }, 600);
-    window.speechSynthesis.onvoiceschanged = ()=>{ _loadVoices(); clearTimeout(wait); _doSpeak(); };
+    const _origOvc = window.speechSynthesis.onvoiceschanged;
+    window.speechSynthesis.onvoiceschanged = ()=>{
+      _loadVoices();
+      clearTimeout(wait);
+      _doSpeak();
+      // 恢復原本的 handler
+      window.speechSynthesis.onvoiceschanged = _origOvc || _loadVoices;
+    };
   } else {
     _doSpeak();
   }
 }
 function amountToThai(total){
+  // Thai number words
   const u=['','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
   const t=['','สิบ','ยี่สิบ','สามสิบ','สี่สิบ','ห้าสิบ','หกสิบ','เจ็ดสิบ','แปดสิบ','เก้าสิบ'];
-  if(total===0)return'ศูนย์';
-  let n=Math.round(total),res='';
-  if(n>=1000000){res+=u[Math.min(Math.floor(n/1000000),9)]+'ล้าน';n%=1000000;}
-  if(n>=100000) {res+=u[Math.floor(n/100000)]+'แสน';n%=100000;}
-  if(n>=10000)  {res+=u[Math.floor(n/10000)] +'หมื่น';n%=10000;}
-  if(n>=1000)   {res+=u[Math.floor(n/1000)]  +'พัน'; n%=1000;}
-  if(n>=100)    {res+=u[Math.floor(n/100)]   +'ร้อย';n%=100;}
-  if(n>=10)     {res+=t[Math.floor(n/10)];   n%=10;}
-  if(n>0)       res+=u[n];
+  if(total===0) return 'ศูนย์';
+  let n=Math.round(total), res='';
+  // จัดการล้าน (อาจมากกว่า 9 ล้านได้)
+  if(n>=1000000){
+    const mil=Math.floor(n/1000000);
+    // สร้างคำล้านแบบ recursive เพื่อรองรับ 10 ล้านขึ้นไป
+    res+=amountToThai(mil)+'ล้าน';
+    n%=1000000;
+  }
+  if(n>=100000){res+=u[Math.floor(n/100000)]+'แสน'; n%=100000;}
+  if(n>=10000) {res+=u[Math.floor(n/10000)] +'หมื่น';n%=10000;}
+  if(n>=1000)  {res+=u[Math.floor(n/1000)]  +'พัน';  n%=1000;}
+  if(n>=100)   {res+=u[Math.floor(n/100)]   +'ร้อย'; n%=100;}
+  if(n>=10){
+    res+=t[Math.floor(n/10)];
+    n%=10;
+  }
+  // กฎ เอ็ด: เลขหลักหน่วยเป็น 1 ให้ใช้ "เอ็ด" แทน "หนึ่ง"
+  // ยกเว้นเมื่อค่าเป็น 1 ล้วนๆ (ไม่มีหลักสิบ) ให้ใช้ "หนึ่ง" ตามปกติ
+  if(n===1 && res!=='') res+='เอ็ด';
+  else if(n>0) res+=u[n];
   return res;
 }
 let heldCarts = []; // [{id, items, savedAt}]
@@ -2845,6 +2877,16 @@ function renderHoldBar(){
 // ══════════════════════════════════════════════════════════
 // 版本更新紀錄 CHANGELOG
 // ──────────────────────────────────────────────────────────
+// v1.2.5
+//   1. [Bug] amountToThai: 修正泰語數字朗讀錯誤（เอ็ด rule）
+//      11=สิบเอ็ด / 21=ยี่สิบเอ็ด (舊版誤讀為 สิบหนึ่ง / ยี่สิบหนึ่ง)
+//   2. [Bug] amountToThai: 修正 ≥10,000,000 截頭錯誤（改用遞迴避免 Math.min cap）
+//   3. [Bug] speak(): onerror 重試時補上 voice/lang/rate/pitch 設定
+//   4. [Bug] speak(): 防止 onerror 與 800ms timeout 雙重重試同時觸發
+//   5. [Bug] speak(): 修正 onvoiceschanged 在 speak() 內被覆寫的問題
+//   6. [Feature] 線上訂單：新訂單到達時播放提示音（雙音）+ TTS 語音通知
+//   7. [Bug] clearAllData: 同步清空 Firebase shop/transactions 路徑
+//
 // v1.2.4
 //   1. [UI] 暫存此客人購物車按鈕下方暫存購物車列表文字再放大 1.3 倍
 //      (.hs-num 13→16.9px / .hs-count & .hs-amt 14.3→18.6px /
@@ -2880,7 +2922,7 @@ function renderHoldBar(){
 //   - Firebase onValue 跳過 initial fire，防止自迴響
 //   - 分鍵追蹤寫入，避免全量覆寫
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.2.4';
+const APP_VERSION = '1.2.5';
 
 // 將版本號顯示於 nav brand（DOMContentLoaded 後確保元素存在）
 document.addEventListener('DOMContentLoaded', () => {
@@ -3149,12 +3191,22 @@ function listenOnlineOrders(){
   if(!window._fbOnValue) return;
   // ★ Fix: 先 unsubscribe 舊監聽器，防止重複呼叫時堆疊多個 listener
   if(window._ooUnsubscribe){ try{ window._ooUnsubscribe(); }catch(e){} }
+  let _ooFirstFire = true; // 初次 fire 不通知，避免重載時誤響
   window._ooUnsubscribe = window._fbOnValue('shop/online_orders', snap=>{
+    const prev = _onlineOrders ? _onlineOrders.filter(o=>(o.status||'pending')==='pending').length : 0;
     _onlineOrders = snap && snap.val()
       ? Object.values(snap.val()).filter(o=>o&&o.id).sort((a,b)=>new Date(b.date)-new Date(a.date))
       : [];
+    const curr = _onlineOrders.filter(o=>(o.status||'pending')==='pending').length;
     renderOnlineOrders();
     updateOnlineBadge();
+    // ★ 新訂單到達通知：非首次 fire，且待處理訂單數量增加時，播放提示音+語音
+    if(!_ooFirstFire && curr > prev){
+      playBeep(880, 0.08);
+      setTimeout(()=>playBeep(1100, 0.15), 120);
+      setTimeout(()=>{ speak('มีออเดอร์ใหม่'); }, 300); // "มีออเดอร์ใหม่" = 有新訂單
+    }
+    _ooFirstFire = false;
   }, e=>console.warn('[POS] listen orders:',e));
 }
 

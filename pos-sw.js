@@ -1,10 +1,15 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.4
+   POS Service Worker  v1.2.5
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
    ──────────────────────────────────────────
    版本更新紀錄 CHANGELOG
+   v1.2.5
+     - [Bug] amountToThai เอ็ด rule 修正 + ≥10M 數字修正
+     - [Bug] speak() 語音重試雙響 / voice 遺失 / onvoiceschanged 覆寫 修正
+     - [Feature] 線上訂單新訂單提示音 + TTS 通知
+     - [Bug] clearAllData 同步清空 shop/transactions
    v1.2.4
      - [UI] 暫存此客人購物車按鈕下方暫存購物車列表文字再放大 1.3 倍
        (.hs-num 13→16.9px / .hs-count & .hs-amt 14.3→18.6px /
@@ -25,7 +30,7 @@
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.4';
+const VER          = 'pos-v1.2.5';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;
