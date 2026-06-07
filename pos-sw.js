@@ -1,36 +1,27 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.5
+   POS Service Worker  v1.2.6
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
    ──────────────────────────────────────────
    版本更新紀錄 CHANGELOG
+   v1.2.6
+     - [Bug] renderHoldBar map 參數 h 遮蔽 h() XSS 函式 → 改名 hc
+     - [Bug] openModal('m-firebase') 從未呼叫 loadFbConfigToModal → 已修正
+     - [Bug] 移除 toggleNewBcMode() 死碼（參照不存在的 DOM 元素）
+     - [Perf] renderHoldBar/renderCart/setQty 雙 reduce → 單次迴圈
+     - [Perf] 移除 _origRenderProd 空 wrapper
+     - [UX]  heldCarts 以 sessionStorage 持久化，重整後不遺失
+     - [CSS] will-change 加入掃描動畫元素
    v1.2.5
      - [Bug] amountToThai เอ็ด rule 修正 + ≥10M 數字修正
      - [Bug] speak() 語音重試雙響 / voice 遺失 / onvoiceschanged 覆寫 修正
      - [Feature] 線上訂單新訂單提示音 + TTS 通知
      - [Bug] clearAllData 同步清空 shop/transactions
-   v1.2.4
-     - [UI] 暫存此客人購物車按鈕下方暫存購物車列表文字再放大 1.3 倍
-       (.hs-num 13→16.9px / .hs-count & .hs-amt 14.3→18.6px /
-        .hs-del 16.9→22px / .hold-bar-empty 14.3→18.6px)
-   v1.2.3
-     - [UI] 暫存此客人購物車按鈕文字放大 1.3 倍
-     - [UI] 暫存列表（hold-bar）內所有文字放大 1.3 倍
-   v1.2.2
-     - 預快取 POS.html，首次離線也能打開收銀台
-     - HTML Network First 增加逾時 fallback，網路卡住時更快使用快取
-   v1.2.1
-     - 配合 POS.html v1.2.1 同步版號
-       (Bug fixes: hw-input readonly→inputmode、
-        numpad currentQty、stopScanner 模式判斷、
-        clearAll 同步 Firebase)
-   v1.2.0
-     - 配合前端定時 / 切前台更新偵測
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.5';
+const VER          = 'pos-v1.2.6';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;

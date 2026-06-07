@@ -66,7 +66,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .chz{font-family:var(--zh);font-size:11px;color:var(--muted);margin-left:2px;}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted2);flex-shrink:0;}
 .dot.green{background:var(--green);box-shadow:0 0 8px rgba(5,150,105,.4);}
-.dot.pulse{background:var(--accent);box-shadow:0 0 8px rgba(37,99,235,.35);animation:blink 1.5s infinite;}
+.dot.pulse{background:var(--accent);box-shadow:0 0 8px rgba(37,99,235,.35);animation:blink 1.5s infinite;will-change:opacity;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* ── LEFT COL ── */
@@ -77,7 +77,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .video-wrap{position:relative;background:#0f172a;border-radius:10px;overflow:hidden;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);}
 #preview{width:100%;height:100%;object-fit:cover;display:none;}
 .scan-overlay{position:absolute;inset:0;pointer-events:none;}
-.scan-line{position:absolute;left:12%;right:12%;height:2px;background:linear-gradient(90deg,transparent,#00d4ff,transparent);animation:scanmove 2s ease-in-out infinite;box-shadow:0 0 10px #00d4ff;}
+.scan-line{position:absolute;left:12%;right:12%;height:2px;background:linear-gradient(90deg,transparent,#00d4ff,transparent);animation:scanmove 2s ease-in-out infinite;box-shadow:0 0 10px #00d4ff;will-change:top,opacity;}
 @keyframes scanmove{0%,100%{top:18%;opacity:0}10%,90%{opacity:1}50%{top:80%}}
 .sc{position:absolute;width:24px;height:24px;border-color:#00d4ff;border-style:solid;opacity:.9;}
 .sc.tl{top:10%;left:10%;border-width:3px 0 0 3px}.sc.tr{top:10%;right:10%;border-width:3px 3px 0 0}
@@ -1556,8 +1556,8 @@ function setQty(bc,input){
   if(isNaN(val)||val<1){const item=cart.find(i=>i.barcode===bc);if(item)input.value=item.qty;return;}
   const item=cart.find(i=>i.barcode===bc);if(!item)return;
   item.qty=val;
-  const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
-  const totalQty=cart.reduce((s,i)=>s+i.qty,0);
+  let sub=0, totalQty=0;
+  for(const i of cart){ sub+=i.price*i.qty; totalQty+=i.qty; }
   document.getElementById('item-count').textContent=totalQty;
   document.getElementById('grand-total').textContent='NT$ '+sub;
   document.getElementById('btn-checkout').disabled=cart.length===0;
@@ -1631,8 +1631,8 @@ function renderCart(){
     const bh=document.getElementById('btn-hold');if(bh)bh.disabled=true;
     return;
   }
-  const totalQty=cart.reduce((s,i)=>s+i.qty,0);
-  const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  let totalQty=0, sub=0;
+  for(const i of cart){ totalQty+=i.qty; sub+=i.price*i.qty; }
   body.innerHTML=cart.map((item,idx)=>`
     <div class="t-row">
       <div class="t-num">${idx+1}</div>
@@ -1917,22 +1917,15 @@ function applyEditMode(){
   }
 }
 
-// 初始化：預設 OFF，隱藏商品管理頁籤與編輯按鈕
+// 初始化：預設 OFF，隱藏商品管理頁籤與編輯按鈕；並還原上次的暫存購物車
 document.addEventListener('DOMContentLoaded', function(){
   applyEditMode();
+  _loadHeldCarts();
 });
 // 若 DOMContentLoaded 已觸發，立即執行
 if(document.readyState !== 'loading') applyEditMode();
 
-// ═══ 新條碼開關 ═══
-function toggleNewBcMode(){
-  allowNewBc=!allowNewBc;
-  const btn=document.getElementById('toggle-new-bc');
-  const knob=document.getElementById('toggle-knob');
-  const lbl=document.getElementById('toggle-label');
-  if(allowNewBc){btn.style.background='var(--green)';knob.style.left='21px';lbl.style.color='var(--green)';lbl.textContent='ON';}
-  else{btn.style.background='var(--muted2)';knob.style.left='3px';lbl.style.color='var(--muted)';lbl.textContent='OFF';}
-}
+// ═══ 新條碼開關 ═══（由 _editMode 統一控制，allowNewBc 保留供相容）
 
 // ═══ 商品管理 ═══
 // ═══ 商品管理分類狀態 ═══
@@ -2325,6 +2318,8 @@ function openModal(id){
   // 初始化 select 選項
   if(id==='m-addprod')buildCatOptions('ap-cat','other');
   if(id==='m-addnobc')buildCatOptions('addnobc-cat','other');
+  // ★ Fix: 開啟 Firebase 設定視窗時載入已儲存的設定值（之前從未呼叫導致欄位永遠空白）
+  if(id==='m-firebase')loadFbConfigToModal();
   document.getElementById(id).classList.add('open');
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -2659,12 +2654,7 @@ window.renderNobcListModal = function(){
   if(nb){ nb._fabAttached=false; setTimeout(()=>attachInnerScrollTop(nb),30); }
 };
 
-// prod-main-area 在 renderProdGrid 重建後重新附加
-const _origRenderProd = renderProdGrid;
-window.renderProdGrid = function(){
-  _origRenderProd();
-  // prod-main-area 本身不 overflow，主頁面捲動，FAB 已覆蓋
-};
+// prod-main-area 本身不 overflow，主頁面捲動，全頁 FAB 已覆蓋，無需 inner scroll fab
 
 document.addEventListener('DOMContentLoaded', initStaticScrollTops);
 setTimeout(initStaticScrollTops, 500);
@@ -2810,6 +2800,22 @@ function amountToThai(total){
   else if(n>0) res+=u[n];
   return res;
 }
+const HELD_SS_KEY = 'pos_held_carts';
+function _saveHeldCarts(){
+  try{
+    // savedAt is a Date object – serialize as ISO string for sessionStorage
+    const serialized = heldCarts.map(hc=>({...hc, savedAt: hc.savedAt instanceof Date ? hc.savedAt.toISOString() : hc.savedAt}));
+    sessionStorage.setItem(HELD_SS_KEY, JSON.stringify(serialized));
+  }catch(e){}
+}
+function _loadHeldCarts(){
+  try{
+    const raw = JSON.parse(sessionStorage.getItem(HELD_SS_KEY)||'[]');
+    if(!Array.isArray(raw)) return;
+    heldCarts = raw.map(hc=>({...hc, savedAt: new Date(hc.savedAt)}));
+    if(heldCarts.length) renderHoldBar();
+  }catch(e){ heldCarts=[]; }
+}
 let heldCarts = []; // [{id, items, savedAt}]
 
 function holdCart(){
@@ -2819,6 +2825,7 @@ function holdCart(){
   cart = [];
   renderCart();
   renderHoldBar();
+  _saveHeldCarts();
   showToast('已暫存購物車，可繼續服務下一位客人','ok');
 }
 
@@ -2833,6 +2840,7 @@ function resumeHeld(id){
   heldCarts.splice(idx,1);
   renderCart();
   renderHoldBar();
+  _saveHeldCarts();
   showToast('已恢復暫存購物車','ok');
 }
 
@@ -2840,6 +2848,7 @@ function deleteHeld(id, e){
   e.stopPropagation();
   heldCarts = heldCarts.filter(h=>h.id!==id);
   renderHoldBar();
+  _saveHeldCarts();
   showToast('已刪除暫存購物車','ok');
 }
 
@@ -2850,18 +2859,18 @@ function renderHoldBar(){
     wrap.innerHTML = '';
     return;
   }
-  const slots = heldCarts.map((h,i)=>{
-    const total = h.items.reduce((s,item)=>s+item.price*item.qty,0);
-    const count = h.items.reduce((s,item)=>s+item.qty,0);
-    const t = h.savedAt;
+  const slots = heldCarts.map((hc,i)=>{
+    let total=0, count=0;
+    for(const item of hc.items){ total+=item.price*item.qty; count+=item.qty; }
+    const t = hc.savedAt;
     const timeStr = String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
-    return `<div class="hold-slot" onclick="resumeHeld('${h.id}')" title="點擊恢復此購物車">
+    return `<div class="hold-slot" onclick="resumeHeld('${hc.id}')" title="點擊恢復此購物車">
       <div class="hs-num">${i+1}</div>
       <div class="hs-info">
         <div class="hs-count">${count} 件 · ${timeStr}</div>
         <div class="hs-amt">NT$ ${total}</div>
       </div>
-      <span class="hs-del" onclick="deleteHeld('${h.id}',event)" title="刪除">×</span>
+      <span class="hs-del" onclick="deleteHeld('${hc.id}',event)" title="刪除">×</span>
     </div>`;
   }).join('');
   wrap.innerHTML = `<div class="hold-bar">${slots}</div>`;
@@ -2877,6 +2886,16 @@ function renderHoldBar(){
 // ══════════════════════════════════════════════════════════
 // 版本更新紀錄 CHANGELOG
 // ──────────────────────────────────────────────────────────
+// v1.2.6
+//   1. [Bug] renderHoldBar: map 參數 h 遮蔽全域 h() XSS 轉義函式 → 改名 hc
+//   2. [Bug] openModal('m-firebase') 從未呼叫 loadFbConfigToModal()
+//      → 設定視窗每次開啟欄位均為空白，現已修正
+//   3. [Bug] toggleNewBcMode() 參照不存在的 DOM 元素 → 移除死碼
+//   4. [Perf] renderHoldBar / renderCart / setQty 雙 reduce → 單次 for-of 迴圈
+//   5. [Perf] 移除 _origRenderProd 空 wrapper（無功能，僅增加呼叫開銷）
+//   6. [UX]  heldCarts 以 sessionStorage 持久化，重整頁面後不再遺失暫存購物車
+//   7. [CSS] .scan-line / .dot.pulse 加入 will-change，提示 GPU 合成層
+//
 // v1.2.5
 //   1. [Bug] amountToThai: 修正泰語數字朗讀錯誤（เอ็ด rule）
 //      11=สิบเอ็ด / 21=ยี่สิบเอ็ด (舊版誤讀為 สิบหนึ่ง / ยี่สิบหนึ่ง)
@@ -2922,7 +2941,7 @@ function renderHoldBar(){
 //   - Firebase onValue 跳過 initial fire，防止自迴響
 //   - 分鍵追蹤寫入，避免全量覆寫
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.2.5';
+const APP_VERSION = '1.2.6';
 
 // 將版本號顯示於 nav brand（DOMContentLoaded 後確保元素存在）
 document.addEventListener('DOMContentLoaded', () => {
