@@ -1,10 +1,12 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.7
+   POS Service Worker  v1.2.8
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
    ──────────────────────────────────────────
    版本更新紀錄 CHANGELOG
+   v1.2.8
+     - [Bug] activate 僅清除 pos-* 舊快取，避免刪除同站其他 App 快取
    v1.2.6
      - [Bug] renderHoldBar map 參數 h 遮蔽 h() XSS 函式 → 改名 hc
      - [Bug] openModal('m-firebase') 從未呼叫 loadFbConfigToModal → 已修正
@@ -21,11 +23,12 @@
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.7';
+const VER          = 'pos-v1.2.8';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;
 const ALL_CACHES   = [STATIC_CACHE, FONT_CACHE, FB_CACHE];
+const CACHE_PREFIX = 'pos-';
 
 const PRECACHE = [
   './POS.html',
@@ -54,7 +57,9 @@ self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
-        keys.filter(k => !ALL_CACHES.includes(k)).map(k => caches.delete(k))
+        keys
+          .filter(k => k.startsWith(CACHE_PREFIX) && !ALL_CACHES.includes(k))
+          .map(k => caches.delete(k))
       ))
       .then(() => self.clients.claim())
   );

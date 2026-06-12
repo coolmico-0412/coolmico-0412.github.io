@@ -661,7 +661,7 @@ body.pwa-offline .pwa-update-bar.show {
   <button class="nav-tab active" onclick="showPage('pos',this)">🏪 แคชเชียร์<span class="zh">收銀台</span></button>
   <button class="nav-tab" onclick="showPage('online-orders',this)" id="nav-online">🛒 ออนไลน์<span class="zh">線上訂單</span><span id="online-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:50%;font-size:10px;padding:1px 5px;font-family:var(--mono)">0</span></button>
   <button class="nav-tab" onclick="showPage('products',this)">📦 สินค้า<span class="zh">商品管理</span></button>
-  <button class="nav-tab" onclick="showPage('report',this)">📊 รายงาน<span class="zh">銷售報表</span></button>
+  <button class="nav-tab" onclick="showPage('report',this)">📋 <span class="zh">交易明細</span></button>
 </nav>
 
 <!-- ═══ 收銀台 ═══ -->
@@ -798,70 +798,70 @@ body.pwa-offline .pwa-update-bar.show {
   <div id="prod-main-area"></div>
 </div>
 
-<!-- ═══ 銷售報表 ═══ -->
+<!-- ═══ 交易明細 ═══ -->
 <div class="page" id="page-report">
-  <div class="report-top">
-    <div class="stat-row">
-      <div class="stat-chip">
-        <div class="slbl">ยอดขายวันนี้ / 今日銷售</div>
-        <div class="sval hi" id="stat-today">NT$ 0</div>
-        <div class="ssub"><span id="stat-today-count">0</span> รายการ / 筆交易</div>
+  <!-- 本週交易明細 標題 + 編輯模式同一列 -->
+  <div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="font-size:13px;font-weight:700;color:var(--text)">📋 本週交易明細</div>
+        <!-- 收入統計卡片 -->
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:5px 10px;box-shadow:var(--sh);min-width:72px">
+            <div style="font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--muted);font-family:var(--zh)">今日收入</div>
+            <div id="stat-income-today" style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--green);margin-top:1px">NT$ 0</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:5px 10px;box-shadow:var(--sh);min-width:72px">
+            <div style="font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--muted);font-family:var(--zh)">昨日收入</div>
+            <div id="stat-income-yesterday" style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--gold);margin-top:1px">NT$ 0</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:5px 10px;box-shadow:var(--sh);min-width:72px">
+            <div style="font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--muted);font-family:var(--zh)">本週收入</div>
+            <div id="stat-income-week" style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);margin-top:1px">NT$ 0</div>
+          </div>
+        </div>
       </div>
-      <div class="stat-chip">
-        <div class="slbl">ยอดขายสัปดาห์นี้ / 本週銷售</div>
-        <div class="sval" id="stat-week">NT$ 0</div>
-        <div class="ssub"><span id="stat-week-count">0</span> รายการ / 筆交易</div>
-      </div>
-      <div class="stat-chip">
-        <div class="slbl">ยอดขายเดือนนี้ / 本月銷售</div>
-        <div class="sval" id="stat-month">NT$ 0</div>
-        <div class="ssub"><span id="stat-month-count">0</span> รายการ / 筆交易</div>
+      <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;box-shadow:var(--sh);cursor:pointer;user-select:none;" onclick="toggleEditMode()">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-family:var(--zh)">✏ 編輯模式</div>
+          <div style="font-size:10px;color:var(--muted2);margin-top:2px;font-family:var(--zh)">商品管理 / แก้ไขสินค้า</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div id="toggle-edit-mode" style="position:relative;width:42px;height:24px;border-radius:12px;background:var(--muted2);transition:background .2s;flex-shrink:0;">
+            <div id="toggle-edit-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);"></div>
+          </div>
+          <span id="toggle-edit-label" style="font-size:10px;font-weight:700;color:var(--muted);font-family:var(--mono);">OFF</span>
+        </div>
       </div>
     </div>
-    <div class="btn-row" style="align-items:center">
-      <!-- 編輯模式開關 -->
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border2);border-radius:9px">
-        <span style="font-size:12px;font-family:var(--zh);color:var(--text2);white-space:nowrap">✏ 編輯模式</span>
-        <button id="toggle-edit-mode" onclick="toggleEditMode()" style="position:relative;width:42px;height:24px;border-radius:12px;border:none;cursor:pointer;transition:background .2s;background:var(--muted2);flex-shrink:0" title="ON：顯示商品管理與報表匯入匯出 / OFF：隱藏">
-          <span id="toggle-edit-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span>
-        </button>
-        <span id="toggle-edit-label" style="font-size:11px;font-family:var(--mono);color:var(--muted);font-weight:700">OFF</span>
+    <div class="tbl">
+      <div id="recent-tx-head" class="t-head" style="grid-template-columns:140px 1fr 110px">
+        <div>เวลา <span class="zh">時間</span></div>
+        <div>รายการ <span class="zh">品項摘要</span></div>
+        <div style="text-align:right">ยอด <span class="zh">金額</span></div>
+        <div id="recent-tx-head-del" style="display:none"></div>
       </div>
-      <div id="report-edit-btns" style="display:none;gap:7px;flex-wrap:wrap;align-items:center">
-        <button class="btn btn-green" style="font-size:12px;padding:7px 12px" onclick="exportCSV()">⬇ ส่งออก CSV / 匯出報表</button>
-        <button class="btn btn-ghost" style="font-size:12px;padding:7px 12px" onclick="document.getElementById('imp-report').click()">⬆ นำเข้า / 匯入</button>
-        <input type="file" id="imp-report" accept=".json" style="display:none" onchange="importReport(event)">
-        <button class="btn btn-danger" style="font-size:12px;padding:7px 12px" onclick="clearAllData()">🗑 ลบทั้งหมด / 清除</button>
+      <div id="recent-tx-body">
+        <div class="empty-st"><div class="ei">📋</div><div>ยังไม่มีรายการ</div><div class="zh">本週尚無銷售資料</div></div>
       </div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:right;font-family:var(--zh)">💡 每月/週/日報表及匯出請至 REPORT 系統 → 明細頁籤</div>
+  </div>
+</div>
+
+<!-- ═══ Modal: 刪除交易警告 ═══ -->
+<div class="overlay" id="m-delete-tx">
+  <div class="mbox" style="width:380px">
+    <div class="m-title" style="color:var(--red)">🗑 確認刪除這筆交易？<span class="zh">此操作無法復原</span></div>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 14px;margin-bottom:4px;font-family:var(--zh);font-size:13px;color:var(--red);line-height:1.7">
+      ⚠ 刪除後，此筆銷售紀錄將永久消失，<b>無法恢復</b>。
+    </div>
+    <div id="delete-tx-preview" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-family:var(--zh);font-size:12px;color:var(--text2);line-height:1.8"></div>
+    <div class="m-acts">
+      <button class="btn" style="flex:1;background:var(--red);color:#fff;border:none;font-size:14px" id="delete-tx-confirm-btn">🗑 確認刪除</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('m-delete-tx')">取消</button>
     </div>
   </div>
-  <div class="report-cols">
-    <div class="report-panel">
-      <div class="rp-hd">
-        <div class="rp-hd-title">รายเดือน <span class="zh">每月報表</span></div>
-      </div>
-      <div class="r-list" id="monthly-list">
-        <div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>
-      </div>
-    </div>
-    <div class="report-panel">
-      <div class="rp-hd">
-        <div class="rp-hd-title">รายสัปดาห์ <span class="zh">每週報表</span></div>
-      </div>
-      <div class="r-list" id="weekly-list">
-        <div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>
-      </div>
-    </div>
-    <div class="report-panel">
-      <div class="rp-hd">
-        <div class="rp-hd-title">รายวัน <span class="zh">每日報表</span></div>
-      </div>
-      <div class="r-list" id="daily-list">
-        <div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>
-      </div>
-    </div>
-  </div>
-  <div style="font-size:11px;color:var(--muted);margin-top:10px;font-family:var(--zh);text-align:right">💡 點擊各列項查看當期品項銷售明細</div>
 </div>
 
 <!-- ═══ 線上訂單頁 ═══ -->
@@ -1342,7 +1342,7 @@ async function pickDataFile(){
         await _loadFromFile();
         setFileStatus('linked','✓ '+(_fileHandle.name||'pos_data.json'));
         showToast('已重新連結：'+_fileHandle.name,'ok');
-        renderProdGrid();renderStats();renderMonthly();renderWeekly();renderDaily();
+        renderProdGrid();renderStats();renderRecentTx();
         return;
       }
     }catch(e){}
@@ -1375,7 +1375,7 @@ async function pickDataFile(){
       setFileStatus('linked','✓ '+_fileHandle.name);
       showToast('已建立資料檔案：'+_fileHandle.name,'ok');
     }
-    renderProdGrid();renderStats();renderMonthly();renderWeekly();renderDaily();
+    renderProdGrid();renderStats();renderRecentTx();
   }catch(e){
     if(e.name!=='AbortError') showToast('操作取消','err');
   }
@@ -1896,14 +1896,12 @@ function applyEditMode(){
   const knob  = document.getElementById('toggle-edit-knob');
   const lbl   = document.getElementById('toggle-edit-label');
   const prodTab  = document.querySelector("button.nav-tab[onclick*=\"'products'\"]");
-  const editBtns = document.getElementById('report-edit-btns');
 
   if(_editMode){
     if(btn)  btn.style.background = 'var(--green)';
     if(knob) knob.style.left = '21px';
     if(lbl)  { lbl.style.color = 'var(--green)'; lbl.textContent = 'ON'; }
     if(prodTab)  prodTab.style.display = '';
-    if(editBtns) editBtns.style.display = 'flex';
   } else {
     if(btn)  btn.style.background = 'var(--muted2)';
     if(knob) knob.style.left = '3px';
@@ -1916,8 +1914,9 @@ function applyEditMode(){
       }
       prodTab.style.display = 'none';
     }
-    if(editBtns) editBtns.style.display = 'none';
   }
+  // 同步更新交易明細刪除按鈕與表頭欄位
+  renderRecentTx();
 }
 
 // 初始化：預設 OFF，隱藏商品管理頁籤與編輯按鈕；並還原上次的暫存購物車
@@ -2206,24 +2205,125 @@ function renderStats(){
     if(fm(d)===month){mT+=tx.total;mC++;}
     if(fweek(d)===week){wT+=tx.total;wC++;}
   });
-  document.getElementById('stat-today').textContent='NT$ '+tT;
-  document.getElementById('stat-today-count').textContent=tC;
-  document.getElementById('stat-month').textContent='NT$ '+mT;
-  document.getElementById('stat-month-count').textContent=mC;
-  const sw=document.getElementById('stat-week');
-  const swc=document.getElementById('stat-week-count');
-  if(sw)sw.textContent='NT$ '+wT;
-  if(swc)swc.textContent=wC;
+  const st=document.getElementById('stat-today');if(st)st.textContent='NT$ '+tT;
+  const stc=document.getElementById('stat-today-count');if(stc)stc.textContent=tC;
+  const sm=document.getElementById('stat-month');if(sm)sm.textContent='NT$ '+mT;
+  const smc=document.getElementById('stat-month-count');if(smc)smc.textContent=mC;
+  const sw=document.getElementById('stat-week');if(sw)sw.textContent='NT$ '+wT;
+  const swc=document.getElementById('stat-week-count');if(swc)swc.textContent=wC;
 }
+
+// 本週交易明細（週一至週日，用於 POS 交易明細頁）
+function renderRecentTx(){
+  const txList=getTx();
+  const now=new Date();
+  // 計算本週週一
+  const day=now.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  const diffToMon=day===0?-6:1-day;
+  const weekMon=new Date(now);
+  weekMon.setHours(0,0,0,0);
+  weekMon.setDate(now.getDate()+diffToMon);
+  // 計算本週週日（週一 +6 天）23:59:59
+  const weekSun=new Date(weekMon);
+  weekSun.setDate(weekMon.getDate()+6);
+  weekSun.setHours(23,59,59,999);
+  // 今日 / 昨日範圍
+  const todayStart=new Date(now); todayStart.setHours(0,0,0,0);
+  const todayEnd=new Date(now); todayEnd.setHours(23,59,59,999);
+  const ydayStart=new Date(todayStart); ydayStart.setDate(todayStart.getDate()-1);
+  const ydayEnd=new Date(todayEnd); ydayEnd.setDate(todayEnd.getDate()-1);
+  // 計算各期間收入
+  let incToday=0,incYday=0,incWeek=0;
+  txList.forEach(tx=>{
+    const d=new Date(tx.date);
+    if(d>=weekMon&&d<=weekSun) incWeek+=tx.total;
+    if(d>=todayStart&&d<=todayEnd) incToday+=tx.total;
+    if(d>=ydayStart&&d<=ydayEnd) incYday+=tx.total;
+  });
+  // 更新統計卡片
+  const elT=document.getElementById('stat-income-today');
+  const elY=document.getElementById('stat-income-yesterday');
+  const elW=document.getElementById('stat-income-week');
+  if(elT) elT.textContent='NT$ '+incToday.toLocaleString();
+  if(elY) elY.textContent='NT$ '+incYday.toLocaleString();
+  if(elW) elW.textContent='NT$ '+incWeek.toLocaleString();
+  // 更新表頭欄位
+  const thead=document.getElementById('recent-tx-head');
+  const theadDel=document.getElementById('recent-tx-head-del');
+  if(thead) thead.style.gridTemplateColumns=_editMode?'140px 1fr 110px 36px':'140px 1fr 110px';
+  if(theadDel) theadDel.style.display=_editMode?'':'none';
+  const recent=txList
+    .filter(tx=>{const d=new Date(tx.date);return d>=weekMon&&d<=weekSun;})
+    .sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const body=document.getElementById('recent-tx-body');
+  if(!body)return;
+  if(!recent.length){
+    body.innerHTML='<div class="empty-st"><div class="ei">📋</div><div>ยังไม่มีรายการ</div><div class="zh">本週尚無銷售資料</div></div>';
+    return;
+  }
+  body.innerHTML=recent.map(tx=>{
+    const d=new Date(tx.date);
+    const dateStr=d.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const summary=tx.items.slice(0,3).map(i=>`${h(i.name)}×${i.qty}`).join('、')+(tx.items.length>3?'…':'');
+    const safeId=tx.id.replace(/'/g,"\\'");
+    const cols=_editMode?'140px 1fr 110px 36px':'140px 1fr 110px';
+    return `<div style="display:grid;grid-template-columns:${cols};padding:11px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background .12s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">${dateStr}</div>
+      <div style="font-family:var(--zh);font-size:12px;color:var(--text)">${summary}</div>
+      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--gold);text-align:right">NT$ ${tx.total}</div>
+      ${_editMode?`<div style="display:flex;align-items:center;justify-content:center">
+        <button onclick="confirmDeleteTx('${safeId}')" style="width:24px;height:24px;border-radius:6px;border:1.5px solid var(--border2);background:transparent;color:var(--muted2);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all .12s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='#fef2f2'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted2)';this.style.background='transparent'" title="刪除此筆交易">✕</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ═══ 刪除單筆交易 ═══
+let _deleteTxId = null;
+function confirmDeleteTx(txId){
+  const txList=getTx();
+  const tx=txList.find(t=>t.id===txId);
+  if(!tx)return;
+  _deleteTxId=txId;
+  const d=new Date(tx.date);
+  const dateStr=d.toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const summary=tx.items.map(i=>`${i.name} ×${i.qty}`).join('、');
+  const preview=document.getElementById('delete-tx-preview');
+  if(preview){
+    preview.innerHTML='<div style="margin-bottom:4px;color:var(--muted);font-size:11px">📅 '+dateStr+'</div>'+
+      '<div style="margin-bottom:4px;font-family:var(--zh)">'+summary+'</div>'+
+      '<div style="font-family:var(--mono);font-weight:700;color:var(--gold)">NT$ '+tx.total+'</div>';
+  }
+  const btn=document.getElementById('delete-tx-confirm-btn');
+  if(btn) btn.onclick=function(){deleteTx(txId);};
+  openModal('m-delete-tx');
+}
+function deleteTx(txId){
+  let txList=getTx();
+  const before=txList.length;
+  txList=txList.filter(t=>t.id!==txId);
+  if(txList.length===before){showToast('找不到此筆交易','err');closeModal('m-delete-tx');return;}
+  saveTx(txList);
+  if(window._fbSet){
+    window._fbSet('pos/transactions', txList).catch(function(e){console.warn('[POS] deleteTx Firebase fail:',e);});
+  }
+  closeModal('m-delete-tx');
+  renderStats();
+  renderRecentTx();
+  showToast('已刪除該筆交易紀錄','ok');
+  _deleteTxId=null;
+}
+
 function renderMonthly(){
+  const el=document.getElementById('monthly-list');if(!el)return;
   const txList=getTx();const grouped={};
   txList.forEach(tx=>{const k=fm(new Date(tx.date));if(!grouped[k])grouped[k]={total:0,count:0};grouped[k].total+=tx.total;grouped[k].count++;});
   const keys=Object.keys(grouped).sort().reverse();
-  const el=document.getElementById('monthly-list');
   if(!keys.length){el.innerHTML=`<div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>`;return;}
   el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','monthly')"><div class="rdate">${k}</div><div class="ramt">NT$ ${grouped[k].total}</div><div class="rcnt">${grouped[k].count} 筆</div><div class="rarrow">›</div></div>`).join('');
 }
 function renderWeekly(){
+  const el=document.getElementById('weekly-list');if(!el)return;
   const txList=getTx();const grouped={};
   txList.forEach(tx=>{
     const k=fweek(new Date(tx.date));
@@ -2231,7 +2331,6 @@ function renderWeekly(){
     grouped[k].total+=tx.total;grouped[k].count++;
   });
   const keys=Object.keys(grouped).sort().reverse();
-  const el=document.getElementById('weekly-list');
   if(!keys.length){el.innerHTML=`<div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>`;return;}
   el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','weekly')">
     <div class="rdate" style="width:auto;min-width:80px;font-size:11px">${grouped[k].label}</div>
@@ -2241,10 +2340,10 @@ function renderWeekly(){
   </div>`).join('');
 }
 function renderDaily(){
+  const el=document.getElementById('daily-list');if(!el)return;
   const txList=getTx();const grouped={};
   txList.forEach(tx=>{const k=fd(new Date(tx.date));if(!grouped[k])grouped[k]={total:0,count:0};grouped[k].total+=tx.total;grouped[k].count++;});
   const keys=Object.keys(grouped).sort().reverse();
-  const el=document.getElementById('daily-list');
   if(!keys.length){el.innerHTML=`<div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>`;return;}
   el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','daily')"><div class="rdate">${k}</div><div class="ramt">NT$ ${grouped[k].total}</div><div class="rcnt">${grouped[k].count} 筆</div><div class="rarrow">›</div></div>`).join('');
 }
@@ -2285,7 +2384,7 @@ function importReport(e){
       const existing=getTx();const ids=new Set(existing.map(t=>t.id));let added=0;
       data.forEach(tx=>{if(!ids.has(tx.id)){existing.push(tx);added++;}});
       existing.sort((a,b)=>new Date(a.date)-new Date(b.date));
-      saveTx(existing);renderStats();renderMonthly();renderWeekly();renderDaily();
+      saveTx(existing);renderStats();renderRecentTx();
       showToast('已匯入 '+added+' 筆交易紀錄','ok');
     }catch{showToast('檔案格式錯誤','err');}
     e.target.value='';
@@ -2302,7 +2401,7 @@ function clearAllData(){
       window._fbSet('shop/transactions', []),
     ]).catch(e=>console.warn('[POS] clearAllData Firebase fail:',e));
   }
-  renderStats();renderMonthly();renderWeekly();renderDaily();
+  renderStats();renderRecentTx();
   showToast('已清除所有資料','ok');
 }
 
@@ -2312,7 +2411,7 @@ function showPage(id,btn){
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(btn)btn.classList.add('active');
-  if(id==='report'){renderStats();renderMonthly();renderWeekly();renderDaily();}
+  if(id==='report'){renderStats();renderRecentTx();}
   if(id==='products'){_resetProdCat();renderProdGrid();}
 }
 
@@ -2628,7 +2727,7 @@ function attachInnerScrollTop(el){
 
 // 靜態容器：報表列表、結帳 review
 function initStaticScrollTops(){
-  ['monthly-list','weekly-list','daily-list','review-body'].forEach(id=>{
+  ['review-body'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) attachInnerScrollTop(el);
   });
@@ -2952,7 +3051,7 @@ function renderHoldBar(){
 //   - Firebase onValue 跳過 initial fire，防止自迴響
 //   - 分鍵追蹤寫入，避免全量覆寫
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.2.7';
+const APP_VERSION = '1.2.8';
 
 // 將版本號顯示於 nav brand（DOMContentLoaded 後確保元素存在）
 document.addEventListener('DOMContentLoaded', () => {
@@ -3040,7 +3139,7 @@ async function fbPullAll(){
       localStorage.setItem('pos_transactions', JSON.stringify(arr));
     }
     setFbStatus('connected','☁ Firebase 已連線');
-    renderProdGrid(); renderStats(); renderMonthly(); renderWeekly(); renderDaily();
+    renderProdGrid(); renderStats(); renderRecentTx();
     showToast('Firebase 資料同步完成','ok');
   }catch(e){
     console.error('[Firebase pull]',e);
@@ -3064,7 +3163,7 @@ function fbListenAll(){
       const val=snap.val(); if(val===null) return;
       const toStore = (type===2||type===3) ? (Array.isArray(val)?val:Object.values(val)) : val;
       localStorage.setItem(lsKey, JSON.stringify(toStore));
-      if(type===2){ renderStats(); renderMonthly(); renderWeekly(); renderDaily(); }
+      if(type===2){ renderStats(); renderRecentTx(); }
       else renderProdGrid();
     }, err=>console.warn('[Firebase listen]',err));
     _fbListeners[path]=unsub;

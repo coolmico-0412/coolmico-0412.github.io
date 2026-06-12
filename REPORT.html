@@ -282,23 +282,53 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .dl-name{flex:1;color:var(--text2);font-family:var(--zh);}
 .dl-val{font-family:var(--mono);font-size:10px;color:var(--muted);font-weight:700;}
 
-/* ════════════════════════
-   PAGE 4: TRANSACTIONS
-   ════════════════════════ */
-.tx-filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
-.tx-filter-bar input[type=date]{padding:6px 10px;border:1.5px solid var(--border2);
-  border-radius:8px;font-size:12px;font-family:var(--mono);background:var(--surface);color:var(--text);}
-.tx-table{width:100%;border-collapse:collapse;}
-.tx-th{padding:9px 14px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
-  color:var(--muted);background:var(--surface2);border-bottom:2px solid var(--border);text-align:left;}
-.tx-th.num{text-align:right;}
-.tx-td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;}
-.tx-tr:hover .tx-td{background:var(--surface2);cursor:pointer;}
-.tx-tr:last-child .tx-td{border-bottom:none;}
-.tx-badge-pos{display:inline-flex;background:var(--aglow);color:var(--accent);
-  border:1px solid #bfdbfe;border-radius:5px;padding:2px 7px;font-size:9px;font-weight:700;}
-.tx-badge-online{display:inline-flex;background:#f0fdf4;color:var(--green);
-  border:1px solid #bbf7d0;border-radius:5px;padding:2px 7px;font-size:9px;font-weight:700;}
+/* ── REPORT PANELS (從 POS 移入的每日/週/月報表) ── */
+.report-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px;}
+.report-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  box-shadow:var(--sh);overflow:hidden;display:flex;flex-direction:column;}
+.rp-hd{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface2);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.rp-hd-title{font-size:13px;font-weight:700;color:var(--text);}
+.rp-hd-title .zh{font-family:var(--zh);font-size:11px;color:var(--muted);font-weight:400;margin-left:4px;}
+.r-list{max-height:280px;overflow-y:auto;}
+.r-row{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .12s;gap:10px;}
+.r-row:last-child{border-bottom:none;}
+.r-row:hover{background:var(--surface2);}
+.rdate{font-family:var(--mono);font-size:11px;color:var(--muted);flex-shrink:0;min-width:90px;}
+.ramt{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text);flex:1;}
+.rcnt{font-size:10px;color:var(--muted2);font-family:var(--zh);flex-shrink:0;}
+.rarrow{color:var(--muted2);font-size:12px;flex-shrink:0;transition:color .12s;}
+.r-row:hover .rarrow{color:var(--accent);}
+@media(max-width:768px){.report-cols{grid-template-columns:1fr;}}
+/* 平板 / PC：report-panel 高度填滿 95vh，r-list 滾動 */
+@media(min-width:769px){
+  .report-panel{height:calc(95vh - 54px - 18px - 52px);}
+  .r-list{flex:1;max-height:none;}
+}
+
+/* ── DRILL-DOWN MODAL ── */
+.m-sub{font-size:11px;color:var(--muted);margin-bottom:14px;font-family:var(--mono);
+  background:var(--surface2);padding:7px 11px;border-radius:6px;border:1px solid var(--border);}
+.drill-table{width:100%;border-collapse:collapse;margin-top:8px;}
+.drill-table th{padding:8px 10px;font-size:10px;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);
+  text-align:left;font-family:var(--zh);background:var(--surface2);}
+.drill-table td{padding:10px 10px;font-size:12px;border-bottom:1px solid var(--border);
+  font-family:var(--zh);color:var(--text);}
+.drill-table tr:last-child td{border-bottom:none;}
+.drill-table .num{font-family:var(--mono);text-align:right;}
+.drill-total{display:flex;justify-content:space-between;padding:11px 0 0;margin-top:4px;
+  border-top:2px solid var(--border);}
+.drill-total .dl{font-size:12px;color:var(--muted);font-family:var(--zh);font-weight:600;}
+.drill-total .dr{font-family:var(--mono);font-weight:700;color:var(--gold);font-size:16px;}
+.m-acts{display:flex;gap:8px;margin-top:16px;}
+
+/* ── EMPTY STATE ── */
+.empty-st{padding:32px 16px;text-align:center;color:var(--muted);}
+.empty-st .ei{font-size:28px;margin-bottom:8px;opacity:.3;}
+
+
 
 /* ── MODAL (drill-down) ── */
 .overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:500;
@@ -551,7 +581,7 @@ if (window.matchMedia('(display-mode: standalone)').matches
   <button class="nav-tab active" onclick="showPage('overview',this)">📊 總覽<span class="zh">Dashboard</span></button>
   <button class="nav-tab" onclick="showPage('restock',this)">📦 庫存清單<span class="zh">Inventory</span></button>
   <button class="nav-tab" onclick="showPage('ranking',this)">🏆 排行<span class="zh">Ranking</span></button>
-  <button class="nav-tab" onclick="showPage('transactions',this)">📋 明細<span class="zh">Transactions</span></button>
+  <button class="nav-tab" onclick="showPage('transactions',this)">📋 銷售報表<span class="zh">Transactions</span></button>
   <button class="nav-install" id="btn-pwa-install" onclick="pwaTriggerInstall()" style="display:none">⬇ 安裝應用</button>
 </nav>
 
@@ -708,58 +738,64 @@ if (window.matchMedia('(display-mode: standalone)').matches
 </div>
 
 <!-- ════════════════════════════════════════
-     PAGE 4: TRANSACTIONS（交易明細）
+     PAGE 4: TRANSACTIONS（銷售報表）
      ════════════════════════════════════════ -->
 <div class="page" id="page-transactions">
+  <!-- 頂部：標題 + 匯出/匯入/清除按鈕 -->
   <div class="sec-hd" style="margin-top:4px">
-    <span class="sec-title">📋 交易明細</span>
+    <span class="sec-title">📋 銷售報表</span>
     <div class="sec-ml">
-      <input type="date" id="tx-from" onchange="renderTransactions()">
-      <span style="font-size:11px;color:var(--muted)">至</span>
-      <input type="date" id="tx-to" onchange="renderTransactions()">
-      <button class="btn btn-ghost btn-sm" onclick="resetTxFilter()">全部</button>
-      <button class="btn btn-green btn-sm" onclick="exportTxCSV()">⬇ CSV</button>
+      <button class="btn btn-green btn-sm" onclick="exportCSV()" title="匯出全部交易為 CSV">⬇ 匯出 CSV</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('imp-report-rpt').click()" title="從 CSV 匯入交易紀錄">⬆ 匯入 CSV</button>
+      <input type="file" id="imp-report-rpt" accept=".csv" style="display:none" onchange="importReport(event)">
+      <button class="btn btn-sm" style="background:transparent;border:1.5px solid var(--border2);color:var(--muted)" onclick="clearAllData()" title="清除所有交易紀錄">🗑 清除</button>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-hd" style="justify-content:space-between;flex-wrap:wrap;gap:6px">
-      <span class="card-hd-title" id="tx-count-label">— 筆交易</span>
-      <span class="card-hd-sub" id="tx-total-label" style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--gold)"></span>
+  <!-- 每月 / 每週 / 每日 報表 -->
+  <div class="report-cols">
+    <div class="report-panel">
+      <div class="rp-hd">
+        <div class="rp-hd-title">📅 每月報表 <span class="zh">Monthly</span></div>
+      </div>
+      <div class="r-list" id="monthly-list">
+        <div class="empty-st"><div class="ei">📋</div><div>尚無銷售資料</div></div>
+      </div>
     </div>
-    <div style="overflow-x:auto">
-      <table class="tx-table">
-        <thead>
-          <tr>
-            <th class="tx-th" style="width:150px">時間</th>
-            <th class="tx-th">品項摘要</th>
-            <th class="tx-th num" style="width:110px">金額</th>
-            <th class="tx-th" style="width:80px;text-align:center">來源</th>
-          </tr>
-        </thead>
-        <tbody id="tx-tbody"></tbody>
-      </table>
+    <div class="report-panel">
+      <div class="rp-hd">
+        <div class="rp-hd-title">📆 每週報表 <span class="zh">Weekly</span></div>
+      </div>
+      <div class="r-list" id="weekly-list">
+        <div class="empty-st"><div class="ei">📋</div><div>尚無銷售資料</div></div>
+      </div>
     </div>
-    <div id="tx-load-more" style="padding:12px;text-align:center;display:none">
-      <button class="btn btn-ghost btn-sm" onclick="txLoadMore()">載入更多...</button>
+    <div class="report-panel">
+      <div class="rp-hd">
+        <div class="rp-hd-title">🗓 每日報表 <span class="zh">Daily</span></div>
+      </div>
+      <div class="r-list" id="daily-list">
+        <div class="empty-st"><div class="ei">📋</div><div>尚無銷售資料</div></div>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ── Modal: TX 明細 ── -->
-<div class="overlay" id="m-tx-detail" onclick="if(event.target===this)closeModal('m-tx-detail')">
+
+<!-- ── Modal: 銷售明細（drill-down）── -->
+<div class="overlay" id="m-drill" onclick="if(event.target===this)closeModal('m-drill')">
   <div class="mbox">
-    <div class="m-title">🧾 交易明細 <span class="zh" id="m-tx-id"></span></div>
-    <table class="m-table">
-      <thead><tr><th>品項</th><th>單價</th><th class="num">數量</th><th class="num">小計</th></tr></thead>
-      <tbody id="m-tx-body"></tbody>
+    <div class="m-title" id="drill-title">銷售明細</div>
+    <div class="m-sub" id="drill-sub"></div>
+    <table class="drill-table">
+      <thead><tr><th>品項名稱</th><th class="num">銷售數量</th><th class="num">小計</th></tr></thead>
+      <tbody id="drill-body"></tbody>
     </table>
-    <div class="m-footer">
-      <span style="font-size:12px;color:var(--muted);font-family:var(--zh)" id="m-tx-date"></span>
-      <span style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold)" id="m-tx-total"></span>
+    <div class="drill-total">
+      <div class="dl">合計收入</div>
+      <div class="dr" id="drill-total-amt"></div>
     </div>
-    <div style="margin-top:12px;text-align:right">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('m-tx-detail')">關閉</button>
+    <div class="m-acts" style="margin-top:14px">
+      <button class="btn btn-accent" style="flex:1" onclick="closeModal('m-drill')">關閉</button>
     </div>
   </div>
 </div>
@@ -872,7 +908,7 @@ function showPage(id, btn){
   if(id==='overview')     renderOverview();
   if(id==='restock')      renderRestock();
   if(id==='ranking')      renderRanking();
-  if(id==='transactions') renderTransactions();
+  if(id==='transactions') { renderMonthly(); renderWeekly(); renderDaily(); }
 }
 
 /* ══════════════════════════════
@@ -1433,82 +1469,6 @@ function renderRankTable(id, entries, unit, maxVal, color, isMoney=false){
   }).join('')}</tbody>`;
 }
 
-/* ══════════════════════════════
-   PAGE 4: TRANSACTIONS
-   ══════════════════════════════ */
-let _txOffset = 0;
-const TX_PAGE_SIZE = 50;
-let _txFiltered = [];
-
-function initTxDatePicker(){
-  const now=new Date();
-  const firstTx=getTx().sort((a,b)=>new Date(a.date)-new Date(b.date))[0];
-  const fromDate=firstTx ? fd(new Date(firstTx.date)) : fd(now);
-  document.getElementById('tx-from').value=fromDate;
-  document.getElementById('tx-to').value=fd(now);
-}
-function resetTxFilter(){
-  initTxDatePicker();
-  renderTransactions();
-}
-function renderTransactions(){
-  _txOffset=0;
-  const from=document.getElementById('tx-from').value;
-  const to  =document.getElementById('tx-to').value;
-  _txFiltered=getTx()
-    .filter(tx=>{ const d=tx.date.substring(0,10); return d>=from && d<=to; })
-    .sort((a,b)=>new Date(b.date)-new Date(a.date));
-  const total=_txFiltered.reduce((s,tx)=>s+tx.total,0);
-  document.getElementById('tx-count-label').textContent=`${_txFiltered.length} 筆交易`;
-  document.getElementById('tx-total-label').textContent=`合計 NT$ ${total.toLocaleString()}`;
-  renderTxPage(true);
-}
-function txLoadMore(){ _txOffset+=TX_PAGE_SIZE; renderTxPage(false); }
-function renderTxPage(reset){
-  const startIdx=_txOffset;
-  const slice=_txFiltered.slice(startIdx, startIdx+TX_PAGE_SIZE);
-  const tbody=document.getElementById('tx-tbody');
-  const rows=slice.map((tx, si)=>{
-    const d=new Date(tx.date);
-    const dateStr=d.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-    const summary=tx.items.slice(0,3).map(i=>`${h(i.name)}×${i.qty}`).join('、')+(tx.items.length>3?'…':'');
-    const srcBadge=tx.source==='online'?'<span class="tx-badge-online">線上</span>':'<span class="tx-badge-pos">POS</span>';
-    return `<tr class="tx-tr" onclick="showTxDetail(${startIdx+si})">
-      <td class="tx-td" style="font-family:var(--mono);font-size:11px;color:var(--muted)">${dateStr}</td>
-      <td class="tx-td" style="font-family:var(--zh)">${summary}</td>
-      <td class="tx-td num" style="font-family:var(--mono);font-weight:700;color:var(--gold)">NT$ ${tx.total}</td>
-      <td class="tx-td" style="text-align:center">${srcBadge}</td>
-    </tr>`;
-  }).join('');
-  if(reset) tbody.innerHTML=rows;
-  else tbody.innerHTML+=rows;
-  const moreBtn=document.getElementById('tx-load-more');
-  moreBtn.style.display=startIdx+TX_PAGE_SIZE<_txFiltered.length?'block':'none';
-}
-function showTxDetail(idx){
-  const tx=_txFiltered[idx];
-  const d=new Date(tx.date);
-  document.getElementById('m-tx-id').textContent=`# ${tx.id}`;
-  document.getElementById('m-tx-date').textContent=d.toLocaleString('zh-TW');
-  document.getElementById('m-tx-total').textContent=`NT$ ${tx.total}`;
-  document.getElementById('m-tx-body').innerHTML=tx.items.map((item,i)=>`
-    <tr>
-      <td style="font-family:var(--zh)">${h(item.name)}</td>
-      <td class="num">NT$ ${item.price}</td>
-      <td class="num">${item.qty}</td>
-      <td class="num" style="color:var(--gold)">NT$ ${item.price*item.qty}</td>
-    </tr>`).join('');
-  openModal('m-tx-detail');
-}
-function exportTxCSV(){
-  const rows=[['交易編號','日期時間','品項摘要','合計','來源']];
-  _txFiltered.forEach(tx=>{
-    rows.push([tx.id, tx.date, tx.items.map(i=>`${i.name}x${i.qty}`).join('; '), tx.total, tx.source||'pos']);
-  });
-  downloadCSV(rows,'transactions_'+fd(new Date()).replace(/-/g,'')+'.csv');
-  showToast('已匯出 CSV','ok');
-}
-
 /* ── CSV DOWNLOAD ── */
 function downloadCSV(rows, filename){
   const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
@@ -1771,9 +1731,154 @@ function showImportResult({error, matched=0, notFound=0, qtySet=0, catSet=0, not
   openModal('m-import-result');
 }
 
+/* ══════════════════════════════════════════
+   每月 / 每週 / 每日 報表（從 POS 移入）
+   ══════════════════════════════════════════ */
+function renderMonthly(){
+  const el=document.getElementById('monthly-list');if(!el)return;
+  const txList=getTx();const grouped={};
+  txList.forEach(tx=>{const k=fm(new Date(tx.date));if(!grouped[k])grouped[k]={total:0,count:0};grouped[k].total+=tx.total;grouped[k].count++;});
+  const keys=Object.keys(grouped).sort().reverse();
+  if(!keys.length){el.innerHTML='<div class="empty-st"><div class="ei">📋</div><div>尚無銷售資料</div></div>';return;}
+  el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','monthly')"><div class="rdate">${k}</div><div class="ramt">NT$ ${grouped[k].total}</div><div class="rcnt">${grouped[k].count} 筆</div><div class="rarrow">›</div></div>`).join('');
+}
+function renderWeekly(){
+  const el=document.getElementById('weekly-list');if(!el)return;
+  const txList=getTx();const grouped={};
+  txList.forEach(tx=>{
+    const d=new Date(tx.date);
+    const k=fweek(d);
+    if(!grouped[k])grouped[k]={total:0,count:0,label:fweekLabel(d)};
+    grouped[k].total+=tx.total;grouped[k].count++;
+  });
+  const keys=Object.keys(grouped).sort().reverse();
+  if(!keys.length){el.innerHTML='<div class="empty-st"><div class="ei">📋</div><div>尚無銷售資料</div></div>';return;}
+  el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','weekly')">
+    <div class="rdate" style="min-width:auto;font-size:11px">${grouped[k].label}</div>
+    <div class="ramt">NT$ ${grouped[k].total}</div>
+    <div class="rcnt">${grouped[k].count} 筆</div>
+    <div class="rarrow">›</div>
+  </div>`).join('');
+}
+function renderDaily(){
+  const el=document.getElementById('daily-list');if(!el)return;
+  const txList=getTx();const grouped={};
+  txList.forEach(tx=>{const k=fd(new Date(tx.date));if(!grouped[k])grouped[k]={total:0,count:0};grouped[k].total+=tx.total;grouped[k].count++;});
+  const keys=Object.keys(grouped).sort().reverse();
+  if(!keys.length){el.innerHTML='<div class="empty-st"><div class="ei">📋</div><div>尚無銷售資料</div></div>';return;}
+  el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','daily')"><div class="rdate">${k}</div><div class="ramt">NT$ ${grouped[k].total}</div><div class="rcnt">${grouped[k].count} 筆</div><div class="rarrow">›</div></div>`).join('');
+}
+function showDrilldown(key,mode){
+  const txList=getTx();
+  const filtered=txList.filter(tx=>{
+    const d=new Date(tx.date);
+    if(mode==='daily')  return fd(d)===key;
+    if(mode==='monthly')return fm(d)===key;
+    if(mode==='weekly') return fweek(d)===key;
+    return false;
+  });
+  const itemMap={};
+  filtered.forEach(tx=>{tx.items.forEach(item=>{if(!itemMap[item.name])itemMap[item.name]={qty:0,total:0};itemMap[item.name].qty+=item.qty;itemMap[item.name].total+=item.price*item.qty;});});
+  const items=Object.entries(itemMap).sort((a,b)=>b[1].total-a[1].total);
+  const grand=items.reduce((s,[,v])=>s+v.total,0);
+  const modeLabel={daily:'每日',monthly:'每月',weekly:'每週'};
+  document.getElementById('drill-title').textContent=(modeLabel[mode]||mode)+'銷售明細';
+  document.getElementById('drill-sub').textContent=key.replace('~',' ~ ')+'　共 '+filtered.length+' 筆交易';
+  document.getElementById('drill-body').innerHTML=items.map(([name,v])=>`<tr><td>${h(name)}</td><td class="num">${v.qty} 件</td><td class="num" style="color:var(--gold);font-weight:700">NT$ ${v.total}</td></tr>`).join('');
+  document.getElementById('drill-total-amt').textContent='NT$ '+grand;
+  openModal('m-drill');
+}
+
+/* ══════════════════════════════════════════
+   匯出 CSV（全部交易）
+   ══════════════════════════════════════════ */
+function exportCSV(){
+  const txList=getTx();if(!txList.length){showToast('無資料可匯出','err');return;}
+  const rows=[['交易編號','日期時間','品項摘要','合計','來源']];
+  txList.forEach(tx=>{const items=tx.items.map(i=>`${i.name}x${i.qty}`).join('; ');rows.push([tx.id,tx.date,items,tx.total,tx.source||'pos']);});
+  const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='transactions_all_'+fd(new Date()).replace(/-/g,'')+'.csv';a.click();URL.revokeObjectURL(a.href);
+  showToast('已匯出全部交易 CSV','ok');
+}
+
+/* ══════════════════════════════════════════
+   CSV 解析輔助函式
+   ══════════════════════════════════════════ */
+function parseCSV(text){
+  if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);
+  const rows=[];let row=[],field='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQ){
+      if(c==='"'&&text[i+1]==='"'){field+='"';i++;}
+      else if(c==='"'){inQ=false;}
+      else{field+=c;}
+    } else {
+      if(c==='"'){inQ=true;}
+      else if(c===','){row.push(field);field='';}
+      else if(c==='\r'){/* skip */}
+      else if(c==='\n'){row.push(field);if(row.some(f=>f.trim()))rows.push(row);row=[];field='';}
+      else{field+=c;}
+    }
+  }
+  if(row.length||field){row.push(field);if(row.some(f=>f.trim()))rows.push(row);}
+  return rows;
+}
+
+/* ══════════════════════════════════════════
+   匯入 CSV（合併交易紀錄）
+   欄位：交易編號, 日期時間, 品項摘要, 合計, 來源
+   ══════════════════════════════════════════ */
+function importReport(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const rows=parseCSV(ev.target.result);
+      if(!rows.length||rows[0].length<4) throw new Error('格式錯誤');
+      // 跳過標題列（交易編號, 日期時間, 品項摘要, 合計, 來源）
+      const dataRows=rows.slice(1).filter(r=>r.length>=4&&r[0].trim());
+      const existing=getTx();const ids=new Set(existing.map(t=>t.id));let added=0;
+      dataRows.forEach(r=>{
+        const id=r[0].trim(),date=r[1].trim(),itemsSummary=r[2].trim();
+        const total=parseFloat(r[3])||0,source=(r[4]||'pos').trim();
+        if(!id||ids.has(id))return;
+        // 解析品項摘要格式："商品名x2; 商品名2x5"
+        const items=itemsSummary.split(';').map(s=>s.trim()).filter(Boolean).map(s=>{
+          const m=s.match(/^(.+)x(\d+)$/);
+          if(!m)return null;
+          return {name:m[1].trim(),qty:parseInt(m[2])||1,price:0};
+        }).filter(Boolean);
+        // 按數量比例分配合計至各品項單價
+        const totalQty=items.reduce((s,i)=>s+i.qty,0);
+        if(totalQty>0) items.forEach(i=>{i.price=total/totalQty;});
+        existing.push({id,date,items,total,source});
+        ids.add(id);added++;
+      });
+      existing.sort((a,b)=>new Date(a.date)-new Date(b.date));
+      localStorage.setItem('pos_transactions',JSON.stringify(existing));
+      renderMonthly();renderWeekly();renderDaily();
+      showToast('已匯入 '+added+' 筆交易紀錄','ok');
+    }catch{showToast('CSV 格式錯誤','err');}
+    e.target.value='';
+  };
+  reader.readAsText(file,'UTF-8');
+}
+
+/* ══════════════════════════════════════════
+   清除所有交易紀錄
+   ══════════════════════════════════════════ */
+function clearAllData(){
+  if(!confirm('確定清除所有銷售資料？此操作無法復原。'))return;
+  localStorage.removeItem('pos_transactions');
+  renderMonthly();renderWeekly();renderDaily();renderTransactions();
+  showToast('已清除所有交易資料','ok');
+}
+
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', ()=>{
-  initTxDatePicker();
   // Wait for Firebase sync, or render immediately from localStorage
   const init = ()=>{
     renderOverview();
