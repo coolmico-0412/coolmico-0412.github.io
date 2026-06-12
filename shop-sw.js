@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   Service Worker — ร้านค้าออนไลน์ PWA  v1.5.4
+   Service Worker — ร้านค้าออนไลน์ PWA  v1.5.5
 
    ⚠️  快取策略修正說明：
        HTML 頁面 → Network First（確保永遠拿到最新版本）
@@ -7,7 +7,7 @@
        Firebase RTDB → Network First（即時資料）
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION    = 'v1.5.4'; // fix: 商品白屏 — 改動態載入 shop-names/images，修正 init() 渲染順序
+const APP_VERSION    = 'v1.5.5'; // fix: 商品白屏 — 改動態載入 shop-names/images，修正 init() 渲染順序
 const STATIC_CACHE   = `shop-static-${APP_VERSION}`;
 const FONT_CACHE     = `shop-fonts-${APP_VERSION}`;
 const FIREBASE_CACHE = `shop-firebase-${APP_VERSION}`;
