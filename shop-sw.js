@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   Service Worker — ร้านค้าออนไลน์ PWA  v1.2.0
+   Service Worker — ร้านค้าออนไลน์ PWA  v1.5.4
 
    ⚠️  快取策略修正說明：
        HTML 頁面 → Network First（確保永遠拿到最新版本）
@@ -7,7 +7,7 @@
        Firebase RTDB → Network First（即時資料）
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION    = 'v1.3.2'; // feat: 新增菲律賓 PH 英文商品名稱翻譯
+const APP_VERSION    = 'v1.5.4'; // fix: 商品白屏 — 改動態載入 shop-names/images，修正 init() 渲染順序
 const STATIC_CACHE   = `shop-static-${APP_VERSION}`;
 const FONT_CACHE     = `shop-fonts-${APP_VERSION}`;
 const FIREBASE_CACHE = `shop-firebase-${APP_VERSION}`;
@@ -15,6 +15,7 @@ const ALL_CACHES     = [STATIC_CACHE, FONT_CACHE, FIREBASE_CACHE];
 
 const PRECACHE_ASSETS = [
   './shop-names.js',         // ← 翻譯對照表（每次更新翻譯後重新抓取）
+  './shop-images.js',        // ← 商品圖片設定（每次新增/移除圖片後重新抓取）
   './shop-manifest.json',
   './icons/icon-72.png',
   './icons/icon-96.png',
@@ -86,8 +87,9 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // shop-names.js 翻譯檔 → Network First（修改翻譯後馬上生效）
-  if (url.pathname.endsWith('shop-names.js')) {
+  // shop-names.js 翻譯檔、shop-images.js 圖片設定 → Network First（修改後馬上生效）
+  if (url.pathname.endsWith('shop-names.js') ||
+      url.pathname.endsWith('shop-images.js')) {
     event.respondWith(networkFirstHTML(request, STATIC_CACHE));
     return;
   }

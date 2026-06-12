@@ -43,6 +43,7 @@
   --accent:   #E8892B;
   --accent2:  #C9721E;
   --green:    #2D9B6F;
+  --red:      #e57373;
   --text:     #2A1410;
   --text2:    #5C3728;
   --muted:    #9B7060;
@@ -1685,6 +1686,8 @@ body::after {
       <div id="m-order-hist"></div>
     </div>
     <div class="member-ft" style="display:flex;flex-direction:column;gap:8px">
+      <button class="logout-btn" id="m-edit-profile-btn" onclick="openEditProfile()"
+              style="border-color:var(--primary);color:var(--primary)">✏ แก้ไขข้อมูล</button>
       <button class="logout-btn" id="m-logout-btn" onclick="logout()">🚪 ออกจากระบบ</button>
     </div>
   </div>
@@ -1731,7 +1734,7 @@ body::after {
     <div>
       <div class="brand-name" id="shop-name">ร้านค้าออนไลน์</div>
       <div class="brand-sub" id="brand-sub-text">คลิกสินค้าเพื่อเพิ่มลงตะกร้า</div>
-      <div class="brand-ver" id="brand-ver-text" title="版本說明：v1.0.0 ‧ 初版上線，店家地址更新為通霄鎮通南里南勢中山路109號">v1.0.0</div>
+      <div class="brand-ver" id="brand-ver-text" title="v1.5.4 ‧ 修正商品白屏、改動態載入 shop-names/images">v1.5.4</div>
     </div>
   </div>
   <div class="header-right">
@@ -1951,7 +1954,14 @@ import { initializeApp }
   from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
 import { getDatabase, ref, get, set, update, query, orderByChild, equalTo, limitToLast, runTransaction }
   from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
-import { PRODUCT_NAME_MAP } from "./shop-names.js";
+/* ── shop-names.js / shop-images.js 改為動態載入（在 init() 中執行）──────────
+   原因：靜態 import 若任一檔案 404 / 網路錯誤，整個 <script type="module"> 會
+         直接崩潰，導致 init() 永遠不被呼叫、商品格空白、頁面完全無法運作。
+   做法：改為 let 宣告 + 預設空值，init() 中用 Promise.allSettled() 非同步載入；
+         即使兩個檔案都載入失敗，商品仍可正常顯示（僅缺翻譯 / 本地圖片），
+         載入成功後再觸發一次 renderProducts() 補上翻譯與圖片。            ── */
+let PRODUCT_NAME_MAP = {};
+let PRODUCT_IMAGE_SET = new Set();
 
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyCXL_BPUqT5UA2Ufxo8Byulm6-ATNxTr4c",
@@ -2063,7 +2073,8 @@ async function syncProducts() {
 
     // 計算本機商品數量
     const localProds     = safeGetLS(LS.PROD, null);
-    const localProdCount = localProds ? Object.keys(localProds).length : 0;
+    // Fix: 空物件 {} 視為「無商品」，不計入 localProdCount
+    const localProdCount = (localProds && typeof localProds==='object') ? Object.keys(localProds).length : 0;
     const localNobc      = safeGetLS(LS.NOBC, []);
     const localNobcCount = Array.isArray(localNobc) ? localNobc.length : 0;
     const totalLocal     = localProdCount + localNobcCount;
@@ -2099,6 +2110,10 @@ async function syncProducts() {
         safeSetLS(LS.PROD, d);
         updated = true;
         console.log(`[Shop] 拉取商品 ${Object.keys(d).length} 筆`);
+      } else {
+        // Fix: Firebase 商品節點存在但為空 → 主動清除本機舊快取，避免永遠顯示舊資料
+        try { localStorage.removeItem(LS.PROD); } catch(e) {}
+        console.log('[Shop] Firebase 商品為空，已清除本機快取');
       }
     }
     if (ns.exists()) {
@@ -2108,6 +2123,10 @@ async function syncProducts() {
         safeSetLS(LS.NOBC, arr);
         updated = true;
         console.log(`[Shop] 拉取無條碼商品 ${arr.length} 筆`);
+      } else {
+        // Fix: 同上，無條碼商品為空也清除
+        try { localStorage.removeItem(LS.NOBC); } catch(e) {}
+        console.log('[Shop] Firebase 無條碼商品為空，已清除本機快取');
       }
     }
     // 缺貨清單（即使是空的也要更新）
@@ -3292,6 +3311,7 @@ function applyLang() {
   // Re-render dynamic content
   renderTabs();
   updateAllCartUI();
+  renderProducts();   // Fix: 換語言後立即刷新商品名稱
 }
 
 /* 左下角語言切換面板 — 登入前展開，登入後折疊為國籍旗幟，點擊 toggle */
@@ -3336,17 +3356,18 @@ function buildNatOptions(selectedCode) {
 }
 /* ── 取得本地化商品名稱 ─────────────────────────
    語系 → 對照表 key 對應：
+     th  → entry.th   泰文（純泰文，去除中文混排）
+     tw  → entry.zh   中文（純中文，去除泰文混排）
      vi  → entry.vi   越南文
      id  → entry.id   印尼文
      ph  → entry.en   英文（菲律賓）
-     th / tw → 直接回傳原文（泰文/中文商店，不需翻譯）
    找不到翻譯 → fallback 回傳原始名稱              */
-const LANG_TO_MAP_KEY = { vi:'vi', id:'id', ph:'en' };
+const LANG_TO_MAP_KEY = { th:'th', tw:'zh', vi:'vi', id:'id', ph:'en' };
 
 function getProductName(origName) {
   if (!origName) return origName;
   const mapKey = LANG_TO_MAP_KEY[_lang];
-  if (!mapKey) return origName;                      // th / tw → 原文
+  if (!mapKey) return origName;   // 不支援的語系 → 回傳原文
   const entry = PRODUCT_NAME_MAP[origName.trim()];
   return (entry && entry[mapKey]) ? entry[mapKey] : origName;
 }
@@ -3391,9 +3412,32 @@ const DEFAULT_PRODUCTS = {
   '4711234000001':{name:'小美冰淇淋',price:25,category:'frozen'},
 };
 function loadAllProducts() {
-  const barcodeMap = safeGetLS(LS.PROD, null) || DEFAULT_PRODUCTS;
+  // Fix: 空物件 {} 是 truthy，|| 不會 fallback，需明確判斷長度
+  const _rawProd   = safeGetLS(LS.PROD, null);
+  const barcodeMap = (_rawProd && Object.keys(_rawProd).length > 0) ? _rawProd : DEFAULT_PRODUCTS;
   const nobcList   = safeGetLS(LS.NOBC, []);
   const oosMap     = safeGetLS(LS.OOS, {});   // 缺貨清單 {id: {name, type}}
+  // Fix: POS 系統有時存中文/泰文分類名稱，需轉換回英文 ID
+  const CAT_NORMALIZE = {
+    // 泰文
+    'อาหารแช่แข็ง':'frozen','เครื่องปรุง':'seasoning','เครื่องดื่ม':'drink',
+    'ข้าว':'rice','เครื่องดื่มแอลกอฮอล์':'alcohol','ของใช้ส่วนตัว':'hygiene',
+    'อาหาร':'food','อื่นๆ':'other',
+    // 中文
+    '冷凍食品':'frozen','調味品':'seasoning','飲料':'drink',
+    '米':'rice','酒':'alcohol','清潔保養品':'hygiene','食品':'food','其他':'other',
+    // 英文別名（防呆）
+    'beverage':'drink','beverages':'drink','snack':'food','snacks':'food',
+    'cleaning':'hygiene','personal care':'hygiene',
+  };
+  function normalizeCat(raw) {
+    if (!raw) return 'other';
+    const s = String(raw).trim();
+    const valid = new Set(['frozen','seasoning','drink','rice','alcohol','hygiene','food','other']);
+    if (valid.has(s)) return s;                        // 已是合法 ID
+    return CAT_NORMALIZE[s] || 'other';                // 中文/泰文 → ID
+  }
+
   const raw = [];
   try {
     Object.entries(barcodeMap).forEach(([bc, p]) => {
@@ -3402,7 +3446,7 @@ function loadAllProducts() {
       if (!name) return;
       if (oosMap[bc] || p.outOfStock) return;   // 缺貨 → 跳過
       raw.push({ id:bc, name, price:Number(p.price??0),
-        category:String(p.category??'other'), image:p.image??null, type:'barcode' });
+        category:normalizeCat(p.category), image:p.image??null, type:'barcode' });
     });
   } catch(e) {}
   try {
@@ -3411,9 +3455,10 @@ function loadAllProducts() {
       const name = String(p.name ?? '').trim();
       if (!name) return;
       if (oosMap[p.id] || p.outOfStock) return;  // 缺貨 → 跳過
-      raw.push({ id:p.id??('NOBC-'+Math.random().toString(36).slice(2)),
+      const idFallback = 'NOBC-' + name.replace(/\s+/g,'').slice(0,12) + '-' + (p.price??0);
+      raw.push({ id:p.id??idFallback,
         name, price:Number(p.price??0),
-        category:String(p.category??'other'), image:p.image??null, type:'nobc' });
+        category:normalizeCat(p.category), image:p.image??null, type:'nobc' });
     });
   } catch(e) {}
   // Deduplicate: same name (case+space insensitive) + same price
@@ -3465,8 +3510,11 @@ function renderProducts() {
     // ── 翻譯商品名稱（vi / id 語系）──
     const dName   = getProductName(p.name);
     const showOrig = hasTranslation(p.name);   // 是否顯示原文輔助字幕
-    const imgHtml = p.image
-      ? `<img class="card-img" src="${h(p.image)}" alt="${h(p.name)}" loading="lazy"
+    // ── 圖片優先順序：shop-images.js 本地圖 → Firebase 圖 → 漸層色塊 ──
+    const localImg = PRODUCT_IMAGE_SET.has(p.name) ? `images/${encodeURIComponent(p.name)}.webp` : null;
+    const imgSrc   = localImg || p.image || null;
+    const imgHtml  = imgSrc
+      ? `<img class="card-img" src="${h(imgSrc)}" alt="${h(p.name)}" loading="lazy"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
          <div class="card-placeholder ${grad}" style="display:none">
            <div class="ph-emoji">${h(icon)}</div><div class="ph-initial">${h(init)}</div></div>`
@@ -3942,16 +3990,27 @@ async function init() {
   const authNat = document.getElementById('auth-nationality');
   if (authNat) authNat.innerHTML = `<option value="">${(LANGS[_lang]||LANGS.th).selectNat}</option>` + natOpts;
 
-  // ⑤ 套用語言 + 設定頁面標題（applyLang 內已呼叫 updatePageTitle，無需重複）
+  // ⑤ 先載入商品快取（必須在 applyLang() 之前）
+  //    原 bug：applyLang() 內部呼叫 renderProducts()，但此時 allProducts=[]
+  //            → 首次渲染一定空白，用戶看到空畫面。
+  //    修正：先填好 allProducts，applyLang() 呼叫 renderProducts() 時已有資料。
+  allProducts = loadAllProducts();
+
+  // ⑥ 套用語言（applyLang 內含 renderTabs + renderProducts + updateAllCartUI）
   applyLang();
 
-  // ⑥ 立即從本機快取渲染商品（不等 Firebase）
-  allProducts = loadAllProducts();
-  renderTabs();
-  renderProducts();
-  updateAllCartUI();
+  // ⑦ 非同步載入翻譯 + 圖片設定（不阻塞頁面，載入後補繪一次）
+  //    → 兩個檔案任一載入失敗都不影響頁面運作（Promise.allSettled 不拋錯）
+  Promise.allSettled([
+    import('./shop-names.js')
+      .then(m => { if (m?.PRODUCT_NAME_MAP) PRODUCT_NAME_MAP = m.PRODUCT_NAME_MAP; })
+      .catch(e => console.warn('[Shop] shop-names.js 載入失敗（非致命）:', e)),
+    import('./shop-images.js')
+      .then(m => { if (m?.PRODUCT_IMAGE_SET) PRODUCT_IMAGE_SET = m.PRODUCT_IMAGE_SET; })
+      .catch(e => console.warn('[Shop] shop-images.js 載入失敗（非致命）:', e)),
+  ]).then(() => renderProducts()); // 有翻譯名稱 + 本地圖後重繪一次
 
-  // ⑦ 立即判斷會員狀態（不等 Firebase）
+  // ⑧ 立即判斷會員狀態（不等 Firebase）
   const savedMember = safeGetLS(LS.MEMBER, null);
   if (savedMember?.memberId) {
     const o = document.getElementById('auth-overlay');
@@ -3966,7 +4025,7 @@ async function init() {
     showAuthModal();
   }
 
-  // ⑧ Firebase 背景同步商品（10 秒 timeout，失敗不影響 UI）
+  // ⑨ Firebase 背景同步商品（10 秒 timeout，失敗不影響 UI）
   syncProductsBackground();
 }
 
@@ -3984,8 +4043,10 @@ async function syncProductsBackground() {
 
     // 同步成功後重新載入並比對，若有變化就重新渲染
     const fresh = loadAllProducts();
-    const prevIds  = allProducts.map(p => p.id + p.price).sort().join(',');
-    const freshIds = fresh.map(p => p.id + p.price).sort().join(',');
+    // Fix: 比對簽章含 id、price、category、name，避免分類或名稱改了卻不重繪
+    const sig      = p => `${p.id}|${p.price}|${p.category}|${p.name}`;
+    const prevIds  = allProducts.map(sig).sort().join(',');
+    const freshIds = fresh.map(sig).sort().join(',');
 
     if (prevIds !== freshIds || fresh.length !== allProducts.length) {
       console.log(`[Shop] 商品已更新：${allProducts.length} → ${fresh.length} 筆，重新渲染`);
