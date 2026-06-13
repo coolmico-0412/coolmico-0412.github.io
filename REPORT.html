@@ -225,9 +225,8 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .restock-qty-input{-moz-appearance:textfield;}
 
 /* ════════════════════════
-   PAGE 3: RANKING
-   ════════════════════════ */
-.bbc-bar{flex:1;border-radius:4px 4px 0 0;min-width:0;cursor:pointer;position:relative;
+   OVERVIEW — 銷售圖表元件（bbc-bar / wk-compare / hourly）
+   ════════════════════════ */{flex:1;border-radius:4px 4px 0 0;min-width:0;cursor:pointer;position:relative;
   transition:opacity .2s;}
 .bbc-bar:hover{opacity:.8;}
 .bbc-bar .bbc-tip{display:none;position:absolute;bottom:calc(100% + 4px);left:50%;
@@ -260,7 +259,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .dow-card.peak .dow-val{color:var(--gold);}
 
 /* ════════════════════════
-   PAGE 3: RANKING
+   PAGE 3: RANKING — 排行表 / 甜甜圈
    ════════════════════════ */
 .rank-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .rank-table{width:100%;border-collapse:collapse;}
@@ -799,7 +798,7 @@ if (window.matchMedia('(display-mode: standalone)').matches
     </div>
     <!-- Never sold / slow movers -->
     <div class="card">
-      <div class="card-hd"><span class="card-hd-title">🐌 滯銷商品</span><span class="card-hd-sub">近 30 天未售出</span></div>
+      <div class="card-hd"><span class="card-hd-title">🐌 滯銷商品</span><span class="card-hd-sub" id="rank-slow-sub">近 30 天未售出</span></div>
       <div id="rank-slow" style="padding:14px;max-height:280px;overflow-y:auto"></div>
     </div>
   </div>
@@ -1189,7 +1188,7 @@ function renderOverview(){
     const d=new Date(tx.date);
     if(d<twelveWeeksAgo) return;
     dowWeekSet.add(fweek(d));
-    const dow=(d.getDay()+6)%7;
+    const dow=(toTW8(d).getUTCDay()+6)%7;  // ★ 修正：使用 UTC+8 台灣時區，避免午夜前後日期錯誤
     dowData[dow]+=tx.total; dowCount[dow]++;
   });
   const actualWeeks = Math.max(1, dowWeekSet.size);
@@ -1556,6 +1555,8 @@ function renderRanking(){
   ];
   const slow=allProds.filter(p=>!soldNames.has(p.name));
   const slowEl=document.getElementById('rank-slow');
+  const slowSubEl=document.getElementById('rank-slow-sub');
+  if(slowSubEl) slowSubEl.textContent=`近 ${days} 天未售出`;
   if(!slow.length){
     slowEl.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted);font-family:var(--zh)">🎉 近 ${days} 天所有商品均有銷售</div>`;
   } else {
@@ -2003,7 +2004,7 @@ function importReport(e){
 function clearAllData(){
   if(!confirm('確定清除所有銷售資料？此操作無法復原。'))return;
   localStorage.removeItem('pos_transactions');
-  renderMonthly();renderWeekly();renderDaily();renderTransactions();
+  renderOverview();renderMonthly();renderWeekly();renderDaily();
   showToast('已清除所有交易資料','ok');
 }
 
