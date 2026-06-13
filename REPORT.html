@@ -987,11 +987,11 @@ window.PROD_THUMB_PH = '<div class="prod-thumb-ph" title="尚無圖片">📷</di
 function thumbHTML(name){
   const imgSet = window.PRODUCT_IMAGE_SET;
   if(!imgSet || !imgSet.has(name)) return window.PROD_THUMB_PH;
-  const src   = 'images/' + encodeURIComponent(name) + '.webp';
-  const qname = JSON.stringify(name); // 安全引號，含特殊字元亦可
+  const src = 'images/' + encodeURIComponent(name) + '.webp';
   return `<img class="prod-thumb" src="${src}" alt="" loading="lazy"
     title="${h(name)}"
-    onclick="openImgLbx(${qname})"
+    data-name="${h(name)}"
+    onclick="openImgLbx(this.dataset.name)"
     onerror="this.outerHTML=window.PROD_THUMB_PH">`;
 }
 
