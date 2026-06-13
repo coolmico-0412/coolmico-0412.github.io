@@ -34,6 +34,44 @@ body{background:var(--bg);color:var(--text);font-family:var(--th);min-height:100
 ::-webkit-scrollbar-track{background:var(--surface2);}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
 
+/* ══════════════════════════════
+   DARK MODE VARIABLES
+   ══════════════════════════════ */
+[data-theme="dark"]{
+  --bg:#0f172a;--surface:#1e293b;--surface2:#1a2744;--surface3:#243352;
+  --border:#334155;--border2:#475569;
+  --aglow:rgba(37,99,235,.18);
+  --text:#f1f5f9;--text2:#cbd5e1;--muted:#94a3b8;--muted2:#64748b;
+  --sh:0 1px 3px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.25);
+  --sh-md:0 4px 16px rgba(0,0,0,.45);
+}
+[data-theme="dark"] .kpi.accent-kpi{border-color:#1e3a8a;background:linear-gradient(135deg,#1e3a8a22,var(--surface));}
+[data-theme="dark"] .kpi.gold-kpi{border-color:#78350f;background:linear-gradient(135deg,#78350f22,var(--surface));}
+[data-theme="dark"] .kpi.red-kpi{border-color:#7f1d1d;background:linear-gradient(135deg,#7f1d1d22,var(--surface));}
+[data-theme="dark"] .rk-hd{background:linear-gradient(90deg,#0f1e44 0%,#1e3a8a 100%);}
+[data-theme="dark"] .restock-panel{border-color:#1e3a8a;}
+[data-theme="dark"] .rk-tr:hover .rk-td{background:#1e2d4a;}
+[data-theme="dark"] .rk-tr.oos-row .rk-td{background:#2d1515;}
+[data-theme="dark"] .rank-tr:hover .rank-td{background:#243352;}
+[data-theme="dark"] .r-row:hover{background:#243352;}
+[data-theme="dark"] .dow-card.peak{border-color:#78350f;background:#1c120a;}
+[data-theme="dark"] .btn-green:hover{background:#052e16;}
+[data-theme="dark"] .export-menu{background:var(--surface);border-color:var(--border);}
+[data-theme="dark"] .cat-mgr-row{background:var(--surface3);}
+[data-theme="dark"] .cat-add-row{border-color:var(--border2);}
+[data-theme="dark"] .filter-chip{background:var(--surface);color:var(--muted);}
+[data-theme="dark"] .filter-chip.active{background:rgba(37,99,235,.2);}
+[data-theme="dark"] body{color-scheme:dark;}
+
+/* ── DARK TOGGLE BUTTON ── */
+.btn-dark{
+  padding:6px 10px;border-radius:7px;border:1.5px solid var(--border2);
+  background:transparent;color:var(--muted);cursor:pointer;
+  font-size:14px;line-height:1;transition:all .18s;
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-dark:hover{border-color:var(--accent);color:var(--accent);background:var(--aglow);}
+
 /* ── NAV ── */
 nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--border);
   padding:0 16px;min-height:54px;position:sticky;top:0;z-index:200;gap:2px;box-shadow:var(--sh);flex-wrap:wrap;}
@@ -450,31 +488,35 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 }
 #img-lbx-ov.open{opacity:1;pointer-events:all;}
 #img-lbx-box{
-  position:relative;border-radius:16px;overflow:hidden;
+  border-radius:16px;overflow:hidden;
   box-shadow:0 24px 70px rgba(0,0,0,.45);
   transform:scale(.94);transition:transform .22s;
   background:var(--surface);
+  display:flex;flex-direction:column;
 }
 #img-lbx-ov.open #img-lbx-box{transform:scale(1);}
+#img-lbx-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 12px 10px 16px;background:var(--surface);
+  border-bottom:1px solid var(--border);gap:10px;flex-shrink:0;
+}
 #img-lbx-img{
-  width:600px;height:600px;
-  max-width:88vw;max-height:75vh;
-  object-fit:contain;display:block;
-  background:var(--surface2);
+  width:500px;height:500px;
+  max-width:88vw;max-height:72vh;
+  object-fit:cover;display:block;flex-shrink:0;
 }
 #img-lbx-name{
-  padding:10px 16px;font-family:var(--zh);font-size:13px;
-  font-weight:600;color:var(--text);text-align:center;
-  border-top:1px solid var(--border);
+  font-family:var(--zh);font-size:13px;
+  font-weight:600;color:var(--text);flex:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 #img-lbx-close{
-  position:absolute;top:10px;right:10px;
   width:30px;height:30px;border-radius:50%;border:none;
-  background:rgba(0,0,0,.5);color:#fff;font-size:15px;
+  background:var(--surface3);color:var(--text2);font-size:15px;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
-  z-index:1;transition:background .15s;line-height:1;
+  flex-shrink:0;transition:background .15s;line-height:1;
 }
-#img-lbx-close:hover{background:rgba(0,0,0,.78);}
+#img-lbx-close:hover{background:var(--border2);color:var(--text);}
 </style>
 
 <!-- ── Firebase（同 POS.html 設定）── -->
@@ -570,7 +612,7 @@ try {
    ══════════════════════════════ */
 (function(){
   if (!('serviceWorker' in navigator)) return;
-  const SW_VERSION = 'report-app-v1';
+  const SW_VERSION = 'report-app-v1.1.0';
   const swCode = `
 const CACHE = '${SW_VERSION}';
 const ASSETS = [self.location.href.replace(/\\/[^/]*$/, '') + '/REPORT.html'];
@@ -644,11 +686,12 @@ if (window.matchMedia('(display-mode: standalone)').matches
 
 <!-- ── NAV ── -->
 <nav>
-  <div class="brand">REPORT<span class="brand-ver">v1.0.0</span></div>
+  <div class="brand">REPORT<span class="brand-ver">v1.1.0</span></div>
   <button class="nav-tab active" onclick="showPage('overview',this)">📊 總覽<span class="zh">Dashboard</span></button>
   <button class="nav-tab" onclick="showPage('restock',this)">📦 庫存清單<span class="zh">Inventory</span></button>
   <button class="nav-tab" onclick="showPage('ranking',this)">🏆 排行<span class="zh">Ranking</span></button>
   <button class="nav-tab" onclick="showPage('transactions',this)">📋 銷售報表<span class="zh">Transactions</span></button>
+  <button class="btn-dark" id="btn-dark-toggle" onclick="toggleDark()" title="切換暗色模式">🌙</button>
   <button class="nav-install" id="btn-pwa-install" onclick="pwaTriggerInstall()" style="display:none">⬇ 安裝應用</button>
 </nav>
 
@@ -902,10 +945,12 @@ if (window.matchMedia('(display-mode: standalone)').matches
 <!-- ── 商品圖片燈箱 ── -->
 <div id="img-lbx-ov" onclick="if(event.target===this)closeImgLbx()">
   <div id="img-lbx-box">
-    <button id="img-lbx-close" onclick="closeImgLbx()">✕</button>
+    <div id="img-lbx-header">
+      <div id="img-lbx-name"></div>
+      <button id="img-lbx-close" onclick="closeImgLbx()">✕</button>
+    </div>
     <img id="img-lbx-img" src="" alt="" loading="lazy"
       onerror="document.getElementById('img-lbx-name').textContent+=' ⚠ 圖片載入失敗'">
-    <div id="img-lbx-name"></div>
   </div>
 </div>
 
@@ -2007,6 +2052,37 @@ function clearAllData(){
   renderOverview();renderMonthly();renderWeekly();renderDaily();
   showToast('已清除所有交易資料','ok');
 }
+
+/* ══════════════════════════════════════════
+   暗色模式（Dark Mode）
+   ══════════════════════════════════════════ */
+const DARK_KEY = 'report_dark_mode';
+function applyDark(dark){
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  const btn = document.getElementById('btn-dark-toggle');
+  if(btn) btn.textContent = dark ? '☀️' : '🌙';
+}
+function toggleDark(){
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const next = !isDark;
+  localStorage.setItem(DARK_KEY, next ? '1' : '0');
+  applyDark(next);
+  showToast(next ? '🌙 暗色模式已開啟' : '☀️ 亮色模式已開啟');
+}
+(function initDark(){
+  // 優先讀使用者選擇，其次跟隨系統偏好
+  const saved = localStorage.getItem(DARK_KEY);
+  if(saved !== null){
+    applyDark(saved === '1');
+  } else {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyDark(prefersDark);
+  }
+  // 監聽系統切換（僅在使用者未手動設定時生效）
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if(localStorage.getItem(DARK_KEY) === null) applyDark(e.matches);
+  });
+})();
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', ()=>{
