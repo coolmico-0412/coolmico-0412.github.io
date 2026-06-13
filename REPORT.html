@@ -419,6 +419,63 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
   .nav-tab .zh{display:none;}
   nav{padding:0 10px;}
 }
+
+/* ══════════════════════════════
+   商品圖片縮圖
+   ══════════════════════════════ */
+.prod-thumb{
+  width:40px;height:40px;border-radius:7px;flex-shrink:0;
+  object-fit:cover;cursor:pointer;display:block;
+  border:1px solid var(--border);
+  transition:transform .15s,box-shadow .15s;
+}
+.prod-thumb:hover{
+  transform:scale(1.08);
+  box-shadow:0 3px 12px rgba(0,0,0,.2);
+}
+.prod-thumb-ph{
+  width:40px;height:40px;border-radius:7px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--surface3),var(--surface2));
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:var(--muted2);
+}
+.prod-name-cell{display:flex;align-items:center;gap:9px;}
+
+/* ── 圖片燈箱 ── */
+#img-lbx-ov{
+  position:fixed;inset:0;background:rgba(15,23,42,.78);z-index:800;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .22s;
+  backdrop-filter:blur(5px);
+}
+#img-lbx-ov.open{opacity:1;pointer-events:all;}
+#img-lbx-box{
+  position:relative;border-radius:16px;overflow:hidden;
+  box-shadow:0 24px 70px rgba(0,0,0,.45);
+  transform:scale(.94);transition:transform .22s;
+  background:var(--surface);
+}
+#img-lbx-ov.open #img-lbx-box{transform:scale(1);}
+#img-lbx-img{
+  width:600px;height:600px;
+  max-width:88vw;max-height:75vh;
+  object-fit:contain;display:block;
+  background:var(--surface2);
+}
+#img-lbx-name{
+  padding:10px 16px;font-family:var(--zh);font-size:13px;
+  font-weight:600;color:var(--text);text-align:center;
+  border-top:1px solid var(--border);
+}
+#img-lbx-close{
+  position:absolute;top:10px;right:10px;
+  width:30px;height:30px;border-radius:50%;border:none;
+  background:rgba(0,0,0,.5);color:#fff;font-size:15px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  z-index:1;transition:background .15s;line-height:1;
+}
+#img-lbx-close:hover{background:rgba(0,0,0,.78);}
 </style>
 
 <!-- ── Firebase（同 POS.html 設定）── -->
@@ -463,6 +520,17 @@ async function syncFromFirebase(db, ref, get) {
     }
   } catch(e) { console.warn('[REPORT sync]', e); }
   document.dispatchEvent(new Event('report-data-ready'));
+}
+</script>
+
+<!-- ── 商品圖片設定（與 shop.html 共用同一份 shop-images.js）── -->
+<script type="module">
+try {
+  const { PRODUCT_IMAGE_SET } = await import('./shop-images.js');
+  window.PRODUCT_IMAGE_SET = PRODUCT_IMAGE_SET;
+} catch(e) {
+  console.warn('[REPORT] shop-images.js 載入失敗，圖片功能停用', e);
+  window.PRODUCT_IMAGE_SET = new Set();
 }
 </script>
 <script>
@@ -832,6 +900,16 @@ if (window.matchMedia('(display-mode: standalone)').matches
   </div>
 </div>
 
+<!-- ── 商品圖片燈箱 ── -->
+<div id="img-lbx-ov" onclick="if(event.target===this)closeImgLbx()">
+  <div id="img-lbx-box">
+    <button id="img-lbx-close" onclick="closeImgLbx()">✕</button>
+    <img id="img-lbx-img" src="" alt="" loading="lazy"
+      onerror="document.getElementById('img-lbx-name').textContent+=' ⚠ 圖片載入失敗'">
+    <div id="img-lbx-name"></div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <!-- ══════════════════════════════════════════════
@@ -898,6 +976,36 @@ function showToast(msg,type=''){const t=document.getElementById('toast');t.textC
 /* ── MODAL ── */
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+/* ══════════════════════════════
+   商品圖片燈箱
+   ══════════════════════════════ */
+/* 當 shop-images.js 尚未載入時，PRODUCT_IMAGE_SET 可能是 undefined；
+   thumbHTML() 做防禦性判斷，預設顯示佔位圖示                       */
+window.PROD_THUMB_PH = '<div class="prod-thumb-ph" title="尚無圖片">📷</div>';
+
+function thumbHTML(name){
+  const imgSet = window.PRODUCT_IMAGE_SET;
+  if(!imgSet || !imgSet.has(name)) return window.PROD_THUMB_PH;
+  const src   = 'images/' + encodeURIComponent(name) + '.webp';
+  const qname = JSON.stringify(name); // 安全引號，含特殊字元亦可
+  return `<img class="prod-thumb" src="${src}" alt="" loading="lazy"
+    title="${h(name)}"
+    onclick="openImgLbx(${qname})"
+    onerror="this.outerHTML=window.PROD_THUMB_PH">`;
+}
+
+function openImgLbx(name){
+  const src = 'images/' + encodeURIComponent(name) + '.webp';
+  document.getElementById('img-lbx-img').src  = src;
+  document.getElementById('img-lbx-img').alt  = name;
+  document.getElementById('img-lbx-name').textContent = name;
+  document.getElementById('img-lbx-ov').classList.add('open');
+}
+function closeImgLbx(){
+  document.getElementById('img-lbx-ov').classList.remove('open');
+  setTimeout(()=>{ document.getElementById('img-lbx-img').src = ''; }, 260);
+}
 
 /* ── PAGE SWITCH ── */
 function showPage(id, btn){
@@ -1295,8 +1403,13 @@ function applyRestockFilter(){
             onclick="this.select()">
         </td>
         <td class="rk-td">
-          <div class="pname">${h(p.name)}</div>
-          <div class="pbc">${p.barcode||'無條碼'}</div>
+          <div class="prod-name-cell">
+            ${thumbHTML(p.name)}
+            <div>
+              <div class="pname">${h(p.name)}</div>
+              <div class="pbc">${p.barcode||'無條碼'}</div>
+            </div>
+          </div>
         </td>
         <td class="rk-td">
           <select class="cat-select" data-prod-name="${h(p.name)}" onchange="setCategoryForProduct(this)">
@@ -1879,6 +1992,10 @@ function clearAllData(){
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', ()=>{
+  // ESC 鍵關閉燈箱
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape') closeImgLbx();
+  });
   // Wait for Firebase sync, or render immediately from localStorage
   const init = ()=>{
     renderOverview();
