@@ -959,14 +959,31 @@ function getProds(){try{return JSON.parse(localStorage.getItem('pos_products')||
 function getNobcProds(){try{return JSON.parse(localStorage.getItem('pos_nobc_products')||'[]')}catch{return [];}}
 function getTx(){try{return JSON.parse(localStorage.getItem('pos_transactions')||'[]')}catch{return [];}}
 
-/* ── DATE HELPERS ── */
+/* ── DATE HELPERS（固定 UTC+8 台灣時區，不受瀏覽器設定影響）──
+   修正原因：POS 以 UTC 儲存交易時間（new Date().toISOString()）。
+   台灣早上 7:00 = UTC 前一天 23:00，若直接用瀏覽器本地時間或
+   substring(0,10) 切字串，7 點前的交易日期會跑到「昨日」。
+   全部改用 UTC+8 強制計算，確保與 POS 時區完全一致。           ── */
 const MS_DAY = 86400000;
-function fd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
-function fm(d){return d.getFullYear()+'-'+pad(d.getMonth()+1);}
-function pad(n){return String(n).padStart(2,'0');}
-function daysAgo(n){const d=new Date();d.setDate(d.getDate()-n);return fd(d);}
-function fweek(d){const day=d.getDay(),diff=day===0?-6:1-day,mon=new Date(d);mon.setDate(d.getDate()+diff);const sun=new Date(mon);sun.setDate(mon.getDate()+6);return fd(mon)+'~'+fd(sun);}
-function fweekLabel(d){const day=d.getDay(),diff=day===0?-6:1-day,mon=new Date(d);mon.setDate(d.getDate()+diff);const sun=new Date(mon);sun.setDate(mon.getDate()+6);return `${mon.getMonth()+1}/${mon.getDate()}～${sun.getMonth()+1}/${sun.getDate()}`;}
+const TZ8_MS = 8 * 3600 * 1000;                                   // UTC+8 固定偏移
+function toTW8(d){ return new Date(d.getTime()+TZ8_MS); }         // 任意 Date → 台灣時間
+function _fdU(d){ return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate()); } // 內部：讀 UTC 欄位
+function fd(d){ return _fdU(toTW8(d)); }                          // YYYY-MM-DD（台灣）
+function fm(d){ const t=toTW8(d); return t.getUTCFullYear()+'-'+pad(t.getUTCMonth()+1); } // YYYY-MM（台灣）
+function pad(n){ return String(n).padStart(2,'0'); }
+function daysAgo(n){ return fd(new Date(Date.now()-n*MS_DAY)); }  // n 天前日期字串
+function fweek(d){
+  const t=toTW8(d),day=t.getUTCDay(),diff=day===0?-6:1-day;      // 台灣星期幾
+  const mon=new Date(t.getTime()+diff*MS_DAY);                    // 本週一（台灣）
+  const sun=new Date(mon.getTime()+6*MS_DAY);                     // 本週日（台灣）
+  return _fdU(mon)+'~'+_fdU(sun);
+}
+function fweekLabel(d){
+  const t=toTW8(d),day=t.getUTCDay(),diff=day===0?-6:1-day;
+  const mon=new Date(t.getTime()+diff*MS_DAY);
+  const sun=new Date(mon.getTime()+6*MS_DAY);
+  return `${mon.getUTCMonth()+1}/${mon.getUTCDate()}～${sun.getUTCMonth()+1}/${sun.getUTCDate()}`;
+}
 function pct(a,b){if(b===0)return a>0?100:0;return Math.round((a-b)/b*100);}
 function h(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
@@ -1120,13 +1137,13 @@ function renderOverview(){
   let tTotal=0, tCount=0, wTotal=0, wCount=0, mTotal=0, mCount=0;
   let prevWTotal=0, prevMTotal=0, yestTotal=0, dayBefore2Total=0;
   let rangeTotal=0, rangeCount=0;
-  const yesterday  = new Date(now); yesterday.setDate(now.getDate()-1);
-  const dayBefore2 = new Date(now); dayBefore2.setDate(now.getDate()-2);
+  const yesterday  = new Date(now.getTime()-MS_DAY);   // 純毫秒運算，不受瀏覽器 TZ 影響
+  const dayBefore2 = new Date(now.getTime()-2*MS_DAY);
   const yesterdayStr  = fd(yesterday);
   const dayBefore2Str = fd(dayBefore2);
 
   txList.forEach(tx=>{
-    const ds = tx.date.substring(0,10);
+    const ds = fd(new Date(tx.date));          // ★ 修正：以 UTC+8 計算台灣日期，不能直接切字串
     const d  = new Date(tx.date);
     const ms = fm(d);
     const ws = fweek(d);
@@ -1167,7 +1184,7 @@ function renderOverview(){
   const dowData    = new Array(7).fill(0);
   const dowCount   = new Array(7).fill(0);
   const dowWeekSet = new Set();
-  const twelveWeeksAgo = new Date(now); twelveWeeksAgo.setDate(now.getDate()-84);
+  const twelveWeeksAgo = new Date(now.getTime()-84*MS_DAY);
   txList.forEach(tx=>{
     const d=new Date(tx.date);
     if(d<twelveWeeksAgo) return;
@@ -1194,12 +1211,12 @@ function renderOverview(){
   /* 30-day bar */
   const dailyMap={};
   txList.forEach(tx=>{
-    const ds=tx.date.substring(0,10);
+    const ds=fd(new Date(tx.date));                // ★ 修正：UTC+8 台灣日期
     if(!dailyMap[ds]) dailyMap[ds]=0;
     dailyMap[ds]+=tx.total;
   });
   const dates30=[];
-  for(let i=29;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i);dates30.push(fd(d));}
+  for(let i=29;i>=0;i--){dates30.push(fd(new Date(now.getTime()-i*MS_DAY)));}
   const vals30=dates30.map(d=>dailyMap[d]||0);
   const max30=Math.max(...vals30,1);
   const el30=document.getElementById('ov-30day');
@@ -1244,11 +1261,11 @@ function renderOverview(){
 
   /* Hourly */
   const hourMap=new Array(24).fill(0);
-  const cutoff90=new Date(now);cutoff90.setDate(now.getDate()-90);
+  const cutoff90=new Date(now.getTime()-90*MS_DAY);
   txList.forEach(tx=>{
     const d=new Date(tx.date);
     if(d<cutoff90)return;
-    hourMap[d.getHours()]+=tx.total;
+    hourMap[toTW8(d).getUTCHours()]+=tx.total;      // ★ 修正：台灣時區的小時
   });
   const hr9to21=hourMap.slice(9,22);
   const maxHr=Math.max(...hr9to21,1);
@@ -1472,7 +1489,7 @@ function renderRanking(){
   const days    = parseInt(document.getElementById('rank-range').value)||7;
   const txList  = getTx();
   const now     = new Date();
-  const cutoff  = new Date(now); cutoff.setDate(now.getDate()-days);
+  const cutoff  = new Date(now.getTime()-days*MS_DAY);
   const prods   = getProds(); const nobcPs=getNobcProds();
 
   const qtyMap={}, revMap={}, catRevMap={};
