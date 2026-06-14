@@ -1,10 +1,16 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.8
+   POS Service Worker  v1.2.9
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
    ──────────────────────────────────────────
    版本更新紀錄 CHANGELOG
+   v1.2.9
+     - [Bug] saveEditProduct: outOfStock 等屬性在編輯後遺失 → spread 保留
+     - [Bug] pickDataFile catch: 非 AbortError 顯示錯誤訊息錯誤 → 修正
+     - [Bug] readyState 快速路徑漏呼叫 _loadHeldCarts() → 補齊
+     - [Bug] setQty/renderCart/openReview 總金額缺 money() 千分位格式 → 修正
+     - [Perf] 移除末尾無作用的 showPage wrapper（focusHwIfNeeded 為空函式）
    v1.2.8
      - [Bug] activate 僅清除 pos-* 舊快取，避免刪除同站其他 App 快取
    v1.2.6
@@ -23,7 +29,7 @@
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.8';
+const VER          = 'pos-v1.2.9';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;

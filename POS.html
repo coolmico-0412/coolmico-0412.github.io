@@ -1377,7 +1377,8 @@ async function pickDataFile(){
     }
     renderProdGrid();renderStats();renderRecentTx();
   }catch(e){
-    if(e.name!=='AbortError') showToast('操作取消','err');
+    if(e.name==='AbortError') return; // 使用者主動取消，不顯示提示
+    showToast('操作失敗：'+(e.message||String(e)),'err');
   }
 }
 
@@ -1559,7 +1560,7 @@ function setQty(bc,input){
   let sub=0, totalQty=0;
   for(const i of cart){ sub+=i.price*i.qty; totalQty+=i.qty; }
   document.getElementById('item-count').textContent=totalQty;
-  document.getElementById('grand-total').textContent='NT$ '+sub;
+  document.getElementById('grand-total').textContent='NT$ '+money(sub);
   document.getElementById('btn-checkout').disabled=cart.length===0;
   const bh=document.getElementById('btn-hold');if(bh)bh.disabled=cart.length===0;
 }
@@ -1653,7 +1654,7 @@ function renderCart(){
     </div>`).join('');
   document.getElementById('item-count').textContent=totalQty;
   document.getElementById('btn-checkout').disabled=false;
-  document.getElementById('grand-total').textContent='NT$ '+sub;
+  document.getElementById('grand-total').textContent='NT$ '+money(sub);
   const bh=document.getElementById('btn-hold');if(bh)bh.disabled=false;
 }
 
@@ -1843,11 +1844,11 @@ function openReview(){
       <td class="sub">NT$ ${sub}</td>
     </tr>`;
   }).join('');
-  document.getElementById('review-total-amt').textContent='NT$ '+total;
+  document.getElementById('review-total-amt').textContent='NT$ '+money(total);
   const rh=document.getElementById('rv-change-hint');
   if(rh&&total>0){
     function chg(d){const pay=Math.ceil(total/d)*d;return{pay,c:pay-total};}
-    function row(icon,d){return d.c===0?`${icon} NT$${d.pay} ครบพอดี / 剛好 ✓`:`${icon} NT$${d.pay} → ทอน / 找零 NT$${d.c}`;}
+    function row(icon,d){return d.c===0?`${icon} NT$${money(d.pay)} ครบพอดี / 剛好 ✓`:`${icon} NT$${money(d.pay)} → ทอน / 找零 NT$${money(d.c)}`;}
     rh.style.display='block';
     rh.innerHTML=row('💵',chg(1000))+'<br>'+row('💴',chg(500))+'<br>'+row('🪙',chg(100));
   }else if(rh){rh.style.display='none';}
@@ -1925,7 +1926,7 @@ document.addEventListener('DOMContentLoaded', function(){
   _loadHeldCarts();
 });
 // 若 DOMContentLoaded 已觸發，立即執行
-if(document.readyState !== 'loading') applyEditMode();
+if(document.readyState !== 'loading'){ applyEditMode(); _loadHeldCarts(); }
 
 // ═══ 新條碼開關 ═══（由 _editMode 統一控制，allowNewBc 保留供相容）
 
@@ -2105,7 +2106,7 @@ function saveEditProduct(){
   const price=parseFloat(document.getElementById('ep-price').value);
   const category=document.getElementById('ep-cat').value||'other';
   if(!name||isNaN(price)||price<0){showToast('請填寫完整資料','err');return;}
-  const prods=getProds();prods[editingBC]={name,price,category};saveProds(prods);
+  const prods=getProds();prods[editingBC]={...prods[editingBC],name,price,category};saveProds(prods);
   closeModal('m-editprod');renderProdGrid();
   showToast('已更新：'+name,'ok');editingBC=null;
 }
@@ -2988,7 +2989,19 @@ function renderHoldBar(){
 // ══════════════════════════════════════════════════════════
 // 版本更新紀錄 CHANGELOG
 // ──────────────────────────────────────────────────────────
-// v1.2.7
+// v1.2.9
+//   1. [Bug] saveEditProduct: 修正覆寫商品時整個物件被重建，
+//      導致 outOfStock 等額外屬性遺失 → 改用 spread 保留既有屬性
+//   2. [Bug] pickDataFile catch: 非 AbortError 例外顯示「操作取消」
+//      → 改為顯示實際錯誤訊息；AbortError (使用者取消) 則靜默返回
+//   3. [Bug] readyState 快速路徑漏呼叫 _loadHeldCarts()
+//      → 補齊，確保頁面已載入時暫存購物車仍能正常恢復
+//   4. [Bug] setQty / renderCart / openReview 總金額未套用 money() 格式化
+//      → 金額 >999 時補千分位逗號，包含結帳確認頁找零提示
+//   5. [Perf] 移除末尾無作用的 showPage wrapper
+//      (focusHwIfNeeded 為空函式，整個 override 毫無效用)
+//
+// v1.2.8
 //   1. [UI] 暫存購物車列表（hold-slot）所有文字縮小為 0.9 倍
 //      (.hs-num 16.9→15.2px / .hs-count & .hs-amt 18.6→16.7px /
 //       .hs-del 22→19.8px / .hold-bar-empty 18.6→16.7px)
@@ -3051,7 +3064,7 @@ function renderHoldBar(){
 //   - Firebase onValue 跳過 initial fire，防止自迴響
 //   - 分鍵追蹤寫入，避免全量覆寫
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.2.8';
+const APP_VERSION = '1.2.9';
 
 // 將版本號顯示於 nav brand（DOMContentLoaded 後確保元素存在）
 document.addEventListener('DOMContentLoaded', () => {
@@ -3930,12 +3943,7 @@ async function syncOosToFirebase(){
     await window._fbSet('shop/meta/updatedAt', new Date().toISOString());
   } catch(e){ console.warn('[POS] syncOosToFirebase fail:',e); }
 }
-// 頁面切換時若切回收銀台，自動聚焦掃描器輸入框
-const _origShowPage = showPage;
-window.showPage = function(id, btn){
-  _origShowPage(id, btn);
-  if(id==='pos') setTimeout(focusHwIfNeeded, 150);
-};
+// 頁面切換時若切回收銀台，HID 掃描器不需要重新聚焦（global keydown 直接接收）
 
 </script>
 </body>
