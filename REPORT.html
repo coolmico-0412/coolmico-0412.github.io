@@ -264,7 +264,8 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 
 /* ════════════════════════
    OVERVIEW — 銷售圖表元件（bbc-bar / wk-compare / hourly）
-   ════════════════════════ */{flex:1;border-radius:4px 4px 0 0;min-width:0;cursor:pointer;position:relative;
+   ════════════════════════ */
+.bbc-bar{flex:1;border-radius:4px 4px 0 0;min-width:0;cursor:pointer;position:relative;
   transition:opacity .2s;}
 .bbc-bar:hover{opacity:.8;}
 .bbc-bar .bbc-tip{display:none;position:absolute;bottom:calc(100% + 4px);left:50%;
@@ -1134,13 +1135,14 @@ function calcRestock(){
 
   const baseResult = Object.entries(map)
     .map(([name, s])=>{
+      const info = prodInfo[name];
+      if(!info) return null;  /* 未在商品資料庫登錄的項目（特殊/非正常商品）一律排除 */
       const dailyAvg  = +(s.total / calcDays).toFixed(2);
       const weeklyAvg = +(dailyAvg * 7).toFixed(1);
       const suggested = Math.max(1, Math.ceil(s.total / calcDays * 7 * 1.5));
-      const info      = prodInfo[name] || {category:'shelf1', outOfStock:false, barcode:null};
       return { name, dailyAvg, weeklyAvg, suggested, ...info };
     })
-    .filter(p => p.dailyAvg > 0 && !specialNames.has(p.name));
+    .filter(p => p !== null && p.dailyAvg > 0 && !specialNames.has(p.name));
 
   /* 同名但不同價的無條碼商品：共用相同銷售數據，另外加入獨立列 */
   nobcSameNameDiffPrice.forEach(nobc=>{
@@ -1588,7 +1590,7 @@ function renderRanking(){
   document.getElementById('rank-donut').innerHTML =
     `<svg viewBox="0 0 100 100" class="donut-svg">
       ${slices}
-      <text x="50" y="54" text-anchor="middle" font-size="7" font-weight="700" fill="#0f172a">本期</text>
+      <text x="50" y="54" text-anchor="middle" font-size="7" font-weight="700" style="fill:var(--text)">本期</text>
     </svg>
     <div class="donut-legend">${legend}</div>`;
 
@@ -1821,9 +1823,9 @@ function parseAndApplyImportCSV(csvText){
   if(rows.length<2){ showToast('CSV 格式錯誤或無資料','err'); return; }
 
   const header = parseCSVRow(rows[0]);
-  const colName = header.findIndex(h=>/商品名稱|名稱|name/i.test(h));
-  const colQty  = header.findIndex(h=>/補貨數|數量|qty|quantity/i.test(h));
-  const colCat  = header.findIndex(h=>/分類|category|cat/i.test(h));
+  const colName = header.findIndex(col=>/商品名稱|名稱|name/i.test(col));
+  const colQty  = header.findIndex(col=>/補貨數|數量|qty|quantity/i.test(col));
+  const colCat  = header.findIndex(col=>/分類|category|cat/i.test(col));
 
   if(colName===-1){
     showImportResult({error:'找不到「商品名稱」欄位，請確認 CSV 包含正確表頭。'});
