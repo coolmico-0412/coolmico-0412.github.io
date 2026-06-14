@@ -73,7 +73,7 @@ export const PRODUCT_NAME_MAP = {
 
   // ── 食品 Food ────────────────────────────────────────────────────
   '美露': { en: 'Milo', vi: 'Sữa Milo', id: 'Milo', th: 'Milo', zh: '美露' },
-  'Birdy': { en: 'Birdy Coffee', vi: 'Cà phê Birdy', id: 'Kopi Birdy', th: 'Birdy', zh: 'Birdy' },
+  'Birdy-red': { en: 'Birdy Cafe', vi: 'Cà phê Birdy', id: 'Kopi Birdy Cafe', th: 'BirdyCafe', zh: 'BirdyCafe' },
   'BirdyCafe': { en: 'Birdy Cafe', vi: 'Cà phê Birdy', id: 'Kopi Birdy Cafe', th: 'BirdyCafe', zh: 'BirdyCafe' },
   'CappuCafe': { en: 'Cappuccino Coffee', vi: 'Cà phê Cappuccino', id: 'Kopi Cappuccino', th: 'CappuCafe', zh: 'CappuCafe' },
   'Nescafe-green': { en: 'Nescafe Green', vi: 'Nescafe xanh lá', id: 'Nescafe Hijau', th: 'Nescafe-green', zh: 'Nescafe-green' },
@@ -415,10 +415,10 @@ export const PRODUCT_NAME_MAP = {
   'ปรับผ้านุ่มComfort 柔軟精1': { en: 'Comfort Fabric Softener', vi: 'Nước xả vải Comfort', id: 'Pelembut Pakaian Comfort', th: 'ปรับผ้านุ่ม Comfort', zh: '柔軟精' },
   'ปรับผ้านุ่มComfort 柔軟精2': { en: 'Comfort Fabric Softener', vi: 'Nước xả vải Comfort', id: 'Pelembut Pakaian Comfort', th: 'ปรับผ้านุ่ม Comfort', zh: '柔軟精' },
   'ปรับผ้านุ่มComfort 柔軟精3': { en: 'Comfort Fabric Softener', vi: 'Nước xả vải Comfort', id: 'Pelembut Pakaian Comfort', th: 'ปรับผ้านุ่ม Comfort', zh: '柔軟精' },
-  'ปรับผ้านุ่มDowny柔軟精2': { en: 'Downy Fabric Softener', vi: 'Nước xả vải Downy', id: 'Pelembut Pakaian Downy', th: 'ปรับผ้านุ่ม Downy', zh: '柔軟精' },
-  'ปรับผ้านุ่มDowny柔軟精1': { en: 'Downy Fabric Softener', vi: 'Nước xả vải Downy', id: 'Pelembut Pakaian Downy', th: 'ปรับผ้านุ่ม Downy', zh: '柔軟精' },
-  'ปรับผ้านุ่มDowny柔軟精': { en: 'Downy Fabric Softener', vi: 'Nước xả vải Downy', id: 'Pelembut Pakaian Downy', th: 'ปรับผ้านุ่ม Downy', zh: '柔軟精' },
-  'ปรับผ้านุ่มDowny柔軟精大': { en: 'Downy Fabric Softener', vi: 'Nước xả vải Downy', id: 'Pelembut Pakaian Downy', th: 'ปรับผ้านุ่ม Downy', zh: '柔軟精' },
+  'ปรับผ้านุ่ม750mlDowny柔軟精2': { en: 'Downy Fabric Softene750mlr', vi: 'Nước xả vải Downy750ml', id: 'Pelembut Pakaian Downy750ml', th: 'ปรับผ้านุ่ม Downy750ml', zh: '柔軟精750ml' },
+  'ปรับผ้านุ่ม750mlDowny柔軟精1': { en: 'Downy Fabric Softener750ml', vi: 'Nước xả vải Downy750ml', id: 'Pelembut Pakaian Downy750ml', th: 'ปรับผ้านุ่ม Downy750ml', zh: '柔軟精750ml' },
+  'ปรับผ้านุ่ม750mlDowny柔軟精': { en: 'Downy Fabric Softener750ml', vi: 'Nước xả vải Downy750ml', id: 'Pelembut Pakaian Downy750ml', th: 'ปรับผ้านุ่ม Downy750ml', zh: '柔軟精750ml' },
+  'ปรับผ้านุ่ม750mlDowny柔軟精大': { en: 'Downy Fabric Softener', vi: 'Nước xả vải Downy', id: 'Pelembut Pakaian Downy', th: 'ปรับผ้านุ่ม Downy', zh: '柔軟精' },
   'ปรับผ้านุ่มH柔軟精3': { en: 'Hygiene Fabric Softener', vi: 'Nước xả vải Hygiene', id: 'Pelembut Pakaian Hygiene', th: 'ปรับผ้านุ่ม Hygiene', zh: 'H柔軟精' },
   'ปรับผ้านุ่มH柔軟精2': { en: 'Hygiene Fabric Softener', vi: 'Nước xả vải Hygiene', id: 'Pelembut Pakaian Hygiene', th: 'ปรับผ้านุ่ม Hygiene', zh: 'H柔軟精' },
   'ปรับผ้านุ่มH柔軟精1': { en: 'Hygiene Fabric Softener', vi: 'Nước xả vải Hygiene', id: 'Pelembut Pakaian Hygiene', th: 'ปรับผ้านุ่ม Hygiene', zh: 'H柔軟精' },
@@ -514,10 +514,10 @@ export const PRODUCT_NAME_MAP = {
 
 
   // ─── 米類 / RICE ──────────────────────────────────────────────────
-  'ข้าวเหนียว 5 กก.糯米5kg': { en: 'Sticky Rice 5kg', vi: 'Gạo nếp 5kg', id: 'Beras Ketan 5kg', th: 'ข้าวเหนียว 5 กก.', zh: '糯米5kg' },
-  'ข้าวเหนียว 30 กก.糯米30kg': { en: 'Sticky Rice 30kg', vi: 'Gạo nếp 30kg', id: 'Beras Ketan 30kg', th: 'ข้าวเหนียว 30 กก.', zh: '糯米30kg' },
-  'ข้าวหอมมะลิ 5 กก.香米5kg': { en: 'Jasmine Rice 5kg', vi: 'Gạo thơm 5kg', id: 'Beras Melati 5kg', th: 'ข้าวหอมมะลิ 5 กก.', zh: '香米5kg' },
-  'ข้าวหอมมะลิ 12 กก.香米12kg': { en: 'Jasmine Rice 12kg', vi: 'Gạo thơm 12kg', id: 'Beras Melati 12kg', th: 'ข้าวหอมมะลิ 12 กก.', zh: '香米12kg' },
+  'ข้าวเหนียว5กก.糯米5kg': { en: 'Sticky Rice 5kg', vi: 'Gạo nếp 5kg', id: 'Beras Ketan 5kg', th: 'ข้าวเหนียว 5 กก.', zh: '糯米5kg' },
+  'ข้าวเหนียว30กก.糯米30kg': { en: 'Sticky Rice 30kg', vi: 'Gạo nếp 30kg', id: 'Beras Ketan 30kg', th: 'ข้าวเหนียว 30 กก.', zh: '糯米30kg' },
+  'ข้าวหอมมะลิ5กก.香米5kg': { en: 'Jasmine Rice 5kg', vi: 'Gạo thơm 5kg', id: 'Beras Melati 5kg', th: 'ข้าวหอมมะลิ 5 กก.', zh: '香米5kg' },
+  'ข้าวหอมมะลิ12กก.香米12kg': { en: 'Jasmine Rice 12kg', vi: 'Gạo thơm 12kg', id: 'Beras Melati 12kg', th: 'ข้าวหอมมะลิ 12 กก.', zh: '香米12kg' },
 
   // ─── 其他 / OTHER & OTHERS ─────────────────────────────────────────────
   'คลิป平口夾2': { en: 'Flat Clip', vi: 'Kẹp miệng phẳng', id: 'Klip Datar', th: 'คลิป', zh: '平口夾' },
