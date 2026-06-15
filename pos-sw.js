@@ -1,10 +1,17 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.9
+   POS Service Worker  v1.2.10
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
    ──────────────────────────────────────────
    版本更新紀錄 CHANGELOG
+   v1.2.10
+     - [Bug] renderHoldBar: 暫存購物車金額未套用 money() → 修正千分位格式
+     - [Bug] openReview table: 結帳明細單價/小計未套用 money() → 修正
+     - [Bug] renderCart row: 購物車商品單價未套用 money() → 修正
+     - [Bug] renderNobcListModal/renderProdGrid: 商品價格顯示缺 money() → 修正
+     - [Bug] showDrilldown/renderMonthly/Weekly/Daily: 金額缺 money() → 修正
+     - [Perf] renderStats: 移除 6 個引用不存在 DOM 元素的死碼 → pass-through
    v1.2.9
      - [Bug] saveEditProduct: outOfStock 等屬性在編輯後遺失 → spread 保留
      - [Bug] pickDataFile catch: 非 AbortError 顯示錯誤訊息錯誤 → 修正
@@ -29,7 +36,7 @@
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.9';
+const VER          = 'pos-v1.2.10';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;

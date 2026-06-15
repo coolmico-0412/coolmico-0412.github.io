@@ -864,6 +864,27 @@ body.pwa-offline .pwa-update-bar.show {
   </div>
 </div>
 
+<!-- ═══ Modal: 交易明細彈跳視窗 ═══ -->
+<div class="overlay" id="m-tx-detail">
+  <div class="mbox" style="width:460px;max-height:88vh;overflow-y:auto;padding:0">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 22px 14px;border-bottom:1px solid var(--border);background:var(--surface2);border-radius:18px 18px 0 0">
+      <div>
+        <div class="m-title" style="margin:0">📋 รายละเอียดการขาย <span class="zh">交易明細</span></div>
+        <div id="txd-meta" style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:5px"></div>
+      </div>
+      <button onclick="closeModal('m-tx-detail')" style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='#fef2f2'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)';this.style.background='transparent'">✕</button>
+    </div>
+    <!-- Items table -->
+    <div id="txd-items" style="padding:10px 0"></div>
+    <!-- Footer total -->
+    <div id="txd-footer" style="display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-top:2px solid var(--border);background:var(--surface2);border-radius:0 0 18px 18px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:var(--muted);font-family:var(--zh)">รวม / 合計</div>
+      <div id="txd-total" style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--gold)"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ 線上訂單頁 ═══ -->
 <div class="page" id="page-online-orders">
   <!-- Header -->
@@ -1644,7 +1665,7 @@ function renderCart(){
         ${h(item.name)}
         ${item.noBarcode?'<span class="nobc-tag">無條碼</span>':''}
       </div>
-      <div class="t-price">NT$ ${item.price}</div>
+      <div class="t-price">NT$ ${money(item.price)}</div>
       <div class="qty-ctrl" style="display:flex;align-items:center;gap:4px;">
         <button class="qty-btn" onclick="changeQty(${jsArg(item.barcode)},1)">＋</button>
         <span class="qty-display" onclick="editQty(${jsArg(item.barcode)})">${item.qty}</span>
@@ -1736,7 +1757,7 @@ function renderNobcListModal(){
     body.innerHTML=`<div class="nobc-product-grid">${filtered.map(p=>`
       <button type="button" class="nobc-list-item" onclick="addNobcProdToCart(${p._idx})" title="加入購物車">
         <div class="nobc-list-name">${h(p.name)}</div>
-        <div class="nobc-list-price">NT$ ${p.price}</div>
+        <div class="nobc-list-price">NT$ ${money(p.price)}</div>
       </button>`).join('')}</div>`;
   }
 }
@@ -1839,9 +1860,9 @@ function openReview(){
     return`<tr>
       <td class="num" style="color:var(--muted2)">${i+1}</td>
       <td>${h(item.name)}${item.noBarcode?'<span class="nobc-tag">無條碼</span>':''}</td>
-      <td class="num">NT$ ${item.price}</td>
+      <td class="num">NT$ ${money(item.price)}</td>
       <td class="num">${item.qty}</td>
-      <td class="sub">NT$ ${sub}</td>
+      <td class="sub">NT$ ${money(sub)}</td>
     </tr>`;
   }).join('');
   document.getElementById('review-total-amt').textContent='NT$ '+money(total);
@@ -2024,7 +2045,7 @@ function renderProdGrid(){
               ${isOos?`<span style="font-size:9px;background:var(--red);color:#fff;border-radius:4px;padding:1px 5px;font-weight:700">缺貨</span>`:''}
             </div>
             <div class="prod-name">${h(p.name)}</div>
-            <div class="prod-price">NT$ ${p.price}</div>
+            <div class="prod-price">NT$ ${money(p.price)}</div>
             <div class="prod-acts">
               <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh);border-color:var(--purple);color:var(--purple)" onclick="editNobcProd(${p._idx})">✏</button>
               <button class="btn btn-danger" style="font-size:10px;padding:4px 7px" onclick="delNobcProd(${p._idx})">🗑</button>
@@ -2047,7 +2068,7 @@ function renderProdGrid(){
               ${isOos?`<span style="font-size:9px;background:var(--red);color:#fff;border-radius:4px;padding:1px 5px;font-weight:700">缺貨</span>`:''}
             </div>
             <div class="prod-name">${h(p.name)}</div>
-            <div class="prod-price">NT$ ${p.price}</div>
+            <div class="prod-price">NT$ ${money(p.price)}</div>
             <div class="prod-acts">
               <button class="btn btn-ghost" style="font-size:10px;padding:4px 7px;font-family:var(--zh)" onclick="openEditProd(${jsArg(bc)})">✏</button>
               <button class="btn btn-danger" style="font-size:10px;padding:4px 7px" onclick="delProduct(${jsArg(bc)})">🗑</button>
@@ -2197,21 +2218,8 @@ function clearAllProducts(){
 
 // ═══ 報表 ═══
 function renderStats(){
-  const txList=getTx();const now=new Date();
-  const today=fd(now),month=fm(now),week=fweek(now);
-  let tT=0,tC=0,mT=0,mC=0,wT=0,wC=0;
-  txList.forEach(tx=>{
-    const d=new Date(tx.date);
-    if(fd(d)===today){tT+=tx.total;tC++;}
-    if(fm(d)===month){mT+=tx.total;mC++;}
-    if(fweek(d)===week){wT+=tx.total;wC++;}
-  });
-  const st=document.getElementById('stat-today');if(st)st.textContent='NT$ '+tT;
-  const stc=document.getElementById('stat-today-count');if(stc)stc.textContent=tC;
-  const sm=document.getElementById('stat-month');if(sm)sm.textContent='NT$ '+mT;
-  const smc=document.getElementById('stat-month-count');if(smc)smc.textContent=mC;
-  const sw=document.getElementById('stat-week');if(sw)sw.textContent='NT$ '+wT;
-  const swc=document.getElementById('stat-week-count');if(swc)swc.textContent=wC;
+  // 統計卡片（stat-income-today/yesterday/week）由 renderRecentTx() 統一更新。
+  // 此函式保留為呼叫點相容層，不做額外計算。
 }
 
 // 本週交易明細（週一至週日，用於 POS 交易明細頁）
@@ -2265,14 +2273,14 @@ function renderRecentTx(){
   body.innerHTML=recent.map(tx=>{
     const d=new Date(tx.date);
     const dateStr=d.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-    const summary=tx.items.slice(0,3).map(i=>`${h(i.name)}×${i.qty}`).join('、')+(tx.items.length>3?'…':'');
+    const summary=tx.items.slice(0,2).map(i=>`${h(i.name)}×${i.qty}`).join('、')+(tx.items.length>2?'…':'');
     const safeId=tx.id.replace(/'/g,"\\'");
     const cols=_editMode?'140px 1fr 110px 36px':'140px 1fr 110px';
-    return `<div style="display:grid;grid-template-columns:${cols};padding:11px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background .12s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+    return `<div style="display:grid;grid-template-columns:${cols};padding:11px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background .12s;cursor:pointer;" onclick="openTxDetail('${safeId}')" onmouseover="this.style.background='var(--aglow)'" onmouseout="this.style.background=''">
       <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">${dateStr}</div>
       <div style="font-family:var(--zh);font-size:12px;color:var(--text)">${summary}</div>
-      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--gold);text-align:right">NT$ ${tx.total}</div>
-      ${_editMode?`<div style="display:flex;align-items:center;justify-content:center">
+      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--gold);text-align:right">NT$ ${money(tx.total)}</div>
+      ${_editMode?`<div style="display:flex;align-items:center;justify-content:center" onclick="event.stopPropagation()">
         <button onclick="confirmDeleteTx('${safeId}')" style="width:24px;height:24px;border-radius:6px;border:1.5px solid var(--border2);background:transparent;color:var(--muted2);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all .12s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='#fef2f2'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted2)';this.style.background='transparent'" title="刪除此筆交易">✕</button>
       </div>`:''}
     </div>`;
@@ -2315,13 +2323,51 @@ function deleteTx(txId){
   _deleteTxId=null;
 }
 
+// ═══ 交易明細彈跳視窗 ═══
+function openTxDetail(txId){
+  const txList=getTx();
+  const tx=txList.find(t=>t.id===txId);
+  if(!tx)return;
+  const d=new Date(tx.date);
+  const dateStr=d.toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const meta=document.getElementById('txd-meta');
+  if(meta) meta.textContent='#'+tx.id+'  ·  '+dateStr;
+  const itemsEl=document.getElementById('txd-items');
+  if(itemsEl){
+    if(!tx.items||!tx.items.length){
+      itemsEl.innerHTML='<div style="padding:18px 22px;color:var(--muted);font-family:var(--zh);font-size:13px">無商品資料</div>';
+    } else {
+      // table header
+      let html='<div style="display:grid;grid-template-columns:1fr 56px 90px;padding:7px 22px;background:var(--surface2);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);border-bottom:1px solid var(--border);font-family:var(--zh)">'
+        +'<div>商品 / สินค้า</div><div style="text-align:center">數量 / จำนวน</div><div style="text-align:right">小計 / รวม</div></div>';
+      tx.items.forEach((item,i)=>{
+        const sub=((item.price||0)*(item.qty||1));
+        const isLast=i===tx.items.length-1;
+        html+=`<div style="display:grid;grid-template-columns:1fr 56px 90px;padding:10px 22px;${isLast?'':'border-bottom:1px solid var(--border);'}align-items:center">`
+          +`<div>`
+          +`<div style="font-weight:600;font-family:var(--zh);color:var(--text);font-size:13px">${h(item.name||'')}</div>`
+          +(item.barcode?`<div style="font-family:var(--mono);font-size:9px;color:var(--muted2);margin-top:2px">${h(item.barcode)}</div>`:'')
+          +`</div>`
+          +`<div style="text-align:center;font-family:var(--mono);font-weight:700;color:var(--text);font-size:14px">${item.qty||1}</div>`
+          +`<div style="text-align:right;font-family:var(--mono);font-weight:700;color:var(--gold);font-size:13px">NT$ ${money(sub)}</div>`
+          +'</div>';
+      });
+      itemsEl.innerHTML=html;
+    }
+  }
+  const totalEl=document.getElementById('txd-total');
+  if(totalEl) totalEl.textContent='NT$ '+money(tx.total);
+  openModal('m-tx-detail');
+}
+
+
 function renderMonthly(){
   const el=document.getElementById('monthly-list');if(!el)return;
   const txList=getTx();const grouped={};
   txList.forEach(tx=>{const k=fm(new Date(tx.date));if(!grouped[k])grouped[k]={total:0,count:0};grouped[k].total+=tx.total;grouped[k].count++;});
   const keys=Object.keys(grouped).sort().reverse();
   if(!keys.length){el.innerHTML=`<div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>`;return;}
-  el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','monthly')"><div class="rdate">${k}</div><div class="ramt">NT$ ${grouped[k].total}</div><div class="rcnt">${grouped[k].count} 筆</div><div class="rarrow">›</div></div>`).join('');
+  el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','monthly')"><div class="rdate">${k}</div><div class="ramt">NT$ ${money(grouped[k].total)}</div><div class="rcnt">${grouped[k].count} 筆</div><div class="rarrow">›</div></div>`).join('');
 }
 function renderWeekly(){
   const el=document.getElementById('weekly-list');if(!el)return;
@@ -2335,7 +2381,7 @@ function renderWeekly(){
   if(!keys.length){el.innerHTML=`<div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>`;return;}
   el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','weekly')">
     <div class="rdate" style="width:auto;min-width:80px;font-size:11px">${grouped[k].label}</div>
-    <div class="ramt">NT$ ${grouped[k].total}</div>
+    <div class="ramt">NT$ ${money(grouped[k].total)}</div>
     <div class="rcnt">${grouped[k].count} 筆</div>
     <div class="rarrow">›</div>
   </div>`).join('');
@@ -2346,7 +2392,7 @@ function renderDaily(){
   txList.forEach(tx=>{const k=fd(new Date(tx.date));if(!grouped[k])grouped[k]={total:0,count:0};grouped[k].total+=tx.total;grouped[k].count++;});
   const keys=Object.keys(grouped).sort().reverse();
   if(!keys.length){el.innerHTML=`<div class="empty-st"><div class="ei">📋</div><div class="zh">尚無銷售資料</div></div>`;return;}
-  el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','daily')"><div class="rdate">${k}</div><div class="ramt">NT$ ${grouped[k].total}</div><div class="rcnt">${grouped[k].count} 筆</div><div class="rarrow">›</div></div>`).join('');
+  el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','daily')"><div class="rdate">${k}</div><div class="ramt">NT$ ${money(grouped[k].total)}</div><div class="rcnt">${grouped[k].count} 筆</div><div class="rarrow">›</div></div>`).join('');
 }
 function showDrilldown(key,mode){
   const txList=getTx();
@@ -2364,8 +2410,8 @@ function showDrilldown(key,mode){
   const modeLabel={daily:'每日',monthly:'每月',weekly:'每週'};
   document.getElementById('drill-title').textContent=(modeLabel[mode]||mode)+'銷售明細';
   document.getElementById('drill-sub').textContent=key.replace('~',' ~ ')+'　共 '+filtered.length+' 筆交易';
-  document.getElementById('drill-body').innerHTML=items.map(([name,v])=>`<tr><td>${h(name)}</td><td class="num">${v.qty} 件</td><td class="num" style="color:var(--gold);font-weight:700">NT$ ${v.total}</td></tr>`).join('');
-  document.getElementById('drill-total-amt').textContent='NT$ '+grand;
+  document.getElementById('drill-body').innerHTML=items.map(([name,v])=>`<tr><td>${h(name)}</td><td class="num">${v.qty} 件</td><td class="num" style="color:var(--gold);font-weight:700">NT$ ${money(v.total)}</td></tr>`).join('');
+  document.getElementById('drill-total-amt').textContent='NT$ '+money(grand);
   openModal('m-drill');
 }
 function exportCSV(){
@@ -2971,7 +3017,7 @@ function renderHoldBar(){
       <div class="hs-num">${i+1}</div>
       <div class="hs-info">
         <div class="hs-count">${count} 件 · ${timeStr}</div>
-        <div class="hs-amt">NT$ ${total}</div>
+        <div class="hs-amt">NT$ ${money(total)}</div>
       </div>
       <span class="hs-del" onclick="deleteHeld('${hc.id}',event)" title="刪除">×</span>
     </div>`;
@@ -2989,6 +3035,22 @@ function renderHoldBar(){
 // ══════════════════════════════════════════════════════════
 // 版本更新紀錄 CHANGELOG
 // ──────────────────────────────────────────────────────────
+// v1.2.10
+//   1. [Bug] renderHoldBar: 暫存購物車金額未套用 money() 千分位格式
+//      → NT$ ${total} 改為 NT$ ${money(total)}
+//   2. [Bug] openReview 結帳確認表格: 單價欄與小計欄未套用 money()
+//      → item.price / sub 均已補 money() 格式化
+//   3. [Bug] renderCart 購物車行: 商品單價未套用 money()
+//      → NT$ ${item.price} 改為 NT$ ${money(item.price)}
+//   4. [Bug] renderNobcListModal: 無條碼商品選擇清單價格未套用 money()
+//   5. [Bug] renderProdGrid: 無條碼/條碼商品管理卡片價格未套用 money()
+//   6. [Bug] showDrilldown / renderMonthly / renderWeekly / renderDaily:
+//      明細金額與合計未套用 money()
+//   7. [Perf] renderStats(): 移除 6 個引用不存在 DOM 元素的死碼
+//      (stat-today / stat-today-count / stat-month / stat-month-count /
+//       stat-week / stat-week-count 皆不存在於 HTML)
+//      → 改為相容層 pass-through，實際統計由 renderRecentTx() 負責
+//
 // v1.2.9
 //   1. [Bug] saveEditProduct: 修正覆寫商品時整個物件被重建，
 //      導致 outOfStock 等額外屬性遺失 → 改用 spread 保留既有屬性
@@ -3064,7 +3126,7 @@ function renderHoldBar(){
 //   - Firebase onValue 跳過 initial fire，防止自迴響
 //   - 分鍵追蹤寫入，避免全量覆寫
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.2.9';
+const APP_VERSION = '1.2.10';
 
 // 將版本號顯示於 nav brand（DOMContentLoaded 後確保元素存在）
 document.addEventListener('DOMContentLoaded', () => {
