@@ -86,7 +86,7 @@ export const PRODUCT_NAME_MAP = {
   'มะม่วงแช่อิ่ม醃芒果': { en: 'Pickled Sweet Mango', vi: 'Xoài ngâm chua ngọt', id: 'Manisan Mangga', th: 'มะม่วงแช่อิ่ม', zh: '醃芒果' },
   'ม็อคโคน่า摩可納Cafe-green': { en: 'Moccona Instant Coffee', vi: 'Cà phê hòa tan Moccona', id: 'Kopi Instan Moccona', th: 'ม็อคโคน่า เขียว', zh: '摩可納Cafe' },
   'ม็อคโคน่า摩可納Cafe-red': { en: 'Moccona Instant Coffee', vi: 'Cà phê hòa tan Moccona', id: 'Kopi Instan Moccona', th: 'ม็อคโคน่า แดง', zh: '摩可納Cafe' },
-  'มาม่าMama泡麵': { en: 'Mama Instant Noodles', vi: 'Mì ăn liền Mama', id: 'Mie Instan Mama', th: 'มาม่า', zh: 'Mama泡麵' },
+  'มาม่าMama泡麵': { en: 'Mama Instant Noodles Assorted', vi: 'Thùng mì Mama lộn xộn vị', id: 'Mi Instan Mama Aneka Rasa', th: 'มาม่าคละรส', zh: '不指定口味泡麵' },
   'มาม่าMama泡麵碗': { en: 'Mama Instant Noodles', vi: 'Mì tô ăn liền Mama', id: 'Mie Instan Wadah Mangkok Mama', th: 'มาม่าถ้วย', zh: 'Mama泡麵碗' },
   'แคบหมู豬皮酥': { en: 'Pork Cracklings / Pork Rinds', vi: 'Da heo chiên giòn', id: 'Kerupuk Kulit Babi', th: 'แคบหมู', zh: '豬皮酥' },
   'ปลาเส้นปรุงรส鱈魚香絲': { en: 'Taro Seasoned Fish Snack', vi: 'Snack cá sợi tẩm vị', id: 'Camilan Stik Ikan Berbumbu', th: 'ปลาเส้นปรุงรส', zh: '鱈魚香絲' },
@@ -133,7 +133,7 @@ export const PRODUCT_NAME_MAP = {
   'แคบหมูรสเผ็ด豬皮酥辣味': { en: 'Spicy Crispy Pork Rinds', vi: 'Da heo chiên giòn vị cay', id: 'Kerupuk Kulit Babi Pedas', th: 'แคบหมูรสเผ็ด', zh: '豬皮酥辣味' },
   'ตำไทย原味涼拌青木瓜': { en: 'Thai Green Papaya Salad (Tam Thai)', vi: 'Gỏi đu đủ Som Tum Thái', id: 'Salad Pepaya Muda (Som Tum Thai)', th: 'ตำไทย', zh: '原味涼拌青木瓜' },
   'ส้มตำปูปลาร้า螃蟹涼拌青木瓜': { en: 'Green Papaya Salad with Crab and Fermented Fish (Tam Pu Pla Ra)', vi: 'Gỏi đu đủ ba khía mắm cá', id: 'Salad Pepaya Muda dengan Kepiting dan Pasta Ikan Fermentasi', th: 'ส้มตำปูปลาร้า', zh: '螃蟹涼拌青木瓜' },
-  'มาม่ายกลังคละรส不指定口味泡麵箱': { en: 'Mama Instant Noodles Assorted (Case)', vi: 'Thùng mì Mama lộn xộn vị', id: 'Mi Instan Mama Aneka Rasa (Karton)', th: 'มาม่ายกลังคละรส', zh: '不指定口味泡麵箱' },
+  'มาม่ายกลัง泡麵箱': { en: 'Mama Instant Noodles Assorted (Case)', vi: 'Thùng mì Mama lộn xộn vị', id: 'Mi Instan Mama Aneka Rasa (Karton)', th: 'มาม่ายกลังคละรส', zh: '不指定口味泡麵箱' },
   'ข้าวเหนียว糯米飯': { en: 'Cooked Sticky Rice', vi: 'Xôi', id: 'Nasi Ketan Matang', th: 'ข้าวเหนียว', zh: '糯米飯' },
   
 
