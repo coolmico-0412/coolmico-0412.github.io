@@ -1,10 +1,18 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.10
+   POS Service Worker  v1.2.11
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
    ──────────────────────────────────────────
-   版本更新紀錄 CHANGELOG
+   v1.2.11
+     1. [Bug] 關閉平板/手機螢幕後再開啟，畫面空白需點擊才能恢復
+        根本原因 A：.overlay 與 #numpad-overlay 的 backdrop-filter:blur(2px)
+          在 opacity:0（關閉狀態）時仍建立 GPU 合成層，螢幕喚醒後
+          GPU Compositor 無法自動重繪，直到觸控事件才恢復。
+          → 修正：將 backdrop-filter 移至 .open 狀態，僅在 Modal 開啟時才啟用。
+        根本原因 B：無「螢幕喚醒 → 強制重繪」機制。
+          → 修正：新增全域 visibilitychange 監聽器，
+            使用雙幀 rAF 觸發 GPU 合成層重繪，模擬點擊的喚醒效果。
    v1.2.10
      - [Bug] renderHoldBar: 暫存購物車金額未套用 money() → 修正千分位格式
      - [Bug] openReview table: 結帳明細單價/小計未套用 money() → 修正
@@ -36,7 +44,7 @@
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.10';
+const VER          = 'pos-v1.2.11';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;

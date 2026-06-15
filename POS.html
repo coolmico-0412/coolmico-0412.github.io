@@ -275,8 +275,8 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .nobc-tag{font-size:10px;color:var(--purple);font-family:var(--mono);background:#faf5ff;border:1px solid #e9d5ff;padding:1px 5px;border-radius:3px;margin-left:6px;}
 
 /* ── MODALS ── */
-.overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:400;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s;backdrop-filter:blur(2px);}
-.overlay.open{opacity:1;pointer-events:all;}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:400;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s;}
+.overlay.open{opacity:1;pointer-events:all;backdrop-filter:blur(2px);}
 .mbox{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px;width:440px;max-width:94vw;transform:scale(.93);transition:transform .22s;max-height:90vh;overflow-y:auto;box-shadow:var(--sh-md);}
 .overlay.open .mbox{transform:scale(1);}
 .m-title{font-size:17px;font-weight:700;margin-bottom:4px;color:var(--text);}
@@ -306,8 +306,8 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 #toast.err{background:#7f1d1d;}
 
 /* ── CUSTOM NUMPAD ── */
-#numpad-overlay{position:fixed;inset:0;z-index:800;background:rgba(15,23,42,.45);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(2px);}
-#numpad-overlay.open{opacity:1;pointer-events:all;}
+#numpad-overlay{position:fixed;inset:0;z-index:800;background:rgba(15,23,42,.45);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+#numpad-overlay.open{opacity:1;pointer-events:all;backdrop-filter:blur(2px);}
 #numpad-box{background:var(--surface);border-radius:20px 20px 0 0;padding:18px 18px 32px;width:100%;max-width:400px;transform:translateY(100%);transition:transform .25s cubic-bezier(.25,.8,.25,1);box-shadow:0 -4px 32px rgba(0,0,0,.18);}
 #numpad-overlay.open #numpad-box{transform:translateY(0);}
 .numpad-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
@@ -2809,6 +2809,19 @@ document.addEventListener('DOMContentLoaded', initStaticScrollTops);
 setTimeout(initStaticScrollTops, 500);
 
 
+// ═══ 螢幕喚醒強制重繪（Fix: 關閉螢幕再開啟後畫面空白需點擊才恢復）═══
+// 根本原因：backdrop-filter 即使在 opacity:0 狀態下仍會建立 GPU 合成層，
+// 螢幕關閉時 GPU 合成器暫停，喚醒後舊合成層未重繪直到觸控事件觸發。
+// 此處透過 rAF 雙幀強制觸發重繪流程，模擬使用者點擊的喚醒效果。
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    requestAnimationFrame(() => {
+      document.body.style.transform = 'translateZ(0)';
+      requestAnimationFrame(() => { document.body.style.transform = ''; });
+    });
+  }
+});
+
 // ═══ 防下拉刷新 ═══
 let _touchStartY=0;
 document.addEventListener('touchstart',e=>{_touchStartY=e.touches[0].clientY;},{passive:true});
@@ -3035,6 +3048,16 @@ function renderHoldBar(){
 // ══════════════════════════════════════════════════════════
 // 版本更新紀錄 CHANGELOG
 // ──────────────────────────────────────────────────────────
+// v1.2.11
+//   1. [Bug] 關閉平板/手機螢幕後再開啟，畫面空白需點擊才能恢復
+//      根本原因 A：.overlay 與 #numpad-overlay 的 backdrop-filter:blur(2px)
+//        在 opacity:0（關閉狀態）時仍建立 GPU 合成層，螢幕喚醒後
+//        GPU Compositor 無法自動重繪，直到觸控事件才恢復。
+//        → 修正：將 backdrop-filter 移至 .open 狀態，僅在 Modal 開啟時才啟用。
+//      根本原因 B：無「螢幕喚醒 → 強制重繪」機制。
+//        → 修正：新增全域 visibilitychange 監聽器，
+//          使用雙幀 rAF 觸發 GPU 合成層重繪，模擬點擊的喚醒效果。
+//
 // v1.2.10
 //   1. [Bug] renderHoldBar: 暫存購物車金額未套用 money() 千分位格式
 //      → NT$ ${total} 改為 NT$ ${money(total)}
@@ -3900,6 +3923,7 @@ function initPosPWA() {
             reg.update().catch(() => {});
           }
         });
+
       })
       .catch(e => console.warn('[POS-SW] registration failed:', e));
 
