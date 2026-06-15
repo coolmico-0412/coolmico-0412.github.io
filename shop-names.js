@@ -231,7 +231,7 @@ export const PRODUCT_NAME_MAP = {
   'น้ำมันพืชองุ่น沙拉油': { en: 'Angoon Soybean Cooking Oil', vi: 'Dầu ăn đậu nành hiệu Ngôi Sao', id: 'Minyak Goreng Kedelai Angoon', th: 'น้ำมันพืชองุ่น', zh: '沙拉油' },
   'ดีขวด牛膽汁': { en: 'Bottled Beef Bile', vi: 'Mật bò đóng chai', id: 'Empedu Sapi Botol', th: 'ดีขวด', zh: '牛膽汁' },
   'ต้มยำสำเร็จ有心辣椒醬454': { en: 'Maepranom Tom Yum Paste 454g', vi: 'Cốt súp Tom Yum ăn liền Maepranom 454g', id: 'Bumbu Pasta Tom Yum Instan Maepranom 454g', th: 'ต้มยำสำเร็จ 454g', zh: '有心辣椒醬454' },
-  'ต้มยำสำเร็จ有心酸辣醬227': { en: 'Maepranom Tom Yum Paste 227g', vi: 'Cốt súp Tom Yum ăn liền Maepranom 227g', id: 'Bumbu Pasta Tom Yum Instan Maepranom 227g', th: 'ต้มยำสำเร็จ 227g', zh: '有心酸辣醬227' },
+  'ต้มยำสำเร็จ有心辣椒醬227': { en: 'Maepranom Tom Yum Paste 227g', vi: 'Cốt súp Tom Yum ăn liền Maepranom 227g', id: 'Bumbu Pasta Tom Yum Instan Maepranom 227g', th: 'ต้มยำสำเร็จ 227g', zh: '有心辣椒醬227' },
   'เต้าเจี้ยวเล็ก仁和園豆瓣醬350': { en: 'Healthy Boy Soybean Paste 350g', vi: 'Tương hột Healthy Boy 350g', id: 'Tauco Healthy Boy 350g', th: 'เต้าเจี้ยวเล็ก 350g', zh: '仁和園豆瓣醬350' },
   'เต้าเจี้ยวเล็ก仁和園豆瓣醬800': { en: 'Healthy Boy Soybean Paste 800g', vi: 'Tương hột Healthy Boy 800g', id: 'Tauco Healthy Boy 800g', th: 'เต้าเจี้ยวเล็ก 800g', zh: '仁和園豆瓣醬800' },
   'นมข้นหวาน三花煉乳': { en: 'Carnation Sweetened Condensed Milk', vi: 'Sữa đặc có đường Carnation', id: 'Susu Kental Manis Carnation', th: 'นมข้นหวาน สาม花', zh: '三花煉乳' },
