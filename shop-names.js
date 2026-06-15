@@ -65,6 +65,8 @@ export const PRODUCT_NAME_MAP = {
   'อีฟน้ำเก๊กฮวย菊花茶': { en: 'If Chrysanthemum Tea', vi: 'Trà hoa cúc If', id: 'Teh Krisan If', th: 'อีฟน้ำเก๊กฮวย', zh: '菊花茶' },
   'M150-10ขวด罐': { en: 'M-150 Energy Drink (10 Bottles)', vi: 'Nước tăng lực M-150 (Lốc 10 chai)', id: 'Minuman Energi M-150 (10 Botol)', th: 'เอ็ม-150 10 ขวด', zh: 'M150-10ขวด罐' },
   'เอ็ม150ยกลังM150箱': { en: 'M-150 Energy Drink (Case)', vi: 'Thùng nước tăng lực M-150', id: 'Minuman Energi M-150 (Karton)', th: 'เอ็ม-150 ยกลัง', zh: 'M150箱' },
+  'โคคาโคล่า可口可樂330ml': { en: 'Coca-Cola330ml', vi: 'Coca-Cola330ml', id: 'Coca-Cola330ml', th: 'โคคาโคล่า330ml', zh: '可口可樂330ml' },
+  'โคคาโคล่า可口可樂2L': { en: 'Coca-Cola2L', vi: 'Coca-Cola2L', id: 'Coca-Cola2L', th: 'โคคาโคล่า2L', zh: '可口可樂2L' },
 
 
 
@@ -156,8 +158,9 @@ export const PRODUCT_NAME_MAP = {
   'ซอสผัดผงกะหรี่泰式螃蟹料理包': { en: 'Thai Stir-Fried Crab Curry Sauce Pack', vi: 'Gói sốt xào bột cà ri cua kiểu Thái', id: 'Saus Bumbu Tumis Kepiting Kari Thailand', th: 'ซอสผัดผงกะหรี่', zh: '泰式螃蟹料理包' },
   'ซอสพริก上等辣椒醬': { en: 'Premium Chili Sauce', vi: 'Tương ớt thượng hạng', id: 'Saus Cabai Premium', th: 'ซอสพริก', zh: '上等辣椒醬' },
   'ซอสหอยเส็ก主婦蠔油4500': { en: 'Maekrua Oyster Sauce 4500ml', vi: 'Dầu hào Maekrua 4500ml', id: 'Saus Tiram Maekrua 4500ml', th: 'ซอสหอยเส็ก', zh: '主婦蠔油4500' },
-  'ซอสหอยเส็ก蠔油150': { en: 'Oyster Sauce 150ml', vi: 'Dầu hào 150ml', id: 'Saus Tiram 150ml', th: 'ซอสหอยเส็ก', zh: '蠔油150' },
-  'ซอสหอยเส็ก蠔油600': { en: 'Oyster Sauce 600ml', vi: 'Dầu hào 600ml', id: 'Saus Tiram 600ml', th: 'ซอสหอยเส็ก', zh: '蠔油600' },
+  'ซอสหอยเส็ก蠔油150': { en: 'Oyster Sauce 150ml', vi: 'Dầu hào 150ml', id: 'Saus Tiram 150ml', th: 'ซอสหอยเส็ก', zh: '主婦蠔油150' },
+  'ซอสหอยเส็ก蠔油300': { en: 'Oyster Sauce 300ml', vi: 'Dầu hào 300ml', id: 'Saus Tiram 300ml', th: 'ซอสหอยเส็ก', zh: '主婦蠔油300' },
+  'ซอสหอยเส็ก蠔油600': { en: 'Oyster Sauce 600ml', vi: 'Dầu hào 600ml', id: 'Saus Tiram 600ml', th: 'ซอสหอยเส็ก', zh: '主婦蠔油600' },
   'ฉู่ฉี่สามแม่ครัว椰漿沙丁魚': { en: 'Three Chefs Sardines in Chu Chee Curry', vi: 'Cá mòi sốt cà ri nước cốt dừa Three Chefs', id: 'Tiga Koki Sarden Saus Kari Santan', th: 'ฉู่ฉี่สามแม่ครัว', zh: '椰漿沙丁魚' },
   'งาขาว炸粉': { en: 'Fried Flour with White Sesame', vi: 'Bột chiên mè trắng', id: 'Tepung Goreng Wijen Putih', th: 'งาขาว', zh: '炸粉' },
   'เงาะในน้ำเชื่อม紅毛丹罐頭': { en: 'Rambutan in Syrup Canned', vi: 'Chôm chôm ngâm đường đóng hộp', id: 'Manisan Rambutan Kaleng', th: 'เงาะในน้ำเชื่อม', zh: '紅毛丹罐頭' },
@@ -280,6 +283,7 @@ export const PRODUCT_NAME_MAP = {
   'มะเขือเทศ蕃茄': { en: 'Tomato', vi: 'Cà chua', id: 'Tomat', th: 'มะเขือเทศ', zh: '蕃茄' },
   'มะนาว檸檬': { en: 'Lime', vi: 'Chanh xanh', id: 'Jeruk Nipis', th: 'มะนาว', zh: '檸檬' },
   'มะละกอ青木瓜': { en: 'Green Papaya', vi: 'Đu đủ xanh', id: 'Pepaya Muda', th: 'มะละกอ', zh: '青木瓜' },
+  'กะทิผงสำเร็จรูป即溶椰漿粉': { en: 'Instant Coconut Milk Powder', vi: 'Bột cốt dừa', id: 'Serbuk Santan Kelapa', th: 'กะทิผงสำเร็จรูป', zh: '即溶椰漿粉' },
 
  
 
@@ -391,7 +395,8 @@ export const PRODUCT_NAME_MAP = {
   'โฟมล้างหน้าNivea洗面乳1': { en: 'Nivea Facial Foam Cleanser', vi: 'Sữa rửa mặt Nivea', id: 'Sabun Cuci Muka Nivea', th: 'โฟมล้างหน้า Nivea', zh: 'Nivea洗面乳' },
   'โฟมล้างหน้าNivea洗面乳': { en: 'Nivea Facial Foam Cleanser', vi: 'Sữa rửa mặt Nivea', id: 'Sabun Cuci Muka Nivea', th: 'โฟมล้างหน้า Nivea', zh: 'Nivea洗面乳' },
   'โฟมล้างหน้าNivea洗面乳2': { en: 'Nivea Facial Foam Cleanser', vi: 'Sữa rửa mặt Nivea', id: 'Sabun Cuci Muka Nivea', th: 'โฟมล้างหน้า Nivea', zh: 'Nivea洗面乳' },
-  'โฟมล้างหน้าSmoothe洗面乳': { en: 'Smooth E Facial Foam Cleanser', vi: 'Sữa rửa mặt trị mụn dịu nhẹ Smooth E', id: 'Sabun Cuci Muka Smooth E', th: 'โฟมล้างหน้า Smooth E', zh: 'Smoothe洗面乳' },
+  'โฟมล้างหน้าSmoothe洗面乳': { en: 'SmoothE Facial Foam Cleanser', vi: 'Sữa rửa mặt trị mụn dịu nhẹ SmoothE', id: 'Sabun Cuci Muka SmoothE', th: 'โฟมล้างหน้าSmoothE', zh: 'SmoothE洗面乳' },
+  'โฟมล้างหน้าGarnier洗面乳': { en: 'Garnier Facial Foam Cleanser', vi: 'Sữa rửa mặt trị mụn dịu nhẹ Garnier', id: 'Sabun Cuci Muka Garnier', th: 'โฟมล้างหน้าGarnier', zh: 'Garnier洗面乳' },
   'แป้งฝุ่น12PLUS爽身粉': { en: '12 Plus Talcum Powder', vi: 'Phấn rôm', id: 'Bedak Tabur', th: 'แป้งฝุ่น 12PLUS', zh: '爽身粉' },
   'แป้งฝุ่น馬頭爽身粉': { en: 'St. Lukes Prickly Heat Powder', vi: 'Phấn mát trị rôm sẩy hiệu Đầu Ngựa', id: 'Bedak Dingin Anti Biang Keringat Cap Kepala Kuda', th: 'แป้งฝุ่น ตราม้า', zh: '馬頭爽身粉' },
   'แป้งฝุ่นBabi爽身粉3': { en: 'Babi Mild Baby Powder', vi: 'Phấn rôm cho bé Babi Mild', id: 'Bedak Bayi Babi Mild', th: 'แป้งฝุ่น Babi Mild', zh: 'Babi爽身粉' },
