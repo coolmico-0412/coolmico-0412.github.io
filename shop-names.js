@@ -157,7 +157,7 @@ export const PRODUCT_NAME_MAP = {
   'คนเนชั่น三花調製奶水': { en: 'Carnation Evaporated Milk', vi: 'Sữa đặc Carnation', id: 'Susu Evaporasi Carnation', th: 'คนเนชั่น', zh: '三花調製奶水' },
   'คนอไก่雞湯塊': { en: 'Knorr Chicken Bouillon Cube', vi: 'Hạt nêm Knorr vị gà', id: 'Kaldu Blok Ayam Knorr', th: 'คนอไก่', zh: '雞湯塊' },
   'คนอต้มยำ酸辣湯塊': { en: 'Knorr Tom Yum Bouillon Cube', vi: 'Hạt nêm Knorr vị Tom Yum', id: 'Kaldu Blok Tom Yum Knorr', th: 'คนอต้มยำ', zh: '酸辣湯塊' },
-  'คนหมู豬湯塊': { en: 'Knorr Pork Bouillon Cube', vi: 'Hạt nêm Knorr vị heo', id: 'Kaldu Blok Babi Knorr', th: 'คนหมู', zh: '豬湯塊' },
+  'คนอหมู豬湯塊': { en: 'Knorr Pork Bouillon Cube', vi: 'Hạt nêm Knorr vị heo', id: 'Kaldu Blok Babi Knorr', th: 'คนอหมู', zh: '豬湯塊' },
   'ซอยฝาเขียวใหญ่金山牌醬油1000': { en: 'Golden Mountain Green Cap Seasoning Sauce 1000ml', vi: 'Nước tương nắp xanh Golden Mountain 1000ml', id: 'Saus Penyedap Golden Mountain Tutup Hijau 1000ml', th: 'ซอยฝาเขียวใหญ่', zh: '金山牌醬油1000' },
   'ซอยฝาเขียวใหญ่金山牌醬油200': { en: 'Golden Mountain Green Cap Seasoning Sauce 200ml', vi: 'Nước tương nắp xanh Golden Mountain 200ml', id: 'Saus Penyedap Golden Mountain Tutup Hijau 200ml', th: 'ซอยฝาเขียวใหญ่', zh: '金山牌醬油200' },
   'ซอยฝาเขียวใหญ่金山牌醬油600': { en: 'Golden Mountain Green Cap Seasoning Sauce 600ml', vi: 'Nước tương nắp xanh Golden Mountain 600ml', id: 'Saus Penyedap Golden Mountain Tutup Hijau 600ml', th: 'ซอยฝาเขียวใหญ่', zh: '金山牌醬油600' },
