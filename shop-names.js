@@ -523,6 +523,7 @@ export const PRODUCT_NAME_MAP = {
   'กระชาย甲猜': { en: 'Fingerroot (Krachai)', vi: 'Củ ngải bún (Krachai)', id: 'Temu Kunci (Krachai)', th: 'กระชาย', zh: '甲猜' },
   'ปลาหมึกวง魷魚圈': { en: 'Frozen Squid Rings', vi: 'Mực ống cắt khoanh đông lạnh', id: 'Cumi Ring Beku', th: 'ปลาหมึกวง', zh: '魷魚圈' },
   'หน่อไม้醃竹筍': { en: 'Frozen Pickled Bamboo Shoots', vi: 'Măng ngâm đông lạnh', id: 'Rebung Acar Beku', th: 'หน่อไม้', zh: '醃竹筍' },
+  'หน่อไม้醃竹筍1': { en: 'Frozen Pickled Bamboo Shoots', vi: 'Măng ngâm đông lạnh', id: 'Rebung Acar Beku', th: 'หน่อไม้', zh: '醃竹筍' },
   'หมูยอ越南火腿': { en: 'Vietnamese Pork Sausage', vi: 'Chả lụa Việt Nam', id: 'Sosis Babi Vietnam', th: 'หมูยอ', zh: '越南火腿' },
   'หมูสด豬肉': { en: 'Frozen Raw Pork', vi: 'Thịt heo tươi đông lạnh', id: 'Daging Babi Mentah Beku', th: 'หมูสด', zh: '豬肉' },
 
