@@ -1047,6 +1047,25 @@ body::after {
 }
 .login-btn-hdr:hover { background:var(--primary); color:#fff; box-shadow:0 3px 10px rgba(201,78,110,.3); }
 
+/* ── LINE 詢問按鈕（位於會員圖案左側）── */
+.line-ask-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: #06C755;
+  color: #fff;
+  flex-shrink: 0;
+  transition: all .18s;
+  box-shadow: 0 3px 10px rgba(6,199,85,.35);
+}
+.line-ask-btn:hover { background:#05a647; transform:translateY(-1px); box-shadow:0 5px 14px rgba(6,199,85,.45); }
+.line-ask-btn:active { transform:translateY(0); }
+.line-ask-btn svg { width:20px; height:20px; display:block; }
+
 /* ── Auth Login Modal ── */
 .auth-overlay {
   position: fixed;
@@ -1734,10 +1753,17 @@ body::after {
     <div>
       <div class="brand-name" id="shop-name">ร้านค้าออนไลน์</div>
       <div class="brand-sub" id="brand-sub-text">คลิกสินค้าเพื่อเพิ่มลงตะกร้า</div>
-      <div class="brand-ver" id="brand-ver-text" title="v1.5.5 ‧ 修正商品白屏、改動態載入 shop-names/images">v1.5.5</div>
+      <div class="brand-ver" id="brand-ver-text" title="v1.5.4 ‧ 修正商品白屏、改動態載入 shop-names/images">v1.5.4</div>
     </div>
   </div>
   <div class="header-right">
+    <!-- LINE 詢問按鈕：永遠顯示在會員圖案左側，供客人直接用 LINE 詢問問題 -->
+    <button class="line-ask-btn" onclick="openLineInquiry()" id="line-ask-btn" type="button" title="LINE 詢問 / Ask via LINE" aria-label="LINE">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3.5" y="4.5" width="17" height="11" rx="3" fill="currentColor"/>
+        <path d="M8 15.5 L8 19 L12 15.5 Z" fill="currentColor"/>
+      </svg>
+    </button>
     <!-- Auth Area: hidden/shown by JS -->
     <div id="auth-area-loggedout">
       <button class="login-btn-hdr" onclick="showAuthModal()">
@@ -3717,6 +3743,50 @@ function openOrderModal() {
 }
 
 /* ══════════════════════════════════════════════
+   LINE 串接
+   ① 標頭「LINE 詢問」按鈕 → 直接開啟與官方帳號的聊天室
+   ② 送出訂單時 → 將訂單內容整理成文字，另開 LINE 聊天室並帶入文字
+      （LINE 不允許網頁代為自動送出訊息，客人需自行按「傳送」，
+       因此同時把文字複製到剪貼簿，當帶入失敗時客人仍可手動貼上送出）
+══════════════════════════════════════════════ */
+const LINE_OA_ID = '@239fgqbz';
+
+function openLineInquiry() {
+  window.open(`https://line.me/R/ti/p/${LINE_OA_ID}`, '_blank');
+}
+
+function buildLineOrderText(orderObj) {
+  const lines = [
+    '🆕 線上新訂單',
+    `單號：${orderObj.id}`,
+    '－－－－－－－－－－',
+    `👤 姓名：${orderObj.customerName}`,
+    `📱 電話：${orderObj.customerPhone || '（未填寫）'}`,
+    `📍 地址：${orderObj.deliveryLocation}`,
+  ];
+  if (orderObj.note) lines.push(`📝 備註：${orderObj.note}`);
+  if (orderObj.memberId) lines.push(`🪪 會員編號：${orderObj.memberId}`);
+  lines.push('－－－－－－－－－－');
+  lines.push('🛒 商品清單：');
+  orderObj.items.forEach(it => {
+    lines.push(`${getProductName(it.name)} x${it.qty}　NT$${it.price * it.qty}`);
+  });
+  lines.push('－－－－－－－－－－');
+  lines.push(`💰 總計：NT$${orderObj.total}`);
+  return lines.join('\n');
+}
+
+function openLineWithOrder(orderObj) {
+  try {
+    const text = buildLineOrderText(orderObj);
+    // 嘗試複製到剪貼簿：若裝置/瀏覽器無法自動帶入文字，客人仍可在 LINE 視窗手動貼上後送出
+    try { navigator.clipboard && navigator.clipboard.writeText(text).catch(()=>{}); } catch(e) {}
+    const lineUrl = `https://line.me/R/oaMessage/${LINE_OA_ID}/?${encodeURIComponent(text)}`;
+    window.open(lineUrl, '_blank');
+  } catch(e) { console.error('[Shop] openLineWithOrder:', e); }
+}
+
+/* ══════════════════════════════════════════════
    Submit Order
 ══════════════════════════════════════════════ */
 async function submitOrder() {
@@ -3791,6 +3861,9 @@ async function submitOrder() {
       items: cart.map(i=>({id:i.id,name:i.name,price:i.price,qty:i.qty})),
       subtotal:total, total, status:'pending',
     };
+
+    // 另開 LINE 聊天室並帶入本次訂單內容（在原本送出流程之外，額外動作）
+    openLineWithOrder(orderObj);
 
     // ⚠️ 不在此寫入 localStorage：
     //    pending 訂單只存 Firebase；
@@ -4708,6 +4781,7 @@ Object.assign(window, {
   openDrawer, closeDrawer, handleDrawerOutsideClick,
   openOrderModal, closeModal, handleModalOutsideClick,
   submitOrder, closeSuccess,
+  openLineInquiry,
   showAuthModal, lookupMember, registerMember, continueAsGuest, logout,
   openMemberDrawer, closeMemberDrawer, handleMemberOutsideClick,
   pwaInstall, pwaDismiss, autoApplySwUpdate,
