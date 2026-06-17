@@ -1753,7 +1753,7 @@ body::after {
     <div>
       <div class="brand-name" id="shop-name">ร้านค้าออนไลน์</div>
       <div class="brand-sub" id="brand-sub-text">คลิกสินค้าเพื่อเพิ่มลงตะกร้า</div>
-      <div class="brand-ver" id="brand-ver-text" title="v1.5.4 ‧ 修正商品白屏、改動態載入 shop-names/images">v1.5.4</div>
+      <div class="brand-ver" id="brand-ver-text" title="v1.5.5 ‧ 修正下單按鈕卡字、補上手動地址範圍檢查、地圖選點取消還原">v1.5.5</div>
     </div>
   </div>
   <div class="header-right">
@@ -3811,6 +3811,15 @@ async function submitOrder() {
     showToast(t('deliveryRequired'), 'err');
     return;
   }
+  // Fix: 手動輸入地址沒有座標可算距離，但仍要檔掉「明顯超出配送範圍的縣市」，
+  // 否則 GPS / 地圖選點都擋了，使用者只要手動打字就能完全跳過配送範圍限制。
+  // isKnownTaiwanRegionTooFar() 原本就是為此設計的檢查，但先前沒有被呼叫到。
+  if (!deliveryCoordsForSubmit && manualAddressVal && isKnownTaiwanRegionTooFar(manualAddressVal)) {
+    showTooFarStatus(getTaiwanRegionMention(manualAddressVal));
+    document.getElementById('manual-address-input')?.focus();
+    showToast(t('geoTooFar').replace('%r', ''), 'err');
+    return;
+  }
   const _deliveryBase = deliveryCoordsForSubmit
     ? (document.getElementById('order-delivery')?.value || deliveryCoordsForSubmit.address || `${deliveryCoordsForSubmit.lat}, ${deliveryCoordsForSubmit.lng}`).trim()
     : manualAddressVal;
@@ -3820,7 +3829,12 @@ async function submitOrder() {
   try{ localStorage.setItem('shop_last_delivery', deliveryVal); }catch(e){}
 
   const btn=document.getElementById('confirm-btn');
-  if(btn){btn.disabled=true;btn.textContent=t('submitting');}
+  // Fix: 不可用 btn.textContent 整個覆寫按鈕內容，否則會把內層
+  // <span id="modal-btn-confirm-text"> 一併刪除，導致之後 getElementById
+  // 找不到該 span，文字永遠卡在「submitting」狀態（送出一次後按鈕文字壞掉）。
+  // 改成只設定內層 span 的文字，保留按鈕的 DOM 結構。
+  const btnTxt=document.getElementById('modal-btn-confirm-text');
+  if(btn){btn.disabled=true;} if(btnTxt){btnTxt.textContent=t('submitting');}
   try {
     const nameVal  = (document.getElementById('customer-name')?.value||'').trim();
     const phoneVal = (document.getElementById('customer-phone')?.value||'').trim();
@@ -4333,6 +4347,9 @@ let _pinAddress = '';
 let _pinSource = '';
 let _pinAccuracy = null;
 let _pinConfirmed = false;
+// Fix: 開地圖前的已確認狀態快照。使用者點地圖但未按「確認位置」就關閉時，
+// 用來還原，避免畫面仍顯示舊地址、但 getDeliveryCoords() 已經失效的不一致狀態。
+let _pinSnapshotBeforeMapOpen = null;
 let _mapInstance = null;
 let _pinMarker = null;
 let _storeMarker = null;
@@ -4654,6 +4671,11 @@ function openMapPicker() {
     setGeoStatus(t('mapNotLoaded'), 'err');
     return;
   }
+  // Fix: 記錄這次開地圖「前」的已確認座標狀態，供取消時還原（見 closeMapPicker）
+  _pinSnapshotBeforeMapOpen = {
+    lat: _pinLat, lng: _pinLng, address: _pinAddress,
+    source: _pinSource, accuracy: _pinAccuracy, confirmed: _pinConfirmed,
+  };
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
 
@@ -4753,6 +4775,7 @@ function confirmMapPin() {
   if (!Number.isFinite(_pinLat) || !Number.isFinite(_pinLng)) return;
 
   _pinConfirmed = true;
+  _pinSnapshotBeforeMapOpen = null; // Fix: 已確認，closeMapPicker() 不應再還原成舊狀態
   setDeliveryDisplay(shortAddress(_pinAddress) || formatCoords(_pinLat, _pinLng));
 
   const distKm = calcDistKm(STORE.lat, STORE.lng, _pinLat, _pinLng);
@@ -4765,6 +4788,15 @@ function closeMapPicker() {
   const overlay = document.getElementById('map-overlay');
   if (overlay) overlay.classList.remove('open');
   document.body.style.overflow = '';
+  // Fix: 使用者在地圖上點選但沒按「確認位置」就關閉（取消/✕）時，
+  // 還原成開地圖前的已確認狀態，避免畫面仍顯示舊地址、但內部座標已被
+  // 未確認的點擊覆寫、getDeliveryCoords() 回傳 null 的不一致情形。
+  if (_pinSnapshotBeforeMapOpen) {
+    const s = _pinSnapshotBeforeMapOpen;
+    _pinLat = s.lat; _pinLng = s.lng; _pinAddress = s.address;
+    _pinSource = s.source; _pinAccuracy = s.accuracy; _pinConfirmed = s.confirmed;
+    _pinSnapshotBeforeMapOpen = null;
+  }
 }
 
 function getDeliveryCoords() {

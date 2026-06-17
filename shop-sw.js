@@ -7,7 +7,7 @@
        Firebase RTDB → Network First（即時資料）
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION    = 'v1.5.5'; // fix: 商品白屏 — 改動態載入 shop-names/images，修正 init() 渲染順序
+const APP_VERSION    = 'v1.5.5'; // fix: 確認訂單按鈕文字卡在「送出中」、補上手動地址的配送範圍檢查、地圖選點取消還原狀態
 const STATIC_CACHE   = `shop-static-${APP_VERSION}`;
 const FONT_CACHE     = `shop-fonts-${APP_VERSION}`;
 const FIREBASE_CACHE = `shop-firebase-${APP_VERSION}`;
