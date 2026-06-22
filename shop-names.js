@@ -291,6 +291,8 @@ export const PRODUCT_NAME_MAP = {
   'มะนาว檸檬': { en: 'Lime', vi: 'Chanh xanh', id: 'Jeruk Nipis', th: 'มะนาว', zh: '檸檬' },
   'มะละกอ青木瓜': { en: 'Green Papaya', vi: 'Đu đủ xanh', id: 'Pepaya Muda', th: 'มะละกอ', zh: '青木瓜' },
   'กะทิผงสำเร็จรูป即溶椰漿粉': { en: 'Instant Coconut Milk Powder', vi: 'Bột cốt dừa', id: 'Serbuk Santan Kelapa', th: 'กะทิผงสำเร็จรูป', zh: '即溶椰漿粉' },
+  'ใบมะกรูด檸檬葉': { en: 'Kaffir Lime Leaves', vi: 'Lá chanh', id: 'Daun jeruk', th: 'ใบมะกรูด', zh: '檸檬葉' },
+  'ตะไคร้香茅': { en: 'Lemongrass', vi: 'Củ sả', id: 'Serai', th: 'ตะไคร้', zh: '香茅' },
 
  
 
@@ -379,6 +381,8 @@ export const PRODUCT_NAME_MAP = {
   'ครีมกลางวันยกกล่องPonds亮白保濕日霜盒': { en: 'Ponds Brightening & Moisturizing Day Cream (Box)', vi: 'Kem dưỡng ẩm sáng da ban ngày Ponds (Hộp)', id: 'Ponds Brightening & Moisturizing Day Cream (Box)', th: 'ครีมกลางวันยกกล่อง', zh: 'Ponds亮白保濕日霜盒' },
   'เซรั่มคุมมันVaseline控油精華乳': { en: 'Vaseline Oil Control Serum Cream', vi: 'Tinh chất dưỡng kiềm dầu Vaseline', id: 'Vaseline Serum Cream Oil Control', th: 'เซรั่มคุมมัน', zh: 'Vaseline控油精華乳' },
   'เซรั่มคุมมันยกกล่องVaseline控油精華乳盒': { en: 'Vaseline Oil Control Serum Cream (Box)', vi: 'Tinh chất dưỡng kiềm dầu Vaseline (Hộp)', id: 'Vaseline Serum Cream Oil Control (Box)', th: 'เซรั่มคุมมันยกกล่อง', zh: 'Vaseline控油精華乳盒' },
+  'วิตามินซี เซรั่มGarnier維他命C精華液': { en: 'Garnier Bright Complete Vitamin C Ampoule Serum', vi: 'Tinh chất Ampoule Serum Garnier Bright Complete 3% Vitamin C + Niacinamide', id: 'Garnier Bright Complete Serum Ampul', th: 'วิตามินซี เซรั่มGarnier', zh: 'Garnier維他命C精華液' },
+  'วิตามินซี เซรั่ม กกล่องGarnier維他命C精華液盒': { en: 'Garnier Bright Complete Vitamin C Ampoule Serum(Box)', vi: 'Tinh chất Ampoule Serum Garnier Bright Complete 3% Vitamin C + Niacinamide(Hộp)', id: 'Garnier Bright Complete Serum Ampul(Box)', th: 'วิตามินซี เซรั่ม กกล่องGarnier', zh: 'Garnier維他命C精華液盒' },
   'ครีมกลางคืนPonds晚霜': { en: 'Ponds Night Cream', vi: 'Kem dưỡng ban đêm Ponds', id: 'Ponds Night Cream', th: 'ครีมกลางคืน', zh: 'Ponds晚霜' },
   'ครีมอาบนํ้าLux沐浴乳': { en: 'Lux Body Wash', vi: 'Sữa tắm Lux', id: 'Sabun Mandi Cair Lux', th: 'ครีมอาบนํ้า', zh: 'Lux沐浴乳' },
   'ครีมอาบนํ้าLux沐浴乳1': { en: 'Lux Body Wash', vi: 'Sữa tắm Lux', id: 'Sabun Mandi Cair Lux', th: 'ครีมอาบนํ้า', zh: 'Lux沐浴乳' },
