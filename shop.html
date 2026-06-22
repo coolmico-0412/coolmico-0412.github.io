@@ -416,24 +416,10 @@ button { cursor:pointer; font-family:var(--th); }
   font-weight: 600;
   color: var(--text);
   line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  /* 完整顯示商品名稱，不截斷、不省略 */
 }
-/* 翻譯後顯示原始名稱（小字輔助）—  vi / id 語系使用 */
-.card-name-orig {
-  font-size: 10.5px;
-  color: var(--muted2);
-  margin-top: 2px;
-  font-family: var(--zh);
-  font-weight: 400;
-  letter-spacing: .2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;        /* 脫離 -webkit-box clamp 限制 */
-}
+/* .card-name-orig 已停用：多語系 KEY 不再顯示 */
+.card-name-orig { display: none; }
 .card-cat {
   font-size: 11px;
   color: var(--muted2);
@@ -3533,9 +3519,8 @@ function renderProducts() {
     const grad = CAT_GRAD[p.category||'other']||'grad-other';
     const icon = getCatIcon(p.category||'other');
     const init = (p.name||'?')[0];
-    // ── 翻譯商品名稱（vi / id 語系）──
+    // ── 翻譯商品名稱：只顯示當前語系名稱，不顯示原文 KEY ──
     const dName   = getProductName(p.name);
-    const showOrig = hasTranslation(p.name);   // 是否顯示原文輔助字幕
     // ── 圖片優先順序：shop-images.js 本地圖 → Firebase 圖 → 漸層色塊 ──
     const localImg = PRODUCT_IMAGE_SET.has(p.name) ? `images/${encodeURIComponent(p.name)}.webp` : null;
     const imgSrc   = localImg || p.image || null;
@@ -3553,7 +3538,7 @@ function renderProducts() {
         ${qty>0?`<div class="in-cart-badge">${qty}</div>`:''}
       </div>
       <div class="card-body">
-        <div class="card-name">${h(dName)}${showOrig?`<span class="card-name-orig">${h(p.name)}</span>`:''}</div>
+        <div class="card-name">${h(dName)}</div>
         <div class="card-footer">
           <div class="card-price"><span>NT$</span> ${h(String(p.price))}</div>
           <button class="add-btn" onclick="event.stopPropagation();addToCart('${h(p.id)}')" aria-label="เพิ่ม">＋</button>
