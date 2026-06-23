@@ -1354,6 +1354,28 @@ body::after {
   margin-top: 4px;
 }
 
+/* ── 公告消息 ── */
+#m-announcements { display:flex; flex-direction:column; gap:10px; padding:14px 16px; }
+.announce-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.ann-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ann-emoji { font-size: 15px; line-height: 1; }
+.ann-date  { font-size: 10px; color: var(--muted2); }
+.ann-text  { font-size: 13px; color: var(--text); line-height: 1.65; }
+.ann-empty { text-align:center; color:var(--muted2); font-size:13px; padding:20px 0; }
+
 .member-ft { padding:16px; border-top:1px solid var(--border); }
 .logout-btn {
   width: 100%;
@@ -1687,8 +1709,8 @@ body::after {
       </div>
     </div>
     <div class="member-body">
-      <div class="member-section-title" id="m-history-title">ประวัติ</div>
-      <div id="m-order-hist"></div>
+      <div class="member-section-title" id="m-announce-title">📢 ประกาศ</div>
+      <div id="m-announcements"></div>
     </div>
     <div class="member-ft" style="display:flex;flex-direction:column;gap:8px">
       <button class="logout-btn" id="m-edit-profile-btn" onclick="openEditProfile()"
@@ -1974,6 +1996,7 @@ import { getDatabase, ref, get, set, update, query, orderByChild, equalTo, limit
          載入成功後再觸發一次 renderProducts() 補上翻譯與圖片。            ── */
 let PRODUCT_NAME_MAP = {};
 let PRODUCT_IMAGE_SET = new Set();
+let ANNOUNCEMENTS = [];          // 公告消息（從 shop-names.js 載入）
 
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyCXL_BPUqT5UA2Ufxo8Byulm6-ATNxTr4c",
@@ -2480,67 +2503,28 @@ async function renderMemberDrawer() {
   setText('minfo-mid-display',   m.memberId  || '—');
   setText('minfo-phone-display', m.phone     || '—');
 
-  const histEl = document.getElementById('m-order-hist');
-  if (histEl) histEl.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:12px">${t('drawerLoading')}</div>`;
+  // ── 公告消息 ─────────────────────────────────────────────────
+  const annEl = document.getElementById('m-announcements');
+  if (!annEl) return;
 
-  // 每次開啟都向 Firebase 取得最新訂單（包含最新 status）
-  const firebaseOrders = await fetchMemberOrders(m.memberId);
-
-  // 同步已完成訂單到本機資料庫
-  syncCompletedOrdersToLocal(firebaseOrders);
-
-  if (!histEl) return;
-
-  // pending：只顯示 Firebase 的資料
-  const pendingOrders = firebaseOrders.filter(o => (o.status || 'pending') !== 'completed');
-
-  // completed：從本機資料庫讀取（已由 syncCompletedOrdersToLocal 寫入）
-  let completedOrders = [];
-  try {
-    const localAll = safeGetLS('pos_online_orders', []) || [];
-    completedOrders = localAll
-      .filter(o => o.memberId === m.memberId && o.status === 'completed')
-      .filter(o => !pendingOrders.find(p => p.id === o.id)); // 去重
-  } catch(e) {}
-
-  const orders = [
-    ...pendingOrders,
-    ...completedOrders,
-  ].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  if (!orders.length) {
-    histEl.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:16px">
-      ${t('historyEmpty')}
-    </div>`;
+  if (!ANNOUNCEMENTS.length) {
+    annEl.innerHTML = `<div class="ann-empty">${t('announceEmpty')}</div>`;
     return;
   }
 
-  histEl.innerHTML = orders.map(o => {
-    const itemsHtml = (o.items||[]).map(i => `
-      <div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text2)">
-        <span>${h(getProductName(i.name||''))}</span>
-        <span style="font-family:'Courier New',monospace;color:var(--muted)">×${i.qty} NT$${(i.price||0)*i.qty}</span>
-      </div>`).join('');
+  // 語系對應：th→th, tw→zh, vi→vi, id→id, ph→en（同 PRODUCT_NAME_MAP 的 key 邏輯）
+  const langKey = { th:'th', tw:'zh', vi:'vi', id:'id', ph:'en' }[_lang] || 'th';
 
-    const status = o.status || 'pending';
-    const statusBadge = status === 'completed'
-      ? `<span style="font-size:10px;padding:2px 7px;border-radius:50px;background:rgba(45,155,111,.12);color:var(--green);font-weight:700">${t('statusCompleted')}</span>`
-      : `<span style="font-size:10px;padding:2px 7px;border-radius:50px;background:rgba(232,137,43,.12);color:var(--accent);font-weight:700">${t('statusPending')}</span>`;
-
-    return `<div class="order-hist-item" style="cursor:pointer" onclick="this.querySelector('.ohi-detail').style.display=this.querySelector('.ohi-detail').style.display==='none'?'block':'none'">
-      <div class="ohi-top">
-        <span class="ohi-id">${h(o.id)}</span>
-        <span class="ohi-date">${h(fmtDate(o.date))}</span>
+  annEl.innerHTML = ANNOUNCEMENTS.map(ann => {
+    const text  = ann[langKey] || ann.th || '';
+    const emoji = ann.emoji || '📢';
+    const date  = ann.date  || '';
+    return `<div class="announce-card">
+      <div class="ann-hd">
+        <span class="ann-emoji">${emoji}</span>
+        ${date ? `<span class="ann-date">${h(date)}</span>` : ''}
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
-        <span class="ohi-total">NT$ ${h(String(o.total ?? 0))}</span>
-        <div style="display:flex;align-items:center;gap:6px">${statusBadge}<span style="font-size:10px;color:var(--muted2)">${(o.items||[]).length} ${t('orderItemsCount')} ▾</span></div>
-      </div>
-      <div class="ohi-detail" style="display:none;margin-top:8px;padding-top:6px;border-top:1px dashed var(--border2)">
-        ${itemsHtml}
-        ${o.deliveryLocation ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">📍 ${h(o.deliveryLocation)}</div>` : ''}
-        ${o.note ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">💬 ${h(o.note)}</div>` : ''}
-      </div>
+      <div class="ann-text">${h(text)}</div>
     </div>`;
   }).join('');
 }
@@ -2589,7 +2573,7 @@ const LANGS = {
     successTitle:'ส่งคำสั่งซื้อแล้ว！',
     successMsg:'ขอบคุณที่สั่งซื้อ！\nเราจะเตรียมสินค้าให้คุณโดยเร็ว',
     successOrderId:'เลขที่ออเดอร์', btnContinue:'สั่งซื้อต่อ',
-    historyTitle:'ประวัติ', historyEmpty:'ยังไม่มีประวัติการสั่งซื้อ',
+    announceTitle:'📢 ประกาศ', announceEmpty:'ยังไม่มีประกาศ',
     btnLogout:'🚪 ออกจากระบบ', btnEditProfile:'✏ แก้ไขข้อมูล',
     editProfileTitle:'✏ แก้ไขข้อมูลสมาชิก', btnSaveProfile:'บันทึก',
     minOrder:'ยอดขั้นต่ำ NT$1,000',
@@ -2707,7 +2691,7 @@ const LANGS = {
     successTitle:'Đã gửi đơn hàng！',
     successMsg:'Cảm ơn bạn đã đặt hàng！\nChúng tôi sẽ chuẩn bị hàng ngay cho bạn.',
     successOrderId:'Mã đơn hàng', btnContinue:'Tiếp tục mua',
-    historyTitle:'Lịch sử', historyEmpty:'Chưa có lịch sử mua hàng',
+    announceTitle:'📢 Thông báo', announceEmpty:'Chưa có thông báo nào',
     btnLogout:'🚪 Đăng xuất', btnEditProfile:'✏ Sửa thông tin',
     editProfileTitle:'✏ Sửa thông tin thành viên', btnSaveProfile:'Lưu',
     minOrder:'Đơn tối thiểu NT$1.000',
@@ -2825,7 +2809,7 @@ const LANGS = {
     successTitle:'Pesanan Terkirim！',
     successMsg:'Terima kasih telah memesan！\nKami akan segera menyiapkan pesanan Anda.',
     successOrderId:'No. Pesanan', btnContinue:'Lanjut Belanja',
-    historyTitle:'Riwayat', historyEmpty:'Belum ada riwayat pembelian',
+    announceTitle:'📢 Pengumuman', announceEmpty:'Belum ada pengumuman',
     btnLogout:'🚪 Keluar', btnEditProfile:'✏ Edit Profil',
     editProfileTitle:'✏ Edit Data Anggota', btnSaveProfile:'Simpan',
     minOrder:'Minimal pembelian NT$1.000',
@@ -2943,7 +2927,7 @@ const LANGS = {
     successTitle:'Order Submitted！',
     successMsg:'Thank you for your order！\nWe will prepare it as soon as possible.',
     successOrderId:'Order No.', btnContinue:'Continue Shopping',
-    historyTitle:'History', historyEmpty:'No purchase history yet',
+    announceTitle:'📢 Announcements', announceEmpty:'No announcements yet',
     btnLogout:'🚪 Logout', btnEditProfile:'✏ Edit Profile',
     editProfileTitle:'✏ Edit Member Profile', btnSaveProfile:'Save',
     minOrder:'Minimum order NT$1,000',
@@ -3061,7 +3045,7 @@ const LANGS = {
     successTitle:'訂單已送出！',
     successMsg:'感謝您的訂購！\n我們將盡快為您備貨。',
     successOrderId:'訂單編號', btnContinue:'繼續選購',
-    historyTitle:'訂單歷史', historyEmpty:'尚無訂單記錄',
+    announceTitle:'📢 公告消息', announceEmpty:'目前無公告',
     btnLogout:'🚪 登出', btnEditProfile:'✏ 編輯資料',
     editProfileTitle:'✏ 編輯會員資料', btnSaveProfile:'儲存',
     minOrder:'最低消費 NT$1,000',
@@ -3256,7 +3240,7 @@ function applyLang() {
   set('btn-done-text', L.btnContinue);
 
   // Member drawer
-  set('m-history-title', L.historyTitle);
+  set('m-announce-title', L.announceTitle);
   set('m-logout-btn', L.btnLogout);
   set('m-edit-profile-btn', L.btnEditProfile);
 
@@ -4075,7 +4059,10 @@ async function init() {
   //    → 兩個檔案任一載入失敗都不影響頁面運作（Promise.allSettled 不拋錯）
   Promise.allSettled([
     import('./shop-names.js')
-      .then(m => { if (m?.PRODUCT_NAME_MAP) PRODUCT_NAME_MAP = m.PRODUCT_NAME_MAP; })
+      .then(m => {
+        if (m?.PRODUCT_NAME_MAP) PRODUCT_NAME_MAP = m.PRODUCT_NAME_MAP;
+        if (m?.ANNOUNCEMENTS)    ANNOUNCEMENTS    = m.ANNOUNCEMENTS;
+      })
       .catch(e => console.warn('[Shop] shop-names.js 載入失敗（非致命）:', e)),
     import('./shop-images.js')
       .then(m => { if (m?.PRODUCT_IMAGE_SET) PRODUCT_IMAGE_SET = m.PRODUCT_IMAGE_SET; })
