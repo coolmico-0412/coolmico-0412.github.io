@@ -60,10 +60,10 @@
 export const ANNOUNCEMENTS = [
 
   { key: 'ann_001', emoji: '🛵', date: '2026-06-23',
-    th:  'จัดส่งถึงบ้าน ขั้นต่ำ NT$1,000 รัศมีสูงสุด 9 กม.',
-    vi:  'Giao hàng tận nơi, tối thiểu NT$1.000, bán kính tối đa 9 km.',
-    id:  'Pengiriman ke rumah, min. NT$1.000, jarak max. 9 km.',
-    en:  'Home delivery available. Min. order NT$1,000, up to 9 km.',
+    th:  'ระยะทางจัดส่งเพิ่มขึ้น 3 กม. ทุกๆ ยอดซื้อที่เพิ่มขึ้น 1,000 NTD',
+    vi:  'Cứ thêm 1.000 NTD tiền hàng, khoảng cách giao hàng tăng thêm 3 km.',
+    id:  'Jarak pengiriman bertambah 3 km untuk setiap penambahan 1.000 NTD.',
+    en:  '+3 km delivery distance for every additional NT$1,000.',
     zh:  '外送到府，最低消費 NT$1,000，最遠 9 公里。' },
 
   { key: 'ann_002', emoji: '🕘', date: '2026-06-23',
