@@ -1033,7 +1033,9 @@ body::after {
 }
 .login-btn-hdr:hover { background:var(--primary); color:#fff; box-shadow:0 3px 10px rgba(201,78,110,.3); }
 
-/* ── LINE 詢問按鈕（位於會員圖案左側）── */
+/* ── 客服詢問按鈕 & 下拉選單（位於會員圖案左側）── */
+.contact-menu-wrap { position: relative; display: flex; }
+
 .line-ask-btn {
   display: flex;
   align-items: center;
@@ -1051,6 +1053,70 @@ body::after {
 .line-ask-btn:hover { background:#05a647; transform:translateY(-1px); box-shadow:0 5px 14px rgba(6,199,85,.45); }
 .line-ask-btn:active { transform:translateY(0); }
 .line-ask-btn svg { width:20px; height:20px; display:block; }
+
+/* Contact dropdown */
+.contact-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-md);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 162px;
+  z-index: 400;
+  opacity: 0;
+  transform: translateY(-6px) scale(.96);
+  pointer-events: none;
+  transition: opacity .18s, transform .18s;
+}
+.contact-menu.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.contact-menu-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  padding: 2px 6px 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+  white-space: nowrap;
+}
+.contact-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--r-sm);
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  transition: background .15s;
+  cursor: pointer;
+  width: 100%;
+  white-space: nowrap;
+}
+.contact-menu-item:hover { background: var(--surface2); }
+.contact-menu-item .ci-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.contact-menu-item.cmi-line .ci-icon { background: #06C755; }
+.contact-menu-item.cmi-fb   .ci-icon { background: #0866FF; }
 
 /* ── Auth Login Modal ── */
 .auth-overlay {
@@ -1765,13 +1831,35 @@ body::after {
     </div>
   </div>
   <div class="header-right">
-    <!-- LINE 詢問按鈕：永遠顯示在會員圖案左側，供客人直接用 LINE 詢問問題 -->
-    <button class="line-ask-btn" onclick="openLineInquiry()" id="line-ask-btn" type="button" title="LINE 詢問 / Ask via LINE" aria-label="LINE">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="3.5" y="4.5" width="17" height="11" rx="3" fill="currentColor"/>
-        <path d="M8 15.5 L8 19 L12 15.5 Z" fill="currentColor"/>
-      </svg>
-    </button>
+    <!-- 客服詢問按鈕：點選後顯示 LINE / FB 選項 -->
+    <div class="contact-menu-wrap" id="contact-menu-wrap">
+      <button class="line-ask-btn" onclick="toggleContactMenu(event)" id="line-ask-btn" type="button" title="聯絡客服 / Customer Service" aria-label="Customer Service">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3.5" y="4.5" width="17" height="11" rx="3" fill="currentColor"/>
+          <path d="M8 15.5 L8 19 L12 15.5 Z" fill="currentColor"/>
+        </svg>
+      </button>
+      <div class="contact-menu" id="contact-menu" role="menu">
+        <div class="contact-menu-label">💬 ติดต่อสอบถาม / 聯絡客服</div>
+        <button class="contact-menu-item cmi-line" onclick="openLineInquiry()" type="button" role="menuitem">
+          <span class="ci-icon">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" aria-hidden="true">
+              <rect x="3.5" y="4.5" width="17" height="11" rx="3"/>
+              <path d="M8 15.5 L8 19 L12 15.5 Z"/>
+            </svg>
+          </span>
+          LINE 客服
+        </button>
+        <button class="contact-menu-item cmi-fb" onclick="openFBInquiry()" type="button" role="menuitem">
+          <span class="ci-icon">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" aria-hidden="true">
+              <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
+            </svg>
+          </span>
+          FB 客服
+        </button>
+      </div>
+    </div>
     <!-- Auth Area: hidden/shown by JS -->
     <div id="auth-area-loggedout">
       <button class="login-btn-hdr" onclick="showAuthModal()">
@@ -3720,8 +3808,26 @@ function openOrderModal() {
 ══════════════════════════════════════════════ */
 const LINE_OA_ID = '@239fgqbz';
 
+function toggleContactMenu(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('contact-menu');
+  if (!menu) return;
+  menu.classList.toggle('open');
+}
+
+function closeContactMenu() {
+  const menu = document.getElementById('contact-menu');
+  if (menu) menu.classList.remove('open');
+}
+
 function openLineInquiry() {
+  closeContactMenu();
   window.open(`https://line.me/R/ti/p/${LINE_OA_ID}`, '_blank');
+}
+
+function openFBInquiry() {
+  closeContactMenu();
+  window.open('https://m.me/thailasai', '_blank');
 }
 
 function buildLineOrderText(orderObj) {
@@ -4785,7 +4891,7 @@ Object.assign(window, {
   openDrawer, closeDrawer, handleDrawerOutsideClick,
   openOrderModal, closeModal, handleModalOutsideClick,
   submitOrder, closeSuccess,
-  openLineInquiry,
+  openLineInquiry, openFBInquiry, toggleContactMenu, closeContactMenu,
   showAuthModal, lookupMember, registerMember, continueAsGuest, logout,
   openMemberDrawer, closeMemberDrawer, handleMemberOutsideClick,
   pwaInstall, pwaDismiss, autoApplySwUpdate,
@@ -4797,6 +4903,12 @@ Object.assign(window, {
 });
 
 document.addEventListener('DOMContentLoaded', init);
+
+/* ── Close contact menu when clicking outside ── */
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('contact-menu-wrap');
+  if (wrap && !wrap.contains(e.target)) closeContactMenu();
+});
 
 /* ── Category tabs edge-fade ── */
 document.addEventListener('DOMContentLoaded', () => {
