@@ -2083,12 +2083,13 @@ body::after {
         </table>
         <label class="credit-row" id="credit-row-wrap" for="credit-checkbox">
           <input type="checkbox" class="credit-cb" id="credit-checkbox" onchange="onCreditCheckChange()">
-          <span class="credit-lbl">申請本筆帳款賒帳
-            <span class="credit-surcharge">總金額增加 10%</span>
+          <span class="credit-lbl">
+            <span id="credit-lbl-text">申請本筆帳款賒帳</span>
+            <span class="credit-surcharge" id="credit-surcharge-text">總金額增加 10%</span>
           </span>
         </label>
         <div id="credit-under-limit-msg" style="display:none;color:#d97706;font-size:12px;font-weight:600;padding:6px 10px;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-radius:8px;margin-top:4px;text-align:center">
-          ⚠ 未滿一千元僅允許現場取貨
+          <!-- ⚠️ 此文字由 applyLang() 透過 t('creditUnderLimit') 動態填入，請勿在此硬編碼 -->
         </div>
         <div class="order-total-row">
           <span class="order-total-label" id="modal-order-total-label">ยอดรวมทั้งหมด</span>
@@ -2132,6 +2133,29 @@ body::after {
 
 <script type="module">
 /* ═══════════════════════════════════════════════════════════════════
+   ⚠️  【最重要維護原則 — 多國語系 (i18n) 】⚠️
+   ───────────────────────────────────────────────────────────────────
+   除了 shop-names.js 中以 PRODUCT_NAME_MAP 定義的商品名稱之外，
+   本程式碼中 **所有面向使用者的文字** 都必須透過 i18n 系統輸出。
+
+   ✅ 正確做法：
+     · 將文字加入下方 LANGS 物件（5 種語言：th / vi / id / ph / tw）
+     · 在 JS 中使用 t('key') 取得當前語系的文字
+     · 在 applyLang() 中呼叫 set(id, L.key) 更新靜態 HTML 元素
+
+   ❌ 禁止做法：
+     · 在 HTML 或 JS 中直接寫入中文、泰文、英文等特定語言的硬編碼文字
+     · 使用 innerHTML/textContent 直接賦值固定文字字串
+     · 在 HTML 初始值中放特定語言文字（init 值應放預設語系或空字串）
+
+   📌 新增文字時的步驟：
+     1. 在 LANGS.th / vi / id / ph / tw 各語言物件內加入新的 key-value
+     2. 若是 HTML 靜態元素 → 在 applyLang() 加上 set('元素ID', L.key)
+     3. 若是 JS 動態產生 → 改用 t('key')
+
+   🔗 商品名稱的例外：shop-names.js 的 PRODUCT_NAME_MAP 負責商品多語系；
+      getProductName(name) 會自動查表，不需要在 LANGS 加入商品名稱。
+   ───────────────────────────────────────────────────────────────────
    Firebase SDK v12 — Realtime Database only (no Firebase Auth)
    會員系統：姓名 + 電話 → Firebase 流水號 M0001, M0002…
              回訪者輸入編號 → 查詢 Firebase 取回資料
@@ -2685,7 +2709,20 @@ async function renderMemberDrawer() {
 
 /* ══════════════════════════════════════════════
    多語言系統 i18n
-   支援：th（泰文）、id（印尼文）、vi（越南文）
+   ──────────────────────────────────────────────
+   ⚠️  維護說明（請務必閱讀）：
+   · 每個語言物件的 key 必須 **完全一致**；漏掉任何一個 key，
+     切換到該語系時就會 fallback 回泰文（th）。
+   · 新增功能時：
+       ① 先在 LANGS.th 加入新 key（泰文版本）
+       ② 依序在 vi / id / ph / tw 加入對應翻譯
+       ③ 在 applyLang() 加上 set() 呼叫，或在 JS 邏輯中改用 t()
+   · 語言代碼對應：
+       th = 泰文（預設）、vi = 越南文、id = 印尼文
+       ph = 菲律賓（英文）、tw = 台灣中文
+   · t(key) 函式：取當前語系文字，找不到 key 時 fallback 回 th。
+   · applyLang() 函式：負責將所有靜態 HTML 元素更新為當前語系文字。
+   ⚠️  禁止在此物件以外的地方硬編碼任何使用者看得到的文字。
 ══════════════════════════════════════════════ */
 const LANGS = {
   th: {
@@ -2810,6 +2847,11 @@ const LANGS = {
     contactLine:'LINE สอบถาม',
     contactFB:'Facebook สอบถาม',
     contactTitle:'ติดต่อสอบถาม',
+    // ── 賒帳（信用）勾選區塊 ── ⚠️ 新增 key 時請同步更新 vi / id / ph / tw
+    creditLbl:'สมัครเครดิตสำหรับออเดอร์นี้',
+    creditSurcharge:'ยอดรวมเพิ่มขึ้น 10%',
+    creditUnderLimit:'⚠ ต่ำกว่า NT$1,000 รับสินค้าที่ร้านเท่านั้น',
+    pickupStore:'รับสินค้าที่ร้าน',
   },
   vi: {
     flag:'🇻🇳', label:'Tiếng Việt',
@@ -2933,6 +2975,11 @@ const LANGS = {
     contactLine:'Nhắn tin LINE',
     contactFB:'Nhắn tin Messenger',
     contactTitle:'Liên hệ hỗ trợ',
+    // ── 賒帳（信用）勾選區塊 ──
+    creditLbl:'Đăng ký trả chậm cho đơn này',
+    creditSurcharge:'Tổng cộng tăng thêm 10%',
+    creditUnderLimit:'⚠ Dưới NT$1.000 chỉ nhận hàng tại cửa hàng',
+    pickupStore:'Nhận hàng tại cửa hàng',
   },
   id: {
     flag:'🇮🇩', label:'Bahasa Indonesia',
@@ -3056,6 +3103,11 @@ const LANGS = {
     contactLine:'Chat via LINE',
     contactFB:'Chat via Messenger',
     contactTitle:'Hubungi Kami',
+    // ── 賒帳（信用）勾選區塊 ──
+    creditLbl:'Ajukan pembayaran kredit untuk pesanan ini',
+    creditSurcharge:'Total meningkat 10%',
+    creditUnderLimit:'⚠ Di bawah NT$1.000 hanya bisa ambil di toko',
+    pickupStore:'Ambil di toko',
   },
   ph: {
     flag:'🇵🇭', label:'English',
@@ -3179,6 +3231,11 @@ const LANGS = {
     contactLine:'LINE Chat',
     contactFB:'Messenger Chat',
     contactTitle:'Contact Support',
+    // ── Credit checkbox block ──
+    creditLbl:'Apply credit payment for this order',
+    creditSurcharge:'Total increases by 10%',
+    creditUnderLimit:'⚠ Orders under NT$1,000 are pickup only',
+    pickupStore:'Pickup at store',
   },
   tw: {
     flag:'🇹🇼', label:'中文',
@@ -3302,6 +3359,11 @@ const LANGS = {
     contactLine:'LINE 客服',
     contactFB:'FB 客服',
     contactTitle:'聯絡客服',
+    // ── 賒帳勾選區塊 ──
+    creditLbl:'申請本筆帳款賒帳',
+    creditSurcharge:'總金額增加 10%',
+    creditUnderLimit:'⚠ 未滿 NT$1,000 僅允許現場取貨',
+    pickupStore:'現場取貨',
   },
 };
 
@@ -3351,7 +3413,14 @@ function detectLang() {
   _lang = 'th'; // 最終預設
 }
 
-/* 套用語言到所有靜態 UI 元素 */
+/* 套用語言到所有靜態 UI 元素
+   ──────────────────────────────────────────────────────────────────
+   ⚠️  維護說明：
+   · 每個有 id 的靜態文字元素都必須在此函式中有對應的 set() 呼叫。
+   · 新增 HTML 元素時：① 加 id → ② 在此加 set(id, L.key) → ③ LANGS 補翻譯
+   · set()  = 更新 textContent（純文字，安全 XSS）
+   · setP() = 更新 placeholder（輸入框佔位符）
+   ────────────────────────────────────────────────────────────────── */
 function applyLang() {
   const L = LANGS[_lang] || LANGS.th;
   const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
@@ -3473,6 +3542,14 @@ function applyLang() {
 
   // manual-address-input placeholder
   setP('manual-address-input', L.placeholderDeliveryManual);
+
+  // ── 賒帳（信用）勾選區塊 ──────────────────────────────────────────
+  // ⚠️ 這些文字先前被硬編碼為中文，現已改為透過 i18n 動態填入。
+  //    未來若修改賒帳相關文字，請在 LANGS 的 creditLbl / creditSurcharge /
+  //    creditUnderLimit 等 key 中更新所有 5 種語言，勿直接在 HTML 或 JS 中硬編碼。
+  set('credit-lbl-text',       L.creditLbl);
+  set('credit-surcharge-text', L.creditSurcharge);
+  set('credit-under-limit-msg', L.creditUnderLimit);
 
   // Update delivery range hint if order modal is open
   const hintEl = document.getElementById('delivery-range-hint');
@@ -3979,6 +4056,12 @@ function openFBInquiry() {
 }
 
 function buildLineOrderText(orderObj) {
+  /* ──────────────────────────────────────────────────────────────────
+     ⚠️  【i18n 例外說明】此函式輸出的是傳給店家 LINE OA 的「內部訂單通知」，
+     接收者是店家人員（非顧客），因此刻意使用繁體中文（固定語言），
+     不隨顧客選擇的語系改變。
+     若日後需要支援多語系通知，請在 LANGS 加入對應 key 後改用 t()。
+     ────────────────────────────────────────────────────────────────── */
   const lines = [
     '🆕 線上新訂單',
     `單號：${orderObj.id}`,
@@ -4051,7 +4134,8 @@ async function submitOrder() {
   }
   const _deliveryBase = deliveryCoordsForSubmit
     ? (document.getElementById('order-delivery')?.value || deliveryCoordsForSubmit.address || `${deliveryCoordsForSubmit.lat}, ${deliveryCoordsForSubmit.lng}`).trim()
-    : (manualAddressVal || (creditApplied ? '現場取貨' : ''));
+    // ⚠️ 賒帳勾選時視為現場取貨，使用 t('pickupStore') 取得多語系文字，禁止硬編碼
+    : (manualAddressVal || (creditApplied ? t('pickupStore') : ''));
   const _deliveryRemark = (document.getElementById('delivery-remark')?.value || '').trim();
   const deliveryVal     = _deliveryRemark ? `${_deliveryBase}【${_deliveryRemark}】` : _deliveryBase;
   // 記住本次地點
