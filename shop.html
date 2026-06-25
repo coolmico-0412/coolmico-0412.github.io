@@ -956,6 +956,18 @@ button { cursor:pointer; font-family:var(--th); }
 .success-title { font-family:var(--serif); font-size:22px; font-weight:700; color:var(--green); }
 .success-msg { font-size:14px; color:var(--muted); line-height:1.6; }
 .success-order-id { font-family:'Courier New',monospace; font-size:13px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px 16px; color:var(--text2); }
+.success-credit-note {
+  background: rgba(232,137,43,.1);
+  border: 1.5px solid rgba(232,137,43,.45);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent2);
+  line-height: 1.6;
+  text-align: center;
+  width: 100%;
+}
 .btn-done { margin-top:6px; padding:12px 32px; border-radius:50px; border:none; background:linear-gradient(135deg,var(--primary),var(--accent)); color:#fff; font-size:15px; font-weight:700; box-shadow:0 4px 14px rgba(201,78,110,.3); transition:all .2s; }
 .btn-done:hover { transform:translateY(-1px); }
 
@@ -2099,6 +2111,9 @@ body::after {
       <div class="success-icon">🎉</div>
       <div class="success-title" id="success-title-text">ส่งคำสั่งซื้อแล้ว！</div>
       <div class="success-msg" id="success-msg-text">ขอบคุณที่สั่งซื้อ！<br>เราจะเตรียมสินค้าให้คุณโดยเร็ว</div>
+      <div class="success-credit-note" id="success-credit-note" style="display:none">
+        <span id="success-credit-note-text"></span>
+      </div>
       <div class="success-order-id" id="success-order-id">เลขที่ออเดอร์：—</div>
       <button class="btn-done" id="btn-done-text" onclick="closeSuccess()">สั่งซื้อต่อ</button>
     </div>
@@ -2712,6 +2727,7 @@ const LANGS = {
     successTitle:'ส่งคำสั่งซื้อแล้ว！',
     successMsg:'ขอบคุณที่สั่งซื้อ！\nเราจะเตรียมสินค้าให้คุณโดยเร็ว',
     successOrderId:'เลขที่ออเดอร์', btnContinue:'สั่งซื้อต่อ',
+    creditOrderNote:'※ ออเดอร์เครดิต (ผ่อนชำระ) กรุณาส่งข้อความยืนยันผ่าน FACEBOOK หรือ LINE อย่างใดอย่างหนึ่ง',
     announceTitle:'📢 ประกาศ', announceEmpty:'ยังไม่มีประกาศ',
     btnLogout:'🚪 ออกจากระบบ', btnEditProfile:'✏ แก้ไขข้อมูล',
     editProfileTitle:'✏ แก้ไขข้อมูลสมาชิก', btnSaveProfile:'บันทึก',
@@ -2834,6 +2850,7 @@ const LANGS = {
     successTitle:'Đã gửi đơn hàng！',
     successMsg:'Cảm ơn bạn đã đặt hàng！\nChúng tôi sẽ chuẩn bị hàng ngay cho bạn.',
     successOrderId:'Mã đơn hàng', btnContinue:'Tiếp tục mua',
+    creditOrderNote:'※ Đơn hàng trả chậm bắt buộc xác nhận qua FACEBOOK hoặc LINE (chọn một)',
     announceTitle:'📢 Thông báo', announceEmpty:'Chưa có thông báo nào',
     btnLogout:'🚪 Đăng xuất', btnEditProfile:'✏ Sửa thông tin',
     editProfileTitle:'✏ Sửa thông tin thành viên', btnSaveProfile:'Lưu',
@@ -2956,6 +2973,7 @@ const LANGS = {
     successTitle:'Pesanan Terkirim！',
     successMsg:'Terima kasih telah memesan！\nKami akan segera menyiapkan pesanan Anda.',
     successOrderId:'No. Pesanan', btnContinue:'Lanjut Belanja',
+    creditOrderNote:'※ Pesanan kredit wajib mengirimkan konfirmasi permohonan melalui FACEBOOK atau LINE (pilih salah satu)',
     announceTitle:'📢 Pengumuman', announceEmpty:'Belum ada pengumuman',
     btnLogout:'🚪 Keluar', btnEditProfile:'✏ Edit Profil',
     editProfileTitle:'✏ Edit Data Anggota', btnSaveProfile:'Simpan',
@@ -3078,6 +3096,7 @@ const LANGS = {
     successTitle:'Order Submitted！',
     successMsg:'Thank you for your order！\nWe will prepare it as soon as possible.',
     successOrderId:'Order No.', btnContinue:'Continue Shopping',
+    creditOrderNote:'※ Credit orders must send a confirmation request via FACEBOOK or LINE (choose one)',
     announceTitle:'📢 Announcements', announceEmpty:'No announcements yet',
     btnLogout:'🚪 Logout', btnEditProfile:'✏ Edit Profile',
     editProfileTitle:'✏ Edit Member Profile', btnSaveProfile:'Save',
@@ -3200,6 +3219,7 @@ const LANGS = {
     successTitle:'訂單已送出！',
     successMsg:'感謝您的訂購！\n我們將盡快為您備貨。',
     successOrderId:'訂單編號', btnContinue:'繼續選購',
+    creditOrderNote:'※ 賒帳訂單須透過 FACEBOOK 或 LINE 擇一發送確認申請狀況',
     announceTitle:'📢 公告消息', announceEmpty:'目前無公告',
     btnLogout:'🚪 登出', btnEditProfile:'✏ 編輯資料',
     editProfileTitle:'✏ 編輯會員資料', btnSaveProfile:'儲存',
@@ -3397,6 +3417,9 @@ function applyLang() {
   const smEl = document.getElementById('success-msg-text');
   if (smEl) smEl.innerHTML = h(L.successMsg).replace(/\n/g, '<br>');
   set('btn-done-text', L.btnContinue);
+  // 若賒帳提示目前可見，同步更新文字（語言切換時保持一致）
+  const cNoteTxtEl = document.getElementById('success-credit-note-text');
+  if (cNoteTxtEl) cNoteTxtEl.textContent = L.creditOrderNote || '';
 
   // Member drawer
   set('m-announce-title', L.announceTitle);
@@ -4104,6 +4127,12 @@ async function submitOrder() {
 
     const si=document.getElementById('success-order-id');
     if(si) si.textContent=`${t('successOrderId')}：${orderId}`;
+
+    // 賒帳訂單提示：勾選賒帳才顯示，並填入當前語系文字
+    const creditNoteEl    = document.getElementById('success-credit-note');
+    const creditNoteTxtEl = document.getElementById('success-credit-note-text');
+    if (creditNoteEl)    creditNoteEl.style.display = creditApplied ? '' : 'none';
+    if (creditNoteTxtEl && creditApplied) creditNoteTxtEl.textContent = t('creditOrderNote');
 
     cart=[]; updateAllCartUI(); renderProducts();
     closeModal('order-modal');
