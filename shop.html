@@ -871,6 +871,48 @@ button { cursor:pointer; font-family:var(--th); }
 .order-total-label { font-size:15px; font-weight:700; color:var(--text2); }
 .order-total-amt { font-family:var(--serif); font-size:24px; font-weight:700; color:var(--primary); }
 
+/* ── Credit (賒帳) Checkbox Row ── */
+.credit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 8px 9px;
+  margin-top: 6px;
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--r-sm);
+  background: var(--surface2);
+  cursor: pointer;
+  transition: border-color .18s, background .18s;
+}
+.credit-row:hover { border-color: var(--accent); background: #FFF8F2; }
+.credit-row.active { border-color: var(--accent); background: #FFF3E6; }
+.credit-cb {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+.credit-lbl {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+  line-height: 1.4;
+}
+.credit-surcharge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent2);
+  background: rgba(232,137,43,.12);
+  border-radius: 6px;
+  padding: 1px 7px;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
 .modal-ft {
   padding: 0 22px 22px;
   display: flex;
@@ -2027,6 +2069,15 @@ body::after {
           </thead>
           <tbody id="modal-order-body"></tbody>
         </table>
+        <label class="credit-row" id="credit-row-wrap" for="credit-checkbox">
+          <input type="checkbox" class="credit-cb" id="credit-checkbox" onchange="onCreditCheckChange()">
+          <span class="credit-lbl">申請本筆帳款賒帳
+            <span class="credit-surcharge">總金額增加 10%</span>
+          </span>
+        </label>
+        <div id="credit-under-limit-msg" style="display:none;color:#d97706;font-size:12px;font-weight:600;padding:6px 10px;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-radius:8px;margin-top:4px;text-align:center">
+          ⚠ 未滿一千元僅允許現場取貨
+        </div>
         <div class="order-total-row">
           <span class="order-total-label" id="modal-order-total-label">ยอดรวมทั้งหมด</span>
           <span class="order-total-amt" id="modal-order-total">NT$ 0</span>
@@ -3680,6 +3731,40 @@ function clearCart() {
 function getTotal()    { return cart.reduce((s,i)=>s+Number(i.price||0)*Number(i.qty||0),0); }
 function getTotalQty() { return cart.reduce((s,i)=>s+Number(i.qty||0),0); }
 
+/* ── 賒帳 (Credit) helpers ── */
+function isCreditChecked() {
+  const cb = document.getElementById('credit-checkbox');
+  return !!(cb && cb.checked);
+}
+function getFinalTotal() {
+  const base = getTotal();
+  return isCreditChecked() ? Math.round(base * 1.1) : base;
+}
+function onCreditCheckChange() {
+  const baseTotal = getTotal();
+  const checked   = isCreditChecked();
+  const total     = checked ? Math.round(baseTotal * 1.1) : baseTotal;
+  const wrap      = document.getElementById('credit-row-wrap');
+  if (wrap) wrap.classList.toggle('active', checked);
+  const tel = document.getElementById('modal-order-total');
+  if (tel) {
+    tel.textContent = `NT$ ${total}`;
+    // 賒帳勾選時豁免最低消費限制，不顯示紅色
+    tel.style.color = (checked || baseTotal >= 1000) ? 'var(--primary)' : 'var(--red)';
+  }
+  // 勾選且未滿 1000 元 → 顯示「未滿一千元僅允許現場取貨」提示，3 秒後自動消失
+  const msg = document.getElementById('credit-under-limit-msg');
+  if (msg) {
+    clearTimeout(_creditMsgTimer);
+    if (checked && baseTotal < 1000) {
+      msg.style.display = '';
+      _creditMsgTimer = setTimeout(() => { msg.style.display = 'none'; }, 3000);
+    } else {
+      msg.style.display = 'none';
+    }
+  }
+}
+
 function buildCartHTML() {
   if (!cart.length) return `<div class="cart-empty"><div class="cart-empty-icon">🛒</div>
     <div class="cart-empty-text">${t('cartEmpty').replace('\n','<br>')}</div></div>`;
@@ -3811,6 +3896,16 @@ function openOrderModal() {
       <td>NT$ ${sub}</td>
     </tr>`;
   }).join('');
+  // Reset credit checkbox on each open
+  const creditCb = document.getElementById('credit-checkbox');
+  if (creditCb) creditCb.checked = false;
+  const creditWrap = document.getElementById('credit-row-wrap');
+  if (creditWrap) creditWrap.classList.remove('active');
+  // 重置未滿千元提示
+  clearTimeout(_creditMsgTimer);
+  const creditMsg = document.getElementById('credit-under-limit-msg');
+  if (creditMsg) creditMsg.style.display = 'none';
+
   const tel=document.getElementById('modal-order-total');
   if(tel) {
     tel.textContent=`NT$ ${total}`;
@@ -3877,6 +3972,10 @@ function buildLineOrderText(orderObj) {
     lines.push(`${getProductName(it.name)} x${it.qty}　NT$${it.price * it.qty}`);
   });
   lines.push('－－－－－－－－－－');
+  if (orderObj.credit) {
+    lines.push(`💳 賒帳申請：是`);
+    lines.push(`   原價 NT$${orderObj.subtotal}　手續費 NT$${orderObj.creditSurcharge}`);
+  }
   lines.push(`💰 總計：NT$${orderObj.total}`);
   return lines.join('\n');
 }
@@ -3897,18 +3996,20 @@ function openLineWithOrder(orderObj) {
 async function submitOrder() {
   if(!cart.length) return;
 
-  // 最低 1000 元在確認送出時攔截
-  const total = getTotal();
-  if(total < 1000) {
-    const need = 1000 - total;
+  // 最低 1000 元在確認送出時攔截（賒帳勾選時豁免）
+  const baseTotal = getTotal();
+  if(baseTotal < 1000 && !isCreditChecked()) {
+    const need = 1000 - baseTotal;
     showToast(`${t('minOrder')} — ${t('minOrderShort').replace('%n', need)}`, 'err');
     return;
   }
 
   // 送貨地點驗證：優先使用 GPS/地圖座標；若無座標，允許手動填寫的文字地址作降級
+  // 賒帳勾選時視為現場取貨，豁免地址必填限制
+  const creditApplied = isCreditChecked();
   const deliveryCoordsForSubmit = getDeliveryCoords();
   const manualAddressVal = (document.getElementById('manual-address-input')?.value || '').trim();
-  if (!deliveryCoordsForSubmit && !manualAddressVal) {
+  if (!creditApplied && !deliveryCoordsForSubmit && !manualAddressVal) {
     const errEl = document.getElementById('modal-delivery-err');
     if(errEl) errEl.style.display = '';
     setGeoStatus(t('geoNoCoords'), 'err');
@@ -3919,7 +4020,7 @@ async function submitOrder() {
   // Fix: 手動輸入地址沒有座標可算距離，但仍要檔掉「明顯超出配送範圍的縣市」，
   // 否則 GPS / 地圖選點都擋了，使用者只要手動打字就能完全跳過配送範圍限制。
   // isKnownTaiwanRegionTooFar() 原本就是為此設計的檢查，但先前沒有被呼叫到。
-  if (!deliveryCoordsForSubmit && manualAddressVal && isKnownTaiwanRegionTooFar(manualAddressVal)) {
+  if (!creditApplied && !deliveryCoordsForSubmit && manualAddressVal && isKnownTaiwanRegionTooFar(manualAddressVal)) {
     showTooFarStatus(getTaiwanRegionMention(manualAddressVal));
     document.getElementById('manual-address-input')?.focus();
     showToast(t('geoTooFar').replace('%r', ''), 'err');
@@ -3927,7 +4028,7 @@ async function submitOrder() {
   }
   const _deliveryBase = deliveryCoordsForSubmit
     ? (document.getElementById('order-delivery')?.value || deliveryCoordsForSubmit.address || `${deliveryCoordsForSubmit.lat}, ${deliveryCoordsForSubmit.lng}`).trim()
-    : manualAddressVal;
+    : (manualAddressVal || (creditApplied ? '現場取貨' : ''));
   const _deliveryRemark = (document.getElementById('delivery-remark')?.value || '').trim();
   const deliveryVal     = _deliveryRemark ? `${_deliveryBase}【${_deliveryRemark}】` : _deliveryBase;
   // 記住本次地點
@@ -3945,9 +4046,11 @@ async function submitOrder() {
     const phoneVal = (document.getElementById('customer-phone')?.value||'').trim();
     const noteVal  = (document.getElementById('order-note')?.value||'').trim();
     const now=new Date(), orderId='ONL-'+now.getTime().toString(36).toUpperCase();
-    const total=getTotal();
+    const baseAmt      = getTotal();
+    // creditApplied 已在外層宣告，此處直接使用
+    const total        = creditApplied ? Math.round(baseAmt * 1.1) : baseAmt;
 
-    const tier = Math.floor(total / 1000);
+    const tier = Math.floor(baseAmt / 1000);
     const coords = deliveryCoordsForSubmit;
     const distKm = coords ? calcDistKm(STORE.lat, STORE.lng, coords.lat, coords.lng) : null;
     const maxKm  = tier * 3;
@@ -3978,7 +4081,10 @@ async function submitOrder() {
       deliveryDays:     tier,
       note:             noteVal,
       items: cart.map(i=>({id:i.id,name:i.name,price:i.price,qty:i.qty})),
-      subtotal:total, total, status:'pending',
+      subtotal: baseAmt, total,
+      credit: creditApplied,
+      creditSurcharge: creditApplied ? total - baseAmt : 0,
+      status:'pending',
     };
 
     // 另開 LINE 聊天室並帶入本次訂單內容（在原本送出流程之外，額外動作）
@@ -4153,6 +4259,7 @@ function closeSuccess() { closeModal('success-modal'); }
    Toast
 ══════════════════════════════════════════════ */
 let _tt=null;
+let _creditMsgTimer = null;
 function showToast(msg,type) {
   try {
     const t=document.getElementById('toast'); if(!t) return;
