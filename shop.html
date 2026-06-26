@@ -913,17 +913,15 @@ button { cursor:pointer; font-family:var(--th); }
   white-space: nowrap;
 }
 
-/* ── Messaging Tool Selector（賒帳時展開）── */
+/* ── Messaging Tool Selector（固定顯示，無論是否賒帳）── */
 .credit-msg-tools {
-  display: none;
+  display: block;
   margin-top: 8px;
   padding: 10px 12px;
   background: rgba(6,199,85,.04);
   border: 1.5px solid rgba(6,199,85,.22);
   border-radius: var(--r-sm);
-  animation: fade-up .2s ease both;
 }
-.credit-msg-tools.show { display: block; }
 .credit-msg-tools-label {
   font-size: 12px;
   font-weight: 600;
@@ -2138,11 +2136,20 @@ body::after {
         <div id="credit-under-limit-msg" style="display:none;color:#d97706;font-size:12px;font-weight:600;padding:6px 10px;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-radius:8px;margin-top:4px;text-align:center">
           <!-- ⚠️ 此文字由 applyLang() 透過 t('creditUnderLimit') 動態填入，請勿在此硬編碼 -->
         </div>
-        <!-- 訊息工具選擇（賒帳勾選時顯示）-->
+        <!-- 訊息工具選擇（固定顯示，無論賒帳與否均可選擇）-->
         <div class="credit-msg-tools" id="credit-msg-tools">
           <div class="credit-msg-tools-label" id="credit-msg-tools-label">📲 選擇傳送確認訊息的工具</div>
           <div class="credit-msg-tool-row">
-            <button class="credit-msg-tool-btn selected-line" id="credit-msg-line-btn"
+            <button class="credit-msg-tool-btn selected-fb" id="credit-msg-fb-btn"
+                    type="button" onclick="selectMsgTool('fb')">
+              <span class="credit-msg-tool-icon" style="background:#0866FF">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="#fff" aria-hidden="true">
+                  <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
+                </svg>
+              </span>
+              <span id="credit-msg-fb-text">Facebook</span>
+            </button>
+            <button class="credit-msg-tool-btn" id="credit-msg-line-btn"
                     type="button" onclick="selectMsgTool('line')">
               <span class="credit-msg-tool-icon" style="background:#06C755">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="#fff" aria-hidden="true">
@@ -2151,15 +2158,6 @@ body::after {
                 </svg>
               </span>
               <span id="credit-msg-line-text">LINE</span>
-            </button>
-            <button class="credit-msg-tool-btn" id="credit-msg-fb-btn"
-                    type="button" onclick="selectMsgTool('fb')">
-              <span class="credit-msg-tool-icon" style="background:#0866FF">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="#fff" aria-hidden="true">
-                  <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
-                </svg>
-              </span>
-              <span id="credit-msg-fb-text">Facebook</span>
             </button>
           </div>
         </div>
@@ -3364,7 +3362,7 @@ const LANGS = {
     announceTitle:'📢 公告消息', announceEmpty:'目前無公告',
     btnLogout:'🚪 登出', btnEditProfile:'✏ 編輯資料',
     editProfileTitle:'✏ 編輯會員資料', btnSaveProfile:'儲存',
-    minOrder:'最低消費 NT$1,000',
+    minOrder:'外送需要最低消費 NT$1,000',
     toastAdded:'已加入', toastCleared:'購物車已清空',
     toastCartEmpty:'購物車是空的！', toastOrderSent:'訂單已寫入 Firebase ✓',
     toastFail:'送出失敗，請再試一次',
@@ -3943,21 +3941,16 @@ function onCreditCheckChange() {
     // 賒帳勾選時豁免最低消費限制，不顯示紅色
     tel.style.color = (checked || baseTotal >= 1000) ? 'var(--primary)' : 'var(--red)';
   }
-  // 勾選且未滿 1000 元 → 顯示「未滿一千元僅允許現場取貨」提示，3 秒後自動消失
+  // 勾選且未滿 1000 元 → 顯示「現場取貨」提示（不自動消失）
   const msg = document.getElementById('credit-under-limit-msg');
   if (msg) {
     clearTimeout(_creditMsgTimer);
     if (checked && baseTotal < 1000) {
       msg.style.display = '';
-      _creditMsgTimer = setTimeout(() => { msg.style.display = 'none'; }, 3000);
     } else {
       msg.style.display = 'none';
     }
   }
-  // 勾選時展開訊息工具選擇器，取消時隱藏並重設
-  const msgTools = document.getElementById('credit-msg-tools');
-  if (msgTools) msgTools.classList.toggle('show', checked);
-  if (!checked) { _selectedMsgTool = 'line'; selectMsgTool('line'); }
 }
 
 /* 選擇送出確認訊息的工具（LINE / Facebook） */
@@ -4110,11 +4103,9 @@ function openOrderModal() {
   clearTimeout(_creditMsgTimer);
   const creditMsg = document.getElementById('credit-under-limit-msg');
   if (creditMsg) creditMsg.style.display = 'none';
-  // 重置訊息工具選擇器
-  _selectedMsgTool = 'line';
-  const msgToolsEl = document.getElementById('credit-msg-tools');
-  if (msgToolsEl) msgToolsEl.classList.remove('show');
-  selectMsgTool('line');
+  // 重置訊息工具選擇器（預設 Facebook）
+  _selectedMsgTool = 'fb';
+  selectMsgTool('fb');
 
   const tel=document.getElementById('modal-order-total');
   if(tel) {
@@ -4497,7 +4488,7 @@ function closeSuccess() { closeModal('success-modal'); }
 ══════════════════════════════════════════════ */
 let _tt=null;
 let _creditMsgTimer = null;
-let _selectedMsgTool = 'line'; // 'line' | 'fb'，預設 LINE
+let _selectedMsgTool = 'fb'; // 預設 Facebook
 function showToast(msg,type) {
   try {
     const t=document.getElementById('toast'); if(!t) return;
