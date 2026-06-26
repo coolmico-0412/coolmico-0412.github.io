@@ -2140,16 +2140,7 @@ body::after {
         <div class="credit-msg-tools" id="credit-msg-tools">
           <div class="credit-msg-tools-label" id="credit-msg-tools-label">📲 選擇傳送確認訊息的工具</div>
           <div class="credit-msg-tool-row">
-            <button class="credit-msg-tool-btn selected-fb" id="credit-msg-fb-btn"
-                    type="button" onclick="selectMsgTool('fb')">
-              <span class="credit-msg-tool-icon" style="background:#0866FF">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="#fff" aria-hidden="true">
-                  <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
-                </svg>
-              </span>
-              <span id="credit-msg-fb-text">Facebook</span>
-            </button>
-            <button class="credit-msg-tool-btn" id="credit-msg-line-btn"
+            <button class="credit-msg-tool-btn selected-line" id="credit-msg-line-btn"
                     type="button" onclick="selectMsgTool('line')">
               <span class="credit-msg-tool-icon" style="background:#06C755">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="#fff" aria-hidden="true">
@@ -2158,6 +2149,15 @@ body::after {
                 </svg>
               </span>
               <span id="credit-msg-line-text">LINE</span>
+            </button>
+            <button class="credit-msg-tool-btn" id="credit-msg-fb-btn"
+                    type="button" onclick="selectMsgTool('fb')">
+              <span class="credit-msg-tool-icon" style="background:#0866FF">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="#fff" aria-hidden="true">
+                  <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
+                </svg>
+              </span>
+              <span id="credit-msg-fb-text">Facebook</span>
             </button>
           </div>
         </div>
@@ -2838,7 +2838,7 @@ const LANGS = {
     announceTitle:'📢 ประกาศ', announceEmpty:'ยังไม่มีประกาศ',
     btnLogout:'🚪 ออกจากระบบ', btnEditProfile:'✏ แก้ไขข้อมูล',
     editProfileTitle:'✏ แก้ไขข้อมูลสมาชิก', btnSaveProfile:'บันทึก',
-    minOrder:'ยอดขั้นต่ำ NT$1,000',
+    minOrder:'จัดส่งต้องสั่งขั้นต่ำ NT$1,000',
     toastAdded:'เพิ่มแล้ว', toastCleared:'ล้างตะกร้าแล้ว',
     toastCartEmpty:'ตะกร้าว่างเปล่า！', toastOrderSent:'ส่งออเดอร์ไปยัง Firebase ✓',
     toastFail:'ส่งไม่สำเร็จ กรุณาลองใหม่',
@@ -2969,7 +2969,7 @@ const LANGS = {
     announceTitle:'📢 Thông báo', announceEmpty:'Chưa có thông báo nào',
     btnLogout:'🚪 Đăng xuất', btnEditProfile:'✏ Sửa thông tin',
     editProfileTitle:'✏ Sửa thông tin thành viên', btnSaveProfile:'Lưu',
-    minOrder:'Đơn tối thiểu NT$1.000',
+    minOrder:'Giao hàng cần đơn tối thiểu NT$1.000',
     toastAdded:'Đã thêm', toastCleared:'Đã xóa giỏ hàng',
     toastCartEmpty:'Giỏ hàng đang trống！', toastOrderSent:'Đã gửi đơn hàng lên Firebase ✓',
     toastFail:'Gửi thất bại, vui lòng thử lại',
@@ -3100,7 +3100,7 @@ const LANGS = {
     announceTitle:'📢 Pengumuman', announceEmpty:'Belum ada pengumuman',
     btnLogout:'🚪 Keluar', btnEditProfile:'✏ Edit Profil',
     editProfileTitle:'✏ Edit Data Anggota', btnSaveProfile:'Simpan',
-    minOrder:'Minimal pembelian NT$1.000',
+    minOrder:'Pengiriman butuh minimal NT$1.000',
     toastAdded:'Ditambahkan', toastCleared:'Keranjang dikosongkan',
     toastCartEmpty:'Keranjang masih kosong！', toastOrderSent:'Pesanan dikirim ke Firebase ✓',
     toastFail:'Gagal mengirim, coba lagi',
@@ -3231,7 +3231,7 @@ const LANGS = {
     announceTitle:'📢 Announcements', announceEmpty:'No announcements yet',
     btnLogout:'🚪 Logout', btnEditProfile:'✏ Edit Profile',
     editProfileTitle:'✏ Edit Member Profile', btnSaveProfile:'Save',
-    minOrder:'Minimum order NT$1,000',
+    minOrder:'Delivery requires minimum NT$1,000',
     toastAdded:'Added', toastCleared:'Cart cleared',
     toastCartEmpty:'Cart is empty！', toastOrderSent:'Order sent to Firebase ✓',
     toastFail:'Failed to send, please try again',
@@ -4103,9 +4103,9 @@ function openOrderModal() {
   clearTimeout(_creditMsgTimer);
   const creditMsg = document.getElementById('credit-under-limit-msg');
   if (creditMsg) creditMsg.style.display = 'none';
-  // 重置訊息工具選擇器（預設 Facebook）
-  _selectedMsgTool = 'fb';
-  selectMsgTool('fb');
+  // 重置訊息工具選擇器（預設 LINE）
+  _selectedMsgTool = 'line';
+  selectMsgTool('line');
 
   const tel=document.getElementById('modal-order-total');
   if(tel) {
@@ -4488,7 +4488,7 @@ function closeSuccess() { closeModal('success-modal'); }
 ══════════════════════════════════════════════ */
 let _tt=null;
 let _creditMsgTimer = null;
-let _selectedMsgTool = 'fb'; // 預設 Facebook
+let _selectedMsgTool = 'line'; // 預設 LINE
 function showToast(msg,type) {
   try {
     const t=document.getElementById('toast'); if(!t) return;
