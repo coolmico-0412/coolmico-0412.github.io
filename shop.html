@@ -917,10 +917,11 @@ button { cursor:pointer; font-family:var(--th); }
 .credit-msg-tools {
   display: block;
   margin-top: 8px;
-  padding: 10px 12px;
+  padding: 10px 12px 12px;
   background: rgba(6,199,85,.04);
   border: 1.5px solid rgba(6,199,85,.22);
   border-radius: var(--r-sm);
+  overflow: visible;
 }
 .credit-msg-tools-label {
   font-size: 12px;
@@ -928,7 +929,7 @@ button { cursor:pointer; font-family:var(--th); }
   color: var(--muted);
   margin-bottom: 8px;
 }
-.credit-msg-tool-row { display: flex; gap: 8px; }
+.credit-msg-tool-row { display: flex; gap: 8px; padding-top: 4px; }
 .credit-msg-tool-btn {
   flex: 1;
   display: flex;
@@ -943,11 +944,49 @@ button { cursor:pointer; font-family:var(--th); }
   font-size: 13px;
   font-weight: 600;
   color: var(--muted);
-  transition: all .18s;
+  transition: all .22s cubic-bezier(.34,1.3,.64,1);
+  position: relative;
 }
 .credit-msg-tool-btn:hover { border-color: var(--primary); color: var(--text); }
-.credit-msg-tool-btn.selected-line { border-color: #06C755; background: rgba(6,199,85,.09); color: #059b44; }
-.credit-msg-tool-btn.selected-fb  { border-color: #0866FF; background: rgba(8,102,255,.09); color: #0553cc; }
+/* ── 選中效果：外光圈 + 上浮 + 勾標 ── */
+.credit-msg-tool-btn.selected-line {
+  border-color: #06C755;
+  border-width: 3px;
+  background: rgba(6,199,85,.14);
+  color: #04903f;
+  font-weight: 700;
+  box-shadow: 0 0 0 3px rgba(6,199,85,.18), 0 5px 16px rgba(6,199,85,.28);
+  transform: translateY(-3px) scale(1.03);
+}
+.credit-msg-tool-btn.selected-fb {
+  border-color: #0866FF;
+  border-width: 3px;
+  background: rgba(8,102,255,.14);
+  color: #0444cc;
+  font-weight: 700;
+  box-shadow: 0 0 0 3px rgba(8,102,255,.18), 0 5px 16px rgba(8,102,255,.28);
+  transform: translateY(-3px) scale(1.03);
+}
+/* 右上角勾選標記 */
+.credit-msg-tool-btn.selected-line::after,
+.credit-msg-tool-btn.selected-fb::after {
+  content: '✓';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 18px;
+  text-align: center;
+  border: 2px solid var(--surface);
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.credit-msg-tool-btn.selected-line::after { background: #06C755; }
+.credit-msg-tool-btn.selected-fb::after  { background: #0866FF; }
 .credit-msg-tool-icon {
   width: 22px;
   height: 22px;
@@ -3474,6 +3513,10 @@ function setLang(lang) {
   _lang = lang;
   _lsOpen = false; // 選完語言後自動收起選單
   try { localStorage.setItem('shop_lang', lang); } catch(e) {}
+  // 切換語言時同步更新預設通訊工具
+  // 泰文/中文 → LINE；英文/越南文/印尼文 → Facebook
+  _selectedMsgTool = getDefaultMsgTool(lang);
+  selectMsgTool(_selectedMsgTool);
   applyLang(); // applyLang 內已呼叫 buildLangSwitcher + renderTabs
 }
 function detectLang() {
@@ -4103,9 +4146,9 @@ function openOrderModal() {
   clearTimeout(_creditMsgTimer);
   const creditMsg = document.getElementById('credit-under-limit-msg');
   if (creditMsg) creditMsg.style.display = 'none';
-  // 重置訊息工具選擇器（預設 LINE）
-  _selectedMsgTool = 'line';
-  selectMsgTool('line');
+  // 重置訊息工具選擇器（依語言預設：泰文/中文 → LINE；英文/越南文/印尼文 → Facebook）
+  _selectedMsgTool = getDefaultMsgTool(_lang);
+  selectMsgTool(_selectedMsgTool);
 
   const tel=document.getElementById('modal-order-total');
   if(tel) {
@@ -4489,6 +4532,11 @@ function closeSuccess() { closeModal('success-modal'); }
 let _tt=null;
 let _creditMsgTimer = null;
 let _selectedMsgTool = 'line'; // 預設 LINE
+
+/* 依語言取得預設通訊工具：泰文/中文 → LINE；英文/越南文/印尼文 → Facebook */
+function getDefaultMsgTool(lang) {
+  return (lang === 'th' || lang === 'tw') ? 'line' : 'fb';
+}
 function showToast(msg,type) {
   try {
     const t=document.getElementById('toast'); if(!t) return;
