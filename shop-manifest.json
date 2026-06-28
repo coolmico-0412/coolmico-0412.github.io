@@ -3,8 +3,8 @@
   "name": "Online Shop",
   "short_name": "Shop",
   "description": "Online shopping / ร้านค้าออนไลน์ / Toko Online / Cửa hàng trực tuyến / 線上商店",
-  "start_url": "shop.html",
-  "scope": "./",
+  "start_url": "/shop.html",
+  "scope": "/shop.html",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "portrait-primary",
@@ -22,7 +22,7 @@
   "shortcuts": [
     {
       "name": "Order Now",
-      "url": "shop.html",
+      "url": "/shop.html",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     }
   ],

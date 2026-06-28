@@ -3879,7 +3879,7 @@ let _posSwRefreshing  = false;
 function initPosPWA() {
   // ── Service Worker 註冊 ──
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./pos-sw.js', { scope: './' })
+    navigator.serviceWorker.register('./pos-sw.js', { scope: '/POS.html' })
       .then(reg => {
         _posSwReg = reg;
         console.log('[POS-SW] registered:', reg.scope);

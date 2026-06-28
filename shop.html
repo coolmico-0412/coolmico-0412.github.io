@@ -4666,7 +4666,7 @@ function initPWA() {
     //   版本更新：hadController = true（v1 仍在控制）→ reload 正常觸發。
     const hadController = !!navigator.serviceWorker.controller;
 
-    navigator.serviceWorker.register('./shop-sw.js', { scope: './' })
+    navigator.serviceWorker.register('./shop-sw.js', { scope: '/shop.html' })
       .then(reg => {
         console.log('[PWA] SW registered:', reg.scope);
 

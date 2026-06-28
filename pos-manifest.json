@@ -1,10 +1,10 @@
 {
   "name": "POS SYSTEM",
   "short_name": "POS",
-  "id": "./POS.html",
+  "id": "/POS.html",
   "description": "ระบบ POS ออนไลน์ / 線上收銀系統",
-  "start_url": "./POS.html",
-  "scope": "./",
+  "start_url": "/POS.html",
+  "scope": "/POS.html",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#f1f5f9",
@@ -49,7 +49,7 @@
   "shortcuts": [
     {
       "name": "แคชเชียร์ / 收銀台",
-      "url": "POS.html",
+      "url": "/POS.html",
       "icons": [
         {
           "src": "pos-icons/pos-icon-96.png",

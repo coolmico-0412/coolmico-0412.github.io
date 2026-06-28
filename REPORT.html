@@ -581,11 +581,12 @@ try {
    ══════════════════════════════ */
 (function(){
   const manifest = {
-    id: "/REPORT",
+    id: "/REPORT.html",
     name: "REPORT",
     short_name: "REPORT",
     description: "銷售報表 · 庫存 · 趨勢 · 排行",
-    start_url: "./REPORT.html",
+    start_url: "/REPORT.html",
+    scope: "/REPORT.html",
     display: "standalone",
     orientation: "any",
     background_color: "#f1f5f9",
@@ -600,8 +601,8 @@ try {
     screenshots: [],
     categories: ["productivity", "business"],
     shortcuts: [
-      { name:"總覽", short_name:"Dashboard", url:"./REPORT.html#overview", description:"核心 KPI 總覽" },
-      { name:"庫存清單", short_name:"Inventory", url:"./REPORT.html#restock", description:"補貨建議表" }
+      { name:"總覽", short_name:"Dashboard", url:"/REPORT.html#overview", description:"核心 KPI 總覽" },
+      { name:"庫存清單", short_name:"Inventory", url:"/REPORT.html#restock", description:"補貨建議表" }
     ]
   };
   const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
