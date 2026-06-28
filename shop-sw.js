@@ -12,6 +12,7 @@ const STATIC_CACHE   = `shop-static-${APP_VERSION}`;
 const FONT_CACHE     = `shop-fonts-${APP_VERSION}`;
 const FIREBASE_CACHE = `shop-firebase-${APP_VERSION}`;
 const ALL_CACHES     = [STATIC_CACHE, FONT_CACHE, FIREBASE_CACHE];
+const CACHE_PREFIX   = 'shop-'; // ← 只清除自己的舊快取，不動 pos-* / report-* 快取
 
 const PRECACHE_ASSETS = [
   './shop-names.js',         // ← 翻譯對照表（每次更新翻譯後重新抓取）
@@ -37,13 +38,13 @@ self.addEventListener('install', event => {
   );
 });
 
-/* ── Activate：清除所有舊版快取 ── */
+/* ── Activate：只清除 shop-* 舊版快取，不刪除 pos-* / report-* ── */
 self.addEventListener('activate', event => {
   console.log('[SW] Activating', APP_VERSION);
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
-        keys.filter(k => !ALL_CACHES.includes(k)).map(k => {
+        keys.filter(k => k.startsWith(CACHE_PREFIX) && !ALL_CACHES.includes(k)).map(k => {
           console.log('[SW] Delete old cache:', k);
           return caches.delete(k);
         })
