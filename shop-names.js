@@ -346,6 +346,7 @@ export const PRODUCT_NAME_MAP = {
   'มะนาว檸檬': { en: 'Lime', vi: 'Chanh xanh', id: 'Jeruk Nipis', th: 'มะนาว', zh: '檸檬' },
   'มะละกอ青木瓜': { en: 'Green Papaya', vi: 'Đu đủ xanh', id: 'Pepaya Muda', th: 'มะละกอ', zh: '青木瓜' },
   'กะทิผงสำเร็จรูป即溶椰漿粉': { en: 'Instant Coconut Milk Powder', vi: 'Bột cốt dừa', id: 'Serbuk Santan Kelapa', th: 'กะทิผงสำเร็จรูป', zh: '即溶椰漿粉' },
+  'กะทิชาวเกาะ巧口牌椰漿': { en: 'Chaokoh Coconut Milk', vi: 'Nước cốt dừa Chaokoh', id: 'Santan Chaokoh', th: 'กะทิชาวเกาะ', zh: '巧口牌椰漿' },
   'ใบมะกรูด檸檬葉': { en: 'Kaffir Lime Leaves', vi: 'Lá chanh', id: 'Daun jeruk', th: 'ใบมะกรูด', zh: '檸檬葉' },
   'ตะไคร้香茅': { en: 'Lemongrass', vi: 'Củ sả', id: 'Serai', th: 'ตะไคร้', zh: '香茅' },
 

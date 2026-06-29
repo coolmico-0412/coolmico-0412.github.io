@@ -2373,19 +2373,21 @@ function setFbIndicator(state) {
    Firebase: Product Sync
    強制從 server 拉取，不用 SDK 快取
 ══════════════════════════════════════════════ */
+/* ── Firebase server 強制拉取（非 SDK 本地快取），帶逾時保護 ──────────
+   提升至 module 層級：避免每次呼叫 syncProducts() 都重新建立 closure。
+   ⚠️ 必須在 _db 初始化後才可呼叫（syncProducts 已有 !_fbOK 守衛）。  */
+function serverGet(path, ms = 8000) {
+  return Promise.race([
+    get(ref(_db, path)),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`timeout: ${path}`)), ms)
+    )
+  ]);
+}
+
 async function syncProducts() {
   if (!_fbOK || !_db) { setFbIndicator('local'); return; }
   setFbIndicator('connecting');
-
-  // 強制從 Firebase server 拉取（非 SDK 本地快取）
-  function serverGet(path, ms = 8000) {
-    return Promise.race([
-      get(ref(_db, path)),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`timeout: ${path}`)), ms)
-      )
-    ]);
-  }
 
   try {
     // 先讀 meta 判斷是否需要更新
@@ -4201,10 +4203,22 @@ function openFBInquiry() {
 
 function buildLineOrderText(orderObj) {
   /* ──────────────────────────────────────────────────────────────────
-     ⚠️  【i18n 例外說明】此函式輸出的是傳給店家 LINE OA 的「內部訂單通知」，
-     接收者是店家人員（非顧客），因此刻意使用繁體中文（固定語言），
-     不隨顧客選擇的語系改變。
-     若日後需要支援多語系通知，請在 LANGS 加入對應 key 後改用 t()。
+     ⚠️  【雙語設計說明】此函式輸出的是傳給店家 LINE OA / Facebook 的「內部訂單通知」。
+     接收者有兩類：
+       ① 台灣員工  → 看 Firebase 原始名稱（中文 / 泰中混排）
+       ② 泰國員工  → 看翻譯後的顧客語系名稱（跟顧客點的一致，方便備貨核對）
+
+     因此商品名稱同時列出兩者：
+       格式：翻譯名  /  原始名
+       例：  กาแฟกระป๋อง  /  伯朗咖啡
+
+     若翻譯名與原始名相同（未設翻譯或語系相同），只顯示一次，不重複。
+
+     ⚠️  維護須知：
+     · 訂單本文的其餘欄位（姓名、電話、備註等）刻意固定為繁體中文，
+       因為那些欄位不需要多語系，台灣員工是主要讀者。
+     · 若未來需要完全多語系化通知，請在 LANGS 加入對應 key 後改用 t()，
+       並在此處說明設計變更原因。
      ────────────────────────────────────────────────────────────────── */
   const lines = [
     '🆕 線上新訂單',
@@ -4219,7 +4233,13 @@ function buildLineOrderText(orderObj) {
   lines.push('－－－－－－－－－－');
   lines.push('🛒 商品清單：');
   orderObj.items.forEach(it => {
-    lines.push(`${getProductName(it.name)} x${it.qty}　NT$${it.price * it.qty}`);
+    // 取顧客語系翻譯名（方便泰國員工與顧客核對）
+    const translatedName = getProductName(it.name);
+    // 若翻譯名和原始名相同（未翻譯 / 語系已是原文），只顯示一次
+    const namePart = (translatedName && translatedName !== it.name)
+      ? `${translatedName}  /  ${it.name}`   // 雙語：翻譯名 / 原始名
+      : it.name;                              // 單語：原始名即可
+    lines.push(`${namePart} x${it.qty}　NT$${it.price * it.qty}`);
   });
   lines.push('－－－－－－－－－－');
   if (orderObj.credit) {
@@ -4319,8 +4339,7 @@ async function submitOrder() {
     // 如果有座標，驗證距離
     if (distKm !== null && distKm > maxKm) {
       showToast(t('geoOutOfRange').replace('%d', distKm.toFixed(1)).replace('%k', maxKm), 'err');
-      if(btn){btn.disabled=false; const el=document.getElementById('modal-btn-confirm-text'); if(el) el.textContent=t('btnConfirm');}
-      return;
+      return; // finally 統一負責 re-enable 按鈕，請勿在此手動重置
     }
 
     const orderObj = {
@@ -4777,10 +4796,12 @@ function autoApplySwUpdate(reg) {
     showToast(t('updateMsg') + ' 🔄', 'ok');
     reg.waiting.postMessage({ type: 'SKIP_WAITING' });
     // reload 統一由 controllerchange handler 處理，不在此直接呼叫 location.reload()
+  } else {
+    // reg.waiting 為 null：SW 可能仍在 installing 狀態，尚未進入 waiting。
+    // 旗標重置，讓 Trigger C（60s interval）在 SW 就緒後能正常補觸發。
+    // ⚠️ 不在此 reload，一律由 controllerchange handler 統一處理，避免重複重整。
+    _swUpdatePending = false;
   }
-  // else 分支已移除：
-  //   若 reg.waiting 為 null，代表 SW 已自行完成切換（極罕見）。
-  //   此時 controllerchange 已觸發（或即將觸發），由 handler 統一 reload 即可。
 }
 
 function pwaInstall() {
@@ -4845,6 +4866,12 @@ let _pinSnapshotBeforeMapOpen = null;
 let _mapInstance = null;
 let _pinMarker = null;
 let _storeMarker = null;
+// 防抖：連續快速點地圖時，等最後一次點擊停止 350ms 才發 Nominatim 請求，
+// 避免每次 click 都觸發一次 HTTP request 打到 rate limit (429)。
+let _mapClickDebounceTimer = null;
+// 反查快取：相同座標（±0.0005° ≒ 55m 精度）只查一次，節省請求次數。
+// key: "lat_rounded,lng_rounded"  value: nominatim display_name string
+const _nominatimCache = new Map();
 
 function calcDistKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -4856,10 +4883,16 @@ function calcDistKm(lat1, lng1, lat2, lng2) {
 }
 
 async function nominatimReverse(lat, lng) {
+  // 快取 key：座標四捨五入到 0.0005°（約 55m），同一區塊只查一次
+  const cacheKey = `${(Math.round(lat / 0.0005) * 0.0005).toFixed(4)},${(Math.round(lng / 0.0005) * 0.0005).toFixed(4)}`;
+  if (_nominatimCache.has(cacheKey)) return { display_name: _nominatimCache.get(cacheKey) };
+
   const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=zh-TW`;
   const res = await fetch(url, { headers: { 'Accept-Language': 'zh-TW,zh;q=0.9' } });
   if (!res.ok) throw new Error('Reverse geocode error');
-  return await res.json();
+  const data = await res.json();
+  if (data?.display_name) _nominatimCache.set(cacheKey, data.display_name);
+  return data;
 }
 
 function normalizeRegionText(text) {
@@ -5013,63 +5046,82 @@ function updateDeliveryHintWithDist(distKm) {
     </b>`;
 }
 
+/* ── 共用 Geolocation + Nominatim 核心邏輯 ──────────────────────────
+   由 getCurrentLocation()（手動按鈕）和 autoDetectLocation()（自動靜默）
+   共同呼叫，避免重複相同的 40 行定位 + 反查 + commitDeliveryCoords 邏輯。
+
+   @param {object} options
+     onStatus  (msg, type) → 更新 geo-status 顯示（由呼叫端決定時機/格式）
+     onSuccess (distKm)    → 定位成功後的 callback
+     onOutOfRange ()       → 地址超出配送範圍時的 callback
+     onError   (err)       → 定位或超出範圍失敗的 callback
+   ─────────────────────────────────────────────────────────────────── */
+async function _doGeolocateAndCommit({ onStatus, onSuccess, onOutOfRange, onError }) {
+  let pos;
+  try {
+    pos = await getCurrentPositionAsync();
+  } catch(e) {
+    onError(e);
+    return;
+  }
+
+  const lat      = pos.coords.latitude;
+  const lng      = pos.coords.longitude;
+  const accuracy = pos.coords.accuracy;
+  let displayName  = '';
+  let reverseFailed = false;
+
+  try {
+    onStatus(t('geoConfirming'), 'loading');
+    const rev = await nominatimReverse(lat, lng);
+    displayName = rev?.display_name || '';
+  } catch(e) {
+    reverseFailed = true;
+  }
+
+  if (displayName && !isAddressAllowed(displayName)) {
+    resetDeliveryCoords({ clearDisplay: true });
+    onOutOfRange(getTaiwanRegionMention(displayName));
+    return;
+  }
+
+  const distKm = commitDeliveryCoords(lat, lng, {
+    address: displayName || formatCoords(lat, lng),
+    source: 'current',
+    accuracy,
+  });
+  const accuracyText = Number.isFinite(accuracy)
+    ? t('geoAccuracy').replace('%a', Math.round(accuracy)) : '';
+  const locationText = shortAddress(displayName) || formatCoords(lat, lng);
+  const reverseText  = reverseFailed ? t('geoReverseFailed') : '';
+  onStatus(
+    t('geoSuccess')
+      .replace('%a', accuracyText)
+      .replace('%loc', locationText)
+      .replace('%d', distKm.toFixed(1))
+      .replace('%rev', reverseText),
+    'ok'
+  );
+  onSuccess(distKm);
+}
+
 async function getCurrentLocation() {
   const btn = document.getElementById('geo-btn');
   const originalText = btn?.textContent || t('btnCurrentLocation');
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = t('geoLocating');
-  }
+  if (btn) { btn.disabled = true; btn.textContent = t('geoLocating'); }
   setGeoStatus(t('geoGetting'), 'loading');
 
-  try {
-    const pos = await getCurrentPositionAsync();
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-    const accuracy = pos.coords.accuracy;
-    let displayName = '';
-    let reverseFailed = false;
-
-    try {
-      setGeoStatus(t('geoConfirming'), 'loading');
-      const rev = await nominatimReverse(lat, lng);
-      displayName = rev?.display_name || '';
-    } catch(e) {
-      reverseFailed = true;
-    }
-
-    if (displayName && !isAddressAllowed(displayName)) {
+  await _doGeolocateAndCommit({
+    onStatus:     (msg, type) => setGeoStatus(msg, type),
+    onSuccess:    (_distKm) => { /* 狀態已由 onStatus 更新，無需額外操作 */ },
+    onOutOfRange: (region)  => showTooFarStatus(region),
+    onError:      (err)     => {
       resetDeliveryCoords({ clearDisplay: true });
-      showTooFarStatus(getTaiwanRegionMention(displayName));
-      return;
-    }
+      setGeoStatus(getLocationErrorMessage(err), 'err');
+    },
+  });
 
-    const distKm = commitDeliveryCoords(lat, lng, {
-      address: displayName || formatCoords(lat, lng),
-      source: 'current',
-      accuracy,
-    });
-    const accuracyText = Number.isFinite(accuracy) ? t('geoAccuracy').replace('%a', Math.round(accuracy)) : '';
-    const locationText = shortAddress(displayName) || formatCoords(lat, lng);
-    const reverseText = reverseFailed ? t('geoReverseFailed') : '';
-    setGeoStatus(
-      t('geoSuccess')
-        .replace('%a', accuracyText)
-        .replace('%loc', locationText)
-        .replace('%d', distKm.toFixed(1))
-        .replace('%rev', reverseText),
-      'ok'
-    );
-
-  } catch(e) {
-    resetDeliveryCoords({ clearDisplay: true });
-    setGeoStatus(getLocationErrorMessage(e), 'err');
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = originalText;
-    }
-  }
+  if (btn) { btn.disabled = false; btn.textContent = originalText; }
 }
 
 /* ── 手動地址輸入模式（GPS 失敗時的降級方案） ── */
@@ -5101,54 +5153,20 @@ async function autoDetectLocation() {
 
   setGeoStatus(t('geoAutoStart'), 'loading');
 
-  try {
-    const pos = await getCurrentPositionAsync();
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-    const accuracy = pos.coords.accuracy;
-    let displayName = '';
-    let reverseFailed = false;
-
-    try {
-      setGeoStatus(t('geoConfirming'), 'loading');
-      const rev = await nominatimReverse(lat, lng);
-      displayName = rev?.display_name || '';
-    } catch(e) {
-      reverseFailed = true;
-    }
-
-    // ③-a 在台灣但超出配送範圍 → 拒絕並提示地圖選點 / 手動輸入
-    if (displayName && !isAddressAllowed(displayName)) {
+  await _doGeolocateAndCommit({
+    onStatus:     (msg, type) => setGeoStatus(msg, type),
+    onSuccess:    (_distKm) => { /* 狀態已由 onStatus 更新，無需額外操作 */ },
+    onOutOfRange: (region)  => {
       resetDeliveryCoords({ clearDisplay: true });
-      showTooFarStatus(getTaiwanRegionMention(displayName));
-      return;
-    }
-
-    // ③-b 成功 → 提交座標
-    const distKm = commitDeliveryCoords(lat, lng, {
-      address: displayName || formatCoords(lat, lng),
-      source: 'current',
-      accuracy,
-    });
-    const accuracyText = Number.isFinite(accuracy)
-      ? t('geoAccuracy').replace('%a', Math.round(accuracy)) : '';
-    const locationText = shortAddress(displayName) || formatCoords(lat, lng);
-    const reverseText  = reverseFailed ? t('geoReverseFailed') : '';
-    setGeoStatus(
-      t('geoSuccess')
-        .replace('%a', accuracyText)
-        .replace('%loc', locationText)
-        .replace('%d', distKm.toFixed(1))
-        .replace('%rev', reverseText),
-      'ok'
-    );
-
-  } catch(e) {
-    // ④ 定位失敗 → 解鎖手動輸入，並提示備選方案
-    resetDeliveryCoords({ clearDisplay: true });
-    setGeoStatus(t('geoAutoFailed'), 'err');
-    enableManualDeliveryInput();
-  }
+      showTooFarStatus(region);
+    },
+    onError: (_err) => {
+      // 定位失敗 → 解鎖手動輸入，提示備選方案
+      resetDeliveryCoords({ clearDisplay: true });
+      setGeoStatus(t('geoAutoFailed'), 'err');
+      enableManualDeliveryInput();
+    },
+  });
 }
 
 // 保留舊名稱，避免舊版 onclick 或快取頁面呼叫時失效。
@@ -5187,9 +5205,11 @@ function openMapPicker() {
         .addTo(_mapInstance)
         .bindPopup(`🏪 ${STORE.name}`);
 
-      _mapInstance.on('click', async (e) => {
+      _mapInstance.on('click', (e) => {
         const { lat, lng } = e.latlng;
-        await placePinAt(lat, lng);
+        // 防抖：350ms 內連續點擊只執行最後一次，避免打爆 Nominatim rate limit
+        clearTimeout(_mapClickDebounceTimer);
+        _mapClickDebounceTimer = setTimeout(() => placePinAt(lat, lng), 350);
       });
     } else {
       _mapInstance.invalidateSize();

@@ -211,7 +211,7 @@ self.addEventListener('push', event => {
       body: d.body || '', icon: './icons/icon-192.png',
       badge: './icons/icon-72.png', tag: d.tag || 'shop', data: d.url || './',
     }));
-  } catch(e) {}
+  } catch(e) { console.error('[SW] Push parse error:', e); }
 });
 self.addEventListener('notificationclick', event => {
   event.notification.close();

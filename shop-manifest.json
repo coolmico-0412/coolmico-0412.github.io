@@ -4,7 +4,7 @@
   "short_name": "Shop",
   "description": "Online shopping / ร้านค้าออนไลน์ / Toko Online / Cửa hàng trực tuyến / 線上商店",
   "start_url": "/shop.html",
-  "scope": "/shop.html",
+  "scope": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "portrait-primary",
