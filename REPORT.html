@@ -338,6 +338,8 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .rcnt{font-size:10px;color:var(--muted2);font-family:var(--zh);flex-shrink:0;}
 .rarrow{color:var(--muted2);font-size:12px;flex-shrink:0;transition:color .12s;}
 .r-row:hover .rarrow{color:var(--accent);}
+.r599{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--purple);
+  flex-shrink:0;min-width:48px;text-align:right;white-space:nowrap;}
 @media(max-width:768px){.report-cols{grid-template-columns:1fr;}}
 /* 平板 / PC：report-panel 高度填滿 95vh，r-list 滾動 */
 @media(min-width:769px){
@@ -822,6 +824,7 @@ if (window.matchMedia('(display-mode: standalone)').matches
     <div class="report-panel">
       <div class="rp-hd">
         <div class="rp-hd-title">📅 每月報表 <span class="zh">Monthly</span></div>
+        <div style="font-size:9px;color:var(--purple);font-weight:700;font-family:var(--zh)">📶 599電信卡</div>
       </div>
       <div class="r-list" id="monthly-list">
         <div class="empty-st"><div class="ei">📋</div><div>尚無銷售資料</div></div>
@@ -830,6 +833,7 @@ if (window.matchMedia('(display-mode: standalone)').matches
     <div class="report-panel">
       <div class="rp-hd">
         <div class="rp-hd-title">📆 每週報表 <span class="zh">Weekly</span></div>
+        <div style="font-size:9px;color:var(--purple);font-weight:700;font-family:var(--zh)">📶 599電信卡</div>
       </div>
       <div class="r-list" id="weekly-list">
         <div class="empty-st"><div class="ei">📋</div><div>尚無銷售資料</div></div>
@@ -838,6 +842,7 @@ if (window.matchMedia('(display-mode: standalone)').matches
     <div class="report-panel">
       <div class="rp-hd">
         <div class="rp-hd-title">🗓 每日報表 <span class="zh">Daily</span></div>
+        <div style="font-size:9px;color:var(--purple);font-weight:700;font-family:var(--zh)">📶 599電信卡</div>
       </div>
       <div class="r-list" id="daily-list">
         <div class="empty-st"><div class="ei">📋</div><div>尚無銷售資料</div></div>
@@ -1869,10 +1874,15 @@ function showImportResult({error, matched=0, notFound=0, qtySet=0, catSet=0, not
 function renderMonthly(){
   const el=document.getElementById('monthly-list');if(!el)return;
   const txList=getTx();const grouped={};
-  txList.forEach(tx=>{const k=fm(new Date(tx.date));if(!grouped[k])grouped[k]={total:0,count:0};grouped[k].total+=tx.total;grouped[k].count++;});
+  txList.forEach(tx=>{
+    const k=fm(new Date(tx.date));
+    if(!grouped[k])grouped[k]={total:0,count:0,tel599:0};
+    grouped[k].total+=tx.total;grouped[k].count++;
+    tx.items.forEach(item=>{if(item.name&&item.name.includes('599'))grouped[k].tel599+=item.qty;});
+  });
   const keys=Object.keys(grouped).sort().reverse();
   if(!keys.length){el.innerHTML='<div class="empty-st"><div class="ei">📋</div><div>尚無銷售資料</div></div>';return;}
-  el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','monthly')"><div class="rdate">${k}</div><div class="ramt">NT$ ${grouped[k].total}</div><div class="rcnt">${grouped[k].count} 筆</div><div class="rarrow">›</div></div>`).join('');
+  el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','monthly')"><div class="rdate">${k}</div><div class="ramt">NT$ ${grouped[k].total}</div><div class="rcnt">${grouped[k].count} 筆</div><div class="r599">${grouped[k].tel599||''}</div><div class="rarrow">›</div></div>`).join('');
 }
 function renderWeekly(){
   const el=document.getElementById('weekly-list');if(!el)return;
@@ -1880,8 +1890,9 @@ function renderWeekly(){
   txList.forEach(tx=>{
     const d=new Date(tx.date);
     const k=fweek(d);
-    if(!grouped[k])grouped[k]={total:0,count:0,label:fweekLabel(d)};
+    if(!grouped[k])grouped[k]={total:0,count:0,label:fweekLabel(d),tel599:0};
     grouped[k].total+=tx.total;grouped[k].count++;
+    tx.items.forEach(item=>{if(item.name&&item.name.includes('599'))grouped[k].tel599+=item.qty;});
   });
   const keys=Object.keys(grouped).sort().reverse();
   if(!keys.length){el.innerHTML='<div class="empty-st"><div class="ei">📋</div><div>尚無銷售資料</div></div>';return;}
@@ -1889,16 +1900,22 @@ function renderWeekly(){
     <div class="rdate" style="min-width:auto;font-size:11px">${grouped[k].label}</div>
     <div class="ramt">NT$ ${grouped[k].total}</div>
     <div class="rcnt">${grouped[k].count} 筆</div>
+    <div class="r599">${grouped[k].tel599||''}</div>
     <div class="rarrow">›</div>
   </div>`).join('');
 }
 function renderDaily(){
   const el=document.getElementById('daily-list');if(!el)return;
   const txList=getTx();const grouped={};
-  txList.forEach(tx=>{const k=fd(new Date(tx.date));if(!grouped[k])grouped[k]={total:0,count:0};grouped[k].total+=tx.total;grouped[k].count++;});
+  txList.forEach(tx=>{
+    const k=fd(new Date(tx.date));
+    if(!grouped[k])grouped[k]={total:0,count:0,tel599:0};
+    grouped[k].total+=tx.total;grouped[k].count++;
+    tx.items.forEach(item=>{if(item.name&&item.name.includes('599'))grouped[k].tel599+=item.qty;});
+  });
   const keys=Object.keys(grouped).sort().reverse();
   if(!keys.length){el.innerHTML='<div class="empty-st"><div class="ei">📋</div><div>尚無銷售資料</div></div>';return;}
-  el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','daily')"><div class="rdate">${k}</div><div class="ramt">NT$ ${grouped[k].total}</div><div class="rcnt">${grouped[k].count} 筆</div><div class="rarrow">›</div></div>`).join('');
+  el.innerHTML=keys.map(k=>`<div class="r-row" onclick="showDrilldown('${k}','daily')"><div class="rdate">${k}</div><div class="ramt">NT$ ${grouped[k].total}</div><div class="rcnt">${grouped[k].count} 筆</div><div class="r599">${grouped[k].tel599||''}</div><div class="rarrow">›</div></div>`).join('');
 }
 function showDrilldown(key,mode){
   const txList=getTx();
