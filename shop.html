@@ -1884,42 +1884,42 @@ body::after {
   </div>
 </div>
 
-<!-- ── Member Side Drawer ── -->
+<!-- ── Side Drawer：聯絡客服 + 公告消息（簡化後任何人皆可開啟，不需會員身份）── -->
 <div class="member-drawer-overlay" id="member-overlay" onclick="handleMemberOutsideClick(event)">
   <div class="member-drawer" id="member-drawer">
     <div class="member-hd">
       <button class="member-close-btn" onclick="closeMemberDrawer()">×</button>
-      <!-- Compact 3-col info row: name | member ID | phone -->
-      <div class="member-info-row">
-        <div class="member-info-cell">
-          <div class="minfo-label" id="minfo-label-name">ชื่อ</div>
-          <span class="minfo-display" id="minfo-name-display">—</span>
-          <input class="minfo-input" id="minfo-name-input" type="text" style="display:none"
-                 onkeydown="if(event.key==='Enter')toggleMemberField('name')">
-          <button class="minfo-edit-btn" id="minfo-name-btn" onclick="toggleMemberField('name')" title="แก้ไข">✏</button>
-        </div>
-        <div class="member-info-cell">
-          <div class="minfo-label" id="minfo-label-id">รหัส</div>
-          <span class="minfo-display" id="minfo-mid-display"
-                style="font-family:'Courier New',monospace;font-size:11px;letter-spacing:.5px">—</span>
-        </div>
-        <div class="member-info-cell">
-          <div class="minfo-label" id="minfo-label-phone">โทร</div>
-          <span class="minfo-display" id="minfo-phone-display">—</span>
-          <input class="minfo-input" id="minfo-phone-input" type="tel" style="display:none"
-                 onkeydown="if(event.key==='Enter')toggleMemberField('phone')">
-          <button class="minfo-edit-btn" id="minfo-phone-btn" onclick="toggleMemberField('phone')" title="แก้ไข">✏</button>
-        </div>
-      </div>
     </div>
     <div class="member-body">
-      <div class="member-section-title" id="m-announce-title">📢 ประกาศ</div>
-      <div id="m-announcements"></div>
-    </div>
-    <div class="member-ft" style="display:flex;flex-direction:column;gap:8px">
-      <button class="logout-btn" id="m-edit-profile-btn" onclick="openEditProfile()"
-              style="border-color:var(--primary);color:var(--primary)">✏ แก้ไขข้อมูล</button>
-      <button class="logout-btn" id="m-logout-btn" onclick="logout()">🚪 ออกจากระบบ</button>
+      <!-- 聯絡客服（原本位於 Header 的獨立按鈕+下拉選單，併入抽屜並置於公告消息上方）-->
+      <div>
+        <div class="member-section-title" id="m-contact-title">💬 ติดต่อสอบถาม</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="contact-menu-item cmi-line" onclick="openLineInquiry()" type="button">
+            <span class="ci-icon">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" aria-hidden="true">
+                <rect x="3.5" y="4.5" width="17" height="11" rx="3"/>
+                <path d="M8 15.5 L8 19 L12 15.5 Z"/>
+              </svg>
+            </span>
+            <span id="m-contact-line-text">LINE สอบถาม</span>
+          </button>
+          <button class="contact-menu-item cmi-fb" onclick="openFBInquiry()" type="button">
+            <span class="ci-icon">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" aria-hidden="true">
+                <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
+              </svg>
+            </span>
+            <span id="m-contact-fb-text">Facebook สอบถาม</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 公告消息 -->
+      <div>
+        <div class="member-section-title" id="m-announce-title">📢 ประกาศ</div>
+        <div id="m-announcements"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1965,54 +1965,14 @@ body::after {
     <div>
       <div class="brand-name" id="shop-name">ร้านค้าออนไลน์</div>
       <div class="brand-sub" id="brand-sub-text">คลิกสินค้าเพื่อเพิ่มลงตะกร้า</div>
-      <div class="brand-ver" id="brand-ver-text" title="v1.5.6 ‧ 修正下單按鈕卡字、補上手動地址範圍檢查、地圖選點取消還原">v1.5.6</div>
+      <div class="brand-ver" id="brand-ver-text" title="v1.5.7 ‧ 簡化會員系統（免申請）、確認訂單移除姓名電話欄位、客服併入公告抽屜、修正語言選擇器收合">v1.5.7</div>
     </div>
   </div>
   <div class="header-right">
-    <!-- 客服詢問按鈕：點選後顯示 LINE / FB 選項 -->
-    <div class="contact-menu-wrap" id="contact-menu-wrap">
-      <button class="line-ask-btn" onclick="toggleContactMenu(event)" id="line-ask-btn" type="button" title="聯絡客服 / Customer Service" aria-label="Customer Service">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="3.5" y="4.5" width="17" height="11" rx="3" fill="currentColor"/>
-          <path d="M8 15.5 L8 19 L12 15.5 Z" fill="currentColor"/>
-        </svg>
-      </button>
-      <div class="contact-menu" id="contact-menu" role="menu">
-        <div class="contact-menu-label" id="contact-menu-label">💬 ติดต่อสอบถาม</div>
-        <button class="contact-menu-item cmi-line" onclick="openLineInquiry()" type="button" role="menuitem">
-          <span class="ci-icon">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" aria-hidden="true">
-              <rect x="3.5" y="4.5" width="17" height="11" rx="3"/>
-              <path d="M8 15.5 L8 19 L12 15.5 Z"/>
-            </svg>
-          </span>
-          <span id="contact-line-text">LINE สอบถาม</span>
-        </button>
-        <button class="contact-menu-item cmi-fb" onclick="openFBInquiry()" type="button" role="menuitem">
-          <span class="ci-icon">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" aria-hidden="true">
-              <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
-            </svg>
-          </span>
-          <span id="contact-fb-text">Facebook สอบถาม</span>
-        </button>
-      </div>
-    </div>
-    <!-- Auth Area: hidden/shown by JS -->
-    <div id="auth-area-loggedout">
-      <button class="login-btn-hdr" onclick="showAuthModal()">
-        <span id="login-btn-text">🪪 สมาชิก / 會員</span>
-      </button>
-    </div>
-    <div id="auth-area-loggedin" style="display:none">
-      <div class="user-area" onclick="openMemberDrawer()">
-        <div class="user-avatar" id="hdr-avatar">?</div>
-        <div class="user-info">
-          <div class="user-name" id="hdr-uname">—</div>
-          <div class="user-mid" id="hdr-mid">M0000</div>
-        </div>
-      </div>
-    </div>
+    <!-- 公告 / 客服 按鈕：原本的獨立客服選單＋會員登入已合併於此，點擊開啟抽屜（聯絡客服＋公告消息），任何人皆可使用，不需登入 -->
+    <button class="login-btn-hdr" onclick="openMemberDrawer()">
+      <span id="login-btn-text">📢 ประกาศ</span>
+    </button>
     <!-- Cart button -->
     <button class="cart-btn-hdr" onclick="openDrawer()" id="hdr-cart-btn">
       <span class="cart-icon">🛒</span>
@@ -2113,20 +2073,6 @@ body::after {
     </div>
     <div class="modal-body">
       <div id="modal-member-chip" style="display:none;background:var(--primary-glow);border:1px solid rgba(201,78,110,.25);border-radius:var(--r-sm);padding:8px 12px;font-size:12px;color:var(--primary);font-weight:600;"></div>
-      <div>
-        <div class="order-summary-hd" id="modal-customer-info-title">👤 ข้อมูลลูกค้า</div>
-        <div class="field-row">
-          <div class="field-group">
-            <label class="field-label" id="modal-name-label">ชื่อ</label>
-            <input class="field-input" id="customer-name" type="text" placeholder="ชื่อ" autocomplete="name">
-          </div>
-          <div class="field-group">
-            <label class="field-label" id="modal-phone-label">เบอร์โทร</label>
-            <input class="field-input" id="customer-phone" type="tel" placeholder="เบอร์โทร" autocomplete="tel">
-          </div>
-        </div>
-        <div class="field-hint" id="modal-customer-hint" style="margin-top:6px">ชื่อและเบอร์โทรไม่บังคับ</div>
-      </div>
       <div class="field-group">
         <label class="field-label" id="modal-delivery-label">📍 สถานที่จัดส่ง <span style="color:var(--primary);font-size:12px">*</span></label>
         <div class="geo-row">
@@ -2692,6 +2638,7 @@ function setMember(member) {
     }
   }
   // else：有手動選語言紀錄 → 不覆蓋，保留用戶的選擇
+  _lsOpen = false; // 語言已確定（沿用選擇或依會員國籍推斷）→ 收合語言選單
   updateAuthUI();
   applyLang(); // 含 buildLangSwitcher (→折疊) + renderTabs
 }
@@ -2773,24 +2720,8 @@ function syncCompletedOrdersToLocal(firebaseOrders) {
 }
 
 async function renderMemberDrawer() {
-  if (!currentMember) return;
-  const m = currentMember;
-
-  // Reset any in-progress inline edits
-  ['name','phone'].forEach(f => {
-    _editingFields[f] = false;
-    const d   = document.getElementById(`minfo-${f}-display`);
-    const inp = document.getElementById(`minfo-${f}-input`);
-    const btn = document.getElementById(`minfo-${f}-btn`);
-    if (d)   { d.style.display = ''; }
-    if (inp) { inp.style.display = 'none'; }
-    if (btn) { btn.textContent = '✏'; btn.classList.remove('confirming'); }
-  });
-
-  // Fill 3-col header fields
-  setText('minfo-name-display',  m.name      || '—');
-  setText('minfo-mid-display',   m.memberId  || '—');
-  setText('minfo-phone-display', m.phone     || '—');
+  // 簡化後抽屜不再顯示會員個人資料，任何人（含訪客）皆可開啟，
+  // 內容僅剩「聯絡客服」（純靜態 HTML，由 applyLang 處理文字）與「公告消息」。
 
   // ── 公告消息 ─────────────────────────────────────────────────
   const annEl = document.getElementById('m-announcements');
@@ -3558,7 +3489,7 @@ function applyLang() {
 
   // Header
   set('brand-sub-text', L.brandSub);
-  set('login-btn-text', L.loginBtn);
+  set('login-btn-text', L.announceTitle); // 按鈕已改為開啟「公告/客服」抽屜，沿用 announceTitle 文案
 
   // Auth modal
   set('auth-store-name-text', L.authTitle);
@@ -3588,12 +3519,6 @@ function applyLang() {
 
   // Order modal
   set('modal-order-title', L.orderTitle);
-  set('modal-customer-info-title', L.customerInfo);
-  set('modal-name-label', L.labelName);
-  setP('customer-name', L.labelName);
-  set('modal-phone-label', L.labelPhone);
-  setP('customer-phone', L.labelPhone);
-  set('modal-customer-hint', L.customerHint);
   set('modal-delivery-label', L.labelDelivery);
   setP('order-delivery', L.placeholderDelivery);
   set('modal-delivery-err', L.deliveryRequired);
@@ -3620,10 +3545,11 @@ function applyLang() {
   const cNoteTxtEl = document.getElementById('success-credit-note-text');
   if (cNoteTxtEl) cNoteTxtEl.textContent = L.creditOrderNote || '';
 
-  // Member drawer
+  // Side Drawer：聯絡客服（原 header 客服選單併入）＋ 公告消息
+  set('m-contact-title', L.contactLabel);
+  set('m-contact-line-text', L.contactLine);
+  set('m-contact-fb-text', L.contactFB);
   set('m-announce-title', L.announceTitle);
-  set('m-logout-btn', L.btnLogout);
-  set('m-edit-profile-btn', L.btnEditProfile);
 
   // Edit profile
   set('edit-profile-title', L.editProfileTitle);
@@ -3640,16 +3566,6 @@ function applyLang() {
   set('map-cancel-btn', L.btnCancel);
   set('map-confirm-btn', L.btnConfirmPos);
 
-  // Contact menu
-  set('contact-menu-label', L.contactLabel);
-  set('contact-line-text',  L.contactLine);
-  set('contact-fb-text',    L.contactFB);
-  const _lineAskBtn = document.getElementById('line-ask-btn');
-  if (_lineAskBtn) {
-    _lineAskBtn.title = L.contactTitle;
-    _lineAskBtn.setAttribute('aria-label', L.contactTitle);
-  }
-
   // Offline bar
   const offBar = document.getElementById('offline-bar');
   if (offBar) offBar.textContent = L.offlineBar;
@@ -3660,11 +3576,6 @@ function applyLang() {
   set('pwa-install-btn',  L.pwaInstall);
   const pwaDismissBtn = document.getElementById('pwa-banner-dismiss');
   if (pwaDismissBtn) pwaDismissBtn.setAttribute('aria-label', L.pwaClose);
-
-  // Member drawer header labels
-  set('minfo-label-name',  L.minfoName);
-  set('minfo-label-id',    L.minfoId);
-  set('minfo-label-phone', L.minfoPhone);
 
   // Auth nationality select placeholder
   const authNatEl = document.getElementById('auth-nationality');
@@ -3713,8 +3624,13 @@ function applyLang() {
   renderProducts();   // Fix: 換語言後立即刷新商品名稱
 }
 
-/* 左下角語言切換面板 — 登入前展開，登入後折疊為國籍旗幟，點擊 toggle */
-let _lsOpen = false;
+/* 左下角語言切換面板
+   ── 規則：無論處於哪個階段（登入前／登入後），只要選擇了語言就會收合為國籍旗幟；
+            尚未選擇過語言時預設展開，方便使用者第一次挑選。點擊旗幟可再次展開。 */
+function _hasChosenLang() {
+  try { return !!localStorage.getItem('shop_lang'); } catch(e) { return false; }
+}
+let _lsOpen = !_hasChosenLang(); // 已選過語言 → 預設收合；尚未選過 → 預設展開
 
 function buildLangSwitcher() {
   let el = document.getElementById('lang-switcher');
@@ -3723,9 +3639,9 @@ function buildLangSwitcher() {
     el.id = 'lang-switcher';
     document.body.appendChild(el);
   }
-  const isLoggedIn = !!(currentMember);
-  // 登入前始終展開；登入後依 _lsOpen 決定
-  const showExpanded = !isLoggedIn || _lsOpen;
+  // 只依 _lsOpen 決定展開/收合，不再因登入前/後而強制展開，
+  // 這樣「選擇語言就收合」的行為在任何階段都一致。
+  const showExpanded = _lsOpen;
 
   if (showExpanded) {
     el.innerHTML = `<div class="ls-expanded">
@@ -3735,7 +3651,7 @@ function buildLangSwitcher() {
           <span class="ls-flag">${o.flag}</span>
           <span class="ls-txt">${o.labelShort.replace(/^[^\s]+\s/,'')}</span>
         </button>`).join('')}
-      ${isLoggedIn ? `<button class="ls-opt" onclick="lsCollapse()" style="justify-content:center;opacity:.5;font-size:11px;padding:4px">▼</button>` : ''}
+      <button class="ls-opt" onclick="lsCollapse()" style="justify-content:center;opacity:.5;font-size:11px;padding:4px">▼</button>
     </div>`;
   } else {
     el.innerHTML = `<div class="ls-collapsed" onclick="lsExpand()" title="${(LANGS[_lang]||LANGS.th).label}">
@@ -4096,13 +4012,6 @@ function openOrderModal() {
 
   const total = getTotal();
 
-  // Pre-fill from member / last saved
-  if(currentMember) {
-    const n=document.getElementById('customer-name');
-    const p=document.getElementById('customer-phone');
-    if(n && !n.value) n.value=currentMember.name||'';
-    if(p && !p.value) p.value=currentMember.phone||'';
-  }
   const deliveryEl = document.getElementById('order-delivery');
   if(deliveryEl && !getDeliveryCoords()) deliveryEl.value = '';
   // 隱藏手動地址欄位（每次開啟重置）
@@ -4323,8 +4232,6 @@ async function submitOrder() {
   const btnTxt=document.getElementById('modal-btn-confirm-text');
   if(btn){btn.disabled=true;} if(btnTxt){btnTxt.textContent=t('submitting');}
   try {
-    const nameVal  = (document.getElementById('customer-name')?.value||'').trim();
-    const phoneVal = (document.getElementById('customer-phone')?.value||'').trim();
     const noteVal  = (document.getElementById('order-note')?.value||'').trim();
     const now=new Date(), orderId='ONL-'+now.getTime().toString(36).toUpperCase();
     const baseAmt      = getTotal();
@@ -4347,8 +4254,8 @@ async function submitOrder() {
       memberId:         currentMember?.memberId || null,
       memberName:       currentMember?.name     || null,
       isGuest:          !currentMember,
-      customerName:     nameVal  || currentMember?.name  || 'แขก / 訪客',
-      customerPhone:    phoneVal || currentMember?.phone || '',
+      customerName:     currentMember?.name  || 'แขก / 訪客',
+      customerPhone:    currentMember?.phone || '',
       deliveryLocation: deliveryVal,
       deliveryCoords:   coords || null,
       deliveryLat:      coords ? coords.lat : null,
@@ -4399,7 +4306,7 @@ async function submitOrder() {
     closeModal('order-modal');
     setTimeout(()=>openModal('success-modal'),300);
     try {
-      ['customer-name','customer-phone','order-note','order-delivery','delivery-remark','manual-address-input'].forEach(id=>{
+      ['order-note','order-delivery','delivery-remark','manual-address-input'].forEach(id=>{
         const el=document.getElementById(id); if(el) el.value='';
       });
       const wrap = document.getElementById('manual-address-wrap');
@@ -4609,18 +4516,16 @@ async function init() {
   ]).then(() => renderProducts()); // 有翻譯名稱 + 本地圖後重繪一次
 
   // ⑧ 立即判斷會員狀態（不等 Firebase）
+  // 會員系統已簡化：不再強制彈出申請/登入視窗，所有人可直接以訪客身份選購；
+  // 若瀏覽器內仍留有舊版會員資料（LS.MEMBER），則沿用該身份以維持資料延續性。
   const savedMember = safeGetLS(LS.MEMBER, null);
   if (savedMember?.memberId) {
-    const o = document.getElementById('auth-overlay');
-    if (o) { o.style.display = 'none'; o.classList.remove('visible'); }
     setMember(savedMember);  // setMember 內已含語言偵測
     if (_fbOK) {
       lookupMemberById(savedMember.memberId)
         .then(fresh => { if (fresh) setMember(fresh); })
         .catch(() => {});
     }
-  } else {
-    showAuthModal();
   }
 
   // ⑨ Firebase 背景同步商品（10 秒 timeout，失敗不影響 UI）
