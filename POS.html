@@ -180,6 +180,7 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .prod-cat-row{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 6px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:background .15s,border-color .15s,transform .12s;background:var(--surface);text-align:center;}
 .prod-cat-row:hover{background:var(--surface2);border-color:var(--accent);transform:translateY(-1px);}
 .prod-cat-row:active{transform:scale(.96);}
+.prod-cat-row.empty{opacity:.4;pointer-events:none;} /* ★ Fix v1.2.12: 原本靠 JS 內聯 style 達成，class 從未真正套用 */
 .prod-cat-row.all-row{background:var(--aglow);border-color:#bfdbfe;}
 .prod-cat-row.all-row:hover{background:#dbeafe;}
 .prod-cat-row .pci{font-size:24px;line-height:1;}
@@ -1435,8 +1436,12 @@ let nobcSelectedCat=null; // null=分類選擇頁, 'frozen'等=商品清單頁
 function isValidBarcode(code){
   code=(code||'').trim();
   if(code.length<3||code.length>80)return false;
-  // 允許英數字、空白及條碼常用特殊字元（- . / + % $ * 空格）
-  return /^[A-Za-z0-9\-\.\/\+\%\$\* ]+$/.test(code);
+  // 允許英數字、空白及條碼常用特殊字元（- + % * 空格）
+  // ★ Fix v1.2.12：條碼同時作為 pos/products 於 Firebase Realtime Database 的
+  //   鍵值（見 fbScheduleSave），RTDB 鍵值不可包含 . # $ [ ] / 與控制字元。
+  //   舊版允許 . / $，若掃到含這些字元的條碼（如部分 Code 39 編碼），該商品
+  //   將永遠無法同步雲端且僅顯示「儲存失敗」，不易察覺 → 改為直接拒收此類條碼。
+  return /^[A-Za-z0-9\-\+\%\* ]+$/.test(code);
 }
 // 向下相容（舊呼叫點改用 isValidBarcode）
 const isEAN13 = isValidBarcode;
@@ -1551,7 +1556,7 @@ function addByBarcode(code){
   }
   const p=prods[code];
   addToCart(code,p.name,p.price);
-  setSt('✓ เพิ่มแล้ว: '+p.name+' — NT$ '+p.price,'ok');
+  setSt('✓ เพิ่มแล้ว: '+p.name+' — NT$ '+money(p.price),'ok'); // ★ Fix v1.2.12: 補 money() 千分位
   playBeep();
 }
 
@@ -1767,7 +1772,7 @@ function addNobcProdToCart(idx){
   const bc='NOBC-'+Date.now()+'-'+idx;
   cart.push({barcode:bc,name:p.name,price:p.price,qty:1,noBarcode:true});
   renderCart();playBeep();
-  setSt('✓ เพิ่มแล้ว: '+p.name+' — NT$ '+p.price,'ok');
+  setSt('✓ เพิ่มแล้ว: '+p.name+' — NT$ '+money(p.price),'ok'); // ★ Fix v1.2.12: 補 money()
   showToast('已加入：'+p.name,'ok');
   closeModal('m-nobc-list');
 }
@@ -1782,11 +1787,11 @@ function saveTempNobc(){
   const qty=Math.max(1,parseInt(document.getElementById('temp-qty').value)||1);
   if(isNaN(price)||price<0){showToast('請輸入正確金額','err');return;}
   const bc='NOBC-'+Date.now();
-  const name='特殊商品 NT$'+price;
+  const name='特殊商品 NT$'+money(price); // ★ Fix v1.2.12: 補 money() 千分位（原始 price 未格式化）
   cart.push({barcode:bc,name,price,qty,noBarcode:true});
   renderCart();playBeep();
   closeModal('m-temp-nobc');
-  showToast('已加入暫時商品 NT$ '+price,'ok');
+  showToast('已加入暫時商品 NT$ '+money(price),'ok');
 }
 
 function savePermNobcProduct(){
@@ -1996,7 +2001,9 @@ function renderProdGrid(){
       const nb = nobcCountMap[c.id]||0;
       const bc = bcCountMap[c.id]||0;
       const empty = nb===0 && bc===0;
-      return `<div class="prod-cat-row${empty?' ':' '}" style="${empty?'opacity:.4;pointer-events:none':''}" onclick="prodSelectedCat='${c.id}';renderProdGrid()">
+      // ★ Fix v1.2.12: 原本 empty?' ':' ' 兩邊皆為單一空白，class 從未真正切換，
+      //   僅靠內聯 style 達成視覺效果；現正確套用 .empty class（CSS 已補上對應規則）
+      return `<div class="prod-cat-row${empty?' empty':''}" onclick="prodSelectedCat='${c.id}';renderProdGrid()">
         <div class="pci">${c.icon}</div>
         <div class="pct">
           <div class="pct-th">${c.th}</div>
@@ -2253,9 +2260,11 @@ function renderRecentTx(){
   const elT=document.getElementById('stat-income-today');
   const elY=document.getElementById('stat-income-yesterday');
   const elW=document.getElementById('stat-income-week');
-  if(elT) elT.textContent='NT$ '+incToday.toLocaleString();
-  if(elY) elY.textContent='NT$ '+incYday.toLocaleString();
-  if(elW) elW.textContent='NT$ '+incWeek.toLocaleString();
+  // ★ Fix v1.2.12: 改用 money()（=num()+toLocaleString('en-US')），避免裝置語系
+  //   不同導致千分位符號不一致，並防止資料異常時顯示 NT$ NaN
+  if(elT) elT.textContent='NT$ '+money(incToday);
+  if(elY) elY.textContent='NT$ '+money(incYday);
+  if(elW) elW.textContent='NT$ '+money(incWeek);
   // 更新表頭欄位
   const thead=document.getElementById('recent-tx-head');
   const theadDel=document.getElementById('recent-tx-head-del');
@@ -2296,12 +2305,15 @@ function confirmDeleteTx(txId){
   _deleteTxId=txId;
   const d=new Date(tx.date);
   const dateStr=d.toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-  const summary=tx.items.map(i=>`${i.name} ×${i.qty}`).join('、');
+  // ★ Fix v1.2.12: summary 未經 h() 轉義即插入 innerHTML，tx.items 可能來自線上訂單
+  //   （Firebase 資料，見 executeReportOrder），品項名稱未轉義將構成 XSS 注入風險；
+  //   金額亦補上 money() 千分位格式，與其他交易明細頁面一致
+  const summary=safeArray(tx.items).map(i=>`${h(i?.name||'')} ×${num(i?.qty,1)}`).join('、');
   const preview=document.getElementById('delete-tx-preview');
   if(preview){
     preview.innerHTML='<div style="margin-bottom:4px;color:var(--muted);font-size:11px">📅 '+dateStr+'</div>'+
       '<div style="margin-bottom:4px;font-family:var(--zh)">'+summary+'</div>'+
-      '<div style="font-family:var(--mono);font-weight:700;color:var(--gold)">NT$ '+tx.total+'</div>';
+      '<div style="font-family:var(--mono);font-weight:700;color:var(--gold)">NT$ '+money(tx.total)+'</div>';
   }
   const btn=document.getElementById('delete-tx-confirm-btn');
   if(btn) btn.onclick=function(){deleteTx(txId);};
@@ -2403,8 +2415,10 @@ function showDrilldown(key,mode){
     if(mode==='weekly') return fweek(d)===key;
     return false;
   });
-  const itemMap={};
-  filtered.forEach(tx=>{tx.items.forEach(item=>{if(!itemMap[item.name])itemMap[item.name]={qty:0,total:0};itemMap[item.name].qty+=item.qty;itemMap[item.name].total+=item.price*item.qty;});});
+  // ★ Fix v1.2.12: 改用 Object.create(null)，避免商品名稱恰為 '__proto__' 等
+  //   保留字時汙染 Object.prototype（一般 {} 的 [name] 存取會落到原型鏈上）
+  const itemMap=Object.create(null);
+  filtered.forEach(tx=>{safeArray(tx.items).forEach(item=>{const nm=item?.name||'';if(!itemMap[nm])itemMap[nm]={qty:0,total:0};itemMap[nm].qty+=num(item?.qty);itemMap[nm].total+=num(item?.price)*num(item?.qty);});});
   const items=Object.entries(itemMap).sort((a,b)=>b[1].total-a[1].total);
   const grand=items.reduce((s,[,v])=>s+v.total,0);
   const modeLabel={daily:'每日',monthly:'每月',weekly:'每週'};
@@ -2707,13 +2721,9 @@ document.addEventListener('keydown', function(e){
   if(ch){ e.preventDefault(); hwAppend(ch); }
 });
 
-// 相容舊呼叫點
-function onHwKeydown(e){}
-function onHwInput(inp){}
-function onHwCompose(inp){}
-function initHwCapture(){}
-function focusHwCapture(){}
-function refocusCapture(){}
+// ★ Fix v1.2.12: 移除 onHwKeydown / onHwInput / onHwCompose / initHwCapture /
+//   focusHwCapture / refocusCapture 六個「相容舊呼叫點」空函式 —
+//   已確認全檔案無任何呼叫點，純屬死碼
 
 function handleHwCode(raw){
   const code = (raw || '').trim().replace(/[^\x20-\x7E]/g, '');
@@ -3048,6 +3058,33 @@ function renderHoldBar(){
 // ══════════════════════════════════════════════════════════
 // 版本更新紀錄 CHANGELOG
 // ──────────────────────────────────────────────────────────
+// v1.2.12（程式碼健檢：安全性 + 一致性修正）
+//   1. [Security] confirmDeleteTx（刪除交易確認彈窗）：品項摘要組字串時
+//      未經 h() 轉義即塞入 innerHTML；tx.items 可能來自線上訂單
+//      （見 executeReportOrder，資料源自 Firebase，非本機輸入），
+//      理論上可構成 XSS 注入。改用 h() 轉義，並補上 money() 金額格式化。
+//   2. [Bug] isValidBarcode 原允許 . / $ 三個字元，但這三者恰是 Firebase
+//      Realtime Database 鍵值的保留字元（不可出現於路徑）。條碼直接作為
+//      pos/products 的鍵值同步雲端，若掃到含這些字元的條碼，該商品會
+//      永遠同步失敗且僅顯示「儲存失敗」，難以察覺根本原因。
+//      → 修正：驗證規則不再允許 . / $，從源頭避免建立無法同步的商品。
+//   3. [Bug] renderProdGrid 分類列表：empty 分類的 class 三元運算式
+//      寫成 empty?' ':' '，兩分支皆為單一空白，.empty class 從未真正
+//      套用（視覺上靠額外的內聯 style 頂著，功能上無異常但屬死碼/筆誤）。
+//      → 修正為 empty?' empty':''，並補上對應的 .prod-cat-row.empty
+//      CSS 規則（原本就存在於 .nobc-cat-btn.empty，此處漏補）。
+//   4. [Bug] showDrilldown 以 {} 作為 itemMap 依商品名稱分組，若商品
+//      名稱恰為 '__proto__' 等原型鏈保留字，會意外寫入 Object.prototype。
+//      → 改用 Object.create(null)。
+//   5. [Bug] 金額顯示一致性：addByBarcode / addNobcProdToCart 的狀態列
+//      提示、saveTempNobc 的暫時商品名稱與提示、renderRecentTx 統計卡片
+//      （今日/昨日/本週收入）皆直接輸出未格式化數字或用裸 toLocaleString()，
+//      未透過共用的 money() 輔助函式 → 統一改用 money()，千分位格式一致，
+//      並避免資料異常時顯示 NaN。
+//   6. [Perf] 移除 onHwKeydown / onHwInput / onHwCompose / initHwCapture /
+//      focusHwCapture / refocusCapture 六個「相容舊呼叫點」空函式，
+//      確認全檔案已無任何呼叫點，純屬死碼。
+//
 // v1.2.11
 //   1. [Bug] 關閉平板/手機螢幕後再開啟，畫面空白需點擊才能恢復
 //      根本原因 A：.overlay 與 #numpad-overlay 的 backdrop-filter:blur(2px)
@@ -3149,7 +3186,7 @@ function renderHoldBar(){
 //   - Firebase onValue 跳過 initial fire，防止自迴響
 //   - 分鍵追蹤寫入，避免全量覆寫
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.2.11';
+const APP_VERSION = '1.2.12';
 
 // 將版本號顯示於 nav brand（DOMContentLoaded 後確保元素存在）
 document.addEventListener('DOMContentLoaded', () => {

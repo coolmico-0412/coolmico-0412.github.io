@@ -1,9 +1,22 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.11
+   POS Service Worker  v1.2.12
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
    ──────────────────────────────────────────
+   v1.2.12（POS.html 程式碼健檢：安全性 + 一致性修正，SW 本身無邏輯變動，
+            僅提升版號以促使已安裝的 PWA 儘快取得更新後的 POS.html）
+     1. [Security] confirmDeleteTx 品項摘要缺 h() 轉義（tx.items 可能源自
+        Firebase 線上訂單資料）→ 補上轉義，並補 money() 格式化
+     2. [Bug] isValidBarcode 允許 . / $ 但這些是 Firebase RTDB 鍵值保留字元，
+        含這些字元的條碼會靜默同步失敗 → 驗證規則改為不允許
+     3. [Bug] renderProdGrid 分類列表 empty class 三元運算式寫成
+        empty?' ':' '（兩分支相同，從未真正套用）→ 修正並補齊對應 CSS
+     4. [Bug] showDrilldown 以 {} 分組商品名稱，商品名稱為 '__proto__' 時
+        可能汙染 Object.prototype → 改用 Object.create(null)
+     5. [Bug] 多處金額顯示未套用 money()（addByBarcode/addNobcProdToCart
+        狀態列、saveTempNobc、renderRecentTx 統計卡片）→ 統一格式化
+     6. [Perf] 移除 6 個已無呼叫點的空函式（onHwKeydown 等相容舊呼叫點死碼）
    v1.2.11
      1. [Bug] 關閉平板/手機螢幕後再開啟，畫面空白需點擊才能恢復
         根本原因 A：.overlay 與 #numpad-overlay 的 backdrop-filter:blur(2px)
@@ -44,7 +57,7 @@
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.11';
+const VER          = 'pos-v1.2.12';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;
