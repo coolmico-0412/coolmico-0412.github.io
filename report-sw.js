@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════
-   REPORT Service Worker  v1.1.0
+   REPORT Service Worker  v1.1.1
    HTML  → Network First（永遠取最新版）
    Firebase → Network First（即時資料）
    Fonts → Stale While Revalidate / Cache First
@@ -7,8 +7,11 @@
 
    ★ 重要：activate 事件只清除 report-* 前綴的快取，
      不影響同站的 pos-* 和 shop-* 快取。
+   ★ v1.1.1 修正：跨來源且未加 crossorigin 的請求（例如
+     Google Fonts CSS）會得到 opaque 回應，res.ok 恆為
+     false，導致永遠快取不到。見下方 isCacheable()。
    ══════════════════════════════════════════ */
-const VER          = 'report-v1.1.0';
+const VER          = 'report-v1.1.1';
 const STATIC_CACHE = `report-static-${VER}`;
 const FONT_CACHE   = `report-fonts-${VER}`;
 const ALL_CACHES   = [STATIC_CACHE, FONT_CACHE];
@@ -93,11 +96,23 @@ async function fetchWithTimeout(req, timeout = 8000) {
   }
 }
 
+/* ── 判斷回應是否可快取 ──
+   跨來源、未加 crossorigin 屬性的請求（例如 <link rel="stylesheet">
+   載入 Google Fonts CSS）瀏覽器會用 no-cors 模式發送，得到的是
+   opaque 回應：type==='opaque'、status 恆為 0、res.ok 恆為 false，
+   即使伺服器實際回應 200 也一樣。若只用 res.ok 判斷是否快取，
+   這類資源會「每次都快取失敗」，離線時也可能直接連線失敗
+   （見 staleWhileRevalidate 的離線保護）。這裡額外允許 opaque
+   回應被視為可快取。                                          ── */
+function isCacheable(res) {
+  return !!res && (res.ok || res.type === 'opaque');
+}
+
 /* ── Network First ── */
 async function networkFirst(req, cache, timeout = 10000) {
   try {
     const res = await fetchWithTimeout(req, timeout);
-    if (res.ok) (await caches.open(cache)).put(req, res.clone());
+    if (isCacheable(res)) (await caches.open(cache)).put(req, res.clone());
     return res;
   } catch(e) {
     return (await caches.match(req)) ||
@@ -111,7 +126,7 @@ async function networkFirst(req, cache, timeout = 10000) {
 async function networkFirstHTML(req, cache, timeout = 4500) {
   try {
     const res = await fetchWithTimeout(req, timeout);
-    if (res.ok) (await caches.open(cache)).put(req, res.clone());
+    if (isCacheable(res)) (await caches.open(cache)).put(req, res.clone());
     return res;
   } catch(e) {
     const cached = await caches.match(req) || await caches.match('./REPORT.html');
@@ -143,7 +158,7 @@ async function cacheFirst(req, cache) {
   if (hit) return hit;
   try {
     const res = await fetch(req);
-    if (res.ok) (await caches.open(cache)).put(req, res.clone());
+    if (isCacheable(res)) (await caches.open(cache)).put(req, res.clone());
     return res;
   } catch(e) { return new Response('Offline', { status: 503 }); }
 }
@@ -152,9 +167,9 @@ async function cacheFirst(req, cache) {
 async function staleWhileRevalidate(req, cache) {
   const cached = await caches.match(req);
   const update = fetch(req).then(async r => {
-    if (r.ok) (await caches.open(cache)).put(req, r.clone());
+    if (isCacheable(r)) (await caches.open(cache)).put(req, r.clone());
     return r;
-  }).catch(() => cached);
+  }).catch(() => cached || new Response('Offline', { status: 503 }));
   return cached || update;
 }
 

@@ -602,6 +602,18 @@ try {
       });
     })
     .catch(err => console.warn('[REPORT-PWA] SW registration failed:', err));
+
+  /* ★ 修正：上面的邏輯會主動叫新版 SW 立刻 skipWaiting 並接管頁面
+     （包含頁面已開著、非第一次安裝的情況），但原本沒有監聽
+     controllerchange。這會導致「已載入的頁面繼續跑舊的 JS，
+     但底層 fetch 已經換成新版 SW/快取」的不一致狀態。
+     這裡補上：換手後重新整理一次（用旗標避免重複觸發）。 */
+  let _swRefreshed = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (_swRefreshed) return;
+    _swRefreshed = true;
+    window.location.reload();
+  });
 })();
 
 /* ══════════════════════════════
@@ -638,12 +650,45 @@ if (window.matchMedia('(display-mode: standalone)').matches
   document.documentElement.classList.add('pwa-standalone');
 }
 </script>
+
+<script>
+/* ══════════════════════════════════════════
+   暗色模式 — 提前於 <head> 套用（避免 FOUC）
+   ★ 修正：這段邏輯原本放在整份文件最底部，要等
+   DOMContentLoaded 才執行，畫面會先用亮色主題繪製一次，
+   暗色模式使用者會看到「先亮後暗」的閃爍。搬到 <head>、
+   在 body 任何內容繪製前就設定好 documentElement 的
+   data-theme，CSS 從第一次繪製就會套用正確的主題。
+   applyDark() 這裡摸不到 #btn-dark-toggle（還沒解析到），
+   已用 if(btn) 防禦；圖示會在 DOMContentLoaded 時同步一次。
+   ══════════════════════════════════════════ */
+const DARK_KEY = 'report_dark_mode';
+function applyDark(dark){
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  const btn = document.getElementById('btn-dark-toggle');
+  if(btn) btn.textContent = dark ? '☀️' : '🌙';
+}
+(function initDark(){
+  // 優先讀使用者選擇，其次跟隨系統偏好
+  const saved = localStorage.getItem(DARK_KEY);
+  if(saved !== null){
+    applyDark(saved === '1');
+  } else {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyDark(prefersDark);
+  }
+  // 監聽系統切換（僅在使用者未手動設定時生效）
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if(localStorage.getItem(DARK_KEY) === null) applyDark(e.matches);
+  });
+})();
+</script>
 </head>
 <body>
 
 <!-- ── NAV ── -->
 <nav>
-  <div class="brand">REPORT<span class="brand-ver">v1.1.0</span></div>
+  <div class="brand">REPORT<span class="brand-ver">v1.1.1</span></div>
   <button class="nav-tab active" onclick="showPage('overview',this)">📊 總覽<span class="zh">Dashboard</span></button>
   <button class="nav-tab" onclick="showPage('restock',this)">📦 庫存清單<span class="zh">Inventory</span></button>
   <button class="nav-tab" onclick="showPage('ranking',this)">🏆 排行<span class="zh">Ranking</span></button>
@@ -743,11 +788,11 @@ if (window.matchMedia('(display-mode: standalone)').matches
         <thead>
           <tr>
             <th class="rk-th num" style="width:74px">補貨數</th>
-            <th class="rk-th" data-sort="name" onclick="sortRestock('name')">商品名稱 ▴</th>
+            <th class="rk-th" data-sort="name" onclick="sortRestock('name')">商品名稱 <span class="sort-arrow"></span></th>
             <th class="rk-th">分類</th>
-            <th class="rk-th num" data-sort="dailyAvg" onclick="sortRestock('dailyAvg')">日均</th>
-            <th class="rk-th num" data-sort="weeklyAvg" onclick="sortRestock('weeklyAvg')">週均</th>
-            <th class="rk-th num sorted" data-sort="suggested" onclick="sortRestock('suggested')">📦 建議庫存 ▾</th>
+            <th class="rk-th num" data-sort="dailyAvg" onclick="sortRestock('dailyAvg')">日均 <span class="sort-arrow"></span></th>
+            <th class="rk-th num" data-sort="weeklyAvg" onclick="sortRestock('weeklyAvg')">週均 <span class="sort-arrow"></span></th>
+            <th class="rk-th num sorted" data-sort="suggested" onclick="sortRestock('suggested')">📦 建議庫存 <span class="sort-arrow"></span></th>
           </tr>
         </thead>
         <tbody id="rk-tbody"></tbody>
@@ -1049,8 +1094,12 @@ function calcRestock(){
   const prods  = getProds();
   const nobcPs = getNobcProds();
 
-  /* 日均/週均計算起始日：2026-05-01 */
-  const CALC_START = new Date('2026-05-01T00:00:00');
+  /* 日均/週均計算起始日：2026-05-01（台灣時間）
+     ★ 修正：明確加上 +08:00 偏移。若省略時區，JS 會用「裝置
+     所在時區」解讀這個字串；一旦裝置系統時區不是 Asia/Taipei，
+     起始時間點就會跟著裝置時區跑掉，與檔案中其餘所有日期計算
+     （toTW8 / fd / fm 等，全部強制以 UTC+8 計算）基準不一致。 */
+  const CALC_START = new Date('2026-05-01T00:00:00+08:00');
   const calcDays   = Math.max(1, Math.ceil((now - CALC_START) / MS_DAY));
 
   /* 特殊商品名稱集合（不為獨立商品，庫存清單略過不顯示） */
@@ -1132,14 +1181,36 @@ function renderOverview(){
   const rangeDays = 30;
   const rangeCutoff = daysAgo(rangeDays - 1);
 
+  /* ★ 效能優化：這個頁面全部的統計最多只需要「近 95 天」的交易
+     （最寬的需求是每小時圖表的 90 天，95 天留一點餘裕），因此先
+     過濾一次，後面所有迴圈都改跑這個較小的陣列，而不是每次切到
+     總覽頁都要把「開店第一天以來」的全部交易重新掃過好幾遍。
+     隨著資料量隨時間累積，這個差異只會越來越明顯。 */
+  const HISTORY_WINDOW_DAYS = 95;
+  const historyCutoff = new Date(now.getTime() - HISTORY_WINDOW_DAYS*MS_DAY);
+  const recentTx = txList.filter(tx => new Date(tx.date) >= historyCutoff);
+
   /* 日期範圍標示 */
   document.getElementById('ov-date-range').textContent = `${rangeCutoff} ～ ${todayStr}`;
 
-  /* KPIs — 上月字串在迴圈外計算，避免重複建立 Date 物件 */
-  const pm = new Date(now); pm.setMonth(pm.getMonth()-1);
-  const prevMonthStr = fm(pm);
+  /* KPIs — 上月 / 上週字串在迴圈外計算，避免重複建立 Date 物件
+     ★ 修正 1：原本用 pm.setMonth(pm.getMonth()-1) 算上個月，當
+     「這個月的日期」大於「上個月的天數」時（例如 3/29～3/31 對到
+     只有 28 天的 2 月、還有 5/31、7/31、10/31、12/31），setMonth
+     會往後溢位到「這個月」，導致 prevMonthStr 誤判成跟 monthStr
+     相同，上月合計整個算錯。改用純年/月整數運算，不受月份天數
+     不同影響。
+     ★ 修正 2：原本「上週」用「7~14 天前」這種滾動區間湊數，跟
+     「本週」（以週一為界的日曆週）基準不一致：例如今天是週二，
+     本週只算了 2 天、上週卻算了完整 7 天，會出現「業績暴跌」的
+     錯誤訊號。改成跟月份一樣，對齊到實際上一個日曆週。 */
+  const twNow = toTW8(now);
+  let prevMonthY = twNow.getUTCFullYear(), prevMonthM = twNow.getUTCMonth()-1;
+  if(prevMonthM < 0){ prevMonthM = 11; prevMonthY--; }
+  const prevMonthStr = prevMonthY + '-' + pad(prevMonthM+1);
+  const prevWeekStr  = fweek(new Date(now.getTime()-7*MS_DAY));
 
-  let tTotal=0, tCount=0, wTotal=0, wCount=0, mTotal=0, mCount=0;
+  let tTotal=0, wTotal=0, mTotal=0;
   let prevWTotal=0, prevMTotal=0, yestTotal=0, dayBefore2Total=0;
   let rangeTotal=0, rangeCount=0;
   const yesterday  = new Date(now.getTime()-MS_DAY);   // 純毫秒運算，不受瀏覽器 TZ 影響
@@ -1147,20 +1218,19 @@ function renderOverview(){
   const yesterdayStr  = fd(yesterday);
   const dayBefore2Str = fd(dayBefore2);
 
-  txList.forEach(tx=>{
-    const ds = fd(new Date(tx.date));          // ★ 修正：以 UTC+8 計算台灣日期，不能直接切字串
+  recentTx.forEach(tx=>{
     const d  = new Date(tx.date);
+    const ds = fd(d);          // ★ 修正：以 UTC+8 計算台灣日期，不能直接切字串
     const ms = fm(d);
     const ws = fweek(d);
-    if(ds===todayStr){tTotal+=tx.total;tCount++;}
-    if(ds===yesterdayStr)  yestTotal    +=tx.total;
+    if(ds===todayStr)      tTotal+=tx.total;
+    if(ds===yesterdayStr)  yestTotal+=tx.total;
     if(ds===dayBefore2Str) dayBefore2Total+=tx.total;
-    if(ws===weekStr){wTotal+=tx.total;wCount++;}
-    if(ms===monthStr){mTotal+=tx.total;mCount++;}
+    if(ws===weekStr)       wTotal+=tx.total;
+    if(ms===monthStr)      mTotal+=tx.total;
     if(ds>=rangeCutoff && ds<=todayStr){rangeTotal+=tx.total;rangeCount++;}
-    const age=(now-d)/MS_DAY;
-    if(age>=7&&age<14) prevWTotal+=tx.total;
-    if(ms===prevMonthStr)  prevMTotal   +=tx.total;
+    if(ws===prevWeekStr)   prevWTotal+=tx.total;
+    if(ms===prevMonthStr)  prevMTotal+=tx.total;
   });
 
   const diff = (a,b)=>{
@@ -1190,7 +1260,7 @@ function renderOverview(){
   const dowCount   = new Array(7).fill(0);
   const dowWeekSet = new Set();
   const twelveWeeksAgo = new Date(now.getTime()-84*MS_DAY);
-  txList.forEach(tx=>{
+  recentTx.forEach(tx=>{
     const d=new Date(tx.date);
     if(d<twelveWeeksAgo) return;
     dowWeekSet.add(fweek(d));
@@ -1215,7 +1285,7 @@ function renderOverview(){
 
   /* 30-day bar */
   const dailyMap={};
-  txList.forEach(tx=>{
+  recentTx.forEach(tx=>{
     const ds=fd(new Date(tx.date));                // ★ 修正：UTC+8 台灣日期
     if(!dailyMap[ds]) dailyMap[ds]=0;
     dailyMap[ds]+=tx.total;
@@ -1241,7 +1311,7 @@ function renderOverview(){
 
   /* 8-week compare */
   const wkMap={};
-  txList.forEach(tx=>{
+  recentTx.forEach(tx=>{
     const txDate=new Date(tx.date);
     const k=fweek(txDate);
     if(!wkMap[k])wkMap[k]={total:0,label:fweekLabel(txDate)};
@@ -1267,7 +1337,7 @@ function renderOverview(){
   /* Hourly */
   const hourMap=new Array(24).fill(0);
   const cutoff90=new Date(now.getTime()-90*MS_DAY);
-  txList.forEach(tx=>{
+  recentTx.forEach(tx=>{
     const d=new Date(tx.date);
     if(d<cutoff90)return;
     hourMap[toTW8(d).getUTCHours()]+=tx.total;      // ★ 修正：台灣時區的小時
@@ -1372,9 +1442,6 @@ function toggleOosOnly(){
 function sortRestock(key){
   if(_restockSortKey===key) _restockSortAsc=!_restockSortAsc;
   else { _restockSortKey=key; _restockSortAsc=false; }
-  document.querySelectorAll('.rk-th').forEach(th=>{
-    th.classList.toggle('sorted', th.dataset.sort===key);
-  });
   applyRestockFilter();
 }
 
@@ -1390,6 +1457,17 @@ function renderRestock(){
 }
 
 function applyRestockFilter(){
+  /* ★ 修正：排序箭頭原本是寫死在 HTML 裡的文字（只有 2/4 個
+     欄位有箭頭），點擊排序後也不會更新方向。統一在這裡（每次
+     表格重繪都會執行）依目前的 _restockSortKey / _restockSortAsc
+     更新每個可排序欄位的箭頭與 .sorted 樣式。 */
+  document.querySelectorAll('.rk-th[data-sort]').forEach(th=>{
+    const isActive = th.dataset.sort === _restockSortKey;
+    th.classList.toggle('sorted', isActive);
+    const arrow = th.querySelector('.sort-arrow');
+    if(arrow) arrow.textContent = isActive ? (_restockSortAsc ? '▴' : '▾') : '';
+  });
+
   let data = [..._restockData];
   if(_restockCatFilter !== 'all') data = data.filter(p=>p.category===_restockCatFilter);
   if(_restockOosOnly)             data = data.filter(p=>p.outOfStock);
@@ -1503,6 +1581,16 @@ function renderRanking(){
   Object.values(prods).forEach(p=>{ if(p.special) specialNames.add(p.name); });
   nobcPs.forEach(p=>{ if(p.special) specialNames.add(p.name); });
 
+  /* ★ 效能優化：商品名稱 → 分類，先建一次查表（O(商品數)）。
+     原本每一筆交易的每一個品項都呼叫 getCatForName()，內部對
+     全部商品清單重新線性掃描一次（O(交易品項數 × 商品數)），
+     交易量隨時間累積後會越來越慢；改成查表後單次查詢是 O(1)。
+     優先序與原本的 getCatForName 一致：prods 優先於 nobcPs，
+     同一來源內先出現的商品優先。 */
+  const nameToCat = {};
+  Object.values(prods).forEach(p=>{ if(!(p.name in nameToCat)) nameToCat[p.name]=p.category||'other'; });
+  nobcPs.forEach(p=>{ if(!(p.name in nameToCat)) nameToCat[p.name]=p.category||'other'; });
+
   txList.forEach(tx=>{
     const d=new Date(tx.date);
     if(d<cutoff)return;
@@ -1510,7 +1598,7 @@ function renderRanking(){
       if(specialNames.has(item.name)) return;  // 略過特殊商品
       qtyMap[item.name]=(qtyMap[item.name]||0)+item.qty;
       revMap[item.name]=(revMap[item.name]||0)+item.price*item.qty;
-      const cat=getCatForName(item.name,prods,nobcPs);
+      const cat=nameToCat[item.name]||'other';
       catRevMap[cat]=(catRevMap[cat]||0)+item.price*item.qty;
     });
   });
@@ -1575,12 +1663,6 @@ function renderRanking(){
       </div>`;
     }).join('');
   }
-}
-
-function getCatForName(name, prods, nobcPs){
-  for(const [,p] of Object.entries(prods)) if(p.name===name) return p.category||'other';
-  for(const p of nobcPs) if(p.name===name) return p.category||'other';
-  return 'other';
 }
 
 function renderRankTable(id, entries, unit, maxVal, color, isMoney=false){
@@ -2028,13 +2110,11 @@ function clearAllData(){
 
 /* ══════════════════════════════════════════
    暗色模式（Dark Mode）
+   ★ 修正（避免主題閃爍 FOUC）：DARK_KEY / applyDark() /
+   初始偵測（原 initDark）已搬到 <head>，在任何內容繪製前就
+   套用好 data-theme，暗色模式使用者不會再看到「先亮後暗」的
+   閃爍。這裡只留下需要回應使用者點擊的 toggleDark()。
    ══════════════════════════════════════════ */
-const DARK_KEY = 'report_dark_mode';
-function applyDark(dark){
-  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-  const btn = document.getElementById('btn-dark-toggle');
-  if(btn) btn.textContent = dark ? '☀️' : '🌙';
-}
 function toggleDark(){
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const next = !isDark;
@@ -2042,30 +2122,29 @@ function toggleDark(){
   applyDark(next);
   showToast(next ? '🌙 暗色模式已開啟' : '☀️ 亮色模式已開啟');
 }
-(function initDark(){
-  // 優先讀使用者選擇，其次跟隨系統偏好
-  const saved = localStorage.getItem(DARK_KEY);
-  if(saved !== null){
-    applyDark(saved === '1');
-  } else {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    applyDark(prefersDark);
-  }
-  // 監聽系統切換（僅在使用者未手動設定時生效）
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-    if(localStorage.getItem(DARK_KEY) === null) applyDark(e.matches);
-  });
-})();
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', ()=>{
+  // 主題本身已在 <head> 提前套用（避免 FOUC）；當時 nav 按鈕
+  // 還不存在於 DOM，這裡補一次讓按鈕圖示跟目前主題同步。
+  applyDark(document.documentElement.getAttribute('data-theme') === 'dark');
   // ESC 鍵關閉燈箱
   document.addEventListener('keydown', e=>{
     if(e.key==='Escape') closeImgLbx();
   });
   // Wait for Firebase sync, or render immediately from localStorage
+  // ★ 修正：原本 init() 永遠只 renderOverview()。如果 Firebase 同步
+  // 是在使用者已經切到「庫存清單 / 排行 / 銷售報表」之後才完成，
+  // 畫面會停在同步前的舊資料，要等使用者手動切一次分頁才會更新。
+  // 改成一律重新渲染「目前正顯示中」的那一頁。
   const init = ()=>{
-    renderOverview();
+    const activeEl = document.querySelector('.page.active');
+    const id = activeEl ? activeEl.id.replace(/^page-/, '') : 'overview';
+    if(id==='overview')          renderOverview();
+    else if(id==='restock')      renderRestock();
+    else if(id==='ranking')      renderRanking();
+    else if(id==='transactions'){ renderMonthly(); renderWeekly(); renderDaily(); }
+    else                         renderOverview();
   };
   init(); // DOMContentLoaded fires when readyState is 'interactive', not 'complete'
   document.addEventListener('report-data-ready', ()=>{
