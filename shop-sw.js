@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   Service Worker — ร้านค้าออนไลน์ PWA  v1.5.7
+   Service Worker — ร้านค้าออนไลน์ PWA  v1.5.8
 
    ⚠️  快取策略修正說明：
        HTML 頁面 → Network First（確保永遠拿到最新版本）
@@ -7,7 +7,7 @@
        Firebase RTDB → Network First（即時資料）
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION    = 'v1.5.7'; // 簡化會員系統（免申請）、確認訂單頁移除姓名電話欄位、聯絡客服併入公告抽屜、修正語言選擇器無論哪個階段選完語言都會收合
+const APP_VERSION    = 'v1.5.8'; // 會員系統完全移除：刪除申請/登入/編輯資料 Modal 與相關 JS/CSS/翻譯字串，訂單改僅寫入 Firebase 供 POS 讀取，顧客端維持 LINE/FB 通知
 const STATIC_CACHE   = `shop-static-${APP_VERSION}`;
 const FONT_CACHE     = `shop-fonts-${APP_VERSION}`;
 const FIREBASE_CACHE = `shop-firebase-${APP_VERSION}`;
