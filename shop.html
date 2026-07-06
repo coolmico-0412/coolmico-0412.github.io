@@ -1,8 +1,8 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 
 <!-- ── PWA Core ── -->
 <link rel="manifest" href="shop-manifest.json">
@@ -1170,62 +1170,18 @@ body::after {
   flex-shrink: 0;
 }
 .login-btn-hdr:hover { background:var(--primary); color:#fff; box-shadow:0 3px 10px rgba(201,78,110,.3); }
-
-/* ── 客服詢問按鈕 & 下拉選單（位於會員圖案左側）── */
-.contact-menu-wrap { position: relative; display: flex; }
-
-.line-ask-btn {
+.login-btn-hdr .ci-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: #06C755;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: none;
-  background: #06C755;
-  color: #fff;
   flex-shrink: 0;
-  transition: all .18s;
-  box-shadow: 0 3px 10px rgba(6,199,85,.35);
 }
-.line-ask-btn:hover { background:#05a647; transform:translateY(-1px); box-shadow:0 5px 14px rgba(6,199,85,.45); }
-.line-ask-btn:active { transform:translateY(0); }
-.line-ask-btn svg { width:20px; height:20px; display:block; }
 
-/* Contact dropdown */
-.contact-menu {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  box-shadow: var(--sh-md);
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 162px;
-  z-index: 400;
-  opacity: 0;
-  transform: translateY(-6px) scale(.96);
-  pointer-events: none;
-  transition: opacity .18s, transform .18s;
-}
-.contact-menu.open {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-}
-.contact-menu-label {
-  font-size: 11px;
-  color: var(--muted);
-  text-align: center;
-  padding: 2px 6px 6px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 2px;
-  white-space: nowrap;
-}
+/* ── 聯絡客服按鈕（現用於會員／公告抽屜內）── */
 .contact-menu-item {
   display: flex;
   align-items: center;
@@ -1654,9 +1610,15 @@ body::after {
     </div>
   </div>
   <div class="header-right">
-    <!-- 公告 / 客服 按鈕：原本的獨立客服選單＋會員登入已合併於此，點擊開啟抽屜（聯絡客服＋公告消息），任何人皆可使用，不需登入 -->
+    <!-- 客服 / 公告 按鈕：原本的獨立客服選單＋會員登入已合併於此，點擊開啟抽屜（聯絡客服＋公告消息），任何人皆可使用，不需登入；圖示改為 LINE 風格綠色圖示 -->
     <button class="login-btn-hdr" onclick="openMemberDrawer()">
-      <span id="login-btn-text">📢 ประกาศ</span>
+      <span class="ci-icon">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" aria-hidden="true">
+          <rect x="3.5" y="4.5" width="17" height="11" rx="3"/>
+          <path d="M8 15.5 L8 19 L12 15.5 Z"/>
+        </svg>
+      </span>
+      <span id="login-btn-text">ติดต่อ/ประกาศ</span>
     </button>
     <!-- Cart button -->
     <button class="cart-btn-hdr" onclick="openDrawer()" id="hdr-cart-btn">
@@ -2222,8 +2184,9 @@ const LANGS = {
     successTitle:'ส่งคำสั่งซื้อแล้ว！',
     successMsg:'ขอบคุณที่สั่งซื้อ！\nเราจะเตรียมสินค้าให้คุณโดยเร็ว',
     successOrderId:'เลขที่ออเดอร์', btnContinue:'สั่งซื้อต่อ',
-    creditOrderNote:'※ ออเดอร์เครดิต (ผ่อนชำระ) กรุณาส่งข้อความยืนยันผ่าน FACEBOOK หรือ LINE อย่างใดอย่างหนึ่ง',
+    creditOrderNote:'※ ออเดอร์ต้องส่งข้อความยืนยันผ่าน FACEBOOK หรือ LINE อย่างใดอย่างหนึ่ง',
     announceTitle:'📢 ประกาศ', announceEmpty:'ยังไม่มีประกาศ',
+    drawerBtnLabel:'ติดต่อ/ประกาศ', // ⚠️ 標頭抽屜按鈕文字（客服/公告合併後的新按鈕名稱）── 新增 key 時請同步更新 vi / id / ph / tw
     minOrder:'จัดส่งต้องสั่งขั้นต่ำ NT$1,000',
     toastAdded:'เพิ่มแล้ว', toastCleared:'ล้างตะกร้าแล้ว',
     toastCartEmpty:'ตะกร้าว่างเปล่า！', toastOrderSent:'ส่งออเดอร์ไปยัง Firebase ✓',
@@ -2313,8 +2276,9 @@ const LANGS = {
     successTitle:'Đã gửi đơn hàng！',
     successMsg:'Cảm ơn bạn đã đặt hàng！\nChúng tôi sẽ chuẩn bị hàng ngay cho bạn.',
     successOrderId:'Mã đơn hàng', btnContinue:'Tiếp tục mua',
-    creditOrderNote:'※ Đơn hàng trả chậm bắt buộc xác nhận qua FACEBOOK hoặc LINE (chọn một)',
+    creditOrderNote:'※ Đơn hàng bắt buộc xác nhận qua FACEBOOK hoặc LINE (chọn một)',
     announceTitle:'📢 Thông báo', announceEmpty:'Chưa có thông báo nào',
+    drawerBtnLabel:'Hỗ trợ/Thông báo',
     minOrder:'Giao hàng cần đơn tối thiểu NT$1.000',
     toastAdded:'Đã thêm', toastCleared:'Đã xóa giỏ hàng',
     toastCartEmpty:'Giỏ hàng đang trống！', toastOrderSent:'Đã gửi đơn hàng lên Firebase ✓',
@@ -2404,8 +2368,9 @@ const LANGS = {
     successTitle:'Pesanan Terkirim！',
     successMsg:'Terima kasih telah memesan！\nKami akan segera menyiapkan pesanan Anda.',
     successOrderId:'No. Pesanan', btnContinue:'Lanjut Belanja',
-    creditOrderNote:'※ Pesanan kredit wajib mengirimkan konfirmasi permohonan melalui FACEBOOK atau LINE (pilih salah satu)',
+    creditOrderNote:'※ Pesanan wajib mengirimkan konfirmasi permohonan melalui FACEBOOK atau LINE (pilih salah satu)',
     announceTitle:'📢 Pengumuman', announceEmpty:'Belum ada pengumuman',
+    drawerBtnLabel:'CS/Pengumuman',
     minOrder:'Pengiriman butuh minimal NT$1.000',
     toastAdded:'Ditambahkan', toastCleared:'Keranjang dikosongkan',
     toastCartEmpty:'Keranjang masih kosong！', toastOrderSent:'Pesanan dikirim ke Firebase ✓',
@@ -2495,8 +2460,9 @@ const LANGS = {
     successTitle:'Order Submitted！',
     successMsg:'Thank you for your order！\nWe will prepare it as soon as possible.',
     successOrderId:'Order No.', btnContinue:'Continue Shopping',
-    creditOrderNote:'※ Credit orders must send a confirmation request via FACEBOOK or LINE (choose one)',
+    creditOrderNote:'※ Orders must send a confirmation request via FACEBOOK or LINE (choose one)',
     announceTitle:'📢 Announcements', announceEmpty:'No announcements yet',
+    drawerBtnLabel:'Support/Announcements',
     minOrder:'Delivery requires minimum NT$1,000',
     toastAdded:'Added', toastCleared:'Cart cleared',
     toastCartEmpty:'Cart is empty！', toastOrderSent:'Order sent to Firebase ✓',
@@ -2586,8 +2552,9 @@ const LANGS = {
     successTitle:'訂單已送出！',
     successMsg:'感謝您的訂購！\n我們將盡快為您備貨。',
     successOrderId:'訂單編號', btnContinue:'繼續選購',
-    creditOrderNote:'※ 賒帳訂單須透過 FACEBOOK 或 LINE 擇一發送確認申請狀況',
+    creditOrderNote:'※ 訂單須透過 FACEBOOK 或 LINE 擇一發送確認申請狀況',
     announceTitle:'📢 公告消息', announceEmpty:'目前無公告',
+    drawerBtnLabel:'客服/公告', // 標頭抽屜按鈕文字（獨立於 announceTitle，供 login-btn-text 使用）
     minOrder:'外送需要最低消費 NT$1,000',
     toastAdded:'已加入', toastCleared:'購物車已清空',
     toastCartEmpty:'購物車是空的！', toastOrderSent:'訂單已寫入 Firebase ✓',
@@ -2716,7 +2683,7 @@ function applyLang() {
 
   // Header
   set('brand-sub-text', L.brandSub);
-  set('login-btn-text', L.announceTitle); // 按鈕已改為開啟「公告/客服」抽屜，沿用 announceTitle 文案
+  set('login-btn-text', L.drawerBtnLabel); // 按鈕開啟「客服/公告」抽屜，文字獨立於抽屜內的 contactLabel／announceTitle 標題
 
   // Sidebar cart
   set('sb-cart-title', L.cartTitle);
@@ -2753,7 +2720,7 @@ function applyLang() {
   const smEl = document.getElementById('success-msg-text');
   if (smEl) smEl.innerHTML = h(L.successMsg).replace(/\n/g, '<br>');
   set('btn-done-text', L.btnContinue);
-  // 若賒帳提示目前可見，同步更新文字（語言切換時保持一致）
+  // 訂單提示現為所有訂單皆顯示，語言切換時同步更新文字
   const cNoteTxtEl = document.getElementById('success-credit-note-text');
   if (cNoteTxtEl) cNoteTxtEl.textContent = L.creditOrderNote || '';
 
@@ -3118,7 +3085,7 @@ function selectMsgTool(tool) {
 
 function buildCartHTML() {
   if (!cart.length) return `<div class="cart-empty"><div class="cart-empty-icon">🛒</div>
-    <div class="cart-empty-text">${t('cartEmpty').replace('\n','<br>')}</div></div>`;
+    <div class="cart-empty-text">${t('cartEmpty').replace(/\n/g,'<br>')}</div></div>`;
   return cart.map(item=>`
     <div class="cart-item">
       <div class="ci-name">${h(getProductName(item.name))}</div>
@@ -3134,7 +3101,7 @@ function buildCartHTML() {
 
 function updateAllCartUI() {
   const total=getTotal(), tq=getTotalQty(), has=cart.length>0;
-  const emptyHTML = `<div class="cart-empty"><div class="cart-empty-icon">🛒</div><div class="cart-empty-text">${t('cartEmpty').replace('\n','<br>')}</div></div>`;
+  const emptyHTML = `<div class="cart-empty"><div class="cart-empty-icon">🛒</div><div class="cart-empty-text">${t('cartEmpty').replace(/\n/g,'<br>')}</div></div>`;
   const cartH = has ? buildCartHTML() : emptyHTML;
   // Header
   setText('hdr-cart-txt', `NT$ ${total}`);
@@ -3275,25 +3242,13 @@ function openOrderModal() {
 ══════════════════════════════════════════════ */
 const LINE_OA_ID = '@239fgqbz';
 
-function toggleContactMenu(e) {
-  if (e) e.stopPropagation();
-  const menu = document.getElementById('contact-menu');
-  if (!menu) return;
-  menu.classList.toggle('open');
-}
-
-function closeContactMenu() {
-  const menu = document.getElementById('contact-menu');
-  if (menu) menu.classList.remove('open');
-}
-
+// 舊版獨立客服選單按鈕（toggleContactMenu/closeContactMenu）已於會員抽屜合併時移除，
+// #contact-menu 元素不再存在於畫面中，故一併移除這兩個函式與呼叫點。
 function openLineInquiry() {
-  closeContactMenu();
   window.open(`https://line.me/R/ti/p/${LINE_OA_ID}`, '_blank');
 }
 
 function openFBInquiry() {
-  closeContactMenu();
   window.open('https://m.me/thailasai', '_blank');
 }
 
@@ -3480,11 +3435,11 @@ async function submitOrder() {
     const si=document.getElementById('success-order-id');
     if(si) si.textContent=`${t('successOrderId')}：${orderId}`;
 
-    // 賒帳訂單提示：勾選賒帳才顯示，並填入當前語系文字
+    // 訂單提示：改為所有訂單皆顯示（不再限定賒帳），並填入當前語系文字
     const creditNoteEl    = document.getElementById('success-credit-note');
     const creditNoteTxtEl = document.getElementById('success-credit-note-text');
-    if (creditNoteEl)    creditNoteEl.style.display = creditApplied ? '' : 'none';
-    if (creditNoteTxtEl && creditApplied) creditNoteTxtEl.textContent = t('creditOrderNote');
+    if (creditNoteEl)    creditNoteEl.style.display = '';
+    if (creditNoteTxtEl) creditNoteTxtEl.textContent = t('creditOrderNote');
 
     cart=[]; updateAllCartUI(); renderProducts();
     closeModal('order-modal');
@@ -4290,7 +4245,7 @@ Object.assign(window, {
   openDrawer, closeDrawer, handleDrawerOutsideClick,
   openOrderModal, closeModal, handleModalOutsideClick,
   submitOrder, closeSuccess,
-  openLineInquiry, openFBInquiry, toggleContactMenu, closeContactMenu,
+  openLineInquiry, openFBInquiry,
   openMemberDrawer, closeMemberDrawer, handleMemberOutsideClick,
   pwaInstall, pwaDismiss, autoApplySwUpdate,
   setLang,
@@ -4301,12 +4256,6 @@ Object.assign(window, {
 });
 
 document.addEventListener('DOMContentLoaded', init);
-
-/* ── Close contact menu when clicking outside ── */
-document.addEventListener('click', (e) => {
-  const wrap = document.getElementById('contact-menu-wrap');
-  if (wrap && !wrap.contains(e.target)) closeContactMenu();
-});
 
 /* ── Category tabs edge-fade ── */
 document.addEventListener('DOMContentLoaded', () => {
