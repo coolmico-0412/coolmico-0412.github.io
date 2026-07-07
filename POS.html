@@ -30,6 +30,7 @@
   --accent:#2563eb; --accent2:#1d4ed8; --aglow:rgba(37,99,235,.09);
   --gold:#d97706; --gold2:#b45309;
   --green:#059669; --red:#dc2626; --purple:#7c3aed;
+  --tiffany:#0abab5; --tiffany-dark:#0a8f86; --tiffany-bg:#e3f8f6; --tiffany-bg2:#cdf3ef; --tiffany-border:#7fd8cf;
   --text:#0f172a; --text2:#334155; --muted:#64748b; --muted2:#94a3b8;
   --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);
   --sh-md:0 4px 16px rgba(0,0,0,.1);
@@ -350,6 +351,8 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .hold-bar-empty{padding:10px 14px;border-top:1px solid var(--border);background:var(--surface2);font-size:16.7px;color:var(--muted2);font-family:var(--zh);text-align:center;}
 .hold-slot{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--surface);border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;transition:all .15s;min-width:0;}
 .hold-slot:hover{border-color:var(--gold);background:#fffbeb;}
+.hold-slot.credit{border-color:var(--tiffany-border);background:var(--tiffany-bg);}
+.hold-slot.credit:hover{border-color:var(--tiffany);background:var(--tiffany-bg2);}
 .hold-slot .hs-num{font-family:var(--mono);font-size:15.2px;color:var(--muted2);font-weight:700;flex-shrink:0;}
 .hold-slot .hs-info{display:flex;flex-direction:column;gap:1px;min-width:0;}
 .hold-slot .hs-count{font-size:16.7px;color:var(--text);font-family:var(--zh);white-space:nowrap;}
@@ -363,6 +366,17 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .bh-text{display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;gap:4px;}
 .bh-th{font-family:var(--th);font-size:20.3px;line-height:1.2;}
 .bh-zh{font-family:var(--zh);font-size:20.3px;line-height:1.2;}
+
+/* ── 賒帳 Toggle（結帳按鈕與暫存按鈕中間）── */
+.credit-toggle{display:flex;align-items:center;gap:10px;padding:9px 12px;background:transparent;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;transition:all .18s;user-select:none;}
+.credit-toggle:hover{border-color:var(--tiffany-border);background:var(--tiffany-bg);}
+.credit-toggle.checked{border-color:var(--tiffany);background:var(--tiffany-bg);}
+.credit-toggle.checked:hover{background:var(--tiffany-bg2);}
+.credit-toggle input[type="checkbox"]{width:20px;height:20px;flex-shrink:0;accent-color:var(--tiffany);cursor:pointer;}
+.ct-text{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.ct-th{font-family:var(--th);font-size:14.5px;color:var(--text2);line-height:1.25;}
+.ct-zh{font-family:var(--zh);font-size:12.5px;color:var(--muted);line-height:1.25;}
+.credit-toggle.checked .ct-th,.credit-toggle.checked .ct-zh{color:var(--tiffany-dark);font-weight:700;}
 
 .scanner-hw-wrap{position:relative;display:flex;gap:8px;align-items:center;}
 .scanner-hw-input{flex:1;padding:11px 44px 11px 14px;font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:2px;background:var(--surface2);border:2px solid var(--border2);border-radius:9px;color:var(--text);outline:none;transition:all .18s;ime-mode:disabled;}
@@ -394,7 +408,7 @@ nav::-webkit-scrollbar{display:none;}
 .t-head,.t-row{grid-template-columns:34px minmax(180px,1fr) 96px 128px 34px;column-gap:8px;}
 .t-name,.prod-name,.nobc-list-name{overflow-wrap:anywhere;}
 .qty-ctrl{justify-content:flex-start;}
-.btn,.btn-checkout,.btn-hold,.btn-nobc,.scan-mode-tab{min-height:40px;}
+.btn,.btn-checkout,.btn-hold,.btn-nobc,.scan-mode-tab,.credit-toggle{min-height:40px;}
 .btn-nobc{font-size:18px;}
 .prod-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}
 .prod-card{border-radius:8px;min-height:96px;}
@@ -733,6 +747,10 @@ body.pwa-offline .pwa-update-bar.show {
         </div>
         <div class="co-actions">
           <button class="btn-checkout" id="btn-checkout" onclick="openReview()" disabled>ชำระเงิน / 結帳</button>
+          <label class="credit-toggle" id="credit-toggle-wrap">
+            <input type="checkbox" id="chk-credit" onchange="toggleCredit()">
+            <span class="ct-text"><span class="ct-th">ขายเชื่อ <b>+10%</b></span><span class="ct-zh">賒帳<b>（+10%）</b></span></span>
+          </label>
           <button class="btn-hold" id="btn-hold" onclick="holdCart()" disabled><span class="bh-icon">⏸</span><span class="bh-text"><span class="bh-th">พักรายการลูกค้าคนนี้ไว้ก่อน</span><span class="bh-zh">暫存此客人購物車</span></span></button>
         </div>
         <!-- 暫存列表 -->
@@ -1425,6 +1443,7 @@ function saveTx(a){localStorage.setItem('pos_transactions',JSON.stringify(a));_s
 
 // ═══ 全域狀態 ═══
 let cart=[], scanning=false, codeReader=null;
+let isCreditSale=false; // 賒帳：此筆交易是否為賒帳（勾選「賒帳」時，總計 ×1.1）
 let pendingBC=null, editingBC=null;
 let lastCode='', lastCodeTime=0;
 const DEBOUNCE=1000; // 1秒內同一條碼只接受一次
@@ -1464,6 +1483,17 @@ function safeArray(value){
   }
 function sumItems(items){
     return safeArray(items).reduce((s,item)=>s + num(item?.price) * num(item?.qty), 0);
+  }
+// ═══ 賒帳（credit sale）金額計算 ═══
+// 賒帳勾選時，加收 10% → sub + feeFor(sub) 恰為 sub 的 1.1 倍（四捨五入取整）
+function feeFor(sub,credit){
+    return credit ? Math.round(num(sub)*0.1) : 0;
+  }
+function creditFee(sub){
+    return feeFor(sub, isCreditSale);
+  }
+function grandTotal(sub){
+    return num(sub) + creditFee(sub);
   }
 
 // EAN-13 checksum 檢查（僅用於新增商品欄位的額外提示，非強制）
@@ -1578,6 +1608,19 @@ function saveNewProduct(){
 }
 
 // ═══ 購物車 ═══
+// 賒帳 checkbox：勾選/取消時同步視覺狀態並重新計算總計
+function toggleCredit(){
+  const box=document.getElementById('chk-credit');
+  isCreditSale = !!(box && box.checked);
+  syncCreditUI();
+  renderCart();
+}
+function syncCreditUI(){
+  const box=document.getElementById('chk-credit');
+  const wrap=document.getElementById('credit-toggle-wrap');
+  if(box) box.checked=isCreditSale;
+  if(wrap) wrap.classList.toggle('checked', isCreditSale);
+}
 function setQty(bc,input){
   const val=parseInt(input.value);
   if(isNaN(val)||val<1){const item=cart.find(i=>i.barcode===bc);if(item)input.value=item.qty;return;}
@@ -1586,7 +1629,7 @@ function setQty(bc,input){
   let sub=0, totalQty=0;
   for(const i of cart){ sub+=i.price*i.qty; totalQty+=i.qty; }
   document.getElementById('item-count').textContent=totalQty;
-  document.getElementById('grand-total').textContent='NT$ '+money(sub);
+  document.getElementById('grand-total').textContent='NT$ '+money(grandTotal(sub));
   document.getElementById('btn-checkout').disabled=cart.length===0;
   const bh=document.getElementById('btn-hold');if(bh)bh.disabled=cart.length===0;
 }
@@ -1643,12 +1686,16 @@ function removeItem(bc){
   const item=cart.find(i=>i.barcode===bc);
   if(!item)return;
   if(!confirm('確定從購物車移除「'+item.name+'」嗎？\n確定要繼續？'))return;
-  cart=cart.filter(i=>i.barcode!==bc);renderCart();
+  cart=cart.filter(i=>i.barcode!==bc);
+  if(!cart.length){isCreditSale=false;syncCreditUI();} // 購物車清空，賒帳狀態隨之重設
+  renderCart();
 }
 function clearCart(){
   if(!cart.length)return;
   if(!confirm('確定清除整個購物車？\n共 '+cart.reduce((s,i)=>s+i.qty,0)+' 件商品將被移除，此操作無法復原。'))return;
-  cart=[];renderCart();
+  cart=[];
+  isCreditSale=false;syncCreditUI(); // 購物車清空，賒帳狀態隨之重設
+  renderCart();
 }
 
 function renderCart(){
@@ -1680,7 +1727,7 @@ function renderCart(){
     </div>`).join('');
   document.getElementById('item-count').textContent=totalQty;
   document.getElementById('btn-checkout').disabled=false;
-  document.getElementById('grand-total').textContent='NT$ '+money(sub);
+  document.getElementById('grand-total').textContent='NT$ '+money(grandTotal(sub));
   const bh=document.getElementById('btn-hold');if(bh)bh.disabled=false;
 }
 
@@ -1870,22 +1917,33 @@ function openReview(){
       <td class="sub">NT$ ${money(sub)}</td>
     </tr>`;
   }).join('');
-  document.getElementById('review-total-amt').textContent='NT$ '+money(total);
+  // 賒帳：加收 10% 費用另列一行，最終總計 = 小計 + 賒帳費用
+  const fee=creditFee(total);
+  const finalTotal=total+fee;
+  if(fee>0){
+    tbody.innerHTML+=`<tr class="rv-credit-row">
+      <td></td>
+      <td colspan="3" style="font-family:var(--zh);font-weight:700;color:var(--tiffany-dark)">ขายเชื่อ 10% <span class="zh">/ 賒帳 10%</span></td>
+      <td class="sub" style="color:var(--tiffany-dark);background:var(--tiffany-bg)">+NT$ ${money(fee)}</td>
+    </tr>`;
+  }
+  document.getElementById('review-total-amt').textContent='NT$ '+money(finalTotal);
   const rh=document.getElementById('rv-change-hint');
-  if(rh&&total>0){
-    function chg(d){const pay=Math.ceil(total/d)*d;return{pay,c:pay-total};}
+  if(rh&&finalTotal>0){
+    function chg(d){const pay=Math.ceil(finalTotal/d)*d;return{pay,c:pay-finalTotal};}
     function row(icon,d){return d.c===0?`${icon} NT$${money(d.pay)} ครบพอดี / 剛好 ✓`:`${icon} NT$${money(d.pay)} → ทอน / 找零 NT$${money(d.c)}`;}
     rh.style.display='block';
     rh.innerHTML=row('💵',chg(1000))+'<br>'+row('💴',chg(500))+'<br>'+row('🪙',chg(100));
   }else if(rh){rh.style.display='none';}
   document.getElementById('review-overlay').classList.add('open');
   // 語音報價
-  speak('ยอดรวม '+amountToThai(total));
+  speak('ยอดรวม '+amountToThai(finalTotal));
 }
 function closeReview(){document.getElementById('review-overlay').classList.remove('open');}
 function confirmCheckout(){
   closeReview();
   const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const fee=creditFee(sub);
   const now=new Date();
   const tx={
     id:'TX'+now.getTime().toString(36).toUpperCase(),
@@ -1893,12 +1951,16 @@ function confirmCheckout(){
     source:'pos',
     items:JSON.parse(JSON.stringify(cart)),
     subtotal:sub,
-    total:sub,
+    isCredit:isCreditSale,
+    creditFee:fee,
+    total:sub+fee,
   };
   const txList=getTx();txList.push(tx);saveTx(txList);
 
   // ── 寫入交易紀錄 ──
-  cart=[];renderCart();
+  cart=[];
+  isCreditSale=false;syncCreditUI(); // 結帳完成，賒帳狀態重設，供下一位客人使用
+  renderCart();
   // ★ Fix: 只在相機模式才停止掃描器；HW 模式僅重設狀態文字，不改變掃描器狀態
   if(scanMode === 'cam') stopScanner();
   else setSt('รอสแกน... / 等待掃描');
@@ -2285,9 +2347,12 @@ function renderRecentTx(){
     const summary=tx.items.slice(0,2).map(i=>`${h(i.name)}×${i.qty}`).join('、')+(tx.items.length>2?'…':'');
     const safeId=tx.id.replace(/'/g,"\\'");
     const cols=_editMode?'140px 1fr 110px 36px':'140px 1fr 110px';
-    return `<div style="display:grid;grid-template-columns:${cols};padding:11px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background .12s;cursor:pointer;" onclick="openTxDetail('${safeId}')" onmouseover="this.style.background='var(--aglow)'" onmouseout="this.style.background=''">
+    // 賒帳交易：底色改為蒂芬妮藍（含 hover 狀態），一般交易維持原本 aglow/透明
+    const baseBg=tx.isCredit?'var(--tiffany-bg)':'';
+    const hoverBg=tx.isCredit?'var(--tiffany-bg2)':'var(--aglow)';
+    return `<div style="display:grid;grid-template-columns:${cols};padding:11px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background .12s;cursor:pointer;background:${baseBg};" onclick="openTxDetail('${safeId}')" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='${baseBg}'">
       <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">${dateStr}</div>
-      <div style="font-family:var(--zh);font-size:12px;color:var(--text)">${summary}</div>
+      <div style="font-family:var(--zh);font-size:12px;color:var(--text)">${summary}${tx.isCredit?'<span style="margin-left:5px;padding:1px 5px;border-radius:4px;background:var(--tiffany);color:#fff;font-size:9.5px;font-weight:700;vertical-align:1px">賒</span>':''}</div>
       <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--gold);text-align:right">NT$ ${money(tx.total)}</div>
       ${_editMode?`<div style="display:flex;align-items:center;justify-content:center" onclick="event.stopPropagation()">
         <button onclick="confirmDeleteTx('${safeId}')" style="width:24px;height:24px;border-radius:6px;border:1.5px solid var(--border2);background:transparent;color:var(--muted2);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all .12s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='#fef2f2'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted2)';this.style.background='transparent'" title="刪除此筆交易">✕</button>
@@ -2354,7 +2419,8 @@ function openTxDetail(txId){
         +'<div>商品 / สินค้า</div><div style="text-align:center">數量 / จำนวน</div><div style="text-align:right">小計 / รวม</div></div>';
       tx.items.forEach((item,i)=>{
         const sub=((item.price||0)*(item.qty||1));
-        const isLast=i===tx.items.length-1;
+        // 若此筆為賒帳交易，商品清單最下面還會再接一行「賒帳10%」，故最後一項商品仍需保留下框線
+        const isLast=i===tx.items.length-1 && !tx.isCredit;
         html+=`<div style="display:grid;grid-template-columns:1fr 56px 90px;padding:10px 22px;${isLast?'':'border-bottom:1px solid var(--border);'}align-items:center">`
           +`<div>`
           +`<div style="font-weight:600;font-family:var(--zh);color:var(--text);font-size:13px">${h(item.name||'')}</div>`
@@ -2364,6 +2430,14 @@ function openTxDetail(txId){
           +`<div style="text-align:right;font-family:var(--mono);font-weight:700;color:var(--gold);font-size:13px">NT$ ${money(sub)}</div>`
           +'</div>';
       });
+      // 賒帳：最下面加一行 10% 費用（中泰雙語），底色使用蒂芬妮藍
+      if(tx.isCredit){
+        const fee=num(tx.creditFee, Math.round(sumItems(tx.items)*0.1));
+        html+=`<div style="display:grid;grid-template-columns:1fr 56px 90px;padding:10px 22px;align-items:center;background:var(--tiffany-bg);border-top:1.5px dashed var(--tiffany-border)">`
+          +`<div style="grid-column:1/3;font-weight:700;font-family:var(--zh);color:var(--tiffany-dark);font-size:12.5px">賒帳 10% <span style="font-family:var(--th);font-weight:600">/ ขายเชื่อ 10%</span></div>`
+          +`<div style="text-align:right;font-family:var(--mono);font-weight:700;color:var(--tiffany-dark);font-size:13px">+NT$ ${money(fee)}</div>`
+          +'</div>';
+      }
       itemsEl.innerHTML=html;
     }
   }
@@ -2993,8 +3067,9 @@ let heldCarts = []; // [{id, items, savedAt}]
 function holdCart(){
   if(!cart.length) return;
   const id = 'H' + Date.now();
-  heldCarts.push({ id, items: JSON.parse(JSON.stringify(cart)), savedAt: new Date() });
+  heldCarts.push({ id, items: JSON.parse(JSON.stringify(cart)), savedAt: new Date(), isCredit: isCreditSale });
   cart = [];
+  isCreditSale=false;syncCreditUI(); // 暫存後換下一位客人，賒帳狀態重設
   renderCart();
   renderHoldBar();
   _saveHeldCarts();
@@ -3006,9 +3081,11 @@ function resumeHeld(id){
   if(idx===-1) return;
   // 若目前購物車有商品，自動先暫存，不詢問
   if(cart.length){
-    heldCarts.push({id:'H'+Date.now(), items:JSON.parse(JSON.stringify(cart)), savedAt:new Date()});
+    heldCarts.push({id:'H'+Date.now(), items:JSON.parse(JSON.stringify(cart)), savedAt:new Date(), isCredit:isCreditSale});
   }
   cart = JSON.parse(JSON.stringify(heldCarts[idx].items));
+  isCreditSale = !!heldCarts[idx].isCredit; // 恢復此客人原本的賒帳狀態
+  syncCreditUI();
   heldCarts.splice(idx,1);
   renderCart();
   renderHoldBar();
@@ -3032,14 +3109,15 @@ function renderHoldBar(){
     return;
   }
   const slots = heldCarts.map((hc,i)=>{
-    let total=0, count=0;
-    for(const item of hc.items){ total+=item.price*item.qty; count+=item.qty; }
+    let rawTotal=0, count=0;
+    for(const item of hc.items){ rawTotal+=item.price*item.qty; count+=item.qty; }
+    const total = rawTotal + feeFor(rawTotal, hc.isCredit); // 賒帳的暫存購物車也顯示 ×1.1 後的金額
     const t = hc.savedAt;
     const timeStr = String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
-    return `<div class="hold-slot" onclick="resumeHeld('${hc.id}')" title="點擊恢復此購物車">
+    return `<div class="hold-slot${hc.isCredit?' credit':''}" onclick="resumeHeld('${hc.id}')" title="點擊恢復此購物車">
       <div class="hs-num">${i+1}</div>
       <div class="hs-info">
-        <div class="hs-count">${count} 件 · ${timeStr}</div>
+        <div class="hs-count">${count} 件 · ${timeStr}${hc.isCredit?' · 賒帳':''}</div>
         <div class="hs-amt">NT$ ${money(total)}</div>
       </div>
       <span class="hs-del" onclick="deleteHeld('${hc.id}',event)" title="刪除">×</span>
@@ -3057,6 +3135,31 @@ function renderHoldBar(){
 // ★ 應用程式版本號（與 pos-sw.js VER 保持一致，方便對照）
 // ══════════════════════════════════════════════════════════
 // 版本更新紀錄 CHANGELOG
+// ──────────────────────────────────────────────────────────
+// v1.2.13（新增「賒帳」功能，中泰雙語 ขายเชื่อ / 賒帳）
+//   1. [Feature] 結帳按鈕與「暫存此客人購物車」按鈕中間新增可勾選的
+//      「賒帳」核取方塊；勾選後，購物車總計（主畫面 grand-total、
+//      確認購買清單 review-total-amt、實際寫入的交易金額 tx.total）
+//      一律以 ×1.1 計算（四捨五入取整），多收的 10% 另存為
+//      tx.creditFee，並以 tx.isCredit 標記本筆交易為賒帳。新增
+//      feeFor()/creditFee()/grandTotal() 共用計算函式，確保各處
+//      金額計算邏輯一致。
+//   2. [Feature] 確認購買清單（openReview）：勾選賒帳時，商品清單
+//      最下面會多一行「ขายเชื่อ 10% / 賒帳 10%」費用列，讓總計金額
+//      的來源清楚可見；找零提示與語音報價（TTS）亦改用加收後的
+//      總金額計算，避免顯示金額與實收金額不一致。
+//   3. [UI] 本週交易明細（renderRecentTx）：賒帳交易的整列底色改為
+//      蒂芬妮藍（新增 --tiffany 系列 CSS 變數），並附加小型「賒」
+//      標籤，方便在列表中快速辨識，一般交易的顯示不受影響。
+//   4. [Feature] 交易明細彈跳視窗（openTxDetail）：賒帳交易的商品
+//      清單最下面新增「賒帳 10% / ขายเชื่อ 10%」中泰雙語費用列
+//      （蒂芬妮藍底色），呈現與 openReview 一致的費用細項。
+//   5. [Bug-prevention] 暫存/恢復購物車（holdCart/resumeHeld）：賒帳
+//      狀態會隨個別暫存購物車一併儲存與還原，並在暫存後自動重設
+//      目前勾選狀態，避免不同客人之間的賒帳狀態互相污染而算錯
+//      金額；暫存列（renderHoldBar）金額與底色亦同步反映賒帳狀態。
+//   6. [Bug-prevention] clearCart / removeItem：購物車清空時一併
+//      重設賒帳勾選狀態，避免下一筆交易誤繼承前一筆的賒帳設定。
 // ──────────────────────────────────────────────────────────
 // v1.2.12（程式碼健檢：安全性 + 一致性修正）
 //   1. [Security] confirmDeleteTx（刪除交易確認彈窗）：品項摘要組字串時
@@ -3186,7 +3289,7 @@ function renderHoldBar(){
 //   - Firebase onValue 跳過 initial fire，防止自迴響
 //   - 分鍵追蹤寫入，避免全量覆寫
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.2.12';
+const APP_VERSION = '1.2.13';
 
 // 將版本號顯示於 nav brand（DOMContentLoaded 後確保元素存在）
 document.addEventListener('DOMContentLoaded', () => {

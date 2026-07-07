@@ -1,9 +1,14 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.12
+   POS Service Worker  v1.2.13
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
    ──────────────────────────────────────────
+   v1.2.13（POS.html 新增「賒帳」功能，SW 本身無邏輯變動，
+            僅提升版號以促使已安裝的 PWA 儘快取得更新後的 POS.html）
+     1. [Feature] 結帳按鈕與暫存按鈕中間新增「賒帳」核取方塊（中泰雙語），
+        勾選後總計 ×1.1；本週交易明細內賒帳交易底色改為蒂芬妮藍；
+        交易明細彈跳視窗與確認購買清單最下面新增「賒帳10%」中泰雙語費用列
    v1.2.12（POS.html 程式碼健檢：安全性 + 一致性修正，SW 本身無邏輯變動，
             僅提升版號以促使已安裝的 PWA 儘快取得更新後的 POS.html）
      1. [Security] confirmDeleteTx 品項摘要缺 h() 轉義（tx.items 可能源自
@@ -57,7 +62,7 @@
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.12';
+const VER          = 'pos-v1.2.13';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;
