@@ -896,6 +896,8 @@ body.pwa-offline .pwa-update-bar.show {
     </div>
     <!-- Items table -->
     <div id="txd-items" style="padding:10px 0"></div>
+    <!-- 賒帳收據連結（僅賒帳且上傳成功時顯示） -->
+    <div id="txd-receipt" style="display:none;padding:0 22px 14px"></div>
     <!-- Footer total -->
     <div id="txd-footer" style="display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-top:2px solid var(--border);background:var(--surface2);border-radius:0 0 18px 18px">
       <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:var(--muted);font-family:var(--zh)">รวม / 合計</div>
@@ -916,7 +918,7 @@ body.pwa-offline .pwa-update-bar.show {
   </div>
 
   <!-- Stats buttons -->
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
     <button onclick="ooSetFilter('pending')" id="oo-btn-pending" class="card" style="padding:14px 12px;text-align:center;cursor:pointer;border:2px solid transparent;transition:all .18s;background:var(--surface)">
       <div style="font-size:33px;font-weight:700;color:var(--red)" id="oo-stat-pending">0</div>
       <div style="font-size:17px;color:var(--muted);margin-top:2px">⏳ รอดำเนินการ<br><span style="font-family:var(--zh)">待處理</span></div>
@@ -924,10 +926,6 @@ body.pwa-offline .pwa-update-bar.show {
     <button onclick="ooSetFilter('done')" id="oo-btn-done" class="card" style="padding:14px 12px;text-align:center;cursor:pointer;border:2px solid transparent;transition:all .18s;background:var(--surface)">
       <div style="font-size:33px;font-weight:700;color:var(--green)" id="oo-stat-done">0</div>
       <div style="font-size:17px;color:var(--muted);margin-top:2px">✓ เสร็จสิ้น<br><span style="font-family:var(--zh)">已完成</span></div>
-    </button>
-    <button onclick="ooOpenMemberList()" class="card" style="padding:14px 12px;text-align:center;cursor:pointer;border:2px solid transparent;transition:all .18s;background:var(--surface)">
-      <div style="font-size:33px;font-weight:700;color:var(--purple)" id="oo-stat-members">0</div>
-      <div style="font-size:17px;color:var(--muted);margin-top:2px">👥 สมาชิก<br><span style="font-family:var(--zh)">會員列表</span></div>
     </button>
   </div>
 
@@ -982,32 +980,10 @@ body.pwa-offline .pwa-update-bar.show {
   </div>
 </div>
 
-<!-- ═══ Modal: 會員列表 ═══ -->
-<div class="overlay" id="m-member-list">
-  <div class="mbox" style="width:460px;max-height:88vh;overflow-y:auto">
-    <div class="m-title">👥 รายชื่อสมาชิก<span class="zh">會員列表</span></div>
-    <div id="member-list-body" style="margin-bottom:12px"></div>
-    <div class="m-acts">
-      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('m-member-list')">ปิด / 關閉</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ Modal: 會員訂單歷史 ═══ -->
-<div class="overlay" id="m-member-history">
-  <div class="mbox" style="width:480px;max-height:88vh;overflow-y:auto">
-    <div class="m-title" id="mh-title">📋 ประวัติออเดอร์<span class="zh">訂單歷史</span></div>
-    <div id="mh-body"></div>
-    <div class="m-acts" style="margin-top:12px">
-      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('m-member-history');openModal('m-member-list')">← กลับ / 返回</button>
-    </div>
-  </div>
-</div>
-
 <!-- ═══ Checkout Review Overlay ═══ -->
 <div class="review-overlay" id="review-overlay">
   <div class="review-nav">
-    <button class="back-btn" onclick="closeReview()">‹ กลับ / 返回收銀台</button>
+    <button class="back-btn" onclick="closeReview()" data-html2canvas-ignore="true">‹ กลับ / 返回收銀台</button>
     <div class="rv-title">ยืนยันรายการสั่งซื้อ<span class="zh">確認購買清單</span></div>
   </div>
   <div class="review-body">
@@ -1028,9 +1004,9 @@ body.pwa-offline .pwa-update-bar.show {
     <div class="rv-total-row">
       <div class="rtl">ยอดรวมทั้งหมด<span class="zh">總計金額</span></div>
       <div class="rta" id="review-total-amt">NT$ 0</div>
-      <div class="rv-change-hint" id="rv-change-hint"></div>
+      <div class="rv-change-hint" id="rv-change-hint" data-html2canvas-ignore="true"></div>
     </div>
-    <button class="btn-confirm" onclick="confirmCheckout()">✓ ยืนยันการชำระเงิน / 確定結帳</button>
+    <button class="btn-confirm" onclick="confirmCheckout()" data-html2canvas-ignore="true">✓ ยืนยันการชำระเงิน / 確定結帳</button>
   </div>
 </div>
 
@@ -1940,7 +1916,88 @@ function openReview(){
   speak('ยอดรวม '+amountToThai(finalTotal));
 }
 function closeReview(){document.getElementById('review-overlay').classList.remove('open');}
-function confirmCheckout(){
+
+// ═══ 賒帳收據截圖 → 上傳 ImgBB ═══
+// 勾選「賒帳」並按下「確定結帳」時，於關閉「確認購買清單」畫面前
+// 先擷取該畫面截圖，結帳完成後於背景上傳至 ImgBB 圖床，
+// 成功後將圖片網址存入該筆交易的 receiptUrl（可於「交易明細」彈跳視窗查看）。
+const IMGBB_API_KEY = 'cb75fed84ae5a2a28d0487ebf5d97ccf';
+let _html2canvasPromise = null;
+function loadHtml2Canvas(){
+  if(window.html2canvas) return Promise.resolve(window.html2canvas);
+  if(_html2canvasPromise) return _html2canvasPromise;
+  _html2canvasPromise = new Promise((resolve,reject)=>{
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+    s.onload = ()=>resolve(window.html2canvas);
+    s.onerror = ()=>reject(new Error('html2canvas 載入失敗'));
+    document.head.appendChild(s);
+  });
+  return _html2canvasPromise;
+}
+// 擷取「確認購買清單」畫面。必須在 closeReview() 之前呼叫並 await 完成，
+// 否則畫面淡出後（opacity→0）截到的會是空白內容。
+// 擷取前先複製一份節點移到畫面外、改為自動高度，避免直接截取
+// position:fixed 的全螢幕 review-overlay 造成收據截圖留白過多。
+async function captureReceiptDataUrl(){
+  const original = document.getElementById('review-overlay');
+  if(!original) return null;
+  try{
+    const html2canvas = await loadHtml2Canvas();
+    const w = original.clientWidth || 420;
+    const clone = original.cloneNode(true);
+    clone.removeAttribute('id');
+    clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id')); // 避免與原畫面重複 id
+    clone.style.cssText = 'position:fixed;top:0;left:-9999px;right:auto;bottom:auto;'
+      + 'width:'+w+'px;height:auto;opacity:1;pointer-events:none;transform:none;z-index:-1;';
+    const cloneBody = clone.querySelector('.review-body');
+    if(cloneBody){ cloneBody.style.flex='none'; cloneBody.style.overflowY='visible'; }
+    document.body.appendChild(clone);
+    let dataUrl = null;
+    try{
+      const canvas = await html2canvas(clone, { scale:2, useCORS:true });
+      dataUrl = canvas.toDataURL('image/png');
+    } finally {
+      clone.remove();
+    }
+    return dataUrl;
+  }catch(e){
+    console.warn('[POS] 收據截圖失敗:', e);
+    return null;
+  }
+}
+// 上傳至 ImgBB；成功回傳圖片網址，失敗回傳 null（絕不阻擋結帳流程）
+async function uploadReceiptToImgbb(dataUrl, name){
+  try{
+    const base64 = String(dataUrl||'').split(',')[1] || '';
+    if(!base64) return null;
+    const fd = new FormData();
+    fd.append('image', base64);
+    if(name) fd.append('name', name);
+    const res = await fetch('https://api.imgbb.com/1/upload?key='+IMGBB_API_KEY, { method:'POST', body:fd });
+    const json = await res.json();
+    if(json && json.success && json.data && json.data.url) return json.data.url;
+    console.warn('[POS] ImgBB 上傳失敗:', json);
+  }catch(e){
+    console.warn('[POS] 收據上傳發生錯誤:', e);
+  }
+  return null;
+}
+
+async function confirmCheckout(){
+  // ★ 雙音提示音 + 語音一律搶先同步觸發（不可放在 await 之後）：
+  //   下方賒帳擷取收據螢幕截圖需要 await html2canvas，若語音排在其後才呼叫，
+  //   會脫離使用者手勢（user gesture）範圍，導致 iOS 無法播放語音（同一類問題
+  //   先前已在別處修正過，見檔案內「保持在用戶手勢範圍內」相關註解）。
+  playBeep(880, 0.08);
+  setTimeout(()=>playBeep(1100, 0.12), 100);
+  speak('ขอบคุณที่ใช้บริการครับ');
+
+  // 賒帳交易：搶在 closeReview() 觸發淡出動畫之前，先擷取收據截圖
+  let receiptDataUrl = null;
+  if(isCreditSale){
+    receiptDataUrl = await captureReceiptDataUrl();
+  }
   closeReview();
   const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
   const fee=creditFee(sub);
@@ -1965,11 +2022,20 @@ function confirmCheckout(){
   if(scanMode === 'cam') stopScanner();
   else setSt('รอสแกน... / 等待掃描');
   showToast('ชำระเงินเรียบร้อย! / 結帳完成 ✓','ok');
-  // 雙音提示音（結帳成功）
-  playBeep(880, 0.08);
-  setTimeout(()=>playBeep(1100, 0.12), 100);
-  // 直接呼叫（不用 setTimeout），保持在用戶手勢範圍內才能觸發 iOS 語音
-  speak('ขอบคุณที่ใช้บริการครับ');
+
+  // 賒帳收據：背景上傳至 ImgBB（不 await，不阻擋結帳流程），
+  // 成功後回填 receiptUrl，供「交易明細」彈跳視窗查閱；失敗則提示收銀員自行處理。
+  if(receiptDataUrl){
+    uploadReceiptToImgbb(receiptDataUrl, tx.id).then(url=>{
+      if(url){
+        const latest = getTx();
+        const idx = latest.findIndex(t=>t.id===tx.id);
+        if(idx>-1){ latest[idx].receiptUrl = url; saveTx(latest); }
+      } else {
+        showToast('อัปโหลดใบเสร็จไม่สำเร็จ / 收據上傳失敗','err');
+      }
+    });
+  }
 }
 
 // ═══ 編輯模式 ═══
@@ -2443,6 +2509,16 @@ function openTxDetail(txId){
   }
   const totalEl=document.getElementById('txd-total');
   if(totalEl) totalEl.textContent='NT$ '+money(tx.total);
+  const receiptEl=document.getElementById('txd-receipt');
+  if(receiptEl){
+    if(tx.receiptUrl){
+      receiptEl.style.display='block';
+      receiptEl.innerHTML=`<a href="${h(tx.receiptUrl)}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:var(--tiffany-bg);border:1px solid var(--tiffany-border);color:var(--tiffany-dark);text-decoration:none;font-size:12.5px;font-weight:700;font-family:var(--zh)">🧾 查看賒帳收據 <span style="font-weight:400;font-family:var(--th)">/ ดูใบเสร็จขายเชื่อ</span></a>`;
+    } else {
+      receiptEl.style.display='none';
+      receiptEl.innerHTML='';
+    }
+  }
   openModal('m-tx-detail');
 }
 
@@ -3599,12 +3675,10 @@ function renderOnlineOrders(){
     // 更新統計數字
     const pending = _onlineOrders.filter(o=>(o.status||'pending')==='pending').length;
     const done    = _onlineOrders.filter(o=>o.status==='done').length;
-    const members = new Set(_onlineOrders.filter(o=>o.memberId).map(o=>o.memberId)).size;
 
     const sp = id=>{ const el=document.getElementById(id); return el||{textContent:''}; };
     sp('oo-stat-pending').textContent = pending;
     sp('oo-stat-done').textContent    = done;
-    sp('oo-stat-members').textContent = members;
 
     // 按鈕高亮
     const bPending = document.getElementById('oo-btn-pending');
@@ -3883,115 +3957,6 @@ async function updateOrderStatus(orderId,status){
     catch(e){ console.warn('[POS] updateOrderStatus Firebase fail:',e); }
   }
 }
-
-/* 會員列表 */
-async function ooOpenMemberList(){
-    const body = document.getElementById('member-list-body');
-    if(!body) return;
-    body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted2)">กำลังโหลด… / 載入中…</div>`;
-    openModal('m-member-list');
-
-    let members = {};
-    // 從 Firebase 讀取 shop/members
-    if(window._fbGet){
-      try{
-        const snap = await window._fbGet('shop/members');
-        if(snap && snap.val()) members = snap.val();
-      }catch(e){ console.warn('[POS] load members fail:',e); }
-    }
-    // 從訂單中補充沒有 Firebase 記錄的會員
-    _onlineOrders.filter(o=>o.memberId && !members[o.memberId]).forEach(o=>{
-      members[o.memberId] = { memberId:o.memberId, name:o.memberName||o.customerName||'—', phone:o.customerPhone||'', orderCount:0, totalSpent:0 };
-    });
-
-    const list = Object.values(members).sort((a,b)=>(a.memberId||'').localeCompare(b.memberId||''));
-    if(!list.length){
-      body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted2);font-family:var(--zh)">尚無會員資料</div>`;
-      return;
-    }
-
-    body.innerHTML = list.map(m=>{
-      const memberId = String(m.memberId || '');
-      return `<div onclick="ooOpenMemberHistory(${jsArg(memberId)})" style="
-        display:grid;grid-template-columns:auto 1fr auto;gap:6px 12px;align-items:center;
-        padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;
-      " onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--purple);
-          background:rgba(124,58,237,.08);border-radius:6px;padding:4px 8px;white-space:nowrap">${h(memberId||'—')}</div>
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)">${h(m.name||'—')}</div>
-        </div>
-        <div style="font-size:11px;color:var(--muted);white-space:nowrap;text-align:right">${h(m.phone||'')}</div>
-      </div>`;
-    }).join('');
-  }
-
-/* 會員訂單歷史 */
-async function ooOpenMemberHistory(memberId){
-    closeModal('m-member-list');
-    const titleEl = document.getElementById('mh-title');
-    const body    = document.getElementById('mh-body');
-    if(!body) return;
-    if(titleEl) titleEl.innerHTML = `📋 ประวัติออเดอร์ <span style="font-family:var(--mono);color:var(--purple)">${h(memberId)}</span>`;
-    body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted2)">กำลังโหลด…</div>`;
-    openModal('m-member-history');
-
-    // 從本機訂單過濾
-    const memberOrders = _onlineOrders.filter(o=>o.memberId===memberId)
-      .sort((a,b)=>new Date(b.date)-new Date(a.date));
-
-    // 從 Firebase 讀取 orderHistory
-    let historyOrders = [];
-    if(window._fbGet){
-      try{
-        const snap = await window._fbGet(`shop/members/${memberId}/orderHistory`);
-        if(snap && snap.val()){
-          historyOrders = Object.values(snap.val()).filter(o=>o&&o.id)
-            .filter(o=>!memberOrders.find(mo=>mo.id===o.id)); // 去重
-        }
-      }catch(e){}
-    }
-
-    const allOrders = [...memberOrders, ...historyOrders]
-      .sort((a,b)=>new Date(b.date)-new Date(a.date));
-
-    if(!allOrders.length){
-      body.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted2);font-family:var(--zh)">此會員尚無訂單記錄</div>`;
-      return;
-    }
-
-    const totalSpent = allOrders.reduce((s,o)=>s+num(o.total),0);
-    body.innerHTML = `
-      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-        <div style="background:var(--surface2);border-radius:8px;padding:10px 16px;flex:1;text-align:center">
-          <div style="font-size:20px;font-weight:700;color:var(--accent);font-family:var(--mono)">NT$${money(totalSpent)}</div>
-          <div style="font-size:11px;color:var(--muted);font-family:var(--zh)">累計消費</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:10px 16px;flex:1;text-align:center">
-          <div style="font-size:20px;font-weight:700;color:var(--purple)">${allOrders.length}</div>
-          <div style="font-size:11px;color:var(--muted);font-family:var(--zh)">訂單總數</div>
-        </div>
-      </div>
-      ${allOrders.map(o=>{
-        const status = o.status||'pending';
-        const statusColor = status==='pending'?'var(--red)':status==='done'?'var(--green)':'var(--muted)';
-        const statusLabel = status==='pending'?'⏳ 待處理':status==='done'?'✓ 已完成':'📊 已計入';
-        const items = safeArray(o.items);
-        const itemSummary = items.slice(0,3).map(i=>h(i?.name||'')).filter(Boolean).join('、') + (items.length>3?` +${items.length-3}...`:'' );
-        return `<div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px">
-            <span style="font-family:var(--mono);font-size:11px;color:var(--accent)">${h(o.id)}</span>
-            <span style="font-size:11px;font-weight:600;color:${statusColor}">${statusLabel}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div style="font-size:11px;color:var(--muted2)">${fmtDateTh(o.date)}</div>
-            <div style="font-family:var(--mono);font-weight:700;color:var(--text)">NT$${money(o.total)}</div>
-          </div>
-          <div style="font-size:12px;color:var(--text2);margin-top:4px">${itemSummary}</div>
-          ${o.note?`<div style="font-size:11px;color:var(--gold);margin-top:3px">💬 ${h(o.note)}</div>`:''}
-        </div>`;
-      }).join('')}`;
-  }
 
 // ── fbPullAll 擴充 ──
 window._fbPullAllExtended = true;

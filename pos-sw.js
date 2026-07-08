@@ -1,9 +1,26 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.13
+   POS Service Worker  v1.2.14
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
    ──────────────────────────────────────────
+   v1.2.14（線上訂單移除會員列表；賒帳新增收據截圖上傳，
+            SW 本身無邏輯變動，僅提升版號以促使已安裝的 PWA
+            儘快取得更新後的 POS.html）
+     1. [Feature] 線上訂單頁移除「會員列表」統計按鈕與彈跳視窗
+        （ooOpenMemberList/ooOpenMemberHistory 及 m-member-list/
+        m-member-history 兩個 Modal 一併移除），統計按鈕格數由
+        3 欄改為 2 欄（僅保留「待處理」「已完成」）
+     2. [Feature] 勾選「賒帳」並按下「確定結帳」時，於關閉「確認
+        購買清單」畫面前先擷取該畫面截圖（html2canvas，由 CDN
+        延遲載入，僅賒帳交易才載入），結帳完成後於背景上傳至
+        ImgBB 圖床；成功後圖片網址存入該筆交易 receiptUrl，可於
+        「交易明細」彈跳視窗（openTxDetail）點擊查看，失敗則
+        顯示提示但不影響結帳流程本身
+     3. [Fix] confirmCheckout 因新增 await 擷取畫面截圖而改為
+        async function；為避免賒帳交易的雙音提示音／語音因排在
+        await 之後而脫離使用者手勢範圍、導致 iOS 無法播放語音，
+        兩者一律搶先移至函式最開頭同步觸發
    v1.2.13（POS.html 新增「賒帳」功能，SW 本身無邏輯變動，
             僅提升版號以促使已安裝的 PWA 儘快取得更新後的 POS.html）
      1. [Feature] 結帳按鈕與暫存按鈕中間新增「賒帳」核取方塊（中泰雙語），
@@ -62,7 +79,7 @@
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.13';
+const VER          = 'pos-v1.2.14';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;
