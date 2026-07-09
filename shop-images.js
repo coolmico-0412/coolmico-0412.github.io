@@ -39,6 +39,7 @@ export const PRODUCT_IMAGE_SET = new Set([
   'DoubleC飲料',
   'DoubleC飲料1',
   'DoubleC飲料2',
+  'DoubleC飲料3',
   'M150',
   'Oishi飲料',
   'Oishi飲料1',
@@ -516,8 +517,7 @@ export const PRODUCT_IMAGE_SET = new Set([
   'กระชาย甲猜',
   'ปลาหมึกวง魷魚圈',
   'หน่อไม้醃竹筍',
-  'หน่อไม้醃竹筍',
- 'หน่อไม้醃竹筍1',
+  'หน่อไม้醃竹筍1',
   'หมูยอ越南火腿',
   'หมูสด豬肉',
 

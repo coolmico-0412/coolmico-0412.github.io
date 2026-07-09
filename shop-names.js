@@ -87,6 +87,7 @@ export const PRODUCT_NAME_MAP = {
   'DoubleC飲料': { en: 'Double C Drink', vi: 'Nước uống Double C', id: 'Minuman Double C', th: 'DoubleC飲料', zh: 'DoubleC飲料' },
   'DoubleC飲料1': { en: 'Double C Drink', vi: 'Nước uống Double C', id: 'Minuman Double C', th: 'DoubleC飲料', zh: 'DoubleC飲料' },
   'DoubleC飲料2': { en: 'Double C Drink', vi: 'Nước uống Double C', id: 'Minuman Double C', th: 'DoubleC飲料', zh: 'DoubleC飲料' },
+  'DoubleC飲料3': { en: 'Double C Drink', vi: 'Nước uống Double C', id: 'Minuman Double C', th: 'DoubleC飲料', zh: 'DoubleC飲料' },
   'M150': { en: 'M-150 Energy Drink', vi: 'Nước tăng lực M-150', id: 'Minuman Energi M-150', th: 'M150', zh: 'M150' },
   'Oishi飲料': { en: 'Oishi Drink', vi: 'Nước uống Oishi', id: 'Minuman Oishi', th: 'Oishi飲料', zh: 'Oishi飲料' },
   'Oishi飲料1': { en: 'Oishi Drink', vi: 'Nước uống Oishi', id: 'Minuman Oishi', th: 'Oishi飲料', zh: 'Oishi飲料' },
