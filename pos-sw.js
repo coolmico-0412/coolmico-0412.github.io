@@ -1,9 +1,15 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.14
+   POS Service Worker  v1.2.15
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
    ──────────────────────────────────────────
+   v1.2.15（商品管理新增「搜尋商品」功能（依條碼後五碼比對），
+            SW 本身無邏輯變動，僅提升版號以促使已安裝的 PWA
+            儘快取得更新後的 POS.html）
+     1. [Feature] 商品管理頁新增搜尋列，輸入條碼後五碼即可跨分類
+        快速篩選出對應的條碼商品；詳細異動請見 POS.html 內
+        CHANGELOG v1.2.15 條目
    v1.2.14（線上訂單移除會員列表；賒帳新增收據截圖上傳，
             SW 本身無邏輯變動，僅提升版號以促使已安裝的 PWA
             儘快取得更新後的 POS.html）
@@ -79,7 +85,7 @@
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.14';
+const VER          = 'pos-v1.2.15';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;
