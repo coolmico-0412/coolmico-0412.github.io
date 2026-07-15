@@ -637,9 +637,13 @@ body.pwa-offline .pwa-update-bar.show {
   try {
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js");
     const { getDatabase, ref, set, get, onValue, off } = await import("https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js");
+    const { getAuth, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js");
 
     const app = initializeApp(cfg, 'pos-app');
     const db  = getDatabase(app);
+    // ★ 匿名登入（無畫面、無感）：搭配資料庫規則 auth != null，
+    //   避免任何人不經過本 App 直接用 databaseURL 讀寫資料庫
+    await signInAnonymously(getAuth(app));
 
     window._fbDb      = db;
     window._fbRef     = (path) => ref(db, path);

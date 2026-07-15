@@ -1,9 +1,18 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.15
+   POS Service Worker  v1.2.16
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
    ──────────────────────────────────────────
+   v1.2.16（Firebase Realtime Database 資料庫規則收緊，
+            SW 本身無邏輯變動，僅提升版號以促使已安裝的 PWA
+            儘快取得更新後的 POS.html）
+     1. [Security] 資料庫規則由完全公開改為需 auth != null 才能讀寫，
+        避免任何人繞過 App、直接用 databaseURL 讀寫整個資料庫
+     2. [Feature] Firebase 初始化流程新增 signInAnonymously()（無畫面、
+        無感登入），於 getDatabase() 之後、window._fbReady 設為 true 之前
+        await 完成，確保後續讀寫皆已通過驗證；失敗時沿用原本
+        _fbNeedSetup 錯誤處理流程，行為與過去相同
    v1.2.15（商品管理新增「搜尋商品」功能（依條碼後五碼比對），
             SW 本身無邏輯變動，僅提升版號以促使已安裝的 PWA
             儘快取得更新後的 POS.html）
@@ -85,7 +94,7 @@
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.15';
+const VER          = 'pos-v1.2.16';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;

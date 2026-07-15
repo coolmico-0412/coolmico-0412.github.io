@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════
-   REPORT Service Worker  v1.1.1
+   REPORT Service Worker  v1.1.2
    HTML  → Network First（永遠取最新版）
    Firebase → Network First（即時資料）
    Fonts → Stale While Revalidate / Cache First
@@ -7,11 +7,16 @@
 
    ★ 重要：activate 事件只清除 report-* 前綴的快取，
      不影響同站的 pos-* 和 shop-* 快取。
+   ★ v1.1.2（Firebase 資料庫規則收緊，SW 本身無邏輯變動，僅提升
+     版號以促使已安裝的 PWA 儘快取得更新後的 REPORT.html）：
+     資料庫規則改為需 auth != null；初始化流程新增
+     signInAnonymously()（無畫面、無感登入），失敗時沿用原本
+     _rptFbReady=false 的離線／本機資料 fallback 流程。
    ★ v1.1.1 修正：跨來源且未加 crossorigin 的請求（例如
      Google Fonts CSS）會得到 opaque 回應，res.ok 恆為
      false，導致永遠快取不到。見下方 isCacheable()。
    ══════════════════════════════════════════ */
-const VER          = 'report-v1.1.1';
+const VER          = 'report-v1.1.2';
 const STATIC_CACHE = `report-static-${VER}`;
 const FONT_CACHE   = `report-fonts-${VER}`;
 const ALL_CACHES   = [STATIC_CACHE, FONT_CACHE];

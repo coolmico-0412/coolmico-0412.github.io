@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   Service Worker — ร้านค้าออนไลน์ PWA  v1.5.8
+   Service Worker — ร้านค้าออนไลน์ PWA  v1.5.10
 
    ⚠️  快取策略修正說明：
        HTML 頁面 → Network First（確保永遠拿到最新版本）
@@ -7,7 +7,14 @@
        Firebase RTDB → Network First（即時資料）
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION    = 'v1.5.8'; // 會員系統完全移除：刪除申請/登入/編輯資料 Modal 與相關 JS/CSS/翻譯字串，訂單改僅寫入 Firebase 供 POS 讀取，顧客端維持 LINE/FB 通知
+const APP_VERSION    = 'v1.5.10'; // Firebase 資料庫規則收緊為需 auth != null；初始化流程新增
+                                  // signInAnonymously()（無畫面、顧客無感登入，不 await 整個模組，
+                                  // 只在 serverGet() / writeOrderToFirebase() 真正讀寫前才等待），
+                                  // 登入失敗時沿用原本 _fbOK 判斷與 local fallback 顯示邏輯
+                                  // 程式碼清理：移除舊版獨立客服選單殘留（toggleContactMenu/closeContactMenu 及對應 CSS，
+                                  // #contact-menu 已於 v1.5.8 會員抽屜合併後不存在）；移除頁首 BOM；
+                                  // 修正 viewport 停用縮放（改為可縮放，符合無障礙需求）；
+                                  // 修正 cartEmpty 換行符號只替換第一個的問題（改用全域 regex，同 successMsg 作法）
 const STATIC_CACHE   = `shop-static-${APP_VERSION}`;
 const FONT_CACHE     = `shop-fonts-${APP_VERSION}`;
 const FIREBASE_CACHE = `shop-firebase-${APP_VERSION}`;

@@ -1867,6 +1867,8 @@ import { initializeApp }
   from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
 import { getDatabase, ref, get, set }
   from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
+import { getAuth, signInAnonymously }
+  from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 /* ── shop-names.js / shop-images.js 改為動態載入（在 init() 中執行）──────────
    原因：靜態 import 若任一檔案 404 / 網路錯誤，整個 <script type="module"> 會
          直接崩潰，導致 init() 永遠不被呼叫、商品格空白、頁面完全無法運作。
@@ -1902,9 +1904,15 @@ const LS = {
 
 let _db   = null;
 let _fbOK = false;
+// ★ 匿名登入 Promise（無畫面、顧客無感）：搭配資料庫規則 auth != null。
+//   不在此 await，避免延後整個模組載入；改為在真正讀寫 Firebase 前
+//   （serverGet / writeOrderToFirebase）才 await 這個 Promise。
+let _authReady = null;
 try {
   const app = initializeApp(FIREBASE_CONFIG);
   _db   = getDatabase(app);
+  _authReady = signInAnonymously(getAuth(app))
+    .catch(e => console.warn('[Shop] 匿名登入失敗:', e));
   _fbOK = true;
 } catch(e) { console.warn('[Shop] Firebase init failed:', e); }
 
@@ -1965,7 +1973,7 @@ function setFbIndicator(state) {
    ⚠️ 必須在 _db 初始化後才可呼叫（syncProducts 已有 !_fbOK 守衛）。  */
 function serverGet(path, ms = 8000) {
   return Promise.race([
-    get(ref(_db, path)),
+    (async () => { if (_authReady) await _authReady; return get(ref(_db, path)); })(),
     new Promise((_, reject) =>
       setTimeout(() => reject(new Error(`timeout: ${path}`)), ms)
     )
@@ -2070,6 +2078,7 @@ async function syncProducts() {
 async function writeOrderToFirebase(orderObj) {
   if (!_fbOK) return false;
   try {
+    if (_authReady) await _authReady;
     await set(ref(_db, `${FB.ORDERS}/${orderObj.id}`), orderObj);
     return true;
   } catch(e) { console.warn('[Shop] writeOrder:', e); return false; }
