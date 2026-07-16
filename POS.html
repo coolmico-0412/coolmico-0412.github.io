@@ -2493,7 +2493,13 @@ function renderRecentTx(){
   body.innerHTML=recent.map(tx=>{
     const d=new Date(tx.date);
     const dateStr=d.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-    const summary=tx.items.slice(0,2).map(i=>`${h(i.name)}×${i.qty}`).join('、')+(tx.items.length>2?'…':'');
+    // ★ Fix v1.2.17: 品項摘要原不分裝置一律只取前兩項＋「…」截斷；平板/電腦
+    //   螢幕該欄（grid 1fr）通常仍有餘裕完整顯示，僅手機寬度才需要精簡。
+    //   isMobileWidth 對應既有 @media(max-width:640px) 手機斷點：
+    //   ≤640px 維持「前兩項＋…」，>640px（平板/電腦）改列出全部品項。
+    const isMobileWidth=window.innerWidth<=640;
+    const summaryItems=isMobileWidth?tx.items.slice(0,2):tx.items;
+    const summary=summaryItems.map(i=>`${h(i.name)}×${i.qty}`).join('、')+(isMobileWidth&&tx.items.length>2?'…':'');
     const safeId=tx.id.replace(/'/g,"\\'");
     const cols=_editMode?'140px 1fr 110px 36px':'140px 1fr 110px';
     // 賒帳交易：底色改為蒂芬妮藍（含 hover 狀態），一般交易維持原本 aglow/透明
@@ -3295,6 +3301,27 @@ function renderHoldBar(){
 // ══════════════════════════════════════════════════════════
 // 版本更新紀錄 CHANGELOG
 // ──────────────────────────────────────────────────────────
+// v1.2.17（本週交易明細「品項摘要」平板/電腦模式不再截斷）
+//   1. [UX] renderRecentTx 組出的品項摘要（summary）原本不分裝置，一律只取
+//      tx.items 前兩項並以「…」省略號截斷。但該欄在 grid-template-columns
+//      中為 1fr（隨可用寬度伸縮），平板/電腦畫面通常仍有餘裕完整顯示，
+//      舊邏輯讓所有裝置都套用手機才需要的精簡顯示，未善用大螢幕空間。
+//      → 修正：新增 isMobileWidth（window.innerWidth<=640，對應既有
+//      @media(max-width:640px) 手機斷點）判斷；僅手機寬度才限制顯示前兩項
+//      ＋省略號，平板/電腦（>640px）改為列出該筆交易全部品項，不再截斷。
+//      此欄未設定 white-space:nowrap 或固定列高，品項較多換行時會自然
+//      撐高該列，不影響其餘欄位或版面。
+// ──────────────────────────────────────────────────────────
+// v1.2.16（Firebase Realtime Database 資料庫規則收緊；本項為補記——先前
+//          將 pos-sw.js 更新至 v1.2.16 時，這裡的 CHANGELOG 與下方
+//          APP_VERSION 未同步更新，此次一併補上，程式碼本身無變動）
+//   1. [Security] 資料庫規則由完全公開改為需 auth != null 才能讀寫，避免
+//      任何人繞過本 App、直接用 databaseURL 讀寫整個資料庫。
+//   2. [Feature] Firebase 初始化流程新增 signInAnonymously()（無畫面、
+//      無感登入），於 getDatabase() 之後、window._fbReady 設為 true 之前
+//      await 完成，確保後續讀寫皆已通過驗證；失敗時沿用原本 _fbNeedSetup
+//      錯誤處理流程，行為與過去相同。
+// ──────────────────────────────────────────────────────────
 // v1.2.15（商品管理新增「搜尋商品」功能：依條碼後五碼快速定位商品）
 //   1. [Feature] 商品管理頁新增搜尋列（置於頁首按鈕列與分類瀏覽區之間，
 //      恆常顯示，不受是否已進入分類影響），輸入框限制最多 5 碼
@@ -3469,7 +3496,7 @@ function renderHoldBar(){
 //   - Firebase onValue 跳過 initial fire，防止自迴響
 //   - 分鍵追蹤寫入，避免全量覆寫
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.2.15';
+const APP_VERSION = '1.2.17';
 
 // 將版本號顯示於 nav brand（DOMContentLoaded 後確保元素存在）
 document.addEventListener('DOMContentLoaded', () => {

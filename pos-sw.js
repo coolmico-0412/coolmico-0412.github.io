@@ -1,9 +1,16 @@
 /* ══════════════════════════════════════════
-   POS Service Worker  v1.2.16
+   POS Service Worker  v1.2.17
    HTML  → Network First（永遠取最新版）
    SDK   → Cache First（省流量）
    Fonts → Stale While Revalidate
    ──────────────────────────────────────────
+   v1.2.17（本週交易明細「品項摘要」平板/電腦模式不再截斷，
+            SW 本身無邏輯變動，僅提升版號以促使已安裝的 PWA
+            儘快取得更新後的 POS.html）
+     1. [UX] 品項摘要（summary）原不分裝置一律只顯示前兩項商品並以「…」
+        截斷；平板/電腦（>640px）畫面改為完整列出該筆交易所有品項，
+        僅手機（≤640px）維持前兩項＋省略號的精簡顯示；詳細異動請見
+        POS.html 內 CHANGELOG v1.2.17 條目
    v1.2.16（Firebase Realtime Database 資料庫規則收緊，
             SW 本身無邏輯變動，僅提升版號以促使已安裝的 PWA
             儘快取得更新後的 POS.html）
@@ -94,7 +101,7 @@
    ★ 維護人員注意：每次修改請將版本最後數字 +1，
      並在 CHANGELOG 補充說明異動內容。
    ══════════════════════════════════════════ */
-const VER          = 'pos-v1.2.16';
+const VER          = 'pos-v1.2.17';
 const STATIC_CACHE = `pos-static-${VER}`;
 const FONT_CACHE   = `pos-fonts-${VER}`;
 const FB_CACHE     = `pos-firebase-${VER}`;
