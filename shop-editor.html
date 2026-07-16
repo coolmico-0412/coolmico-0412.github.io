@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>商品翻譯 & 圖片設定編輯器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   shop-config-editor — styles
+   Brand tokens inherited from shop.html for visual continuity
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg: #FFF8F2;
+  --surface: #FFFFFF;
+  --surface2: #FFF1E8;
+  --border: #F0DDD0;
+  --border2: #E2C8B8;
+  --primary: #C94E6E;
+  --primary2: #A8365A;
+  --primary-glow: rgba(201, 78, 110, .14);
+  --accent: #E8892B;
+  --accent2: #C9721E;
+  --green: #2D9B6F;
+  --green-bg: #E6F4EE;
+  --red: #D9564F;
+  --red-bg: #FDECEA;
+  --amber: #C9721E;
+  --amber-bg: #FDF1E2;
+  --text: #2A1410;
+  --text2: #5C3728;
+  --muted: #9B7060;
+  --muted2: #C4A898;
+  --sh-sm: 0 2px 8px rgba(90, 30, 15, .07);
+  --sh-md: 0 6px 20px rgba(90, 30, 15, .10);
+  --sh-lg: 0 16px 40px rgba(90, 30, 15, .16);
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans TC', 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  padding-bottom: 64px;
+}
+
+input, select, button, textarea {
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.app-shell {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 14px;
+}
+
+/* ── Top bar ───────────────────────────────────────────────────── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--sh-sm);
+}
+.topbar-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.topbar-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.topbar-emoji {
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.topbar-title h1 {
+  font-family: 'Fraunces', 'Noto Sans TC', serif;
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar-sub {
+  margin: 1px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: 999px;
+  padding: 9px 15px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+}
+.btn:active { transform: scale(.96); }
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary2));
+  color: #fff;
+  box-shadow: var(--sh-sm);
+}
+.btn-ghost {
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1px solid var(--border2);
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--primary2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 4px;
+}
+.icon-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 6px;
+  border-radius: 8px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.icon-btn:hover { background: var(--surface2); }
+.icon-btn:disabled { opacity: .3; cursor: default; }
+.icon-btn:disabled:hover { background: transparent; }
+
+/* ── Banners ───────────────────────────────────────────────────── */
+.banner {
+  max-width: 760px;
+  margin: 12px auto 0;
+  padding: 11px 14px;
+  border-radius: var(--r-sm);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-size: 13px;
+  line-height: 1.6;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.banner-warn {
+  background: var(--amber-bg);
+  border-color: #EAC28A;
+  color: var(--accent2);
+  font-weight: 600;
+}
+.banner-close {
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: .6;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 2px 4px;
+}
+.banner-close:hover { opacity: 1; }
+.banner p, .banner div { margin: 0; flex: 1; }
+
+/* ── Tabs ──────────────────────────────────────────────────────── */
+.tabs {
+  max-width: 760px;
+  margin: 14px auto 0;
+  display: flex;
+  gap: 6px;
+  padding: 0 0 0;
+}
+.tab {
+  flex: 1;
+  border: none;
+  background: var(--surface2);
+  color: var(--text2);
+  padding: 11px 10px;
+  border-radius: var(--r-sm) var(--r-sm) 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+}
+.tab.active {
+  background: var(--surface);
+  color: var(--primary2);
+  border-bottom: 3px solid var(--primary);
+}
+.tab-count {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.tab.active .tab-count { color: var(--primary2); }
+
+/* ── Panels ────────────────────────────────────────────────────── */
+.panel { display: none; background: var(--surface); border-radius: 0 0 var(--r-md) var(--r-md); padding: 14px; box-shadow: var(--sh-sm); }
+.panel.active { display: block; }
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.search-wrap { flex: 1 1 100%; }
+#search {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  font-size: 14.5px;
+}
+#search:focus { background: var(--surface); }
+.toolbar-actions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.toolbar-sep { color: var(--border2); }
+
+/* ── Category accordion ───────────────────────────────────────────── */
+.category {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  margin-bottom: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.category-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 12px;
+  cursor: pointer;
+  background: var(--surface2);
+  user-select: none;
+}
+.cat-chevron {
+  transition: transform .15s ease;
+  color: var(--muted);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.category.open .cat-chevron { transform: rotate(90deg); }
+.cat-icon { font-size: 16px; flex-shrink: 0; }
+.cat-name {
+  font-weight: 700;
+  font-size: 14.5px;
+  color: var(--text2);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cat-count {
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 2px 9px;
+  flex-shrink: 0;
+}
+.cat-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.btn-add-product {
+  border: 1px dashed var(--border2);
+  background: var(--surface);
+  color: var(--primary2);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-add-product:hover { background: var(--primary-glow); }
+.category-body { display: none; padding: 10px; }
+.category.open .category-body { display: block; }
+.cat-empty {
+  color: var(--muted);
+  font-size: 13px;
+  padding: 18px 8px;
+  text-align: center;
+}
+.empty-state {
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+  padding: 40px 10px;
+}
+
+/* ── Product card ─────────────────────────────────────────────────── */
+.p-card {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  margin-bottom: 8px;
+}
+.p-card:last-child { margin-bottom: 0; }
+
+.thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--sh-sm);
+}
+.thumb span {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  color: rgba(255, 255, 255, .92);
+  font-weight: 600;
+}
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+}
+.thumb .thumb-icon { display: none; }
+.thumb-on.thumb-broken img { display: none; }
+.thumb-on.thumb-broken .thumb-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 18px;
+  background: var(--amber-bg);
+}
+
+.p-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.p-row-top { display: flex; align-items: center; gap: 6px; }
+.p-key {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 13px;
+}
+.p-key.input-dup { border-color: var(--red); background: var(--red-bg); }
+.p-toggle {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  font-size: 14px;
+}
+.p-toggle input { accent-color: var(--green); width: 15px; height: 15px; }
+
+.p-row-cat select {
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 12.5px;
+  color: var(--text2);
+}
+
+.lang-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+@media (min-width: 480px) {
+  .lang-grid { grid-template-columns: 1fr 1fr; }
+}
+.lang-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 0 8px;
+}
+.lang-field .flag { font-size: 14px; flex-shrink: 0; }
+.lang-field input {
+  border: none;
+  background: transparent;
+  padding: 8px 0;
+  width: 100%;
+  min-width: 0;
+  font-size: 13.5px;
+}
+.lang-field input:focus { outline: none; }
+.lang-field:focus-within { border-color: var(--primary); }
+
+/* ── Announcement card ───────────────────────────────────────────── */
+.ann-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 12px;
+  margin-bottom: 10px;
+  background: var(--bg);
+}
+.ann-row-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.ann-emoji {
+  width: 44px;
+  flex-shrink: 0;
+  text-align: center;
+  padding: 8px 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  font-size: 15px;
+}
+.ann-date {
+  flex-shrink: 0;
+  padding: 7px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  font-size: 12.5px;
+  width: 132px;
+}
+.ann-key {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 12.5px;
+}
+.ann-order { display: flex; gap: 0; flex-shrink: 0; }
+
+/* ── Modals ───────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 20, 16, .45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  padding: 0;
+}
+@media (min-width: 560px) {
+  .modal-overlay { align-items: center; padding: 20px; }
+}
+.modal {
+  background: var(--surface);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  padding: 22px 20px 26px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 86vh;
+  overflow-y: auto;
+  box-shadow: var(--sh-lg);
+}
+@media (min-width: 560px) {
+  .modal { border-radius: var(--r-lg); }
+}
+.modal h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 19px;
+  margin: 0 0 10px;
+  color: var(--text);
+}
+.modal p { font-size: 13.5px; color: var(--text2); line-height: 1.7; margin: 0 0 14px; }
+.modal .hint {
+  font-size: 12.5px;
+  color: var(--muted);
+  background: var(--surface2);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+.modal-btn-row { display: flex; flex-direction: column; gap: 8px; }
+.modal-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px;
+  border-radius: var(--r-sm);
+  border: none;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.modal-btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary2)); color: #fff; }
+.modal-btn-secondary { background: var(--surface2); color: var(--text2); border: 1px solid var(--border2); }
+.import-field { margin-bottom: 14px; }
+.import-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 6px;
+}
+.import-field input[type="file"] {
+  width: 100%;
+  font-size: 12.5px;
+  padding: 8px;
+  border: 1px dashed var(--border2);
+  border-radius: var(--r-sm);
+  background: var(--surface2);
+}
+#import-status { font-size: 13px; margin-top: 6px; min-height: 18px; color: var(--green); }
+.modal-close-row { margin-top: 16px; text-align: center; }
+
+/* ── Toast ────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translate(-50%, 20px);
+  background: var(--text);
+  color: #fff;
+  padding: 11px 20px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  box-shadow: var(--sh-lg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+  z-index: 200;
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast-warn { background: var(--red); }
+
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-title">
+      <span class="topbar-emoji">🏪</span>
+      <div>
+        <h1>商品翻譯 &amp; 圖片設定</h1>
+        <p class="topbar-sub">shop-names.js · shop-images.js</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button type="button" class="btn btn-ghost" id="btn-import">📤 匯入</button>
+      <button type="button" class="btn btn-primary" id="btn-export">⬇️ 匯出</button>
+    </div>
+  </div>
+</header>
+
+<div class="app-shell">
+
+  <div class="banner" id="snapshot-banner">
+    <div>📌 這份編輯器內建的是 <strong>2026-07-16</strong> 你上傳檔案當時的資料（536 筆商品、2 則公告）。如果伺服器上的檔案之後有被更新過，建議先按右上角「📤 匯入」讀取最新版本，再開始編輯，以免蓋掉別人的修改。</div>
+    <button type="button" class="banner-close" id="snapshot-banner-close" title="關閉提示" aria-label="關閉提示">✕</button>
+  </div>
+
+  <div class="banner banner-warn" id="dirty-banner" hidden>
+    <div>✏️ 目前有尚未匯出的修改，記得按「⬇️ 匯出」下載最新檔案。</div>
+  </div>
+
+  <nav class="tabs">
+    <button type="button" class="tab active" data-tab="products">🛒 商品翻譯 <span class="tab-count" id="count-products"></span></button>
+    <button type="button" class="tab" data-tab="announcements">📢 公告消息 <span class="tab-count" id="count-ann"></span></button>
+  </nav>
+
+  <section id="panel-products" class="panel active">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <input id="search" type="text" placeholder="🔍 搜尋商品名稱或任何語言的翻譯…">
+      </div>
+      <div class="toolbar-actions">
+        <button type="button" class="btn-link" id="btn-expand-all">全部展開</button>
+        <span class="toolbar-sep">·</span>
+        <button type="button" class="btn-link" id="btn-collapse-all">全部收合</button>
+        <span class="toolbar-sep">·</span>
+        <button type="button" class="btn-link" id="btn-add-category">＋ 新增分類</button>
+      </div>
+    </div>
+    <div id="category-list"><!-- rendered by JS --></div>
+  </section>
+
+  <section id="panel-announcements" class="panel">
+    <div class="toolbar">
+      <button type="button" class="btn btn-primary" id="btn-add-ann">＋ 新增公告</button>
+    </div>
+    <div id="ann-list"><!-- rendered by JS --></div>
+  </section>
+
+</div>
+
+<!-- Export modal -->
+<div class="modal-overlay" id="export-modal" hidden>
+  <div class="modal">
+    <h2>⬇️ 匯出檔案</h2>
+    <p>下載下面兩個檔案，上傳到伺服器上跟 <strong>shop.html</strong> 同一層的資料夾，直接覆蓋原本的檔案即可。</p>
+    <div class="modal-btn-row">
+      <button type="button" class="modal-btn modal-btn-primary" id="dl-both">⬇️ 下載兩個檔案</button>
+      <button type="button" class="modal-btn modal-btn-secondary" id="dl-names">下載 shop-names.js</button>
+      <button type="button" class="modal-btn modal-btn-secondary" id="dl-images">下載 shop-images.js</button>
+    </div>
+    <div class="hint">💡 目前的 Service Worker（v1.5.10）對這兩個檔案是用 Network First 策略讀取，上傳後通常會馬上生效，不需要特別修改 shop-sw.js 的 APP_VERSION。如果過一陣子還是看到舊資料，才需要考慮把 APP_VERSION 往上加一版，或請顧客重新整理頁面。</div>
+    <div class="modal-close-row"><button type="button" class="btn-link modal-close">關閉</button></div>
+  </div>
+</div>
+
+<!-- Import modal -->
+<div class="modal-overlay" id="import-modal" hidden>
+  <div class="modal">
+    <h2>📤 匯入目前的檔案</h2>
+    <p>如果伺服器上的檔案已經跟這裡顯示的不一樣（例如被手動改過），可以選擇最新的檔案來更新編輯器裡的資料。匯入只會「新增」或「更新」內容，<strong>不會刪除</strong>你已經在這裡新增好的項目。</p>
+    <div class="import-field">
+      <label>shop-names.js（翻譯檔）</label>
+      <input type="file" id="file-names" accept=".js,text/javascript">
+    </div>
+    <div class="import-field">
+      <label>shop-images.js（圖片設定）</label>
+      <input type="file" id="file-images" accept=".js,text/javascript">
+    </div>
+    <div id="import-status"></div>
+    <div class="modal-close-row"><button type="button" class="btn-link modal-close">關閉</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+window.__INITIAL_DATA__ = {"categories":["飲料 Drinks","食品 Food","調味品 Seasonings","酒 Alcohol","清潔保養品 Hygiene & Beauty","冷凍食品 / FROZEN FOOD","米類 / RICE","其他 / OTHER & OTHERS"],"announcements":[{"key":"ann_001","emoji":"🛵","date":"2026-06-23","th":"ระยะทางจัดส่งเพิ่มขึ้น 3 กม. ทุกๆ ยอดซื้อที่เพิ่มขึ้น 1,000 NTD","vi":"Cứ thêm 1.000 NTD tiền hàng, khoảng cách giao hàng tăng thêm 3 km.","id":"Jarak pengiriman bertambah 3 km untuk setiap penambahan 1.000 NTD.","en":"+3 km delivery distance for every additional NT$1,000.","zh":"外送到府，最低消費 NT$1,000，最遠 9 公里。"},{"key":"ann_002","emoji":"🕘","date":"2026-06-23","th":"จันทร์–ศุกร์: 12:00–21:00 น. เสาร์–อาทิตย์: 08:00–21:30 น.","vi":"Thứ 2 – Thứ 6: 12:00–21:00 Thứ 7 & Chủ Nhật: 08:00–21:30","id":"Senin–Jumat: 12.00–21.00 Sabtu–Minggu: 08.00–21.30","en":"Mon–Fri: 12:00–21:00 Sat–Sun: 08:00–21:30","zh":"週一至週五 12:00–21:00 週六及週日 08:00–21:30"}],"products":[{"key":"ลิ้นจี่ใส่วุ้นมะพร้าว荔枝椰果","category":"飲料 Drinks","en":"Lychee with Coconut Jelly","vi":"Vải thiều thạch dừa","id":"Leci dengan Jeli Kelapa","th":"ลิ้นจี่ใส่วุ้นมะพร้าว","zh":"荔枝椰果","hasImage":true},{"key":"สับปะรดใส่วุ้นมะพร้าว鳳梨椰果","category":"飲料 Drinks","en":"Pineapple with Coconut Jelly","vi":"Dứa thạch dừa","id":"Nanas dengan Jeli Kelapa","th":"สับปะรดใส่วุ้นมะพร้าว","zh":"鳳梨椰果","hasImage":true},{"key":"DoubleC飲料","category":"飲料 Drinks","en":"Double C Drink","vi":"Nước uống Double C","id":"Minuman Double C","th":"DoubleC飲料","zh":"DoubleC飲料","hasImage":true},{"key":"DoubleC飲料1","category":"飲料 Drinks","en":"Double C Drink","vi":"Nước uống Double C","id":"Minuman Double C","th":"DoubleC飲料","zh":"DoubleC飲料","hasImage":true},{"key":"DoubleC飲料2","category":"飲料 Drinks","en":"Double C Drink","vi":"Nước uống Double C","id":"Minuman Double C","th":"DoubleC飲料","zh":"DoubleC飲料","hasImage":true},{"key":"DoubleC飲料3","category":"飲料 Drinks","en":"Double C Drink","vi":"Nước uống Double C","id":"Minuman Double C","th":"DoubleC飲料","zh":"DoubleC飲料","hasImage":true},{"key":"M150","category":"飲料 Drinks","en":"M-150 Energy Drink","vi":"Nước tăng lực M-150","id":"Minuman Energi M-150","th":"M150","zh":"M150","hasImage":true},{"key":"Oishi飲料","category":"飲料 Drinks","en":"Oishi Drink","vi":"Nước uống Oishi","id":"Minuman Oishi","th":"Oishi飲料","zh":"Oishi飲料","hasImage":true},{"key":"Oishi飲料1","category":"飲料 Drinks","en":"Oishi Drink","vi":"Nước uống Oishi","id":"Minuman Oishi","th":"Oishi飲料","zh":"Oishi飲料","hasImage":true},{"key":"Oishi飲料2","category":"飲料 Drinks","en":"Oishi Drink","vi":"Nước uống Oishi","id":"Minuman Oishi","th":"Oishi飲料","zh":"Oishi飲料","hasImage":true},{"key":"Oishi飲料3","category":"飲料 Drinks","en":"Oishi Drink","vi":"Nước uống Oishi","id":"Minuman Oishi","th":"Oishi飲料","zh":"Oishi飲料","hasImage":true},{"key":"Oishi飲料4","category":"飲料 Drinks","en":"Oishi Drink","vi":"Nước uống Oishi","id":"Minuman Oishi","th":"Oishi飲料","zh":"Oishi飲料","hasImage":true},{"key":"กาโต๊ะ卡多果汁","category":"飲料 Drinks","en":"Kato Fruit Juice","vi":"Nước trái cây Kato","id":"Jus Buah Kato","th":"กาโต๊ะ","zh":"卡多果汁","hasImage":true},{"key":"กาโต๊ะ卡多果汁1","category":"飲料 Drinks","en":"Kato Fruit Juice","vi":"Nước trái cây Kato","id":"Jus Buah Kato","th":"กาโต๊ะ","zh":"卡多果汁","hasImage":true},{"key":"กาแฟกระป๋องไต้หวัน伯朗咖啡","category":"飲料 Drinks","en":"Brown Canned Coffee","vi":"Cà phê lon Brown","id":"Kopi Kaleng Brown","th":"กาแฟกระป๋องไต้หวัน","zh":"伯朗咖啡","hasImage":true},{"key":"ชาไทย泰式奶茶","category":"飲料 Drinks","en":"Thai Milk Tea","vi":"Trà sữa Thái","id":"Teh Tarik Thailand / Thai Tea","th":"ชาไทย","zh":"泰式奶茶","hasImage":true},{"key":"เครื่องดื่มรสมะขาม羅望子汁","category":"飲料 Drinks","en":"Tamarind Drink","vi":"Nước me","id":"Minuman Rasa Asam Jawa","th":"เครื่องดื่มรสมะขาม","zh":"羅望子汁","hasImage":true},{"key":"โซดา金勇蘇打水","category":"飲料 Drinks","en":"King Yo Soda Water","vi":"Nước Soda King Yo","id":"Air Soda King Yo","th":"โซดา","zh":"金勇蘇打水","hasImage":true},{"key":"โซดาช้าง大象蘇打水","category":"飲料 Drinks","en":"Chang Soda Water","vi":"Nước Soda Chang","id":"Air Soda Chang","th":"โซดาช้าง","zh":"大象蘇打水","hasImage":true},{"key":"โซดาสิงห์勝獅蘇打水","category":"飲料 Drinks","en":"Singha Soda Water","vi":"Nước Soda Singha","id":"Air Soda Singha","th":"โซดาสิงห์","zh":"勝獅蘇打水","hasImage":true},{"key":"นมถั่วเหลืองV豆奶1","category":"飲料 Drinks","en":"Vitamilk Soy Milk","vi":"Sữa đậu nành Vitamilk","id":"Susu Kacang Kedelai Vitamilk","th":"นมถั่วเหลือง Vitamilk","zh":"V豆奶","hasImage":true},{"key":"นมถั่วเหลืองV豆奶5","category":"飲料 Drinks","en":"Vitamilk Soy Milk","vi":"Sữa đậu nành Vitamilk","id":"Susu Kacang Kedelai Vitamilk","th":"นมถั่วเหลือง Vitamilk","zh":"V豆奶","hasImage":true},{"key":"นมถั่วเหลืองV豆奶3","category":"飲料 Drinks","en":"Vitamilk Soy Milk","vi":"Sữa đậu nành Vitamilk","id":"Susu Kacang Kedelai Vitamilk","th":"นมถั่วเหลือง Vitamilk","zh":"V豆奶","hasImage":true},{"key":"นมถั่วเหลืองV豆奶","category":"飲料 Drinks","en":"Vitamilk Soy Milk","vi":"Sữa đậu nành Vitamilk","id":"Susu Kacang Kedelai Vitamilk","th":"นมถั่วเหลือง Vitamilk","zh":"V豆奶","hasImage":true},{"key":"นมถั่วเหลืองV豆奶2","category":"飲料 Drinks","en":"Vitamilk Soy Milk","vi":"Sữa đậu nành Vitamilk","id":"Susu Kacang Kedelai Vitamilk","th":"นมถั่วเหลือง Vitamilk","zh":"V豆奶","hasImage":true},{"key":"นมถั่วเหลืองV豆奶4","category":"飲料 Drinks","en":"Vitamilk Soy Milk","vi":"Sữa đậu nành Vitamilk","id":"Susu Kacang Kedelai Vitamilk","th":"นมถั่วเหลือง Vitamilk","zh":"V豆奶","hasImage":true},{"key":"นมถั่วเหลืองแลคตาซอย力大獅豆奶","category":"飲料 Drinks","en":"Lactasoy Soy Milk","vi":"Sữa đậu nành Lactasoy","id":"Susu Kacang Kedelai Lactasoy","th":"นมถั่วเหลืองแลคตาซอย","zh":"力大獅豆奶","hasImage":true},{"key":"นมเปรี้ยวดัชมิลล์酸奶2","category":"飲料 Drinks","en":"Dutch Mill Drinking Yogurt","vi":"Sữa chua uống Dutch Mill","id":"Yoghurt Cetak","th":"นมเปรี้ยวดัชมิลล์","zh":"酸奶","hasImage":true},{"key":"นมเปรี้ยวดัชมิลล์酸奶1","category":"飲料 Drinks","en":"Dutch Mill Drinking Yogurt","vi":"Sữa chua uống Dutch Mill","id":"Yoghurt Cetak","th":"นมเปรี้ยวดัชมิลล์","zh":"酸奶","hasImage":true},{"key":"นมเปรี้ยวดัชมิลล์酸奶","category":"飲料 Drinks","en":"Dutch Mill Drinking Yogurt","vi":"Sữa chua uống Dutch Mill","id":"Yoghurt Cetak","th":"นมเปรี้ยวดัชมิลล์","zh":"酸奶","hasImage":true},{"key":"เบอดี้birdyCofe易開罐","category":"飲料 Drinks","en":"Birdy Canned Coffee","vi":"Cà phê lon Birdy","id":"Kopi Kaleng Birdy","th":"เบอดี้ birdy","zh":"birdyCofe易開罐","hasImage":true},{"key":"เบอดี้Nescafé 易開罐","category":"飲料 Drinks","en":"Nescafe Canned Coffee","vi":"Cà phê lon Nescafe","id":"Kopi Kaleng Nescafe","th":"เบอดี้ Nescafé","zh":"Nescafé 易開罐","hasImage":true},{"key":"น้ำเปล่า礦泉水","category":"飲料 Drinks","en":"Mineral Water","vi":"Nước khoáng","id":"Air Mineral","th":"น้ำเปล่า","zh":"礦泉水","hasImage":true},{"key":"น้ำตาลสด椰香花蜜","category":"飲料 Drinks","en":"Fresh Coconut Flower Nectar","vi":"Nước mật hoa dừa tươi","id":"Nira Kelapa Segar","th":"น้ำตาลสด","zh":"椰香花蜜","hasImage":true},{"key":"น้ำมะพร้าว椰子汁","category":"飲料 Drinks","en":"Coconut Juice","vi":"Nước dừa","id":"Air Kelapa","th":"น้ำมะพร้าว","zh":"椰子汁","hasImage":true},{"key":"สปอนเซอร์運動飲料沙賓","category":"飲料 Drinks","en":"Sponsor Electrolyte Beverage","vi":"Nước uống thể thao Sponsor","id":"Minuman Isotonik Sponsor","th":"สปอนเซอร์","zh":"運動飲料沙賓","hasImage":true},{"key":"อีฟน้ำเก๊กฮวย菊花茶","category":"飲料 Drinks","en":"If Chrysanthemum Tea","vi":"Trà hoa cúc If","id":"Teh Krisan If","th":"อีฟน้ำเก๊กฮวย","zh":"菊花茶","hasImage":true},{"key":"M150-10ขวด罐","category":"飲料 Drinks","en":"M-150 Energy Drink (10 Bottles)","vi":"Nước tăng lực M-150 (Lốc 10 chai)","id":"Minuman Energi M-150 (10 Botol)","th":"เอ็ม-150 10 ขวด","zh":"M150-10ขวด罐","hasImage":true},{"key":"เอ็ม150ยกลังM150箱","category":"飲料 Drinks","en":"M-150 Energy Drink (Case)","vi":"Thùng nước tăng lực M-150","id":"Minuman Energi M-150 (Karton)","th":"เอ็ม-150 ยกลัง","zh":"M150箱","hasImage":true},{"key":"โคคาโคล่า可口可樂330ml","category":"飲料 Drinks","en":"Coca-Cola330ml","vi":"Coca-Cola330ml","id":"Coca-Cola330ml","th":"โคคาโคล่า330ml","zh":"可口可樂330ml","hasImage":true},{"key":"โคคาโคล่า可口可樂2L","category":"飲料 Drinks","en":"Coca-Cola2L","vi":"Coca-Cola2L","id":"Coca-Cola2L","th":"โคคาโคล่า2L","zh":"可口可樂2L","hasImage":true},{"key":"美露","category":"食品 Food","en":"Milo","vi":"Sữa Milo","id":"Milo","th":"Milo","zh":"美露","hasImage":true},{"key":"Birdy-red","category":"食品 Food","en":"Birdy Cafe","vi":"Cà phê Birdy","id":"Kopi Birdy Cafe","th":"BirdyCafe","zh":"BirdyCafe","hasImage":true},{"key":"BirdyCafe","category":"食品 Food","en":"Birdy Cafe","vi":"Cà phê Birdy","id":"Kopi Birdy Cafe","th":"BirdyCafe","zh":"BirdyCafe","hasImage":true},{"key":"CappuCafe","category":"食品 Food","en":"Cappuccino Coffee","vi":"Cà phê Cappuccino","id":"Kopi Cappuccino","th":"CappuCafe","zh":"CappuCafe","hasImage":true},{"key":"Nescafe-green","category":"食品 Food","en":"Nescafe Green","vi":"Nescafe xanh lá","id":"Nescafe Hijau","th":"Nescafe-green","zh":"Nescafe-green","hasImage":true},{"key":"Nescafe-red","category":"食品 Food","en":"Nescafe Red","vi":"Nescafe đỏ","id":"Nescafe Merah","th":"Nescafe-red","zh":"Nescafe-red","hasImage":true},{"key":"เนสกาแฟกระปุกNeecafe罐","category":"食品 Food","en":"Nescafe Coffee Jar","vi":"Cà phê hòa tan hũ Nescafe","id":"Kopi Bubuk Toples Nescafe","th":"เนสกาแฟกระปุก","zh":"Neecafe罐","hasImage":true},{"key":"มะขามเปียก羅望子","category":"食品 Food","en":"Dried Tamarind Block","vi":"Me chua chín đóng vắt","id":"Asam Jawa Kering","th":"มะขามเปียก","zh":"羅望子","hasImage":true},{"key":"มะม่วงแช่อิ่ม醃芒果1","category":"食品 Food","en":"Pickled Sweet Mango","vi":"Xoài ngâm chua ngọt","id":"Manisan Mangga","th":"มะม่วงแช่อิ่ม","zh":"醃芒果","hasImage":true},{"key":"มะม่วงแช่อิ่ม醃芒果","category":"食品 Food","en":"Pickled Sweet Mango","vi":"Xoài ngâm chua ngọt","id":"Manisan Mangga","th":"มะม่วงแช่อิ่ม","zh":"醃芒果","hasImage":true},{"key":"ม็อคโคน่า摩可納Cafe-green","category":"食品 Food","en":"Moccona Instant Coffee","vi":"Cà phê hòa tan Moccona","id":"Kopi Instan Moccona","th":"ม็อคโคน่า เขียว","zh":"摩可納Cafe","hasImage":true},{"key":"ม็อคโคน่า摩可納Cafe-red","category":"食品 Food","en":"Moccona Instant Coffee","vi":"Cà phê hòa tan Moccona","id":"Kopi Instan Moccona","th":"ม็อคโคน่า แดง","zh":"摩可納Cafe","hasImage":true},{"key":"มาม่าMama泡麵","category":"食品 Food","en":"Mama Instant Noodles Assorted","vi":"Thùng mì Mama lộn xộn vị","id":"Mi Instan Mama Aneka Rasa","th":"มาม่าคละรส","zh":"不指定口味泡麵","hasImage":true},{"key":"มาม่าMama泡麵碗","category":"食品 Food","en":"Mama Instant Noodles","vi":"Mì tô ăn liền Mama","id":"Mie Instan Wadah Mangkok Mama","th":"มาม่าถ้วย","zh":"Mama泡麵碗","hasImage":true},{"key":"แคบหมู豬皮酥","category":"食品 Food","en":"Pork Cracklings / Pork Rinds","vi":"Da heo chiên giòn","id":"Kerupuk Kulit Babi","th":"แคบหมู","zh":"豬皮酥","hasImage":true},{"key":"ปลาเส้นปรุงรส鱈魚香絲","category":"食品 Food","en":"Taro Seasoned Fish Snack","vi":"Snack cá sợi tẩm vị","id":"Camilan Stik Ikan Berbumbu","th":"ปลาเส้นปรุงรส","zh":"鱈魚香絲","hasImage":true},{"key":"ปลาเส้นปรุงรส鱈魚香絲1","category":"食品 Food","en":"Taro Seasoned Fish Snack","vi":"Snack cá sợi tẩm vị","id":"Camilan Stik Ikan Berbumbu","th":"ปลาเส้นปรุงรส","zh":"鱈魚香絲","hasImage":true},{"key":"ปลาเส้นปรุงรส鱈魚香絲3","category":"食品 Food","en":"Taro Seasoned Fish Snack","vi":"Snack cá sợi tẩm vị","id":"Camilan Stik Ikan Berbumbu","th":"ปลาเส้นปรุงรส","zh":"鱈魚香絲","hasImage":true},{"key":"ปลาเส้นปรุงรส鱈魚香絲2","category":"食品 Food","en":"Taro Seasoned Fish Snack","vi":"Snack cá sợi tẩm vị","id":"Camilan Stik Ikan Berbumbu","th":"ปลาเส้นปรุงรส","zh":"鱈魚香絲","hasImage":true},{"key":"กล้วยอบน้ำผึ้ง香蕉蜜片","category":"食品 Food","en":"Honey Baked Bananas","vi":"Chuối nướng mật ong","id":"Pisang Panggang Madu","th":"กล้วยอบน้ำผึ้ง","zh":"香蕉蜜片","hasImage":true},{"key":"โกแก่大豆哥","category":"食品 Food","en":"Koh-Kae Peanut Snacks","vi":"Đậu phộng Koh-Kae","id":"Kacang Koh-Kae","th":"โกแก่","zh":"大豆哥","hasImage":true},{"key":"โกแก่大豆哥1","category":"食品 Food","en":"Koh-Kae Peanut Snacks","vi":"Đậu phộng Koh-Kae","id":"Kacang Koh-Kae","th":"โกแก่","zh":"大豆哥","hasImage":true},{"key":"โกแก่大豆哥2","category":"食品 Food","en":"Koh-Kae Peanut Snacks","vi":"Đậu phộng Koh-Kae","id":"Kacang Koh-Kae","th":"โกแก่","zh":"大豆哥","hasImage":true},{"key":"โกแก่大豆哥3","category":"食品 Food","en":"Koh-Kae Peanut Snacks","vi":"Đậu phộng Koh-Kae","id":"Kacang Koh-Kae","th":"โกแก่","zh":"大豆哥","hasImage":true},{"key":"โกแก่大豆哥4","category":"食品 Food","en":"Koh-Kae Peanut Snacks","vi":"Đậu phộng Koh-Kae","id":"Kacang Koh-Kae","th":"โกแก่","zh":"大豆哥","hasImage":true},{"key":"โกแก่大豆哥5","category":"食品 Food","en":"Koh-Kae Peanut Snacks","vi":"Đậu phộng Koh-Kae","id":"Kacang Koh-Kae","th":"โกแก่","zh":"大豆哥","hasImage":true},{"key":"ขนม大王餅乾","category":"食品 Food","en":"Dawang Biscuits","vi":"Bánh quy Dawang","id":"Biskuit Dawang","th":"ขนม","zh":"大王餅乾","hasImage":true},{"key":"ขนม大王餅乾1","category":"食品 Food","en":"Dawang Biscuits","vi":"Bánh quy Dawang","id":"Biskuit Dawang","th":"ขนม","zh":"大王餅乾","hasImage":true},{"key":"ขนม大王餅乾2","category":"食品 Food","en":"Dawang Biscuits","vi":"Bánh quy Dawang","id":"Biskuit Dawang","th":"ขนม","zh":"大王餅乾","hasImage":true},{"key":"ขนม牛角餅乾","category":"食品 Food","en":"Horn Crackers","vi":"Bánh sừng bò","id":"Keripik Tanduk","th":"ขนม","zh":"牛角餅乾","hasImage":true},{"key":"ขนม牛角餅乾1","category":"食品 Food","en":"Horn Crackers","vi":"Bánh sừng bò","id":"Keripik Tanduk","th":"ขนม","zh":"牛角餅乾","hasImage":true},{"key":"ขนม牛角餅乾2","category":"食品 Food","en":"Horn Crackers","vi":"Bánh sừng bò","id":"Keripik Tanduk","th":"ขนม","zh":"牛角餅乾","hasImage":true},{"key":"ขนม牛角餅乾3","category":"食品 Food","en":"Horn Crackers","vi":"Bánh sừng bò","id":"Keripik Tanduk","th":"ขนม","zh":"牛角餅乾","hasImage":true},{"key":"ขนม牛角餅乾4","category":"食品 Food","en":"Horn Crackers","vi":"Bánh sừng bò","id":"Keripik Tanduk","th":"ขนม","zh":"牛角餅乾","hasImage":true},{"key":"ขนม玉米餅乾","category":"食品 Food","en":"Corn Crackers","vi":"Bánh quy ngô","id":"Keripik Jagung","th":"ขนม","zh":"玉米餅乾","hasImage":true},{"key":"ขนม玉米餅乾1","category":"食品 Food","en":"Corn Crackers","vi":"Bánh quy ngô","id":"Keripik Jagung","th":"ขนม","zh":"玉米餅乾","hasImage":true},{"key":"ขนม玉米餅乾2","category":"食品 Food","en":"Corn Crackers","vi":"Bánh quy ngô","id":"Keripik Jagung","th":"ขนม","zh":"玉米餅乾","hasImage":true},{"key":"ขนม地瓜餅乾","category":"食品 Food","en":"Sweet Potato Crackers","vi":"Bánh quy khoai lang","id":"Keripik Ubi","th":"ขนม","zh":"地瓜餅乾","hasImage":true},{"key":"ขนม青椒餅乾","category":"食品 Food","en":"Green Pepper Crackers","vi":"Bánh quy ớt chuông xanh","id":"Keripik Paprika Hijau","th":"ขนม","zh":"青椒餅乾","hasImage":true},{"key":"ขนม馬鈴薯餅乾","category":"食品 Food","en":"Potato Crackers","vi":"Bánh quy khoai tây","id":"Keripik Kentang","th":"ขนม","zh":"馬鈴薯餅乾","hasImage":true},{"key":"ขนม馬鈴薯餅乾1","category":"食品 Food","en":"Potato Crackers","vi":"Bánh quy khoai tây","id":"Keripik Kentang","th":"ขนม","zh":"馬鈴薯餅乾","hasImage":true},{"key":"ขนม番茄餅乾","category":"食品 Food","en":"Tomato Crackers","vi":"Bánh quy cà chua","id":"Keripik Tomat","th":"ขนม","zh":"番茄餅乾","hasImage":true},{"key":"ขนม樂事薯片","category":"食品 Food","en":"Lay's Potato Chips","vi":"Khoai tây chiên Lay's","id":"Keripik Kentang Lay's","th":"ขนม","zh":"樂事薯片","hasImage":true},{"key":"ขนม蝦味先","category":"食品 Food","en":"Shrimp Crackers","vi":"Bánh phồng tôm Siaw-Wei-Sien","id":"Kerupuk Udang","th":"ขนม","zh":"蝦味先","hasImage":true},{"key":"ขนมขาไก่Mix香脆麵條","category":"食品 Food","en":"Mix Crispy Noodle Snack","vi":"Snack mì giòn Mix","id":"Camilan Mie Krispi Mix","th":"ขนมขาไก่Mix","zh":"香脆麵條","hasImage":true},{"key":"ขนมขาไก่Mix香脆麵條1","category":"食品 Food","en":"Mix Crispy Noodle Snack","vi":"Snack mì giòn Mix","id":"Camilan Mie Krispi Mix","th":"ขนมขาไก่Mix","zh":"香脆麵條","hasImage":true},{"key":"ขนมขาไก่Mix香脆麵條2","category":"食品 Food","en":"Mix Crispy Noodle Snack","vi":"Snack mì giòn Mix","id":"Camilan Mie Krispi Mix","th":"ขนมขาไก่Mix","zh":"香脆麵條","hasImage":true},{"key":"ขนมขาไก่Mix香脆麵條3","category":"食品 Food","en":"Mix Crispy Noodle Snack","vi":"Snack mì giòn Mix","id":"Camilan Mie Krispi Mix","th":"ขนมขาไก่Mix","zh":"香脆麵條","hasImage":true},{"key":"ขนมปลาหวาน風味甜魚片","category":"食品 Food","en":"Sweet Fish Snack","vi":"Snack cá ngọt","id":"Camilan Ikan Manis","th":"ขนมปลาหวาน","zh":"風味甜魚片","hasImage":true},{"key":"ขนมเอลเช่24ชิ้นEllse蛋糕","category":"食品 Food","en":"Ellse Cake 24 Pack","vi":"Hộp 24 bánh Ellse","id":"Kue Ellse Isi 24","th":"ขนมเอลเช่24ชิ้น","zh":"Ellse蛋糕24個","hasImage":true},{"key":"ขนมเอลเช่24ชิ้นEllse蛋糕1","category":"食品 Food","en":"Ellse Cake 24 Pack","vi":"Hộp 24 bánh Ellse","id":"Kue Ellse Isi 24","th":"ขนมเอลเช่24ชิ้น","zh":"Ellse蛋糕24個","hasImage":true},{"key":"ขนมเอลเช่24ชิ้นEllse蛋糕2","category":"食品 Food","en":"Ellse Cake 24 Pack","vi":"Hộp 24 bánh Ellse","id":"Kue Ellse Isi 24","th":"ขนมเอลเช่24ชิ้น","zh":"Ellse蛋糕24個","hasImage":true},{"key":"ขนมเอลเช่24ชิ้นEllse蛋糕3","category":"食品 Food","en":"Ellse Cake 24 Pack","vi":"Hộp 24 bánh Ellse","id":"Kue Ellse Isi 24","th":"ขนมเอลเช่24ชิ้น","zh":"Ellse蛋糕24個","hasImage":true},{"key":"ขนมเอลเช่24ชิ้นEllse蛋糕4","category":"食品 Food","en":"Ellse Cake 24 Pack","vi":"Hộp 24 bánh Ellse","id":"Kue Ellse Isi 24","th":"ขนมเอลเช่24ชิ้น","zh":"Ellse蛋糕24個","hasImage":true},{"key":"ขนมเอลเช่24ชิ้นEllse蛋糕5","category":"食品 Food","en":"Ellse Cake 24 Pack","vi":"Hộp 24 bánh Ellse","id":"Kue Ellse Isi 24","th":"ขนมเอลเช่24ชิ้น","zh":"Ellse蛋糕24個","hasImage":true},{"key":"ขนมเอลเช่24ชิ้นEllse蛋糕6","category":"食品 Food","en":"Ellse Cake 24 Pack","vi":"Hộp 24 bánh Ellse","id":"Kue Ellse Isi 24","th":"ขนมเอลเช่24ชิ้น","zh":"Ellse蛋糕24個","hasImage":true},{"key":"เม็ดมะม่วงหิมพานต์堅果","category":"食品 Food","en":"Cashew Nuts","vi":"Hạt điều","id":"Kacang Mete","th":"เม็ดมะม่วงหิมพานต์","zh":"堅果","hasImage":true},{"key":"ลูกอมฮอลล์LEMONSODA","category":"食品 Food","en":"Halls Candy Lemon Soda","vi":"Kẹo Halls Lemon Soda","id":"Permen Halls Lemon Soda","th":"ลูกอมฮอลล์ เลมอนโซดา","zh":"LEMONSODA","hasImage":true},{"key":"ลูกอมฮอลล์Mentholyptus","category":"食品 Food","en":"Halls Candy Mentholyptus","vi":"Kẹo Halls Mentholyptus","id":"Permen Halls Mentholyptus","th":"ลูกอมฮอลล์ เมนโทลิปตัส","zh":"Mentholyptus","hasImage":true},{"key":"โอวัลติน阿華田","category":"食品 Food","en":"Ovaltine","vi":"Ovaltine","id":"Ovaltine","th":"โอวัลติน","zh":"阿華田","hasImage":true},{"key":"กล้วยฉาบ香蕉脆片","category":"食品 Food","en":"Sweet Banana Chips","vi":"Chuối sấy giòn","id":"Keripik Pisang","th":"กล้วยฉาบ","zh":"香蕉脆片","hasImage":true},{"key":"แคบไก่雞皮酥","category":"食品 Food","en":"Crispy Chicken Skin","vi":"Da gà chiên giòn","id":"Kulit Ayam Krispi","th":"แคบไก่","zh":"雞皮酥","hasImage":true},{"key":"แคบหมูรสเผ็ด豬皮酥辣味","category":"食品 Food","en":"Spicy Crispy Pork Rinds","vi":"Da heo chiên giòn vị cay","id":"Kerupuk Kulit Babi Pedas","th":"แคบหมูรสเผ็ด","zh":"豬皮酥辣味","hasImage":true},{"key":"ตำไทย原味涼拌青木瓜","category":"食品 Food","en":"Thai Green Papaya Salad (Tam Thai)","vi":"Gỏi đu đủ Som Tum Thái","id":"Salad Pepaya Muda (Som Tum Thai)","th":"ตำไทย","zh":"原味涼拌青木瓜","hasImage":true},{"key":"ส้มตำปูปลาร้า螃蟹涼拌青木瓜","category":"食品 Food","en":"Green Papaya Salad with Crab and Fermented Fish (Tam Pu Pla Ra)","vi":"Gỏi đu đủ ba khía mắm cá","id":"Salad Pepaya Muda dengan Kepiting dan Pasta Ikan Fermentasi","th":"ส้มตำปูปลาร้า","zh":"螃蟹涼拌青木瓜","hasImage":true},{"key":"มาม่ายกลัง泡麵箱","category":"食品 Food","en":"Mama Instant Noodles Assorted (Case)","vi":"Thùng mì Mama lộn xộn vị","id":"Mi Instan Mama Aneka Rasa (Karton)","th":"มาม่ายกลังคละรส","zh":"不指定口味泡麵箱","hasImage":true},{"key":"ข้าวเหนียว糯米飯","category":"食品 Food","en":"Cooked Sticky Rice","vi":"Xôi","id":"Nasi Ketan Matang","th":"ข้าวเหนียว","zh":"糯米飯","hasImage":true},{"key":"น้ำตาล二號砂糖","category":"調味品 Seasonings","en":"Brown Sugar","vi":"Đường nâu","id":"Gula Merah","th":"น้ำตาล","zh":"二號砂糖","hasImage":true},{"key":"น้ำมันถั่วเหลือง大豆沙拉油","category":"調味品 Seasonings","en":"Soybean Salad Oil","vi":"Dầu đậu nành","id":"Minyak Kedelai","th":"น้ำมันถั่วเหลือง","zh":"大豆沙拉油","hasImage":true},{"key":"ซีอิ๊วหวานABC調味液","category":"調味品 Seasonings","en":"ABC Sweet Soy Sauce","vi":"Nước tương ngọt ABC","id":"Kecap Manis ABC","th":"ซีอิ๊วหวาน","zh":"ABC調味液","hasImage":true},{"key":"กระเทียมดอง醃蒜頭","category":"調味品 Seasonings","en":"Pickled Garlic","vi":"Tỏi ngâm","id":"Bawang Putih Acar","th":"กระเทียมดอง","zh":"醃蒜頭","hasImage":true},{"key":"ก๋วยเตี๋ยวเย็นตาโฟ火鍋料","category":"調味品 Seasonings","en":"Yentafo Noodles Hot Pot Ingredients","vi":"Nguyên liệu lẩu Yentafo","id":"Bahan Hot Pot Mie Yentafo","th":"ก๋วยเตี๋ยวเย็นตาโฟ","zh":"火鍋料","hasImage":true},{"key":"กะปิ蝦膏金勇180g","category":"調味品 Seasonings","en":"Shrimp Paste Kim Yong 180g","vi":"Mắm tôm Kim Yong 180g","id":"Terasi Kim Yong 180g","th":"กะปิ","zh":"蝦膏金勇180g","hasImage":true},{"key":"กะปิ蝦膏金勇400g","category":"調味品 Seasonings","en":"Shrimp Paste Kim Yong 400g","vi":"Mắm tôm Kim Yong 400g","id":"Terasi Kim Yong 400g","th":"กะปิ","zh":"蝦膏金勇400g","hasImage":true},{"key":"เกลือ碘鹽","category":"調味品 Seasonings","en":"Iodized Salt","vi":"Muối i-ốt","id":"Garam Beryodium","th":"เกลือ","zh":"碘鹽","hasImage":true},{"key":"ขนุนกระป๋อง波羅密罐頭","category":"調味品 Seasonings","en":"Canned Jackfruit","vi":"Mít đóng hộp","id":"Nangka Kalengan","th":"ขนุนกระป๋อง","zh":"波羅密罐頭","hasImage":true},{"key":"คนเนชั่น三花調製奶水","category":"調味品 Seasonings","en":"Carnation Evaporated Milk","vi":"Sữa đặc Carnation","id":"Susu Evaporasi Carnation","th":"คนเนชั่น","zh":"三花調製奶水","hasImage":true},{"key":"คนอไก่雞湯塊","category":"調味品 Seasonings","en":"Knorr Chicken Bouillon Cube","vi":"Hạt nêm Knorr vị gà","id":"Kaldu Blok Ayam Knorr","th":"คนอไก่","zh":"雞湯塊","hasImage":true},{"key":"คนอต้มยำ酸辣湯塊","category":"調味品 Seasonings","en":"Knorr Tom Yum Bouillon Cube","vi":"Hạt nêm Knorr vị Tom Yum","id":"Kaldu Blok Tom Yum Knorr","th":"คนอต้มยำ","zh":"酸辣湯塊","hasImage":true},{"key":"คนอหมู豬湯塊","category":"調味品 Seasonings","en":"Knorr Pork Bouillon Cube","vi":"Hạt nêm Knorr vị heo","id":"Kaldu Blok Babi Knorr","th":"คนอหมู","zh":"豬湯塊","hasImage":true},{"key":"ซอยฝาเขียวใหญ่金山牌醬油1000","category":"調味品 Seasonings","en":"Golden Mountain Green Cap Seasoning Sauce 1000ml","vi":"Nước tương nắp xanh Golden Mountain 1000ml","id":"Saus Penyedap Golden Mountain Tutup Hijau 1000ml","th":"ซอยฝาเขียวใหญ่","zh":"金山牌醬油1000","hasImage":true},{"key":"ซอยฝาเขียวใหญ่金山牌醬油200","category":"調味品 Seasonings","en":"Golden Mountain Green Cap Seasoning Sauce 200ml","vi":"Nước tương nắp xanh Golden Mountain 200ml","id":"Saus Penyedap Golden Mountain Tutup Hijau 200ml","th":"ซอยฝาเขียวใหญ่","zh":"金山牌醬油200","hasImage":true},{"key":"ซอยฝาเขียวใหญ่金山牌醬油600","category":"調味品 Seasonings","en":"Golden Mountain Green Cap Seasoning Sauce 600ml","vi":"Nước tương nắp xanh Golden Mountain 600ml","id":"Saus Penyedap Golden Mountain Tutup Hijau 600ml","th":"ซอยฝาเขียวใหญ่","zh":"金山牌醬油600","hasImage":true},{"key":"ซอสผัดผงกะหรี่泰式螃蟹料理包","category":"調味品 Seasonings","en":"Thai Stir-Fried Crab Curry Sauce Pack","vi":"Gói sốt xào bột cà ri cua kiểu Thái","id":"Saus Bumbu Tumis Kepiting Kari Thailand","th":"ซอสผัดผงกะหรี่","zh":"泰式螃蟹料理包","hasImage":true},{"key":"ซอสพริก上等辣椒醬","category":"調味品 Seasonings","en":"Premium Chili Sauce","vi":"Tương ớt thượng hạng","id":"Saus Cabai Premium","th":"ซอสพริก","zh":"上等辣椒醬","hasImage":true},{"key":"ซอสหอยเส็ก主婦蠔油4500","category":"調味品 Seasonings","en":"Maekrua Oyster Sauce 4500ml","vi":"Dầu hào Maekrua 4500ml","id":"Saus Tiram Maekrua 4500ml","th":"ซอสหอยเส็ก","zh":"主婦蠔油4500","hasImage":true},{"key":"ซอสหอยเส็ก蠔油150","category":"調味品 Seasonings","en":"Oyster Sauce 150ml","vi":"Dầu hào 150ml","id":"Saus Tiram 150ml","th":"ซอสหอยเส็ก","zh":"主婦蠔油150","hasImage":true},{"key":"ซอสหอยเส็ก蠔油300","category":"調味品 Seasonings","en":"Oyster Sauce 300ml","vi":"Dầu hào 300ml","id":"Saus Tiram 300ml","th":"ซอสหอยเส็ก","zh":"主婦蠔油300","hasImage":true},{"key":"ซอสหอยเส็ก蠔油600","category":"調味品 Seasonings","en":"Oyster Sauce 600ml","vi":"Dầu hào 600ml","id":"Saus Tiram 600ml","th":"ซอสหอยเส็ก","zh":"主婦蠔油600","hasImage":true},{"key":"ฉู่ฉี่สามแม่ครัว椰漿沙丁魚","category":"調味品 Seasonings","en":"Three Chefs Sardines in Chu Chee Curry","vi":"Cá mòi sốt cà ri nước cốt dừa Three Chefs","id":"Tiga Koki Sarden Saus Kari Santan","th":"ฉู่ฉี่สามแม่ครัว","zh":"椰漿沙丁魚","hasImage":true},{"key":"งาขาว炸粉","category":"調味品 Seasonings","en":"Fried Flour with White Sesame","vi":"Bột chiên mè trắng","id":"Tepung Goreng Wijen Putih","th":"งาขาว","zh":"炸粉","hasImage":true},{"key":"เงาะในน้ำเชื่อม紅毛丹罐頭","category":"調味品 Seasonings","en":"Rambutan in Syrup Canned","vi":"Chôm chôm ngâm đường đóng hộp","id":"Manisan Rambutan Kaleng","th":"เงาะในน้ำเชื่อม","zh":"紅毛丹罐頭","hasImage":true},{"key":"เงาะสับปะรดกระป๋อง波蘿紅毛丹罐頭","category":"調味品 Seasonings","en":"Rambutan stuffed with Pineapple in Syrup Canned","vi":"Chôm chôm nhân dứa đóng hộp","id":"Rambutan Isi Nanas Kaleng","th":"เงาะสับปะรดกระป๋อง","zh":"波蘿紅毛丹罐頭","hasImage":true},{"key":"เครื่องผโล้滷包","category":"調味品 Seasonings","en":"Chinese Five Spice Stew Spices Pack","vi":"Gói gia vị hầm phá lấu (ngũ vị hương)","id":"Bumbu Kuah Semur / Ngo Hiong","th":"เครื่องผโล้","zh":"滷包","hasImage":true},{"key":"ผงชูรส味素250","category":"調味品 Seasonings","en":"Ajinomoto MSG 250g","vi":"Bột ngọt 250g","id":"Micin 250g","th":"ผงชูรส 250g","zh":"味素250","hasImage":true},{"key":"ผงชูรส味素500","category":"調味品 Seasonings","en":"Ajinomoto MSG 500g","vi":"Bột ngọt 500g","id":"Micin 500g","th":"ผงชูรส 500g","zh":"味素500","hasImage":true},{"key":"ผงชูรส味素800","category":"調味品 Seasonings","en":"Ajinomoto MSG 800g","vi":"Bột ngọt 800g","id":"Micin 800g","th":"ผงชูรส 800g","zh":"味素800","hasImage":true},{"key":"ผงชูรส味素85","category":"調味品 Seasonings","en":"Ajinomoto MSG 85g","vi":"Bột ngọt 85g","id":"Micin 85g","th":"ผงชูรส 85g","zh":"味素85","hasImage":true},{"key":"ผงต้มยำ酸辣調味粉","category":"調味品 Seasonings","en":"Tom Yum Seasoning Powder","vi":"Bột gia vị lẩu chua cay Tom Yum","id":"Bumbu Bubuk Tom Yum","th":"ผงต้มยำ","zh":"酸辣調味粉","hasImage":true},{"key":"ผงปรุงรสก๋วยเตี๋ยว牛肉湯粉GOSTO","category":"調味品 Seasonings","en":"Gosto Noodle Soup Seasoning Powder","vi":"Bột gia vị nấu nước dùng hủ tiếu","id":"Bumbu Bubuk Kuah Sup Mie Rasa Sapi Gosto","th":"ผงปรุงรสก๋วยเตี๋ยวเนื้อ Gosto","zh":"牛肉湯粉GOSTO","hasImage":true},{"key":"ผงปรุงรสก๋วยเตี๋ยวน้ำข้นฟ้าไทย粿條調味粉","category":"調味品 Seasonings","en":"Fa Thai Thick Soup Noodle Seasoning Powder","vi":"Bột gia vị súp hủ tiếu nước lèo đặc Fa Thai","id":"Bumbu Bubuk Kuah Mie Kuah Kental Fa Thai","th":"ผงปรุงรสก๋วยเตี๋ยวน้ำข้น ฟ้าไทย","zh":"粿條調味粉","hasImage":true},{"key":"ผงปรุงรสก๋วยเตี๋ยวน้ำใส粿條調味粉","category":"調味品 Seasonings","en":"Fa Thai Clear Soup Noodle Seasoning Powder","vi":"Bột gia vị súp hủ tiếu nước lèo trong Fa Thai","id":"Bumbu Bubuk Kuah Mie Kuah Bening Fa Thai","th":"ผงปรุงรสก๋วยเตี๋ยวน้ำใส ฟ้าไทย","zh":"粿條調味粉","hasImage":true},{"key":"ผงฟู蛋糕粉","category":"調味品 Seasonings","en":"Baking Powder","vi":"Bột nở","id":"Baking Powder","th":"ผงฟู","zh":"蛋糕粉","hasImage":true},{"key":"ผงวุ้น燕菜粉","category":"調味品 Seasonings","en":"Agar-Agar Powder","vi":"Bột rau câu","id":"Tepung Agar-Agar","th":"ผงวุ้น","zh":"燕菜粉","hasImage":true},{"key":"ผงหมักหมู醃烤調味粉","category":"調味品 Seasonings","en":"Pork Marinade Seasoning Powder","vi":"Bột gia vị ướp thịt lợn (thịt heo)","id":"Bumbu Bubuk Rendaman Daging Babi","th":"ผงหมักหมู","zh":"醃烤調味粉","hasImage":true},{"key":"ผักกาดดอง華南菜","category":"調味品 Seasonings","en":"Pickled Mustard Greens","vi":"Dưa cải muối chua hiệu Hoa Nam","id":"Sawi Asin","th":"ผักกาดดอง ฮั่วหนำ","zh":"華南菜","hasImage":true},{"key":"พริกแกงเขียวหวาน有心綠咖哩醬500g","category":"調味品 Seasonings","en":"Cock Brand Green Curry Paste 500g","vi":"Sốt cà ri xanh hiệu Con Gà (Cock Brand) 500g","id":"Pasta Kari Hijau Cap Ayam (Cock Brand) 500g","th":"พริกแกงเขียวหวาน 500g","zh":"有心綠咖哩醬500g","hasImage":true},{"key":"พริกแกงเขียวหวาน有心綠咖哩醬100g","category":"調味品 Seasonings","en":"Cock Brand Green Curry Paste 100g","vi":"Sốt cà ri xanh hiệu Con Gà (Cock Brand) 100g","id":"Pasta Kari Hijau Cap Ayam (Cock Brand) 100g","th":"พริกแกงเขียวหวาน 100g","zh":"有心綠咖哩醬100g","hasImage":true},{"key":"พริกแกงไตปลา料理包","category":"調味品 Seasonings","en":"Southern Thai Fish Organs Sour Curry Paste (Tai Pla) Meal Kit","vi":"Gói gia vị nấu cà ri lòng cá kiểu miền Nam (Tai Pla)","id":"Paket Bumbu Kari Perut Ikan Khas Thailand Selatan (Tai Pla)","th":"พริกแกงไตปลา","zh":"料理包","hasImage":true},{"key":"พริกแกงน้ำยา有心咖哩醬100g","category":"調味品 Seasonings","en":"Cock Brand Kanom Jeen Noodle Curry Paste 100g","vi":"Sốt cà ri ăn bún (Nam Ya) hiệu Con Gà 100g","id":"Pasta Kari Kuah Bihun (Nam Ya) Cap Ayam 100g","th":"พริกแกงน้ำยา 100g","zh":"有心咖哩醬100g","hasImage":true},{"key":"พริกแกงเผ็ด有心紅咖哩500g","category":"調味品 Seasonings","en":"Cock Brand Red Curry Paste 500g","vi":"Sốt cà ri đỏ hiệu Con Gà (Cock Brand) 500g","id":"Pasta Kari Merah Cap Ayam (Cock Brand) 500g","th":"พริกแกงเผ็ด 500g","zh":"有心紅咖哩500g","hasImage":true},{"key":"พริกแกงเผ็ด有心紅咖哩100g","category":"調味品 Seasonings","en":"Cock Brand Red Curry Paste 100g","vi":"Sốt cà ri đỏ hiệu Con Gà (Cock Brand) 100g","id":"Pasta Kari Merah Cap Ayam (Cock Brand) 100g","th":"พริกแกงเผ็ด 100g","zh":"有心紅咖哩100g","hasImage":true},{"key":"พริกแกงพะแนง有心咖哩醬100g","category":"調味品 Seasonings","en":"Cock Brand Panang Curry Paste 100g","vi":"Sốt cà ri khô Panang hiệu Con Gà 100g","id":"Pasta Kari Panang Cap Ayam 100g","th":"พริกแกงพะแนง 100g","zh":"有心咖哩醬100g","hasImage":true},{"key":"พริกแกงฮังเล料理包","category":"調味品 Seasonings","en":"Northern Thai Kaeng Hung Ley Curry Paste Kit","vi":"Gói gia vị nấu cà ri heo kiểu miền Bắc (Hung Ley)","id":"Paket Bumbu Kari Hung Ley Khas Thailand Utara","th":"พริกแกงฮังเล","zh":"料理包","hasImage":true},{"key":"พริกไทยป่น胡椒粉","category":"調味品 Seasonings","en":"Ground White Pepper Powder","vi":"Bột tiêu trắng","id":"Lada Bubuk","th":"พริกไทยป่น","zh":"胡椒粉","hasImage":true},{"key":"พริกน้ำเงี้ยว泰式料理包","category":"調味品 Seasonings","en":"Northern Thai Nam Ngiao Rice Noodle Curry Kit","vi":"Gói gia vị nấu bún nước lèo cay miền Bắc (Nam Ngiao)","id":"Paket Bumbu Kuah Mie Nam Ngiao Khas Thailand Utara","th":"พริกน้ำเงี้ยว","zh":"泰式料理包","hasImage":true},{"key":"พริกป่น辣椒粉","category":"調味品 Seasonings","en":"Ground Red Pepper","vi":"Ớt khô xay","id":"Cabai Bubuk","th":"พริกป่น","zh":"辣椒粉","hasImage":true},{"key":"พริกป่น辣椒粉14g","category":"調味品 Seasonings","en":"Ground Red Pepper 14g","vi":"Ớt khô xay 14g","id":"Cabai Bubuk 14g","th":"พริกป่น 14g","zh":"辣椒粉14g","hasImage":true},{"key":"พริกป่น辣椒粉50g","category":"調味品 Seasonings","en":"Ground Red Pepper 50g","vi":"Ớt khô xay 50g","id":"Cabai Bubuk 50g","th":"พริกป่น 50g","zh":"辣椒粉50g","hasImage":true},{"key":"พริกเผา513g泰式辣椒醬美寶牌","category":"調味品 Seasonings","en":"Maepranom Thai Chili Paste 513g","vi":"Ớt sa tế tôm kiểu Thái Maepranom 513g","id":"Sambal Terasi 513g","th":"พริกเผา แม่ประนอม 513g","zh":"泰式辣椒醬美寶牌","hasImage":true},{"key":"พริกเผา228g泰式辣椒醬美寶牌","category":"調味品 Seasonings","en":"Maepranom Thai Chili Paste 228g","vi":"Ớt sa tế tôm kiểu Thái Maepranom 228g","id":"Sambal Terasi 228g","th":"พริกเผา แม่ประนอม 228g","zh":"泰式辣椒醬美寶牌","hasImage":true},{"key":"พริกแห้ง辣椒干","category":"調味品 Seasonings","en":"Dried Red Chilies","vi":"Ớt khô nguyên quả","id":"Cabai Kering","th":"พริกแห้ง","zh":"辣椒干","hasImage":true},{"key":"ปุ้มปุ้ยปลาทอดSmiling辣醬炸魚","category":"調味品 Seasonings","en":"Smiling Fish Fried Mackerel in Chili Sauce","vi":"Cá nục chiên sốt ớt hiệu Cá Cười","id":"Ikan Makarel Goreng Saus Cabai Cap Smiling Fish","th":"ปุ้มปุ้ยปลาทอด","zh":"Smiling辣醬炸魚","hasImage":true},{"key":"ปุ้มปุ้ยปลาราดพริกSmiling辣醬炸魚","category":"調味品 Seasonings","en":"Smiling Fish Fried Mackerel with Chili","vi":"Cá nục sốt ớt cay hiệu Cá Cười","id":"Ikan Makarel Goreng Siram Cabai Cap Smiling Fish","th":"ปุ้มปุ้ยปลาราดพริก","zh":"Smiling辣醬炸魚","hasImage":true},{"key":"แป้งโกกิ油炸粉GOGI","category":"調味品 Seasonings","en":"Gogi Tempura Flour","vi":"Bột chiên giòn Gogi","id":"Tepung Bumbu Krispi","th":"แป้งโกกิ","zh":"油炸粉GOGI","hasImage":true},{"key":"แป้งทอดกรอบรสดี油炸粉","category":"調味品 Seasonings","en":"RosDee Crispy Frying Flour","vi":"Bột chiên xù","id":"Tepung Bumbu Goreng Renyah RosDee","th":"แป้งทอดกรอบรสดี","zh":"油炸粉","hasImage":true},{"key":"แป้งทอดกรอบรสดี油炸粉1","category":"調味品 Seasonings","en":"RosDee Crispy Frying Flour","vi":"Bột chiên xù","id":"Tepung Bumbu Goreng Renyah RosDee","th":"แป้งทอดกรอบรสดี","zh":"油炸粉","hasImage":true},{"key":"น้ำจิ้มไก่เด็กสมบูรณ์仁和園甜辣醬350","category":"調味品 Seasonings","en":"Healthy Boy Sweet Chili Sauce 350g","vi":"Sốt ớt ngọt chấm gà Healthy Boy 350g","id":"Saus Sambal Bangkok Manis Healthy Boy 350g","th":"น้ำจิ้มไก่เด็กสมบูรณ์ 350g","zh":"仁和園甜辣醬350","hasImage":true},{"key":"น้ำจิ้มไก่เด็กสมบูรณ์仁和園甜辣醬800","category":"調味品 Seasonings","en":"Healthy Boy Sweet Chili Sauce 800g","vi":"Sốt ớt ngọt chấm gà Healthy Boy 800g","id":"Saus Sambal Bangkok Manis Healthy Boy 800g","th":"น้ำจิ้มไก่เด็กสมบูรณ์ 800g","zh":"仁和園甜辣醬800","hasImage":true},{"key":"น้ำจิ้มไก่แม่พลอยMaeploy甜辣醬920","category":"調味品 Seasonings","en":"Mae Ploy Sweet Chili Sauce 920g","vi":"Sốt ớt ngọt chấm gà Mae Ploy 920g","id":"Saus Sambal Bangkok Manis Mae Ploy 920g","th":"น้ำจิ้มไก่แม่พลอย 920g","zh":"Maeploy甜辣醬920","hasImage":true},{"key":"น้ำจิ้มไก่แม่พลอยMaeploy甜辣醬350","category":"調味品 Seasonings","en":"Mae Ploy Sweet Chili Sauce 350g","vi":"Sốt ớt ngọt chấm gà Mae Ploy 350g","id":"Saus Sambal Bangkok Manis Mae Ploy 350g","th":"น้ำจิ้มไก่แม่พลอย 350g","zh":"Maeploy甜辣醬350","hasImage":true},{"key":"น้ำจิ้มสุกี้ สูตรกวางตุ้ง潘泰火鍋醬730","category":"調味品 Seasonings","en":"Pantai Sukiyaki Sauce Cantonese Formula 730g","vi":"Nước sốt lẩu Suki kiểu Quảng Đông Pantai 730g","id":"Saus Suki Ala Kanton Pantai 730g","th":"น้ำจิ้มสุกี้ สูตรกวางตุ้ง พันท้าย 730g","zh":"潘泰火鍋醬730","hasImage":true},{"key":"น้ำจิ้มสุกี้ สูตรกวางตุ้ง潘泰火鍋醬300","category":"調味品 Seasonings","en":"Pantai Sukiyaki Sauce Cantonese Formula 300g","vi":"Nước sốt lẩu Suki kiểu Quảng Đông Pantai 300g","id":"Saus Suki Ala Kanton Pantai 300g","th":"น้ำจิ้มสุกี้ สูตรกวางตุ้ง พันท้าย 300g","zh":"潘泰火鍋醬300","hasImage":true},{"key":"น้ำจิ้มสุกี้泰式甜辣醬","category":"調味品 Seasonings","en":"Thai Sukiyaki Hot Pot Sauce","vi":"Nước sốt lẩu Suki Thái","id":"Saus Suki Hotpot Thailand","th":"น้ำจิ้มสุกี้","zh":"泰式甜辣醬","hasImage":true},{"key":"น้ำจิ้มสุกี้สุรีย์素麗火鍋沾醬780","category":"調味品 Seasonings","en":"Suree Sukiyaki Sauce 780g","vi":"Sốt lẩu chấm Suki Suree 780g","id":"Saus Suki Suree 780g","th":"น้ำจิ้มสุกี้สุรีย์ 780g","zh":"素麗火鍋沾醬780","hasImage":true},{"key":"น้ำจิ้มสุกี้สุรีย์素麗火鍋醬300","category":"調味品 Seasonings","en":"Suree Sukiyaki Sauce 300g","vi":"Sốt lẩu chấm Suki Suree 300g","id":"Saus Suki Suree 300g","th":"น้ำจิ้มสุกี้สุรีย์ 300g","zh":"素麗火鍋醬300","hasImage":true},{"key":"น้ำตาลมะพร้าวกระปุก棕櫚糖","category":"調味品 Seasonings","en":"Coconut Palm Sugar Tub","vi":"Đường thốt nốt","id":"Gula Aren","th":"น้ำตาลมะพร้าวกระปุก","zh":"棕櫚糖","hasImage":true},{"key":"น้ำตาลมะพร้าวถุง椰糖1000","category":"調味品 Seasonings","en":"Coconut Palm Sugar Bag 1000g","vi":"Đường dừa dạng túi 1000g","id":"Gula Kelapa Kemasan Kantong 1000g","th":"น้ำตาลมะพร้าวถุง 1000g","zh":"椰糖1000","hasImage":true},{"key":"น้ำตาลมะพร้าวถุง椰糖500","category":"調味品 Seasonings","en":"Coconut Palm Sugar Bag 500g","vi":"Đường dừa dạng túi 500g","id":"Gula Kelapa Kemasan Kantong 500g","th":"น้ำตาลมะพร้าวถุง 500g","zh":"椰糖500","hasImage":true},{"key":"น้ำใบหญ้านาง葉菜汁","category":"調味品 Seasonings","en":"Yanang Leaf Extract Juice","vi":"Nước cốt lá sương sâm","id":"Sari Daun Yanang","th":"น้ำใบหญ้านาง","zh":"葉菜汁","hasImage":true},{"key":"น้ำปลาทิพย์รส味露300","category":"調味品 Seasonings","en":"Tiparos Fish Sauce 300ml","vi":"Nước mắm Tiparos 300ml","id":"Kecap Ikan Tiparos 300ml","th":"น้ำปลาทิพย์รส 300ml","zh":"味露300","hasImage":true},{"key":"น้ำปลาทิพย์รส味露4500","category":"調味品 Seasonings","en":"Tiparos Fish Sauce 4500ml","vi":"Nước mắm Tiparos 4500ml","id":"Kecap Ikan Tiparos 4500ml","th":"น้ำปลาทิพย์รส 4500ml","zh":"味露4500","hasImage":true},{"key":"น้ำปลาทิพย์รส味露700","category":"調味品 Seasonings","en":"Tiparos Fish Sauce 700ml","vi":"Nước mắm Tiparos 700ml","id":"Kecap Ikan Tiparos 700ml","th":"น้ำปลาทิพย์รส 700ml","zh":"味露700","hasImage":true},{"key":"น้ำปลาแท้ กุ้ง魚露700","category":"調味品 Seasonings","en":"Premium Fish Sauce 700ml","vi":"Nước mắm cốt hiệu Con Tôm 700ml","id":"Kecap Ikan Asli Cap Udang 700ml","th":"น้ำปลาแท้ กุ้ง 700ml","zh":"魚露700","hasImage":true},{"key":"น้ำปลาแท้ ปลาหมึก魷魚魚露700","category":"調味品 Seasonings","en":"Squid Brand Fish Sauce 700ml","vi":"Nước mắm hiệu Con Mực 700ml","id":"Kecap Ikan Cap Cumi-Cumi 700ml","th":"น้ำปลาแท้ ปลาหมึก 700ml","zh":"魷魚魚露700","hasImage":true},{"key":"น้ำปลานัมหงือ魚露500","category":"調味品 Seasonings","en":"Nam Ngu Vietnam Fish Sauce 500ml","vi":"Nước mắm Nam Ngư 500ml","id":"Kecap Ikan Vietnam Nam Ngu 500ml","th":"น้ำปลานัมหงือ 500ml","zh":"魚露500","hasImage":true},{"key":"น้ำปลาร้า แซ่บไมค์ZAB魚露","category":"調味品 Seasonings","en":"Zab Mike Fermented Fish Sauce","vi":"Nước mắm cá sặc lên men Zab Mike","id":"Saus Ikan Fermentasi Zab Mike","th":"น้ำปลาร้า แซ่บไมค์","zh":"ZAB魚露","hasImage":true},{"key":"น้ำปลาร้า魚露300","category":"調味品 Seasonings","en":"Fermented Fish Sauce 300ml","vi":"Mắm nêm 300ml","id":"Saus Ikan Fermentasi 300ml","th":"น้ำปลาร้า 300ml","zh":"魚露300","hasImage":true},{"key":"น้ำปลาร้า魚露480","category":"調味品 Seasonings","en":"Fermented Fish Sauce 480ml","vi":"Mắm nêm 480ml","id":"Saus Ikan Fermentasi 480ml","th":"น้ำปลาร้า 480ml","zh":"魚露480","hasImage":true},{"key":"น้ำปลาร้า魚露700","category":"調味品 Seasonings","en":"Fermented Fish Sauce 700ml","vi":"Mắm nêm 700ml","id":"Saus Ikan Fermentasi 700ml","th":"น้ำปลาร้า 700ml","zh":"魚露700","hasImage":true},{"key":"น้ำมะขามเปียก酸子醬","category":"調味品 Seasonings","en":"Tamarind Paste","vi":"Sốt me","id":"Asam Jawa Pasta","th":"น้ำมะขามเปียก","zh":"酸子醬","hasImage":true},{"key":"น้ำมะนาว馬蜂橙汁700","category":"調味品 Seasonings","en":"Kaffir Lime Juice 700ml","vi":"Nước cốt chanh sần 700ml","id":"Jus Jeruk Purut 700ml","th":"น้ำมะนาว 700ml","zh":"馬蜂橙汁700","hasImage":true},{"key":"น้ำมะนาว馬蜂橙汁300","category":"調味品 Seasonings","en":"Kaffir Lime Juice 300ml","vi":"Nước cốt chanh sần 300ml","id":"Jus Jeruk Purut 300ml","th":"น้ำมะนาว 300ml","zh":"馬蜂橙汁300","hasImage":true},{"key":"ปลากระป๋อง沙丁魚","category":"調味品 Seasonings","en":"Canned Sardines","vi":"Cá mòi đóng hộp","id":"Sardin Kaleng","th":"ปลากระป๋อง","zh":"沙丁魚","hasImage":true},{"key":"ปลากระป๋องคั่วกลิ้ง鯖魚調味醬1","category":"調味品 Seasonings","en":"Canned Mackerel in Khua Kling Southern Thai Curry Sauce","vi":"Cá nục sốt cà ri Khua Kling kiểu miền Nam Thái Lan","id":"Makarel Kaleng Bumbu Kari Khua Kling","th":"ปลากระป๋องคั่วกลิ้ง","zh":"鯖魚調味醬","hasImage":true},{"key":"ปลากระป๋องคั่วกลิ้ง鯖魚調味醬2","category":"調味品 Seasonings","en":"Canned Mackerel in Khua Kling Southern Thai Curry Sauce","vi":"Cá nục sốt cà ri Khua Kling kiểu miền Nam Thái Lan","id":"Makarel Kaleng Bumbu Kari Khua Kling","th":"ปลากระป๋องคั่วกลิ้ง","zh":"鯖魚調味醬","hasImage":true},{"key":"ปลาร้าน้ำปู魚露350","category":"調味品 Seasonings","en":"Fermented Fish Sauce with Crab Paste 350ml","vi":"Mắm ba khía 350ml","id":"Saus Plara Kombinasi Pasta Kepiting 350ml","th":"ปลาร้าน้ำปู 350ml","zh":"魚露350","hasImage":true},{"key":"ปลาร้าส้มตำรสปู魚露480","category":"調味品 Seasonings","en":"Fermented Fish Sauce for Som Tam Crab Flavor 480ml","vi":"Nước mắm nấu gỏi đu đủ vị cua 480ml","id":"Saus Plara Som Tam Rasa Kepiting 480ml","th":"ปลาร้าส้มตำรสปู 480ml","zh":"魚露480","hasImage":true},{"key":"น้ำส้มสายชู金山醋大","category":"調味品 Seasonings","en":"Golden Mountain Distilled Vinegar","vi":"Giấm tiệt trùng hiệu Núi Vàng Golden Mountain","id":"Cuka Fermentasi Golden Mountain","th":"น้ำส้มสายชูภูเขาทอง","zh":"金山醋","hasImage":true},{"key":"น้ำมันพืชองุ่น沙拉油","category":"調味品 Seasonings","en":"Angoon Soybean Cooking Oil","vi":"Dầu ăn đậu nành hiệu Ngôi Sao","id":"Minyak Goreng Kedelai Angoon","th":"น้ำมันพืชองุ่น","zh":"沙拉油","hasImage":true},{"key":"ดีขวด牛膽汁","category":"調味品 Seasonings","en":"Bottled Beef Bile","vi":"Mật bò đóng chai","id":"Empedu Sapi Botol","th":"ดีขวด","zh":"牛膽汁","hasImage":true},{"key":"ต้มยำสำเร็จ有心辣椒醬454","category":"調味品 Seasonings","en":"Maepranom Tom Yum Paste 454g","vi":"Cốt súp Tom Yum ăn liền Maepranom 454g","id":"Bumbu Pasta Tom Yum Instan Maepranom 454g","th":"ต้มยำสำเร็จ 454g","zh":"有心辣椒醬454","hasImage":true},{"key":"ต้มยำสำเร็จ有心辣椒醬227","category":"調味品 Seasonings","en":"Maepranom Tom Yum Paste 227g","vi":"Cốt súp Tom Yum ăn liền Maepranom 227g","id":"Bumbu Pasta Tom Yum Instan Maepranom 227g","th":"ต้มยำสำเร็จ 227g","zh":"有心辣椒醬227","hasImage":true},{"key":"เต้าเจี้ยวเล็ก仁和園豆瓣醬350","category":"調味品 Seasonings","en":"Healthy Boy Soybean Paste 350g","vi":"Tương hột Healthy Boy 350g","id":"Tauco Healthy Boy 350g","th":"เต้าเจี้ยวเล็ก 350g","zh":"仁和園豆瓣醬350","hasImage":true},{"key":"เต้าเจี้ยวเล็ก仁和園豆瓣醬800","category":"調味品 Seasonings","en":"Healthy Boy Soybean Paste 800g","vi":"Tương hột Healthy Boy 800g","id":"Tauco Healthy Boy 800g","th":"เต้าเจี้ยวเล็ก 800g","zh":"仁和園豆瓣醬800","hasImage":true},{"key":"นมข้นหวาน三花煉乳","category":"調味品 Seasonings","en":"Carnation Sweetened Condensed Milk","vi":"Sữa đặc có đường Carnation","id":"Susu Kental Manis Carnation","th":"นมข้นหวาน สาม花","zh":"三花煉乳","hasImage":true},{"key":"นมข้นหวาน瑪麗煉乳","category":"調味品 Seasonings","en":"Mali Sweetened Condensed Milk","vi":"Sữa đặc có đường Mali","id":"Susu Kental Manis Mali","th":"นมข้นหวาน มะลิ","zh":"瑪麗煉乳","hasImage":true},{"key":"ซีอิ๊วขาว ขวดแก้ว仁和園醬油300","category":"調味品 Seasonings","en":"Healthy Boy Light Soy Sauce 300g","vi":"Nước tương Thượng Hạng Healthy Boy 300g","id":"Kecap Asin Healthy Boy 300g","th":"ซีอิ๊วขาว ขวดแก้ว 300g","zh":"仁和園醬油300","hasImage":true},{"key":"ซีอิ๊วขาว ขวดแก้ว仁和園醬油700","category":"調味品 Seasonings","en":"Healthy Boy Light Soy Sauce 700g","vi":"Nước tương Thượng Hạng Healthy Boy 700g","id":"Kecap Asin Healthy Boy 700g","th":"ซีอิ๊วขาว ขวดแก้ว 700g","zh":"仁和園醬油700","hasImage":true},{"key":"ซีอิ๊วดำเวียดนาม上等海鮮醬","category":"調味品 Seasonings","en":"Vietnam Dark Soy Sauce","vi":"Hắc xì dầu Việt Nam","id":"Kecap Hitam Vietnam","th":"ซีอิ๊วดำเวียดนาม","zh":"上等海鮮醬","hasImage":true},{"key":"ซีอิ๊วดำใหญ่仁和園醬油274","category":"調味品 Seasonings","en":"Healthy Boy Black Sweet Soy Sauce 274ml","vi":"Hắc xì dầu ngọt Healthy Boy 274ml","id":"Kecap Manis Hitam Healthy Boy 274ml","th":"ซีอิ๊วดำใหญ่ 274ml","zh":"仁和園醬油274","hasImage":true},{"key":"ซีอิ๊วดำใหญ่仁和園醬油940","category":"調味品 Seasonings","en":"Healthy Boy Black Sweet Soy Sauce 940g","vi":"Hắc xì dầu ngọt Healthy Boy 940g","id":"Kecap Manis Hitam Healthy Boy 940g","th":"ซีอิ๊วดำใหญ่ 940g","zh":"仁和園醬油940","hasImage":true},{"key":"เม็ดสาคู西谷米","category":"調味品 Seasonings","en":"Tapioca Pearls","vi":"Bột báng","id":"Sagu Mutiara","th":"เม็ดสาคู","zh":"西谷米","hasImage":true},{"key":"เม็ดสาคู西谷米1","category":"調味品 Seasonings","en":"Tapioca Pearls","vi":"Bột báng","id":"Sagu Mutiara","th":"เม็ดสาคู","zh":"西谷米","hasImage":true},{"key":"แมงดาขวด明拉醬","category":"調味品 Seasonings","en":"Mangda Essence","vi":"Nước sốt tinh dầu cà cuống","id":"Saus Esens Kumbang Air","th":"แมงดาขวด","zh":"明拉醬","hasImage":true},{"key":"รสดีกระเพราGaPao調味粉","category":"調味品 Seasonings","en":"RosDee Pad Kra Pao Seasoning Powder","vi":"Bột gia vị xào húng quế RosDee","id":"Bumbu Bubuk Tumis Kemangi RosDee","th":"รสดีกะเพรา","zh":"GaPao調味粉","hasImage":true},{"key":"รสดีพะโล้PALO","category":"調味品 Seasonings","en":"RosDee Pa-Lo Seasoning Powder","vi":"Bột gia vị thịt kho tàu RosDee","id":"Bumbu Bubuk Kuah Semur (Palo) RosDee","th":"รสดีพะโล้","zh":"PALO","hasImage":true},{"key":"รสดีหมู豬肉調味粉400","category":"調味品 Seasonings","en":"RosDee Pork Seasoning Powder 400g","vi":"Bột súp heo RosDee 400g","id":"Bumbu Bubuk Rasa Babi RosDee 400g","th":"รสดีหมู 400","zh":"豬肉調味粉400","hasImage":true},{"key":"รสดีหมู豬肉調味粉900","category":"調味品 Seasonings","en":"RosDee Pork Seasoning Powder 900g","vi":"Bột súp heo RosDee 900g","id":"Bumbu Bubuk Rasa Babi RosDee 900g","th":"รสดีหมู 900","zh":"豬肉調味粉900","hasImage":true},{"key":"รสดีหมู豬肉調味粉70","category":"調味品 Seasonings","en":"RosDee Pork Seasoning Powder 70g","vi":"Bột súp heo RosDee 70g","id":"Bumbu Bubuk Rasa Babi RosDee 70g","th":"รสดีหมู 70","zh":"豬肉調味粉70","hasImage":true},{"key":"ลำไยกระป๋อง龍眼罐頭","category":"調味品 Seasonings","en":"Canned Longan in Syrup","vi":"Nhãn đóng hộp","id":"Lengkeng Kaleng dalam Sirup","th":"ลำไยกระป๋อง","zh":"龍眼罐頭","hasImage":true},{"key":"ลูกชิดกระป๋อง亞達子罐頭","category":"調味品 Seasonings","en":"Canned Attap Seed","vi":"Hạt thốt nốt đóng hộp","id":"Kolang-Kaling Kaleng","th":"ลูกชิดกระป๋อง","zh":"亞達子罐頭","hasImage":true},{"key":"ลูกชิดกระป๋อง洸榔罐頭","category":"調味品 Seasonings","en":"Canned Kaong","vi":"Hạt đác đóng hộp","id":"Buah Aren Kaleng","th":"ลูกชิดกระป๋อง","zh":"洸榔罐頭","hasImage":true},{"key":"ลูกตาลกระป๋อง白玉丹罐頭","category":"調味品 Seasonings","en":"Canned Toddy Palm Slices","vi":"Thốt nốt lát đóng hộp","id":"Irisan Kelapa Laut Kaleng","th":"ลูกตาลกระป๋อง","zh":"白玉丹罐頭","hasImage":true},{"key":"วุ้นเส้น米粉","category":"調味品 Seasonings","en":"Glass Noodles","vi":"Miến","id":"Sohun","th":"วุ้นเส้น","zh":"米粉","hasImage":true},{"key":"เส้นก๋วยเตี๋ยวเวียดนาม澱粉條","category":"調味品 Seasonings","en":"Vietnamese Rice Noodles","vi":"Bánh phở Việt Nam","id":"Kway Teow Vietnam","th":"เส้นก๋วยเตี๋ยวเวียดนาม","zh":"澱粉條","hasImage":true},{"key":"เส้นก๋วยเตี๋ยวเวียดนาม澱粉條3","category":"調味品 Seasonings","en":"Vietnamese Rice Noodles","vi":"Bánh phở Việt Nam","id":"Kway Teow Vietnam","th":"เส้นก๋วยเตี๋ยวเวียดนาม","zh":"澱粉條","hasImage":true},{"key":"เส้นขนมจีน澱粉條2","category":"調味品 Seasonings","en":"Thai Rice Vermicelli Noodles","vi":"Bún tươi thái","id":"Bihun Beras Fresh","th":"เส้นขนมจีน","zh":"澱粉條2","hasImage":true},{"key":"เส้นหมี่ขาว米粉","category":"調味品 Seasonings","en":"White Rice Vermicelli","vi":"Bún gạo trắng","id":"Bihun Beras Putih","th":"เส้นหมี่ขาว","zh":"米粉","hasImage":true},{"key":"หน่อไม้ดอง醃竹筍罐","category":"調味品 Seasonings","en":"Canned Pickled Bamboo Shoots","vi":"Măng chua đóng hộp","id":"Rebung Rendam Kaleng","th":"หน่อไม้ดองกระป๋อง","zh":"醃竹筍罐","hasImage":true},{"key":"หอยลายSmiling辣醬炸魚1","category":"調味品 Seasonings","en":"Smiling Fish Crispy Fried Clams","vi":"Ngao sốt cay Smiling Fish","id":"Kerang Goreng Sambal Smiling Fish","th":"หอยลายยิ้ม","zh":"Smiling辣醬炸魚1","hasImage":true},{"key":"แห้วกระป๋อง悖齊罐頭","category":"調味品 Seasonings","en":"Canned Water Chestnuts","vi":"Củ năng đóng hộp","id":"Manisan Dari Bengkuang Air Kaleng","th":"แห้วกระป๋อง","zh":"悖齊罐頭","hasImage":true},{"key":"เฮลูบอย紅糖水","category":"調味品 Seasonings","en":"Hale’s Blue Boy Red Syrup","vi":"Siro đỏ Hale’s Blue Boy","id":"Sirup Merah Hale’s Blue Boy","th":"เฮลูบอยแดง","zh":"紅糖水","hasImage":true},{"key":"เฮลูบอย綠糖水","category":"調味品 Seasonings","en":"Hale’s Blue Boy Green Syrup","vi":"Siro xanh Hale’s Blue Boy","id":"Sirup Hijau Hale’s Blue Boy","th":"เฮลูบอยเขียว","zh":"綠糖水","hasImage":true},{"key":"มะเขือเปราะ水茄","category":"調味品 Seasonings","en":"Thai Eggplant","vi":"Cà pháo Thái","id":"Terong Bulat Thai","th":"มะเขือเปราะ","zh":"水茄","hasImage":true},{"key":"ก๋วยเตี๋ยวเส้นเล็ก白粿條","category":"調味品 Seasonings","en":"Thin Rice Noodles","vi":"Hủ tiếu sợi nhỏ","id":"Kway Teow Potong Tipis","th":"ก๋วยเตี๋ยวเส้นเล็ก","zh":"白粿條","hasImage":true},{"key":"น้ำพริกสด新鮮辣椒醬","category":"調味品 Seasonings","en":"Fresh Chili Paste","vi":"Ớt chưng tươi","id":"Sambal Cabai Segar","th":"น้ำพริกสด","zh":"新鮮辣椒醬","hasImage":true},{"key":"น้ำกระเทียมดอง蒜頭水","category":"調味品 Seasonings","en":"Pickled Garlic Juice","vi":"Nước tỏi ngâm","id":"Air Bawang Putih Acar","th":"น้ำกระเทียมดอง","zh":"蒜頭水","hasImage":true},{"key":"กระเพรา打拋","category":"調味品 Seasonings","en":"Holy Basil","vi":"Rau húng quế dũa","id":"Daun Kemangi Suci","th":"กระเพรา","zh":"打拋","hasImage":true},{"key":"ข้าวคั่ว糯米粉50g","category":"調味品 Seasonings","en":"Toasted Rice Powder50g","vi":"Thính gạo50g","id":"Bubuk Beras Sangrai50g","th":"ข้าวคั่ว50g","zh":"糯米粉50g","hasImage":true},{"key":"ข้าวคั่ว糯米粉25g","category":"調味品 Seasonings","en":"Toasted Rice Powder25g","vi":"Thính gạo25g","id":"Bubuk Beras Sangrai25g","th":"ข้าวคั่ว25g","zh":"糯米粉25g","hasImage":true},{"key":"ตุ๋นเนื้อยาจีน中藥燉牛肉","category":"調味品 Seasonings","en":"Chinese Herbal Beef Stew Spice Pack","vi":"Gói gia vị hầm bò thuốc bắc","id":"Bumbu Sup Herbal Rempah Cina untuk Daging Sapi","th":"ตุ๋นเนื้อยาจีน","zh":"中藥燉牛肉","hasImage":true},{"key":"ตุ๋นหมูน้ำข้น燉豬肉","category":"調味品 Seasonings","en":"Concentrated Pork Stew Spice Pack","vi":"Gói gia vị hầm thịt heo đậm đà","id":"Bumbu Sup Semur Daging Babi Kental","th":"ตุ๋นหมูน้ำข้น","zh":"燉豬肉","hasImage":true},{"key":"ตะไคร้ใบมะกรูด冬蔭","category":"調味品 Seasonings","en":"Tom Yum Herb Set","vi":"Set gia vị Tom Yum","id":"Paket Rempah Tom Yum","th":"ตะไคร้ใบมะกรูด","zh":"冬蔭","hasImage":true},{"key":"ปลาหมึกแห้ง魷魚乾","category":"調味品 Seasonings","en":"Dried Squid","vi":"Mực khô","id":"Cumi Kering","th":"ปลาหมึกแห้ง","zh":"魷魚乾","hasImage":true},{"key":"ปลาแห้ง蛇紋魚","category":"調味品 Seasonings","en":"Dried Striped Snakehead Fish","vi":"Cá lóc khô","id":"Ikan Gabus Kering","th":"ปลาแห้ง","zh":"蛇紋魚","hasImage":true},{"key":"พริกไทยขาว白胡椒粒","category":"調味品 Seasonings","en":"White Peppercorns","vi":"Tiêu hạt trắng","id":"Lada Putih Butiran","th":"พริกไทยขาว","zh":"白胡椒粒","hasImage":true},{"key":"พริกไทยดำ黑胡椒粒","category":"調味品 Seasonings","en":"Black Peppercorns","vi":"Tiêu hạt đen","id":"Lada Hitam Butiran","th":"พริกไทยดำ","zh":"黑胡椒粒","hasImage":true},{"key":"พริกสด辣椒","category":"調味品 Seasonings","en":"Fresh Chili","vi":"Ớt tươi","id":"Cabai Segar","th":"พริกสด","zh":"辣椒","hasImage":true},{"key":"มะเขือเทศ蕃茄","category":"調味品 Seasonings","en":"Tomato","vi":"Cà chua","id":"Tomat","th":"มะเขือเทศ","zh":"蕃茄","hasImage":true},{"key":"มะนาว檸檬","category":"調味品 Seasonings","en":"Lime","vi":"Chanh xanh","id":"Jeruk Nipis","th":"มะนาว","zh":"檸檬","hasImage":true},{"key":"มะละกอ青木瓜","category":"調味品 Seasonings","en":"Green Papaya","vi":"Đu đủ xanh","id":"Pepaya Muda","th":"มะละกอ","zh":"青木瓜","hasImage":true},{"key":"กะทิผงสำเร็จรูป即溶椰漿粉","category":"調味品 Seasonings","en":"Instant Coconut Milk Powder","vi":"Bột cốt dừa","id":"Serbuk Santan Kelapa","th":"กะทิผงสำเร็จรูป","zh":"即溶椰漿粉","hasImage":true},{"key":"กะทิชาวเกาะ巧口牌椰漿","category":"調味品 Seasonings","en":"Chaokoh Coconut Milk","vi":"Nước cốt dừa Chaokoh","id":"Santan Chaokoh","th":"กะทิชาวเกาะ","zh":"巧口牌椰漿","hasImage":true},{"key":"ใบมะกรูด檸檬葉","category":"調味品 Seasonings","en":"Kaffir Lime Leaves","vi":"Lá chanh","id":"Daun jeruk","th":"ใบมะกรูด","zh":"檸檬葉","hasImage":true},{"key":"ตะไคร้香茅","category":"調味品 Seasonings","en":"Lemongrass","vi":"Củ sả","id":"Serai","th":"ตะไคร้","zh":"香茅","hasImage":true},{"key":"เบียร์ช้าง大象啤酒","category":"酒 Alcohol","en":"Chang Beer","vi":"Bia Chang (Bia Voi Thái Lan)","id":"Bir Chang","th":"เบียร์ช้าง","zh":"大象啤酒","hasImage":true},{"key":"เบียร์ไต้หวัน金牌啤酒","category":"酒 Alcohol","en":"Taiwan Gold Medal Beer","vi":"Bia Taiwan Beer Gold Medal","id":"Bir Taiwan Gold Medal","th":"เบียร์ไต้หวัน","zh":"金牌啤酒","hasImage":true},{"key":"เบียร์สิงห์泰國勝獅啤酒","category":"酒 Alcohol","en":"Singha Beer","vi":"Bia Singha","id":"Bir Singha","th":"เบียร์สิงห์","zh":"泰國勝獅啤酒","hasImage":true},{"key":"สปายคลาสสิคSpy氣泡酒","category":"酒 Alcohol","en":"Spy Wine Cooler Classic","vi":"Rượu trái cây Spy Classic","id":"Cooler Anggur Spy Klasik","th":"สปายคลาสสิค","zh":"Spy氣泡酒","hasImage":true},{"key":"สปายเรดSpy氣泡酒","category":"酒 Alcohol","en":"Spy Wine Cooler Red","vi":"Rượu trái cây Spy Red","id":"Cooler Anggur Spy Merah","th":"สปายเรด","zh":"Spy氣泡酒","hasImage":true},{"key":"ไวน์玫瑰紅酒","category":"酒 Alcohol","en":"Rosé Wine","vi":"Rượu vang hồng","id":"Anggur Merah Rosé","th":"ไวน์","zh":"玫瑰紅酒","hasImage":true},{"key":"ไวน์ขาว58金高","category":"酒 Alcohol","en":"58% Kinmen Kaoliang Liquor","vi":"Rượu Cao Lương Kim Môn 58 độ","id":"Arak Putih Kinmen Kaoliang 58%","th":"ไวน์ขาว","zh":"58金高","hasImage":true},{"key":"แสงโสมแบน泰國皇家","category":"酒 Alcohol","en":"SangSom Special Rum300ml","vi":"Rượu SangSom Thái300ml","id":"Rum SangSom Thailand300ml","th":"แสงโสมแบน300ml","zh":"泰國皇家300ml","hasImage":true},{"key":"แสงโสมแบน0.7L泰國皇家","category":"酒 Alcohol","en":"SangSom Special Rum700ml","vi":"Rượu SangSom Thái700ml","id":"Rum SangSom Thailand700ml","th":"แสงโสมแบน700ml","zh":"泰國皇家700ml","hasImage":true},{"key":"หงทองกลม紅通酒","category":"酒 Alcohol","en":"Hong Thong Spirits","vi":"Rượu Hong Thong Thái","id":"Wiski Hong Thong Thailand","th":"หงทองกลม","zh":"紅通酒","hasImage":true},{"key":"เหล้า40ดีกรี泰國米酒農開","category":"酒 Alcohol","en":"Thai White Spirits 40 Degrees","vi":"Rượu nếp trắng Thái 40 độ Nong Khai","id":"Arak Putih Thailand 40 Persen","th":"เหล้า 40 ดีกรี","zh":"泰國米酒農開","hasImage":true},{"key":"เหล้าขาว南都","category":"酒 Alcohol","en":"Nan Du White Liquor","vi":"Rượu trắng Nam Đô","id":"Arak Putih Nan Du","th":"เหล้าขาว","zh":"南都","hasImage":true},{"key":"เหล้าเสือ紅虎","category":"酒 Alcohol","en":"Tiger Red Liquor","vi":"Rượu hổ đỏ","id":"Arak Macan Merah","th":"เหล้าเสือ","zh":"紅虎","hasImage":true},{"key":"เบียร์ 3 กระป๋อง金牌啤酒3罐","category":"酒 Alcohol","en":"Taiwan Gold Medal Beer (3 Cans)","vi":"Bia Taiwan Gold Medal (3 lon)","id":"Bir Taiwan Gold Medal (3 Kaleng)","th":"เบียร์ 3 กระป๋อง","zh":"金牌啤酒3罐","hasImage":true},{"key":"กันแดดผู้ชายNivea精華液","category":"清潔保養品 Hygiene & Beauty","en":"Nivea Men Sunscreen Serum","vi":"Tinh chất chống nắng Nivea Men","id":"Serum Tabir Surya Nivea Men","th":"กันแดดผู้ชาย","zh":"Nivea精華液","hasImage":true},{"key":"ซีซีครีมCathyDollCC霜","category":"清潔保養品 Hygiene & Beauty","en":"Cathy Doll CC Cream","vi":"Kem CC Cathy Doll","id":"Cathy Doll CC Cream","th":"ซีซีครีม","zh":"CathyDollCC霜","hasImage":true},{"key":"ซีซีครีมยกกล่องCathyDollCC霜盒","category":"清潔保養品 Hygiene & Beauty","en":"Cathy Doll CC Cream (Box)","vi":"Kem CC Cathy Doll (Hộp)","id":"Cathy Doll CC Cream (Box)","th":"ซีซีครีมยกกล่อง","zh":"CathyDollCC霜盒","hasImage":true},{"key":"ซีซีครีมCathyDollCC霜1","category":"清潔保養品 Hygiene & Beauty","en":"Cathy Doll CC Cream","vi":"Kem CC Cathy Doll","id":"Cathy Doll CC Cream","th":"ซีซีครีม","zh":"CathyDollCC霜","hasImage":true},{"key":"ซีซีครีมยกกล่องCathyDollCC霜盒1","category":"清潔保養品 Hygiene & Beauty","en":"Cathy Doll CC Cream (Box)","vi":"Kem CC Cathy Doll (Hộp)","id":"Cathy Doll CC Cream (Box)","th":"ซีซีครีมยกกล่อง","zh":"CathyDollCC霜盒","hasImage":true},{"key":"แชมพูHead&Sholders-Shampoo","category":"清潔保養品 Hygiene & Beauty","en":"Head & Shoulders Shampoo","vi":"Dầu gội Head & Shoulders","id":"Sampo Head & Shoulders","th":"แชมพู","zh":"Head&Sholders-Shampoo","hasImage":true},{"key":"แชมพูHead&Sholders-Shampoo1","category":"清潔保養品 Hygiene & Beauty","en":"Head & Shoulders Shampoo","vi":"Dầu gội Head & Shoulders","id":"Sampo Head & Shoulders","th":"แชมพู","zh":"Head&Sholders-Shampoo","hasImage":true},{"key":"แชมพูHead&Sholders-Shampoo2","category":"清潔保養品 Hygiene & Beauty","en":"Head & Shoulders Shampoo","vi":"Dầu gội Head & Shoulders","id":"Sampo Head & Shoulders","th":"แชมพู","zh":"Head&Sholders-Shampoo","hasImage":true},{"key":"แชมพูHead&Sholders-Shampoo3","category":"清潔保養品 Hygiene & Beauty","en":"Head & Shoulders Shampoo","vi":"Dầu gội Head & Shoulders","id":"Sampo Head & Shoulders","th":"แชมพู","zh":"Head&Sholders-Shampoo","hasImage":true},{"key":"แชมพูHead&Sholders-Shampoo4","category":"清潔保養品 Hygiene & Beauty","en":"Head & Shoulders Shampoo","vi":"Dầu gội Head & Shoulders","id":"Sampo Head & Shoulders","th":"แชมพู","zh":"Head&Sholders-Shampoo","hasImage":true},{"key":"แชมพูHead&Sholders-Shampoo5","category":"清潔保養品 Hygiene & Beauty","en":"Head & Shoulders Shampoo","vi":"Dầu gội Head & Shoulders","id":"Sampo Head & Shoulders","th":"แชมพู","zh":"Head&Sholders-Shampoo","hasImage":true},{"key":"แชมพูSunsilkShampoo","category":"清潔保養品 Hygiene & Beauty","en":"Sunsilk Shampoo","vi":"Dầu gội Sunsilk","id":"Sampo Sunsilk","th":"แชมพู","zh":"SunsilkShampoo","hasImage":true},{"key":"แชมพูSunsilkShampoo1","category":"清潔保養品 Hygiene & Beauty","en":"Sunsilk Shampoo","vi":"Dầu gội Sunsilk","id":"Sampo Sunsilk","th":"แชมพู","zh":"SunsilkShampoo","hasImage":true},{"key":"แชมพูSunsilkShampoo2","category":"清潔保養品 Hygiene & Beauty","en":"Sunsilk Shampoo","vi":"Dầu gội Sunsilk","id":"Sampo Sunsilk","th":"แชมพู","zh":"SunsilkShampoo","hasImage":true},{"key":"แชมพูSunsilkShampoo3","category":"清潔保養品 Hygiene & Beauty","en":"Sunsilk Shampoo","vi":"Dầu gội Sunsilk","id":"Sampo Sunsilk","th":"แชมพู","zh":"SunsilkShampoo","hasImage":true},{"key":"แชมพูSunsilkShampoo4","category":"清潔保養品 Hygiene & Beauty","en":"Sunsilk Shampoo","vi":"Dầu gội Sunsilk","id":"Sampo Sunsilk","th":"แชมพู","zh":"SunsilkShampoo","hasImage":true},{"key":"แชมพูClearShampoo","category":"清潔保養品 Hygiene & Beauty","en":"Clear Shampoo","vi":"Dầu gội Clear","id":"Sampo Clear","th":"แชมพู","zh":"ClearShampoo","hasImage":true},{"key":"แชมพูClearShampoo1","category":"清潔保養品 Hygiene & Beauty","en":"Clear Shampoo","vi":"Dầu gội Clear","id":"Sampo Clear","th":"แชมพู","zh":"ClearShampoo","hasImage":true},{"key":"แชมพูClearShampoo2","category":"清潔保養品 Hygiene & Beauty","en":"Clear Shampoo","vi":"Dầu gội Clear","id":"Sampo Clear","th":"แชมพู","zh":"ClearShampoo","hasImage":true},{"key":"แชมพูClearShampoo3","category":"清潔保養品 Hygiene & Beauty","en":"Clear Shampoo","vi":"Dầu gội Clear","id":"Sampo Clear","th":"แชมพู","zh":"ClearShampoo","hasImage":true},{"key":"แชมพูClearShampoo4","category":"清潔保養品 Hygiene & Beauty","en":"Clear Shampoo","vi":"Dầu gội Clear","id":"Sampo Clear","th":"แชมพู","zh":"ClearShampoo","hasImage":true},{"key":"แชมพูClearShampoo5","category":"清潔保養品 Hygiene & Beauty","en":"Clear Shampoo","vi":"Dầu gội Clear","id":"Sampo Clear","th":"แชมพู","zh":"ClearShampoo","hasImage":true},{"key":"เจลอโลSmooto蝸牛凝膠","category":"清潔保養品 Hygiene & Beauty","en":"Smooto Aloe E Snail Gel","vi":"Gel nha đam ốc sên Smooto","id":"Smooto Aloe E Snail Gel","th":"เจลอโล","zh":"Smooto蝸牛凝膠","hasImage":true},{"key":"เจลอโลยกกล่องSmooto蝸牛凝膠盒","category":"清潔保養品 Hygiene & Beauty","en":"Smooto Aloe E Snail Gel (Box)","vi":"Gel nha đam ốc sên Smooto (Hộp)","id":"Smooto Aloe E Snail Gel (Box)","th":"เจลอโลยกกล่อง","zh":"Smooto蝸牛凝膠盒","hasImage":true},{"key":"สลิปปิ้งเซรั่มSmooto番茄精華","category":"清潔保養品 Hygiene & Beauty","en":"Smooto Tomato Sleeping Serum","vi":"Tinh chất ngủ cà chua Smooto","id":"Smooto Tomato Sleeping Serum","th":"สลิปปิ้งเซรั่ม","zh":"Smooto番茄精華","hasImage":true},{"key":"สลิปปิ้งเซรั่มยกกล่องSmooto番茄精華盒","category":"清潔保養品 Hygiene & Beauty","en":"Smooto Tomato Sleeping Serum (Box)","vi":"Tinh chất ngủ cà chua Smooto (Hộp)","id":"Smooto Tomato Sleeping Serum (Box)","th":"สลิปปิ้งเซรั่มยกกล่อง","zh":"Smooto番茄精華盒","hasImage":true},{"key":"กันแดดผู้ชายNIVEA防曬精華乳","category":"清潔保養品 Hygiene & Beauty","en":"NIVEA Men Sunscreen Serum","vi":"Tinh chất chống nắng nam NIVEA","id":"Serum Tabir Surya Pria NIVEA","th":"กันแดดผู้ชาย","zh":"NIVEA防曬精華乳","hasImage":true},{"key":"ครีมนวดผมSunsilk護髮乳","category":"清潔保養品 Hygiene & Beauty","en":"Sunsilk Hair Conditioner","vi":"Dầu xả tóc Sunsilk","id":"Kondisioner Rambut Sunsilk","th":"ครีมนวดผม","zh":"Sunsilk護髮乳","hasImage":true},{"key":"ครีมนวดผมSunsilk護髮乳1","category":"清潔保養品 Hygiene & Beauty","en":"Sunsilk Hair Conditioner","vi":"Dầu xả tóc Sunsilk","id":"Kondisioner Rambut Sunsilk","th":"ครีมนวดผม","zh":"Sunsilk護髮乳","hasImage":true},{"key":"ครีมนวดผมSunsilk護髮乳2","category":"清潔保養品 Hygiene & Beauty","en":"Sunsilk Hair Conditioner","vi":"Dầu xả tóc Sunsilk","id":"Kondisioner Rambut Sunsilk","th":"ครีมนวดผม","zh":"Sunsilk護髮乳","hasImage":true},{"key":"ครีมนวดผมSunsilk護髮乳3","category":"清潔保養品 Hygiene & Beauty","en":"Sunsilk Hair Conditioner","vi":"Dầu xả tóc Sunsilk","id":"Kondisioner Rambut Sunsilk","th":"ครีมนวดผม","zh":"Sunsilk護髮乳","hasImage":true},{"key":"ครีมนวดผมSunsilk護髮乳4","category":"清潔保養品 Hygiene & Beauty","en":"Sunsilk Hair Conditioner","vi":"Dầu xả tóc Sunsilk","id":"Kondisioner Rambut Sunsilk","th":"ครีมนวดผม","zh":"Sunsilk護髮乳","hasImage":true},{"key":"ครีมบำรุงผิOlay日霜","category":"清潔保養品 Hygiene & Beauty","en":"Olay Day Cream","vi":"Kem dưỡng ban ngày Olay","id":"Krim Siang Olay","th":"ครีมบำรุงผิ","zh":"Olay日霜","hasImage":true},{"key":"ครีมบำรุงผิOlay日霜1","category":"清潔保養品 Hygiene & Beauty","en":"Olay Day Cream","vi":"Kem dưỡng ban ngày Olay","id":"Krim Siang Olay","th":"ครีมบำรุงผิ","zh":"Olay日霜","hasImage":true},{"key":"ครีมบำรุงผิOlay日霜2","category":"清潔保養品 Hygiene & Beauty","en":"Olay Day Cream","vi":"Kem dưỡng ban ngày Olay","id":"Krim Siang Olay","th":"ครีมบำรุงผิ","zh":"Olay日霜","hasImage":true},{"key":"ครีมบำรุงผิยกกล่องOlay日霜盒","category":"清潔保養品 Hygiene & Beauty","en":"Olay Day Cream (Box)","vi":"Kem dưỡng ban ngày Olay (Hộp)","id":"Krim Siang Olay (Box)","th":"ครีมบำรุงผิยกกล่อง","zh":"Olay日霜盒","hasImage":true},{"key":"ครีมบำรุงผิยกกล่องOlay日霜盒1","category":"清潔保養品 Hygiene & Beauty","en":"Olay Day Cream (Box)","vi":"Kem dưỡng ban ngày Olay (Hộp)","id":"Krim Siang Olay (Box)","th":"ครีมบำรุงผิยกกล่อง","zh":"Olay日霜盒","hasImage":true},{"key":"ครีมบำรุงผิยกกล่องOlay日霜盒2","category":"清潔保養品 Hygiene & Beauty","en":"Olay Day Cream (Box)","vi":"Kem dưỡng ban ngày Olay (Hộp)","id":"Krim Siang Olay (Box)","th":"ครีมบำรุงผิยกกล่อง","zh":"Olay日霜盒","hasImage":true},{"key":"เซรั่มคุมมันGARNIER控油精華乳","category":"清潔保養品 Hygiene & Beauty","en":"GARNIER Oil Control Serum Cream","vi":"Tinh chất dưỡng kiềm dầu GARNIER","id":"GARNIER Serum Cream Oil Control","th":"เซรั่มคุมมัน","zh":"GARNIER控油精華乳","hasImage":true},{"key":"เซรั่มครีมGARNIER防曬霜","category":"清潔保養品 Hygiene & Beauty","en":"GARNIER Serum Cream Sunscreen","vi":"Kem chống nắng tinh chất GARNIER","id":"GARNIER Serum Cream Sunscreen","th":"เซรั่มครีม","zh":"GARNIER防曬霜","hasImage":true},{"key":"ครีมบำรุงซองGARNIER補","category":"清潔保養品 Hygiene & Beauty","en":"GARNIER Nourishing Cream Sachet","vi":"Kem dưỡng dạng gói GARNIER","id":"GARNIER Krim Nutrisi Sachet","th":"ครีมบำรุงซอง","zh":"GARNIER補","hasImage":true},{"key":"สลีปปิ้งมาส์กGARNIER晚安面膜","category":"清潔保養品 Hygiene & Beauty","en":"GARNIER Sleeping Mask","vi":"Mặt nạ ngủ GARNIER","id":"GARNIER Sleeping Mask","th":"สลีปปิ้งมาส์ก","zh":"GARNIER晚安面膜","hasImage":true},{"key":"ครีมบำรุงซองGARNIER補盒","category":"清潔保養品 Hygiene & Beauty","en":"GARNIER Nourishing Cream Sachet (Box)","vi":"Kem dưỡng dạng gói GARNIER (Hộp)","id":"GARNIER Krim Nutrisi Sachet (Box)","th":"ครีมบำรุงซอง","zh":"GARNIER補盒","hasImage":true},{"key":"เซรั่มคุมมันยกกล่องGARNIER控油精華乳盒","category":"清潔保養品 Hygiene & Beauty","en":"GARNIER Oil Control Serum (Box)","vi":"Tinh chất dưỡng kiềm dầu GARNIER (Hộp)","id":"GARNIER Serum Oil Control (Box)","th":"เซรั่มคุมมันยกกล่อง","zh":"GARNIER控油精華乳盒","hasImage":true},{"key":"เซรั่มครีมยกกล่องGARNIER防曬霜盒","category":"清潔保養品 Hygiene & Beauty","en":"GARNIER Sunscreen Serum Cream (Box)","vi":"Kem chống nắng tinh chất GARNIER (Hộp)","id":"GARNIER Sunscreen Serum Cream (Box)","th":"เซรั่มครีมยกกล่อง","zh":"GARNIER防曬霜盒","hasImage":true},{"key":"สลีปปิ้งมาส์กยกกล่องGARNIER晚安面膜盒","category":"清潔保養品 Hygiene & Beauty","en":"GARNIER Sleeping Mask (Box)","vi":"Mặt nạ ngủ GARNIER (Hộp)","id":"GARNIER Sleeping Mask (Box)","th":"สลีปปิ้งมาส์กยกกล่อง","zh":"GARNIER晚安面膜盒","hasImage":true},{"key":"ครีมบำรุงซองGARNIER精華乳霜","category":"清潔保養品 Hygiene & Beauty","en":"GARNIER Essence Cream Sachet","vi":"Kem tinh chất dạng gói GARNIER","id":"GARNIER Essence Cream Sachet","th":"ครีมบำรุงซอง","zh":"GARNIER精華乳霜","hasImage":true},{"key":"เซรั่มผู้ชายNIVEA美白保濕乳","category":"清潔保養品 Hygiene & Beauty","en":"NIVEA Men Whitening & Moisturizing Serum","vi":"Tinh chất dưỡng trắng ẩm nam NIVEA","id":"Serum Pria NIVEA Whitening & Moisturizing","th":"เซรั่มผู้ชาย","zh":"NIVEA美白保濕乳","hasImage":true},{"key":"ครีมบำรุงผิวNIVEA滋潤保養霜","category":"清潔保養品 Hygiene & Beauty","en":"NIVEA Creme Moisturizer","vi":"Kem dưỡng ẩm da NIVEA","id":"Krim Pelembap NIVEA","th":"ครีมบำรุงผิว","zh":"NIVEA滋潤保養霜","hasImage":true},{"key":"ครีมกันแดดNivea精華乳霜","category":"清潔保養品 Hygiene & Beauty","en":"Nivea Sunscreen Serum Cream","vi":"Kem tinh chất chống nắng Nivea","id":"Krim Serum Tabir Surya Nivea","th":"ครีมกันแดด","zh":"Nivea精華乳霜","hasImage":true},{"key":"โฟมล้างหน้าNIVEA抗痘洗面乳","category":"清潔保養品 Hygiene & Beauty","en":"NIVEA Anti-Acne Facial Foam","vi":"Sữa rửa mặt ngừa mụn NIVEA","id":"NIVEA Anti-Acne Facial Foam","th":"โฟมล้างหน้า","zh":"NIVEA抗痘洗面乳","hasImage":true},{"key":"ผสมสารกันแดดGARNIER美白精華乳","category":"清潔保養品 Hygiene & Beauty","en":"GARNIER Whitening Serum with UV Filter","vi":"Tinh chất dưỡng trắng chống nắng GARNIER","id":"GARNIER Serum Whitening UV","th":"ผสมสารกันแดด","zh":"GARNIER美白精華乳","hasImage":true},{"key":"เซรั่มผู้ชายยกกล่องNIVEA美白保濕乳盒","category":"清潔保養品 Hygiene & Beauty","en":"NIVEA Men Whitening Serum (Box)","vi":"Tinh chất dưỡng trắng nam NIVEA (Hộp)","id":"Serum Pria NIVEA Whitening (Box)","th":"เซรั่มผู้ชายยกกล่อง","zh":"NIVEA美白保濕乳盒","hasImage":true},{"key":"กันแดดผู้ชายยกกล่องNivea精華液盒","category":"清潔保養品 Hygiene & Beauty","en":"Nivea Men Sunscreen Serum (Box)","vi":"Tinh chất chống nắng nam Nivea (Hộp)","id":"Serum Tabir Surya Pria Nivea (Box)","th":"กันแดดผู้ชายยกกล่อง","zh":"Nivea精華液盒","hasImage":true},{"key":"กันแดดผู้ชายยกกล่องNIVEA防曬精華乳盒","category":"清潔保養品 Hygiene & Beauty","en":"NIVEA Men Sunscreen Serum Cream (Box)","vi":"Kem tinh chất chống nắng nam NIVEA (Hộp)","id":"Krim Serum Tabir Surya Pria NIVEA (Box)","th":"กันแดดผู้ชายยกกล่อง","zh":"NIVEA防曬精華乳盒","hasImage":true},{"key":"ครีมบำรุงผิวยกกล่องNIVEA滋潤保養霜盒","category":"清潔保養品 Hygiene & Beauty","en":"NIVEA Moisturizing Creme (Box)","vi":"Kem dưỡng ẩm NIVEA (Hộp)","id":"Krim Pelembap NIVEA (Box)","th":"ครีมบำรุงผิวยกกล่อง","zh":"NIVEA滋潤保養霜盒","hasImage":true},{"key":"ครีมกันแดดยกกล่องNivea精華乳霜盒","category":"清潔保養品 Hygiene & Beauty","en":"Nivea Sunscreen Serum Cream (Box)","vi":"Kem tinh chất chống nắng Nivea (Hộp)","id":"Krim Serum Tabir Surya Nivea (Box)","th":"ครีมกันแดดยกกล่อง","zh":"Nivea精華乳霜盒","hasImage":true},{"key":"โฟมล้างหน้ายกกล่องNIVEA抗痘洗面乳盒","category":"清潔保養品 Hygiene & Beauty","en":"NIVEA Anti-Acne Facial Foam (Box)","vi":"Sữa rửa mặt ngừa mụn NIVEA (Hộp)","id":"NIVEA Anti-Acne Facial Foam (Box)","th":"โฟมล้างหน้ายกกล่อง","zh":"NIVEA抗痘洗面乳盒","hasImage":true},{"key":"ผสมสารกันแดดยกกล่องGARNIER美白精華乳盒","category":"清潔保養品 Hygiene & Beauty","en":"GARNIER Whitening Serum with UV Filter (Box)","vi":"Tinh chất dưỡng trắng chống nắng GARNIER (Hộp)","id":"GARNIER Serum Whitening UV (Box)","th":"ผสมสารกันแดดยกกล่อง","zh":"GARNIER美白精華乳盒","hasImage":true},{"key":"ครีมกลางวันPonds亮白日霜","category":"清潔保養品 Hygiene & Beauty","en":"Ponds Brightening Day Cream","vi":"Kem dưỡng sáng da ban ngày Ponds","id":"Ponds Brightening Day Cream","th":"ครีมกลางวัน","zh":"Ponds亮白日霜","hasImage":true},{"key":"ครีมบำรุงซองPOND'S日霜盒","category":"清潔保養品 Hygiene & Beauty","en":"POND'S Day Cream Sachet (Box)","vi":"Kem dưỡng ban ngày dạng gói POND'S (Hộp)","id":"POND'S Day Cream Sachet (Box)","th":"ครีมบำรุงซอง","zh":"POND'S日霜盒","hasImage":true},{"key":"ครีมกลางวันPonds亮白保濕日霜","category":"清潔保養品 Hygiene & Beauty","en":"Ponds Brightening & Moisturizing Day Cream","vi":"Kem dưỡng ẩm sáng da ban ngày Ponds","id":"Ponds Brightening & Moisturizing Day Cream","th":"ครีมกลางวัน","zh":"Ponds亮白保濕日霜","hasImage":true},{"key":"ครีมกลางวันยกกล่องPonds亮白日霜盒","category":"清潔保養品 Hygiene & Beauty","en":"Ponds Brightening Day Cream (Box)","vi":"Kem dưỡng sáng da ban ngày Ponds (Hộp)","id":"Ponds Brightening Day Cream (Box)","th":"ครีมกลางวันยกกล่อง","zh":"Ponds亮白日霜盒","hasImage":true},{"key":"ครีมกลางวันยกกล่องPonds亮白保濕日霜盒","category":"清潔保養品 Hygiene & Beauty","en":"Ponds Brightening & Moisturizing Day Cream (Box)","vi":"Kem dưỡng ẩm sáng da ban ngày Ponds (Hộp)","id":"Ponds Brightening & Moisturizing Day Cream (Box)","th":"ครีมกลางวันยกกล่อง","zh":"Ponds亮白保濕日霜盒","hasImage":true},{"key":"เซรั่มคุมมันVaseline控油精華乳","category":"清潔保養品 Hygiene & Beauty","en":"Vaseline Oil Control Serum Cream","vi":"Tinh chất dưỡng kiềm dầu Vaseline","id":"Vaseline Serum Cream Oil Control","th":"เซรั่มคุมมัน","zh":"Vaseline控油精華乳","hasImage":true},{"key":"เซรั่มคุมมันยกกล่องVaseline控油精華乳盒","category":"清潔保養品 Hygiene & Beauty","en":"Vaseline Oil Control Serum Cream (Box)","vi":"Tinh chất dưỡng kiềm dầu Vaseline (Hộp)","id":"Vaseline Serum Cream Oil Control (Box)","th":"เซรั่มคุมมันยกกล่อง","zh":"Vaseline控油精華乳盒","hasImage":true},{"key":"วิตามินซี เซรั่มGarnier維他命C精華液","category":"清潔保養品 Hygiene & Beauty","en":"Garnier Bright Complete Vitamin C Ampoule Serum","vi":"Tinh chất Ampoule Serum Garnier Bright Complete 3% Vitamin C + Niacinamide","id":"Garnier Bright Complete Serum Ampul","th":"วิตามินซี เซรั่มGarnier","zh":"Garnier維他命C精華液","hasImage":true},{"key":"วิตามินซี เซรั่ม กกล่องGarnier維他命C精華液盒","category":"清潔保養品 Hygiene & Beauty","en":"Garnier Bright Complete Vitamin C Ampoule Serum(Box)","vi":"Tinh chất Ampoule Serum Garnier Bright Complete 3% Vitamin C + Niacinamide(Hộp)","id":"Garnier Bright Complete Serum Ampul(Box)","th":"วิตามินซี เซรั่ม กกล่องGarnier","zh":"Garnier維他命C精華液盒","hasImage":true},{"key":"ครีมกลางคืนPonds晚霜","category":"清潔保養品 Hygiene & Beauty","en":"Ponds Night Cream","vi":"Kem dưỡng ban đêm Ponds","id":"Ponds Night Cream","th":"ครีมกลางคืน","zh":"Ponds晚霜","hasImage":true},{"key":"ครีมอาบนํ้าLux沐浴乳","category":"清潔保養品 Hygiene & Beauty","en":"Lux Body Wash","vi":"Sữa tắm Lux","id":"Sabun Mandi Cair Lux","th":"ครีมอาบนํ้า","zh":"Lux沐浴乳","hasImage":true},{"key":"ครีมอาบนํ้าLux沐浴乳1","category":"清潔保養品 Hygiene & Beauty","en":"Lux Body Wash","vi":"Sữa tắm Lux","id":"Sabun Mandi Cair Lux","th":"ครีมอาบนํ้า","zh":"Lux沐浴乳","hasImage":true},{"key":"ครีมอาบนํ้าLux沐浴乳2","category":"清潔保養品 Hygiene & Beauty","en":"Lux Body Wash","vi":"Sữa tắm Lux","id":"Sabun Mandi Cair Lux","th":"ครีมอาบนํ้า","zh":"Lux沐浴乳","hasImage":true},{"key":"ครีมอาบนํ้าLux沐浴乳3","category":"清潔保養品 Hygiene & Beauty","en":"Lux Body Wash","vi":"Sữa tắm Lux","id":"Sabun Mandi Cair Lux","th":"ครีมอาบนํ้า","zh":"Lux沐浴乳","hasImage":true},{"key":"ครีมอาบนํ้าLux沐浴乳4","category":"清潔保養品 Hygiene & Beauty","en":"Lux Body Wash","vi":"Sữa tắm Lux","id":"Sabun Mandi Cair Lux","th":"ครีมอาบนํ้า","zh":"Lux沐浴乳","hasImage":true},{"key":"ครีมอาบนํ้าLux沐浴乳5","category":"清潔保養品 Hygiene & Beauty","en":"Lux Body Wash","vi":"Sữa tắm Lux","id":"Sabun Mandi Cair Lux","th":"ครีมอาบนํ้า","zh":"Lux沐浴乳","hasImage":true},{"key":"ครีมอาบนํ้าLux沐浴乳6","category":"清潔保養品 Hygiene & Beauty","en":"Lux Body Wash","vi":"Sữa tắm Lux","id":"Sabun Mandi Cair Lux","th":"ครีมอาบนํ้า","zh":"Lux沐浴乳","hasImage":true},{"key":"โคโลญจน์50mlNivea體香劑","category":"清潔保養品 Hygiene & Beauty","en":"Nivea Deodorant Cologne 50ml","vi":"Xịt khử mùi Nivea 50ml","id":"Nivea Deodorant Cologne 50ml","th":"โคโลญจน์50ml","zh":"Nivea體香劑","hasImage":true},{"key":"โคโลญจน์50mlNivea體香劑1","category":"清潔保養品 Hygiene & Beauty","en":"Nivea Deodorant Cologne 50ml","vi":"Xịt khử mùi Nivea 50ml","id":"Nivea Deodorant Cologne 50ml","th":"โคโลญจน์50ml","zh":"Nivea體香劑","hasImage":true},{"key":"โคโลญจน์25mlNivea體香劑","category":"清潔保養品 Hygiene & Beauty","en":"Nivea Deodorant Cologne 25ml","vi":"Xịt khử mùi Nivea 25ml","id":"Nivea Deodorant Cologne 25ml","th":"โคโลญจน์25ml","zh":"Nivea體香劑","hasImage":true},{"key":"แฟ๊บ洗衣粉","category":"清潔保養品 Hygiene & Beauty","en":"Detergent Powder","vi":"Bột giặt","id":"Deterjen Bubuk","th":"แฟ๊บ","zh":"洗衣粉","hasImage":true},{"key":"แฟ๊บ洗衣粉1","category":"清潔保養品 Hygiene & Beauty","en":"Detergent Powder","vi":"Bột giặt","id":"Deterjen Bubuk","th":"แฟ๊บ","zh":"洗衣粉","hasImage":true},{"key":"แฟ๊บ洗衣粉2","category":"清潔保養品 Hygiene & Beauty","en":"Detergent Powder","vi":"Bột giặt","id":"Deterjen Bubuk","th":"แฟ๊บ","zh":"洗衣粉","hasImage":true},{"key":"แฟ๊บ洗衣粉3","category":"清潔保養品 Hygiene & Beauty","en":"Detergent Powder","vi":"Bột giặt","id":"Deterjen Bubuk","th":"แฟ๊บ","zh":"洗衣粉","hasImage":true},{"key":"แฟ๊บ洗衣粉8","category":"清潔保養品 Hygiene & Beauty","en":"Detergent Powder","vi":"Bột giặt","id":"Deterjen Bubuk","th":"แฟ๊บ","zh":"洗衣粉","hasImage":true},{"key":"แฟ๊บ洗衣粉7","category":"清潔保養品 Hygiene & Beauty","en":"Detergent Powder","vi":"Bột giặt","id":"Deterjen Bubuk","th":"แฟ๊บ","zh":"洗衣粉","hasImage":true},{"key":"แฟ๊บ洗衣粉6","category":"清潔保養品 Hygiene & Beauty","en":"Detergent Powder","vi":"Bột giặt","id":"Deterjen Bubuk","th":"แฟ๊บ","zh":"洗衣粉","hasImage":true},{"key":"แฟ๊บ洗衣粉5","category":"清潔保養品 Hygiene & Beauty","en":"Detergent Powder","vi":"Bột giặt","id":"Deterjen Bubuk","th":"แฟ๊บ","zh":"洗衣粉","hasImage":true},{"key":"แฟ๊บ洗衣粉4","category":"清潔保養品 Hygiene & Beauty","en":"Detergent Powder","vi":"Bột giặt","id":"Deterjen Bubuk","th":"แฟ๊บ","zh":"洗衣粉","hasImage":true},{"key":"โฟมล้างหน้าNivea洗面乳3","category":"清潔保養品 Hygiene & Beauty","en":"Nivea Facial Foam Cleanser","vi":"Sữa rửa mặt Nivea","id":"Sabun Cuci Muka Nivea","th":"โฟมล้างหน้า Nivea","zh":"Nivea洗面乳","hasImage":true},{"key":"โฟมล้างหน้าNivea洗面乳1","category":"清潔保養品 Hygiene & Beauty","en":"Nivea Facial Foam Cleanser","vi":"Sữa rửa mặt Nivea","id":"Sabun Cuci Muka Nivea","th":"โฟมล้างหน้า Nivea","zh":"Nivea洗面乳","hasImage":true},{"key":"โฟมล้างหน้าNivea洗面乳","category":"清潔保養品 Hygiene & Beauty","en":"Nivea Facial Foam Cleanser","vi":"Sữa rửa mặt Nivea","id":"Sabun Cuci Muka Nivea","th":"โฟมล้างหน้า Nivea","zh":"Nivea洗面乳","hasImage":true},{"key":"โฟมล้างหน้าNivea洗面乳2","category":"清潔保養品 Hygiene & Beauty","en":"Nivea Facial Foam Cleanser","vi":"Sữa rửa mặt Nivea","id":"Sabun Cuci Muka Nivea","th":"โฟมล้างหน้า Nivea","zh":"Nivea洗面乳","hasImage":true},{"key":"โฟมล้างหน้าSmoothe洗面乳","category":"清潔保養品 Hygiene & Beauty","en":"SmoothE Facial Foam Cleanser","vi":"Sữa rửa mặt trị mụn dịu nhẹ SmoothE","id":"Sabun Cuci Muka SmoothE","th":"โฟมล้างหน้าSmoothE","zh":"SmoothE洗面乳","hasImage":true},{"key":"โฟมล้างหน้าGarnier洗面乳","category":"清潔保養品 Hygiene & Beauty","en":"Garnier Facial Foam Cleanser","vi":"Sữa rửa mặt trị mụn dịu nhẹ Garnier","id":"Sabun Cuci Muka Garnier","th":"โฟมล้างหน้าGarnier","zh":"Garnier洗面乳","hasImage":true},{"key":"แป้งฝุ่น12PLUS爽身粉","category":"清潔保養品 Hygiene & Beauty","en":"12 Plus Talcum Powder","vi":"Phấn rôm","id":"Bedak Tabur","th":"แป้งฝุ่น 12PLUS","zh":"爽身粉","hasImage":true},{"key":"แป้งฝุ่น馬頭爽身粉","category":"清潔保養品 Hygiene & Beauty","en":"St. Lukes Prickly Heat Powder","vi":"Phấn mát trị rôm sẩy hiệu Đầu Ngựa","id":"Bedak Dingin Anti Biang Keringat Cap Kepala Kuda","th":"แป้งฝุ่น ตราม้า","zh":"馬頭爽身粉","hasImage":true},{"key":"แป้งฝุ่นBabi爽身粉3","category":"清潔保養品 Hygiene & Beauty","en":"Babi Mild Baby Powder","vi":"Phấn rôm cho bé Babi Mild","id":"Bedak Bayi Babi Mild","th":"แป้งฝุ่น Babi Mild","zh":"Babi爽身粉","hasImage":true},{"key":"แป้งฝุ่นBabi爽身粉2","category":"清潔保養品 Hygiene & Beauty","en":"Babi Mild Baby Powder","vi":"Phấn rôm cho bé Babi Mild","id":"Bedak Bayi Babi Mild","th":"แป้งฝุ่น Babi Mild","zh":"Babi爽身粉","hasImage":true},{"key":"แป้งฝุ่นBabi爽身粉1","category":"清潔保養品 Hygiene & Beauty","en":"Babi Mild Baby Powder","vi":"Phấn rôm cho bé Babi Mild","id":"Bedak Bayi Babi Mild","th":"แป้งฝุ่น Babi Mild","zh":"Babi爽身粉","hasImage":true},{"key":"แป้งฝุ่นBabi爽身粉4","category":"清潔保養品 Hygiene & Beauty","en":"Babi Mild Baby Powder","vi":"Phấn rôm cho bé Babi Mild","id":"Bedak Bayi Babi Mild","th":"แป้งฝุ่น Babi Mild","zh":"Babi爽身粉","hasImage":true},{"key":"แป้งฝุ่นBabi爽身粉","category":"清潔保養品 Hygiene & Beauty","en":"Babi Mild Baby Powder","vi":"Phấn rôm cho bé Babi Mild","id":"Bedak Bayi Babi Mild","th":"แป้งฝุ่น Babi Mild","zh":"Babi爽身粉","hasImage":true},{"key":"แป้งฝุ่นCare爽身粉","category":"清潔保養品 Hygiene & Beauty","en":"Care Baby Powder","vi":"Phấn rôm cho bé Care","id":"Bedak Bayi Care","th":"แป้งฝุ่น Care","zh":"爽身粉","hasImage":true},{"key":"แป้งฝุ่นCare爽身粉2","category":"清潔保養品 Hygiene & Beauty","en":"Care Baby Powder","vi":"Phấn rôm cho bé Care","id":"Bedak Bayi Care","th":"แป้งฝุ่น Care","zh":"爽身粉","hasImage":true},{"key":"แป้งฝุ่นCare爽身粉1","category":"清潔保養品 Hygiene & Beauty","en":"Care Baby Powder","vi":"Phấn rôm cho bé Care","id":"Bedak Bayi Care","th":"แป้งฝุ่น Care","zh":"爽身粉","hasImage":true},{"key":"แป้งฝุ่นP爽身粉1","category":"清潔保養品 Hygiene & Beauty","en":"Talcum Powder","vi":"Phấn rôm","id":"Bedak Tabur","th":"แป้งฝุ่น","zh":"爽身粉","hasImage":true},{"key":"แป้งฝุ่นP爽身粉","category":"清潔保養品 Hygiene & Beauty","en":"Talcum Powder","vi":"Phấn rôm","id":"Bedak Tabur","th":"แป้งฝุ่น","zh":"爽身粉","hasImage":true},{"key":"แป้งฝุ่นP爽身粉4","category":"清潔保養品 Hygiene & Beauty","en":"Talcum Powder","vi":"Phấn rôm","id":"Bedak Tabur","th":"แป้งฝุ่น","zh":"爽身粉","hasImage":true},{"key":"แป้งฝุ่นP爽身粉2","category":"清潔保養品 Hygiene & Beauty","en":"Talcum Powder","vi":"Phấn rôm","id":"Bedak Tabur","th":"แป้งฝุ่น","zh":"爽身粉","hasImage":true},{"key":"แป้งฝุ่นP爽身粉3","category":"清潔保養品 Hygiene & Beauty","en":"Talcum Powder","vi":"Phấn rôm","id":"Bedak Tabur","th":"แป้งฝุ่น","zh":"爽身粉","hasImage":true},{"key":"แป้งพอนย์Ponds蜜粉1","category":"清潔保養品 Hygiene & Beauty","en":"Ponds Magic Powder","vi":"Phấn phủ dạng bột Ponds","id":"Bedak Wajah Ponds Magic Powder","th":"แป้งพอนด์ส","zh":"Ponds蜜粉","hasImage":true},{"key":"แป้งพอนย์Ponds蜜粉","category":"清潔保養品 Hygiene & Beauty","en":"Ponds Magic Powder","vi":"Phấn phủ dạng bột Ponds","id":"Bedak Wajah Ponds Magic Powder","th":"แป้งพอนด์ส","zh":"Ponds蜜粉","hasImage":true},{"key":"แป้งพอนย์Ponds蜜粉2","category":"清潔保養品 Hygiene & Beauty","en":"Ponds Magic Powder","vi":"Phấn phủ dạng bột Ponds","id":"Bedak Wajah Ponds Magic Powder","th":"แป้งพอนด์ส","zh":"Ponds蜜粉","hasImage":true},{"key":"แป้งโยคี足粉","category":"清潔保養品 Hygiene & Beauty","en":"Yokee Powder","vi":"Phấn trị rôm sẩy","id":"Bedak Kesehatan","th":"แป้งโยคี","zh":"足粉","hasImage":true},{"key":"ปรับผ้านุ่มComfort 柔軟精","category":"清潔保養品 Hygiene & Beauty","en":"Comfort Fabric Softener","vi":"Nước xả vải Comfort","id":"Pelembut Pakaian Comfort","th":"ปรับผ้านุ่ม Comfort","zh":"柔軟精","hasImage":true},{"key":"ปรับผ้านุ่มComfort 柔軟精1","category":"清潔保養品 Hygiene & Beauty","en":"Comfort Fabric Softener","vi":"Nước xả vải Comfort","id":"Pelembut Pakaian Comfort","th":"ปรับผ้านุ่ม Comfort","zh":"柔軟精","hasImage":true},{"key":"ปรับผ้านุ่มComfort 柔軟精2","category":"清潔保養品 Hygiene & Beauty","en":"Comfort Fabric Softener","vi":"Nước xả vải Comfort","id":"Pelembut Pakaian Comfort","th":"ปรับผ้านุ่ม Comfort","zh":"柔軟精","hasImage":true},{"key":"ปรับผ้านุ่มComfort 柔軟精3","category":"清潔保養品 Hygiene & Beauty","en":"Comfort Fabric Softener","vi":"Nước xả vải Comfort","id":"Pelembut Pakaian Comfort","th":"ปรับผ้านุ่ม Comfort","zh":"柔軟精","hasImage":true},{"key":"ปรับผ้านุ่ม750mlDowny柔軟精2","category":"清潔保養品 Hygiene & Beauty","en":"Downy Fabric Softene750mlr","vi":"Nước xả vải Downy750ml","id":"Pelembut Pakaian Downy750ml","th":"ปรับผ้านุ่ม Downy750ml","zh":"柔軟精750ml","hasImage":true},{"key":"ปรับผ้านุ่ม750mlDowny柔軟精1","category":"清潔保養品 Hygiene & Beauty","en":"Downy Fabric Softener750ml","vi":"Nước xả vải Downy750ml","id":"Pelembut Pakaian Downy750ml","th":"ปรับผ้านุ่ม Downy750ml","zh":"柔軟精750ml","hasImage":true},{"key":"ปรับผ้านุ่ม750mlDowny柔軟精","category":"清潔保養品 Hygiene & Beauty","en":"Downy Fabric Softener750ml","vi":"Nước xả vải Downy750ml","id":"Pelembut Pakaian Downy750ml","th":"ปรับผ้านุ่ม Downy750ml","zh":"柔軟精750ml","hasImage":true},{"key":"ปรับผ้านุ่ม750mlDowny柔軟精大","category":"清潔保養品 Hygiene & Beauty","en":"Downy Fabric Softener","vi":"Nước xả vải Downy","id":"Pelembut Pakaian Downy","th":"ปรับผ้านุ่ม Downy","zh":"柔軟精","hasImage":true},{"key":"ปรับผ้านุ่มH柔軟精3","category":"清潔保養品 Hygiene & Beauty","en":"Hygiene Fabric Softener","vi":"Nước xả vải Hygiene","id":"Pelembut Pakaian Hygiene","th":"ปรับผ้านุ่ม Hygiene","zh":"H柔軟精","hasImage":true},{"key":"ปรับผ้านุ่มH柔軟精2","category":"清潔保養品 Hygiene & Beauty","en":"Hygiene Fabric Softener","vi":"Nước xả vải Hygiene","id":"Pelembut Pakaian Hygiene","th":"ปรับผ้านุ่ม Hygiene","zh":"H柔軟精","hasImage":true},{"key":"ปรับผ้านุ่มH柔軟精1","category":"清潔保養品 Hygiene & Beauty","en":"Hygiene Fabric Softener","vi":"Nước xả vải Hygiene","id":"Pelembut Pakaian Hygiene","th":"ปรับผ้านุ่ม Hygiene","zh":"H柔軟精","hasImage":true},{"key":"น้ำยาบ้วนปาก漱口水1","category":"清潔保養品 Hygiene & Beauty","en":"Mouthwash","vi":"Nước súc miệng","id":"Obat Kumur","th":"น้ำยาบ้วนปาก","zh":"漱口水","hasImage":true},{"key":"น้ำยาบ้วนปาก漱口水","category":"清潔保養品 Hygiene & Beauty","en":"Mouthwash","vi":"Nước súc miệng","id":"Obat Kumur","th":"น้ำยาบ้วนปาก","zh":"漱口水","hasImage":true},{"key":"น้ำยาอนามัยMistine私密處清潔液","category":"清潔保養品 Hygiene & Beauty","en":"Mistine Intimate Cleansing Lotion","vi":"Dung dịch vệ sinh phụ nữ Mistine","id":"Mistine Sabun Pembersih Kewanitaan","th":"น้ำยาล้างจุดซ่อนเร้น Mistine","zh":"Mistine私密處清潔液","hasImage":true},{"key":"น้ำยาอนามัยMistine私密處清潔液1","category":"清潔保養品 Hygiene & Beauty","en":"Mistine Intimate Cleansing Lotion","vi":"Dung dịch vệ sinh phụ nữ Mistine","id":"Mistine Sabun Pembersih Kewanitaan","th":"น้ำยาล้างจุดซ่อนเร้น Mistine","zh":"Mistine私密處清潔液","hasImage":true},{"key":"เบบี้ออยล์Johnsons嬰兒油","category":"清潔保養品 Hygiene & Beauty","en":"Johnsons Baby Oil","vi":"Dầu dưỡng ẩm cho bé Johnsons Baby Oil","id":"Minyak Bayi Johnsons Baby Oil","th":"เบบี้ออยล์ Johnsons","zh":"Johnsons嬰兒油","hasImage":true},{"key":"ทรีดเม้นCaring護髮油","category":"清潔保養品 Hygiene & Beauty","en":"Caring Hair Treatment Oil","vi":"Kem ủ tóc","id":"Minyak Perawatan Rambut Caring","th":"ทรีดเม้น Caring","zh":"護髮油","hasImage":true},{"key":"ทรีดเม้นCaring護髮油2","category":"清潔保養品 Hygiene & Beauty","en":"Caring Hair Treatment Oil","vi":"Kem ủ tóc","id":"Minyak Perawatan Rambut Caring","th":"ทรีดเม้น Caring","zh":"護髮油","hasImage":true},{"key":"ทรีดเม้นCaring護髮油3","category":"清潔保養品 Hygiene & Beauty","en":"Caring Hair Treatment Oil","vi":"Kem ủ tóc","id":"Minyak Perawatan Rambut Caring","th":"ทรีดเม้น Caring","zh":"護髮油","hasImage":true},{"key":"ทรีดเม้นCaring護髮油1","category":"清潔保養品 Hygiene & Beauty","en":"Caring Hair Treatment Oil","vi":"Kem ủ tóc","id":"Minyak Perawatan Rambut Caring","th":"ทรีดเม้น Caring","zh":"護髮油","hasImage":true},{"key":"ทรีดเม้นCaring護髮油Big","category":"清潔保養品 Hygiene & Beauty","en":"Caring Hair Treatment Oil (Large)","vi":"Kem ủ tóc(Cỡ lớn)","id":"Minyak Perawatan Rambut Caring (Besar)","th":"ทรีดเม้น Caring Big","zh":"護髮油Big","hasImage":true},{"key":"ดีดีครีมกันแดดJulas西瓜霜","category":"清潔保養品 Hygiene & Beauty","en":"Julas Herb Watermelon DD Cream","vi":"Kem chống nắng dưa hấu Julas Herb DD Cream","id":"Krim Tabir Surya Semangka Julas Herb DD Cream","th":"ดีดีครีมกันแดด Julas Herb","zh":"Julas西瓜霜","hasImage":true},{"key":"บูสเตอร์เซรั่มJulas精華液","category":"清潔保養品 Hygiene & Beauty","en":"Julas Herb Booster Serum","vi":"Tinh chất dưỡng da Booster Serum Julas Herb","id":"Serum Booster Julas Herb","th":"บูสเตอร์เซรั่ม Julas Herb","zh":"Julas精華液","hasImage":true},{"key":"บูสเตอร์เซรั่มJulas精華液1","category":"清潔保養品 Hygiene & Beauty","en":"Julas Herb Booster Serum","vi":"Tinh chất dưỡng da Booster Serum Julas Herb","id":"Serum Booster Julas Herb","th":"บูสเตอร์เซรั่ม Julas Herb","zh":"Julas精華液","hasImage":true},{"key":"ดีดีครีมกันแดดยกกล่องJulas西瓜霜盒","category":"清潔保養品 Hygiene & Beauty","en":"Julas Herb Watermelon DD Cream (Box)","vi":"Kem chống nắng dưa hấu Julas Herb DD Cream (Hộp)","id":"Krim Tabir Surya Semangka Julas Herb DD Cream (Box)","th":"ดีดีครีมกันแดดยกกล่อง Julas Herb","zh":"Julas西瓜霜盒","hasImage":true},{"key":"บูสเตอร์เซรั่มยกกล่องJulas精華液盒","category":"清潔保養品 Hygiene & Beauty","en":"Julas Herb Booster Serum (Box)","vi":"Tinh chất dưỡng da Booster Serum Julas Herb (Hộp)","id":"Serum Booster Julas Herb (Box)","th":"บูสเตอร์เซรั่มยกกล่อง Julas Herb","zh":"Julas精華液盒","hasImage":true},{"key":"บูสเตอร์เซรั่มยกกล่องJulas精華液盒1","category":"清潔保養品 Hygiene & Beauty","en":"Julas Herb Booster Serum (Box)","vi":"Tinh chất dưỡng da Booster Serum Julas Herb (Hộp)","id":"Serum Booster Julas Herb (Box)","th":"บูสเตอร์เซรั่มยกกล่อง Julas Herb","zh":"Julas精華液盒","hasImage":true},{"key":"ยาย้อมผมBerina A18黃金色染髮膏","category":"清潔保養品 Hygiene & Beauty","en":"Berina Hair Color Cream A18 (Golden Blonde)","vi":"Kem nhuộm tóc Berina A18 (Vàng kim)","id":"Krim Pewarna Rambut Berina A18 (Golden Blonde)","th":"ยาย้อมผมเบอริน่า A18","zh":"Berina A18黃金色染髮膏","hasImage":true},{"key":"ยาย้อมผมBerina A21 淺灰色染髮膏","category":"清潔保養品 Hygiene & Beauty","en":"Berina Hair Color Cream A21 (Light Grey)","vi":"Kem nhuộm tóc Berina A21 (Xám khói nhạt)","id":"Krim Pewarna Rambut Berina A21 (Light Grey)","th":"ยาย้อมผมเบอริน่า A21","zh":"Berina A21 淺灰色染髮膏","hasImage":true},{"key":"ยาสีฟัน กลิสเทอร์安麗牙膏","category":"清潔保養品 Hygiene & Beauty","en":"Amway Glister Toothpaste","vi":"Kem đánh răng Amway Glister","id":"Pasta Gigi Amway Glister","th":"ยาสีฟัน กลิสเทอร์","zh":"安麗牙膏","hasImage":true},{"key":"ยาสีฟัน黑人牌牙膏","category":"清潔保養品 Hygiene & Beauty","en":"Darlie Toothpaste","vi":"Kem đánh răng Darlie","id":"Pasta Gigi Darlie","th":"ยาสีฟันดาร์ลี่","zh":"黑人牌牙膏","hasImage":true},{"key":"ยาสีฟัน雙蓮牙膏","category":"清潔保養品 Hygiene & Beauty","en":"Twin Lotus Herbal Toothpaste","vi":"Kem đánh răng thảo dược Twin Lotus","id":"Pasta Gigi Herbal Twin Lotus","th":"ยาสีฟันดอกบัวคู่","zh":"雙蓮牙膏","hasImage":true},{"key":"ยาสีฟัน雙蓮牙膏1","category":"清潔保養品 Hygiene & Beauty","en":"Twin Lotus Herbal Toothpaste","vi":"Kem đánh răng thảo dược Twin Lotus","id":"Pasta Gigi Herbal Twin Lotus","th":"ยาสีฟันดอกบัวคู่","zh":"雙蓮牙膏","hasImage":true},{"key":"ยาสีฟัน雙蓮牙膏2","category":"清潔保養品 Hygiene & Beauty","en":"Twin Lotus Herbal Toothpaste","vi":"Kem đánh răng thảo dược Twin Lotus","id":"Pasta Gigi Herbal Twin Lotus","th":"ยาสีฟันดอกบัวคู่","zh":"雙蓮牙膏","hasImage":true},{"key":"ยาสีฟันColgate牙膏","category":"清潔保養品 Hygiene & Beauty","en":"Colgate Toothpaste","vi":"Kem đánh răng Colgate","id":"Pasta Gigi Colgate","th":"ยาสีฟันคอลเกต","zh":"Colgate牙膏","hasImage":true},{"key":"ยาสีฟันColgate牙膏1","category":"清潔保養品 Hygiene & Beauty","en":"Colgate Toothpaste","vi":"Kem đánh răng Colgate","id":"Pasta Gigi Colgate","th":"ยาสีฟันคอลเกต","zh":"Colgate牙膏","hasImage":true},{"key":"ยาสีฟันColgate牙膏2","category":"清潔保養品 Hygiene & Beauty","en":"Colgate Toothpaste","vi":"Kem đánh răng Colgate","id":"Pasta Gigi Colgate","th":"ยาสีฟันคอลเกต","zh":"Colgate牙膏","hasImage":true},{"key":"ยาสีฟันColgate牙膏3","category":"清潔保養品 Hygiene & Beauty","en":"Colgate Toothpaste","vi":"Kem đánh răng Colgate","id":"Pasta Gigi Colgate","th":"ยาสีฟันคอลเกต","zh":"Colgate牙膏","hasImage":true},{"key":"ยาสีฟันColgate牙膏5","category":"清潔保養品 Hygiene & Beauty","en":"Colgate Toothpaste","vi":"Kem đánh răng Colgate","id":"Pasta Gigi Colgate","th":"ยาสีฟันคอลเกต","zh":"Colgate牙膏","hasImage":true},{"key":"ยาสีฟันColgate牙膏4","category":"清潔保養品 Hygiene & Beauty","en":"Colgate Toothpaste","vi":"Kem đánh răng Colgate","id":"Pasta Gigi Colgate","th":"ยาสีฟันคอลเกต","zh":"Colgate牙膏","hasImage":true},{"key":"โลชั่นบำรุงผิวCOSWAY身體乳","category":"清潔保養品 Hygiene & Beauty","en":"Cosway Body Lotion","vi":"Sữa dưỡng thể Cosway","id":"Lotion Tubuh Cosway","th":"โลชั่นบำรุงผิวคอสเวย์","zh":"COSWAY身體乳","hasImage":true},{"key":"โลชั่นบำรุงผิวVaseline乳液","category":"清潔保養品 Hygiene & Beauty","en":"Vaseline Body Lotion","vi":"Sữa dưỡng thể Vaseline","id":"Lotion Tubuh Vaseline","th":"โลชั่นบำรุงผิววาสลีน","zh":"Vaseline乳液","hasImage":true},{"key":"โลชั่นบำรุงผิวVaseline乳液1","category":"清潔保養品 Hygiene & Beauty","en":"Vaseline Body Lotion","vi":"Sữa dưỡng thể Vaseline","id":"Lotion Tubuh Vaseline","th":"โลชั่นบำรุงผิววาสลีน","zh":"Vaseline乳液","hasImage":true},{"key":"โลชั่นบำรุงผิวVaseline乳液2","category":"清潔保養品 Hygiene & Beauty","en":"Vaseline Body Lotion","vi":"Sữa dưỡng thể Vaseline","id":"Lotion Tubuh Vaseline","th":"โลชั่นบำรุงผิววาสลีน","zh":"Vaseline乳液","hasImage":true},{"key":"โลชั่นบำรุงผิวVaseline乳液3","category":"清潔保養品 Hygiene & Beauty","en":"Vaseline Body Lotion","vi":"Sữa dưỡng thể Vaseline","id":"Lotion Tubuh Vaseline","th":"โลชั่นบำรุงผิววาสลีน","zh":"Vaseline乳液","hasImage":true},{"key":"โลชั่นบำรุงผิวVaseline乳液4","category":"清潔保養品 Hygiene & Beauty","en":"Vaseline Body Lotion","vi":"Sữa dưỡng thể Vaseline","id":"Lotion Tubuh Vaseline","th":"โลชั่นบำรุงผิววาสลีน","zh":"Vaseline乳液","hasImage":true},{"key":"โลชั่นบำรุงผิวMistine身體乳","category":"清潔保養品 Hygiene & Beauty","en":"Mistine Body Lotion","vi":"Sữa dưỡng thể Mistine","id":"Lotion Tubuh Mistine","th":"โลชั่นบำรุงผิว มิสทิน","zh":"Mistine身體乳","hasImage":true},{"key":"วาสลีนVaseline","category":"清潔保養品 Hygiene & Beauty","en":"Vaseline Petroleum Jelly","vi":"Sáp dưỡng ẩm Vaseline Petroleum Jelly","id":"Vaseline Petroleum Jelly","th":"วาสลีน","zh":"Vaseline","hasImage":true},{"key":"ผงขัดผิว身體去角質粉","category":"清潔保養品 Hygiene & Beauty","en":"Body Scrub Powder","vi":"Bột tẩy tế bào chết toàn thân","id":"Bubuk Lulur Badan","th":"ผงขัดผิว","zh":"身體去角質粉","hasImage":true},{"key":"ผงขัดผิวยกกล่อง身體去角質粉盒","category":"清潔保養品 Hygiene & Beauty","en":"Body Scrub Powder (Box)","vi":"Hộp bột tẩy tế bào chết toàn thân","id":"Bubuk Lulur Badan (Box)","th":"ผงขัดผิวยกกล่อง","zh":"身體去角質粉盒","hasImage":true},{"key":"ผงขัดหน้า面部去角質粉","category":"清潔保養品 Hygiene & Beauty","en":"Facial Scrub Powder","vi":"Bột tẩy tế bào chết da mặt","id":"Bubuk Scrub Wajah","th":"ผงขัดหน้า","zh":"面部去角質粉","hasImage":true},{"key":"ผงขัดหน้ายกกล่อง面部去角質粉盒","category":"清潔保養品 Hygiene & Beauty","en":"Facial Scrub Powder (Box)","vi":"Hộp bột tẩy tế bào chết da mặt","id":"Bubuk Scrub Wajah (Box)","th":"ผงขัดหน้ายกกล่อง","zh":"面部去角質粉盒","hasImage":true},{"key":"สบู่班尼肥皂","category":"清潔保養品 Hygiene & Beauty","en":"Bennet Soap","vi":"Xà phòng Bennet","id":"Sabun Bennet","th":"สบู่เบนเนท","zh":"班尼肥皂","hasImage":true},{"key":"สบู่班尼肥皂1","category":"清潔保養品 Hygiene & Beauty","en":"Bennet Soap","vi":"Xà phòng Bennet","id":"Sabun Bennet","th":"สบู่เบนเนท","zh":"班尼肥皂","hasImage":true},{"key":"สบู่班尼肥皂2","category":"清潔保養品 Hygiene & Beauty","en":"Bennet Soap","vi":"Xà phòng Bennet","id":"Sabun Bennet","th":"สบู่เบนเนท","zh":"班尼肥皂","hasImage":true},{"key":"สบู่班尼肥皂3","category":"清潔保養品 Hygiene & Beauty","en":"Bennet Soap","vi":"Xà phòng Bennet","id":"Sabun Bennet","th":"สบู่เบนเนท","zh":"班尼肥皂","hasImage":true},{"key":"สบู่I香皂","category":"清潔保養品 Hygiene & Beauty","en":"Imperial Leather Soap","vi":"Xà bông Imperial Leather","id":"Sabun Imperial Leather","th":"สบู่ ไอ","zh":"I香皂","hasImage":true},{"key":"สบู่I香皂1","category":"清潔保養品 Hygiene & Beauty","en":"Imperial Leather Soap","vi":"Xà bông Imperial Leather","id":"Sabun Imperial Leather","th":"สบู่ ไอ","zh":"I香皂","hasImage":true},{"key":"สบู่I香皂2","category":"清潔保養品 Hygiene & Beauty","en":"Imperial Leather Soap","vi":"Xà bông Imperial Leather","id":"Sabun Imperial Leather","th":"สบู่ ไอ","zh":"I香皂","hasImage":true},{"key":"สบู่I香皂3","category":"清潔保養品 Hygiene & Beauty","en":"Imperial Leather Soap","vi":"Xà bông Imperial Leather","id":"Sabun Imperial Leather","th":"สบู่ ไอ","zh":"I香皂","hasImage":true},{"key":"สบู่I香皂4","category":"清潔保養品 Hygiene & Beauty","en":"Imperial Leather Soap","vi":"Xà bông Imperial Leather","id":"Sabun Imperial Leather","th":"สบู่ ไอ","zh":"I香皂","hasImage":true},{"key":"สบู่I香皂5","category":"清潔保養品 Hygiene & Beauty","en":"Imperial Leather Soap","vi":"Xà bông Imperial Leather","id":"Sabun Imperial Leather","th":"สบู่ ไอ","zh":"I香皂","hasImage":true},{"key":"สบู่I香皂6","category":"清潔保養品 Hygiene & Beauty","en":"Imperial Leather Soap","vi":"Xà bông Imperial Leather","id":"Sabun Imperial Leather","th":"สบู่ ไอ","zh":"I香皂","hasImage":true},{"key":"สบู่I香皂7","category":"清潔保養品 Hygiene & Beauty","en":"Imperial Leather Soap","vi":"Xà bông Imperial Leather","id":"Sabun Imperial Leather","th":"สบู่ ไอ","zh":"I香皂","hasImage":true},{"key":"สบู่I香皂8","category":"清潔保養品 Hygiene & Beauty","en":"Imperial Leather Soap","vi":"Xà bông Imperial Leather","id":"Sabun Imperial Leather","th":"สบู่ ไอ","zh":"I香皂","hasImage":true},{"key":"สบู่I香皂9","category":"清潔保養品 Hygiene & Beauty","en":"Imperial Leather Soap","vi":"Xà bông Imperial Leather","id":"Sabun Imperial Leather","th":"สบู่ ไอ","zh":"I香皂","hasImage":true},{"key":"สบู่I香皂10","category":"清潔保養品 Hygiene & Beauty","en":"Imperial Leather Soap","vi":"Xà bông Imperial Leather","id":"Sabun Imperial Leather","th":"สบู่ ไอ","zh":"I香皂","hasImage":true},{"key":"สบู่I香皂11","category":"清潔保養品 Hygiene & Beauty","en":"Imperial Leather Soap","vi":"Xà bông Imperial Leather","id":"Sabun Imperial Leather","th":"สบู่ ไอ","zh":"I香皂","hasImage":true},{"key":"โอโม่แกลลอนOMO洗衣精","category":"清潔保養品 Hygiene & Beauty","en":"Omo Liquid Laundry Detergent (Gallon)","vi":"Nước giặt Omo (Can)","id":"Deterjen Cair Omo (Galon)","th":"โอโม่แกลลอน","zh":"OMO洗衣精","hasImage":true},{"key":"ไก่ทั้งตัว全雞","category":"冷凍食品 / FROZEN FOOD","en":"Whole Chicken","vi":"Gà nguyên con","id":"Ayam Utuh","th":"ไก่ทั้งตัว","zh":"全雞","hasImage":true},{"key":"ขาไก่雞腳","category":"冷凍食品 / FROZEN FOOD","en":"Chicken Feet","vi":"Chân gà","id":"Ceker Ayam","th":"ขาไก่","zh":"雞腳","hasImage":true},{"key":"ชุดเนื้อวัว牛肉組合","category":"冷凍食品 / FROZEN FOOD","en":"Beef Combo Set","vi":"Combo thịt bò","id":"Paket Daging Sapi Set","th":"ชุดเนื้อวัว","zh":"牛肉組合","hasImage":true},{"key":"คางปลา魚下巴","category":"冷凍食品 / FROZEN FOOD","en":"Fish Chin","vi":"Cằm cá (Ức cá)","id":"Dagu Ikan","th":"คางปลา","zh":"魚下巴","hasImage":true},{"key":"เครื่องในไก่雞內臟","category":"冷凍食品 / FROZEN FOOD","en":"Chicken Offal","vi":"Lòng gà","id":"Jeroan Ayam","th":"เครื่องในไก่","zh":"雞內臟","hasImage":true},{"key":"เครื่องในวัว牛雜","category":"冷凍食品 / FROZEN FOOD","en":"Beef Offal","vi":"Lòng bò","id":"Jeroan Sapi","th":"เครื่องในวัว","zh":"牛雜","hasImage":true},{"key":"ปลาดุก土虱1","category":"冷凍食品 / FROZEN FOOD","en":"Walking Catfish","vi":"Cá trê","id":"Ikan Lele","th":"ปลาดุก","zh":"土虱","hasImage":true},{"key":"ปลาดุก土虱","category":"冷凍食品 / FROZEN FOOD","en":"Walking Catfish","vi":"Cá trê","id":"Ikan Lele","th":"ปลาดุก","zh":"土虱","hasImage":true},{"key":"ปลาทู鯖魚","category":"冷凍食品 / FROZEN FOOD","en":"Short Mackerel","vi":"Cá bạc má","id":"Ikan Kembung","th":"ปลาทู","zh":"鯖魚","hasImage":true},{"key":"ปลาทู鯖魚1","category":"冷凍食品 / FROZEN FOOD","en":"Short Mackerel","vi":"Cá bạc má","id":"Ikan Kembung","th":"ปลาทู","zh":"鯖魚","hasImage":true},{"key":"ปลาส้ม酸魚片","category":"冷凍食品 / FROZEN FOOD","en":"Pla Som","vi":"Cá chua Thái Lan","id":"Pla Som","th":"ปลาส้ม","zh":"酸魚片","hasImage":true},{"key":"ปีกไก่雞翅","category":"冷凍食品 / FROZEN FOOD","en":"Chicken Wings","vi":"Cánh gà","id":"Sayap Ayam","th":"ปีกไก่","zh":"雞翅","hasImage":true},{"key":"ตีนไก่鳳爪","category":"冷凍食品 / FROZEN FOOD","en":"Chicken Feet","vi":"Chân gà","id":"Ceker Ayam","th":"ตีนไก่","zh":"鳳爪","hasImage":true},{"key":"ลิ้นหมู豬舌","category":"冷凍食品 / FROZEN FOOD","en":"Frozen Pork Tongue","vi":"Lưỡi heo đông lạnh","id":"Lidah Babi Beku","th":"ลิ้นหมู","zh":"豬舌","hasImage":true},{"key":"ลูกชิ้นเนื้อ牛肉丸","category":"冷凍食品 / FROZEN FOOD","en":"Frozen Beef Balls","vi":"Bò viên đông lạnh","id":"Bakso Sapi Beku","th":"ลูกชิ้นเนื้อ","zh":"牛肉丸","hasImage":true},{"key":"ลูกชิ้นปลา魚丸","category":"冷凍食品 / FROZEN FOOD","en":"Frozen Fish Balls","vi":"Cá viên đông lạnh","id":"Bakso Ikan Beku","th":"ลูกชิ้นปลา","zh":"魚丸","hasImage":true},{"key":"ลูกชิ้นปลา魚丸1","category":"冷凍食品 / FROZEN FOOD","en":"Frozen Fish Balls","vi":"Cá viên đông lạnh","id":"Bakso Ikan Beku","th":"ลูกชิ้นปลา","zh":"魚丸","hasImage":true},{"key":"ลูกชิ้นปลา魚丸2","category":"冷凍食品 / FROZEN FOOD","en":"Frozen Fish Balls","vi":"Cá viên đông lạnh","id":"Bakso Ikan Beku","th":"ลูกชิ้นปลา","zh":"魚丸","hasImage":true},{"key":"ลูกชิ้นหมู豬肉丸","category":"冷凍食品 / FROZEN FOOD","en":"Frozen Pork Balls","vi":"Heo viên đông lạnh","id":"Bakso Babi Beku","th":"ลูกชิ้นหมู","zh":"豬肉丸","hasImage":true},{"key":"แหนมหมู大酸肉","category":"冷凍食品 / FROZEN FOOD","en":"Thai Fermented Pork Sour Sausage (Naem)","vi":"Nem chua heo Thái","id":"Sosis Babi Fermentasi Khas Thai (Naem)","th":"แหนมหมู","zh":"大酸肉","hasImage":true},{"key":"แหนมหมูแท่งยาว長酸肉","category":"冷凍食品 / FROZEN FOOD","en":"Long Fermented Pork Sausage Stick","vi":"Nem chua heo thanh dài","id":"Sosis Babi Fermentasi Panjang","th":"แหนมหมูแท่งยาว","zh":"長酸肉","hasImage":true},{"key":"ฮอตดอกใหญ่大熱狗","category":"冷凍食品 / FROZEN FOOD","en":"Giant Hot Dog","vi":"Xúc xích hot dog lớn","id":"Sosis Hot Dog Besar","th":"ฮอตดอกใหญ่","zh":"大熱狗","hasImage":true},{"key":"ผลไม้ดอง醃水果","category":"冷凍食品 / FROZEN FOOD","en":"Pickled Fruits","vi":"Trái cây ngâm chua ngọt","id":"Manisan Buah","th":"ผลไม้ดอง","zh":"醃水果","hasImage":true},{"key":"ผลไม้ดอง醃水果1","category":"冷凍食品 / FROZEN FOOD","en":"Pickled Fruits","vi":"Trái cây ngâm chua ngọt","id":"Manisan Buah","th":"ผลไม้ดอง","zh":"醃水果","hasImage":true},{"key":"กระชาย甲猜","category":"冷凍食品 / FROZEN FOOD","en":"Fingerroot (Krachai)","vi":"Củ ngải bún (Krachai)","id":"Temu Kunci (Krachai)","th":"กระชาย","zh":"甲猜","hasImage":true},{"key":"ปลาหมึกวง魷魚圈","category":"冷凍食品 / FROZEN FOOD","en":"Frozen Squid Rings","vi":"Mực ống cắt khoanh đông lạnh","id":"Cumi Ring Beku","th":"ปลาหมึกวง","zh":"魷魚圈","hasImage":true},{"key":"หน่อไม้醃竹筍","category":"冷凍食品 / FROZEN FOOD","en":"Frozen Pickled Bamboo Shoots","vi":"Măng ngâm đông lạnh","id":"Rebung Acar Beku","th":"หน่อไม้","zh":"醃竹筍","hasImage":true},{"key":"หน่อไม้醃竹筍1","category":"冷凍食品 / FROZEN FOOD","en":"Frozen Pickled Bamboo Shoots","vi":"Măng ngâm đông lạnh","id":"Rebung Acar Beku","th":"หน่อไม้","zh":"醃竹筍","hasImage":true},{"key":"หมูยอ越南火腿","category":"冷凍食品 / FROZEN FOOD","en":"Vietnamese Pork Sausage","vi":"Chả lụa Việt Nam","id":"Sosis Babi Vietnam","th":"หมูยอ","zh":"越南火腿","hasImage":true},{"key":"หมูสด豬肉","category":"冷凍食品 / FROZEN FOOD","en":"Frozen Raw Pork","vi":"Thịt heo tươi đông lạnh","id":"Daging Babi Mentah Beku","th":"หมูสด","zh":"豬肉","hasImage":true},{"key":"ข้าวเหนียว5กก.糯米5kg","category":"米類 / RICE","en":"Sticky Rice 5kg","vi":"Gạo nếp 5kg","id":"Beras Ketan 5kg","th":"ข้าวเหนียว 5 กก.","zh":"糯米5kg","hasImage":true},{"key":"ข้าวเหนียว30กก.糯米30kg","category":"米類 / RICE","en":"Sticky Rice 30kg","vi":"Gạo nếp 30kg","id":"Beras Ketan 30kg","th":"ข้าวเหนียว 30 กก.","zh":"糯米30kg","hasImage":true},{"key":"ข้าวหอมมะลิ5กก.香米5kg","category":"米類 / RICE","en":"Jasmine Rice 5kg","vi":"Gạo thơm 5kg","id":"Beras Melati 5kg","th":"ข้าวหอมมะลิ 5 กก.","zh":"香米5kg","hasImage":true},{"key":"ข้าวหอมมะลิ12กก.香米12kg","category":"米類 / RICE","en":"Jasmine Rice 12kg","vi":"Gạo thơm 12kg","id":"Beras Melati 12kg","th":"ข้าวหอมมะลิ 12 กก.","zh":"香米12kg","hasImage":true},{"key":"คลิป平口夾2","category":"其他 / OTHER & OTHERS","en":"Flat Clip","vi":"Kẹp miệng phẳng","id":"Klip Datar","th":"คลิป","zh":"平口夾","hasImage":true},{"key":"คลิป平口夾1","category":"其他 / OTHER & OTHERS","en":"Flat Clip","vi":"Kẹp miệng phẳng","id":"Klip Datar","th":"คลิป","zh":"平口夾","hasImage":true},{"key":"白色調胃素","category":"其他 / OTHER & OTHERS","en":"White Stomach Medicine","vi":"Thuốc dạ dày màu trắng","id":"Obat Lambung Putih","th":"白色調胃素","zh":"白色調胃素","hasImage":true},{"key":"除蟲藥","category":"其他 / OTHER & OTHERS","en":"Insecticide","vi":"Thuốc diệt côn trùng","id":"Obat Pembasmi Serangga","th":"除蟲藥","zh":"除蟲藥","hasImage":true},{"key":"ยางรัด橡皮圈1","category":"其他 / OTHER & OTHERS","en":"Rubber Bands","vi":"Dây thun","id":"Karet Gelang","th":"ยางรัด","zh":"橡皮圈","hasImage":true},{"key":"ยางรัด橡皮圈2","category":"其他 / OTHER & OTHERS","en":"Rubber Bands","vi":"Dây thun","id":"Karet Gelang","th":"ยางรัด","zh":"橡皮圈","hasImage":true},{"key":"หวีฟันห่าง關刀梳","category":"其他 / OTHER & OTHERS","en":"Wide Tooth Comb","vi":"Lược răng thưa","id":"Sisir Gigi Jarang","th":"หวีฟันห่าง","zh":"關刀梳","hasImage":true},{"key":"แปรงสีฟันColgate牙刷","category":"其他 / OTHER & OTHERS","en":"Colgate Toothbrush","vi":"Bàn chải đánh răng Colgate","id":"Sikat Gigi Colgate","th":"แปรงสีฟัน","zh":"Colgate牙刷","hasImage":true},{"key":"Mixed fruit","category":"其他 / OTHER & OTHERS","en":"Mixed Fruit","vi":"Trái cây hỗn hợp","id":"Buah Campur","th":"Mixed fruit","zh":"Mixed fruit","hasImage":true},{"key":"กาวตราช้าง三秒膠","category":"其他 / OTHER & OTHERS","en":"Elephant Super Glue","vi":"Keo 502 con voi","id":"Lem Setan Cap Gajah","th":"กาวตราช้าง","zh":"三秒膠","hasImage":true},{"key":"แก้วกาแฟ蝴蝶杯","category":"其他 / OTHER & OTHERS","en":"Coffee Butterfly Cup","vi":"Ly cà phê bướm","id":"Cangkir Kopi Kupu-kupu","th":"แก้วกาแฟ","zh":"蝴蝶杯","hasImage":true},{"key":"แก๊สกระป๋อง瓦斯罐一個","category":"其他 / OTHER & OTHERS","en":"Butane Gas Canister","vi":"Bình ga mini","id":"Tabung Gas Portabel","th":"แก๊สกระป๋อง","zh":"瓦斯罐一個","hasImage":true},{"key":"ไฟแช็ก打火機","category":"其他 / OTHER & OTHERS","en":"Lighter","vi":"Bật lửa","id":"Korek Api Gas","th":"ไฟแช็ก","zh":"打火機","hasImage":true},{"key":"ไพ่撲克牌","category":"其他 / OTHER & OTHERS","en":"Poker Cards","vi":"Bài Poker","id":"Kartu Poker","th":"ไพ่","zh":"撲克牌","hasImage":true},{"key":"พาสเตอแก้ปวด痠痛貼布","category":"其他 / OTHER & OTHERS","en":"Pain Relief Patch","vi":"Miếng dán giảm đau","id":"Koyo Pereda Nyeri","th":"พลาสเตอร์แก้ปวด","zh":"痠痛貼布","hasImage":true},{"key":"เบตาดีนBetadine","category":"其他 / OTHER & OTHERS","en":"Betadine Antiseptic Solution","vi":"Dung dịch sát trùng Betadine","id":"Obat Luka Betadine","th":"เบตาดีน","zh":"Betadine","hasImage":true},{"key":"ยาแก้ไอเสือดาว烏色止咳水","category":"其他 / OTHER & OTHERS","en":"Leopard Brand Cough Syrup","vi":"Siro ho hiệu Báo Đốm","id":"Sirup Obat Batuk Cap Macan Tutul","th":"ยาแก้ไอเสือดาว","zh":"烏色止咳水","hasImage":true},{"key":"ยาคุม避孕藥","category":"其他 / OTHER & OTHERS","en":"Contraceptive","vi":"Thuốc tránh thai","id":"Pil KB","th":"ยาคุม","zh":"避孕藥","hasImage":true},{"key":"ยาดมโป๊ยเซียน八仙薄荷香筒","category":"其他 / OTHER & OTHERS","en":"Poy-Sian Inhaler","vi":"Ống hít mũi Poy-Sian (Bát Tiên)","id":"Inhaler Poy-Sian","th":"ยาดมโป๊ยเซียน","zh":"八仙薄荷香筒","hasImage":true},{"key":"ยาอมแก้ไอStrepsils","category":"其他 / OTHER & OTHERS","en":"Strepsils Cough Lozenges","vi":"Viên ngậm ho Strepsils","id":"Permen Pelega Tenggorokan Strepsils","th":"ยาอมแก้ไอสเตร็ปซิล","zh":"Strepsils","hasImage":true},{"key":"สเปรย์แก้ไอ巴西綠蜂膠","category":"其他 / OTHER & OTHERS","en":"Brazilian Green Propolis Cough Spray","vi":"Chai xịt ho keo ong xanh Brazil","id":"Semprotan Batuk Propolis Hijau Brasil","th":"สเปรย์แก้ไอโปรโพลิส","zh":"巴西綠蜂膠","hasImage":true},{"key":"หม้อนึ่งข้าวเหนียว鋁蒸籠","category":"其他 / OTHER & OTHERS","en":"Aluminum Sticky Rice Steamer Pot","vi":"Nồi hấp xôi bằng nhôm","id":"Panci Kukusan Alumunium Beras Ketan","th":"หม้อนึ่งข้าวเหนียว","zh":"鋁蒸籠","hasImage":true},{"key":"แอนตาซิล胃藥","category":"其他 / OTHER & OTHERS","en":"Antacil Antacid Tablets","vi":"Thuốc đau dạ dày Antacil","id":"Obat Sakit Maag Antacil","th":"แอนตาซิล","zh":"胃藥","hasImage":true},{"key":"เฮโมวิตHaemoVit","category":"其他 / OTHER & OTHERS","en":"HaemoVit Vitamin Tonic","vi":"Bổ máu HaemoVit","id":"Suplemen Penambah Darah HaemoVit","th":"เฮโมวิต","zh":"HaemoVit","hasImage":true},{"key":"กระติ๊บข้าวเล็ก竹簍盒小","category":"其他 / OTHER & OTHERS","en":"Small Bamboo Sticky Rice Basket (Kratip)","vi":"Giỏ tre đựng xôi cỡ nhỏ","id":"Wadah Nasi Ketan Anyaman Bambu Kecil (Kratip)","th":"กระติ๊บข้าวเล็ก","zh":"竹簍盒小","hasImage":true},{"key":"กระติ๊บข้าวใหญ่竹簍盒大","category":"其他 / OTHER & OTHERS","en":"Large Bamboo Sticky Rice Basket (Kratip)","vi":"Giỏ tre đựng xôi cỡ lớn","id":"Wadah Nasi Ketan Anyaman Bambu Besar (Kratip)","th":"กระติ๊บข้าวใหญ่","zh":"竹簍盒大","hasImage":true},{"key":"กระโปรงกางเกงหญิง女性褲裙","category":"其他 / OTHER & OTHERS","en":"Women Culottes","vi":"Quần giả váy nữ","id":"Rok Celana Wanita","th":"กระโปรงกางเกงหญิง","zh":"女性褲裙","hasImage":true},{"key":"กางเกงขายาว長褲","category":"其他 / OTHER & OTHERS","en":"Trousers","vi":"Quần dài","id":"Celana Panjang","th":"กางเกงขายาว","zh":"長褲","hasImage":true},{"key":"กางเกงขาสั้น短褲","category":"其他 / OTHER & OTHERS","en":"Shorts","vi":"Quần short","id":"Celana Pendek","th":"กางเกงขาสั้น","zh":"短褲","hasImage":true},{"key":"กางเกงใน內褲","category":"其他 / OTHER & OTHERS","en":"Underwear","vi":"Quần lót","id":"Celana Dalam","th":"กางเกงใน","zh":"內褲","hasImage":true},{"key":"ชุดกีฬาผู้หญิง運動女裝","category":"其他 / OTHER & OTHERS","en":"Women Sportswear Set","vi":"Set đồ thể thao nữ","id":"Setelan Baju Olahraga Wanita","th":"ชุดกีฬาผู้หญิง","zh":"運動女裝","hasImage":true},{"key":"ชุดมีดโกน剃刀盒","category":"其他 / OTHER & OTHERS","en":"Razor & Blades Set Box","vi":"Hộp dao cạo râu","id":"Kotak Set Alat Cukur Shaver","th":"ชุดมีดโกน","zh":"剃刀盒","hasImage":true},{"key":"ตะเกียบ免洗筷","category":"其他 / OTHER & OTHERS","en":"Disposable Chopsticks","vi":"Đũa dùng một lần","id":"Sumpit Sekali Pakai","th":"ตะเกียบ","zh":"免洗筷","hasImage":true},{"key":"ถ้วยไฮโล瓷盤","category":"其他 / OTHER & OTHERS","en":"Hi-Lo Gambling Porcelain Plate","vi":"Đĩa sứ chơi Sicbo / Hi-Lo","id":"Piring Porselen Dadu Hi-Lo","th":"ถ้วยไฮโล","zh":"瓷盤","hasImage":true},{"key":"ถุงเท้า 1 คู่襪子一雙","category":"其他 / OTHER & OTHERS","en":"Socks (1 Pair)","vi":"Vớ / Tất (1 đôi)","id":"Kaus Kaki (1 Pasang)","th":"ถุงเท้า 1 คู่","zh":"襪子一雙","hasImage":true},{"key":"ที่ตัดเล็บ指甲剪","category":"其他 / OTHER & OTHERS","en":"Nail Clippers","vi":"Bấm móng tay","id":"Gunting Kuku","th":"ที่ตัดเล็บ","zh":"指甲剪","hasImage":true},{"key":"แป้นไฮโล賭紙","category":"其他 / OTHER & OTHERS","en":"Hi-Lo Gambling Layout Mat / Paper","vi":"Bạt sơ đồ đặt cược Sicbo / Hi-Lo","id":"Kertas Papan Taruhan Dadu Hi-Lo","th":"แป้นไฮโล","zh":"賭紙","hasImage":true},{"key":"ฝาไฮโล竹帽","category":"其他 / OTHER & OTHERS","en":"Hi-Lo Gambling Bamboo Cover Mat","vi":"Nắp tre đậy đĩa Sicbo / Hi-Lo","id":"Penutup Anyaman Bambu Dadu Hi-Lo","th":"ฝาไฮโล","zh":"竹帽","hasImage":true},{"key":"รองเท้าแตะลายช้าง大象拖鞋","category":"其他 / OTHER & OTHERS","en":"Elephant Pattern Slippers","vi":"Dép tông họa tiết voi Thái Lan","id":"Sandal Jepit Motif Gajah","th":"รองเท้าแตะลายช้าง","zh":"大象拖鞋","hasImage":true},{"key":"ลูกเต๋า 3 ลูก3個骰子","category":"其他 / OTHER & OTHERS","en":"3 Dices","vi":"3 viên xúc xắc / xí ngầu","id":"3 Buah Dadu","th":"ลูกเต๋า 3 ลูก","zh":"3個骰子","hasImage":true},{"key":"ส้อม叉子","category":"其他 / OTHER & OTHERS","en":"Fork","vi":"Nĩa","id":"Garpu","th":"ส้อม","zh":"叉子","hasImage":true},{"key":"เสื่อ地蓆","category":"其他 / OTHER & OTHERS","en":"Mat","vi":"Chiếu trải sàn","id":"Tikar","th":"เสื่อ","zh":"地蓆","hasImage":true},{"key":"เสื้อแขนกุดหญิง無袖女裝","category":"其他 / OTHER & OTHERS","en":"Women Sleeveless Shirt","vi":"Áo ba lỗ","id":"Baju Tanpa Lengan Wanita","th":"เสื้อแขนกุดหญิง","zh":"無袖女裝","hasImage":true},{"key":"หมวก帽子","category":"其他 / OTHER & OTHERS","en":"Hat","vi":"Mũ","id":"Topi","th":"หมวก","zh":"帽子","hasImage":true},{"key":"หม้ออลูมิเนียม鋁鍋","category":"其他 / OTHER & OTHERS","en":"Aluminum Pot","vi":"Nồi nhôm","id":"Panci Alumunium","th":"หม้ออลูมิเนียม","zh":"鋁鍋","hasImage":true},{"key":"หวดนึ่งข้าว竹蒸籠三角","category":"其他 / OTHER & OTHERS","en":"Triangular Bamboo Sticky Rice Steaming Basket (Huat)","vi":"Chõ tre hấp xôi hình nón","id":"Kukusan Anyaman Bambu Segitiga (Huat)","th":"หวดนึ่งข้าว","zh":"竹蒸籠三角","hasImage":true},{"key":"ลิปสติก護唇膏","category":"其他 / OTHER & OTHERS","en":"Lip Balm","vi":"Son dưỡng môi","id":"Pelembab Bibir","th":"ลิปสติก","zh":"護唇膏","hasImage":true},{"key":"ลิปสติก護唇膏1","category":"其他 / OTHER & OTHERS","en":"Lip Balm","vi":"Son dưỡng môi","id":"Pelembab Bibir","th":"ลิปสติก","zh":"護唇膏","hasImage":true},{"key":"ครีมอาบนํ้าLux沐浴乳7","category":"清潔保養品 Hygiene & Beauty","en":"","vi":"","id":"","th":"","zh":"","hasImage":true}]};
+</script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   shop-config-editor — app logic
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── HTML escaping (for building markup) ───────────────────────────── */
+function escAttr(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/* ── JS string escaping (for generating .js file output) ────────────── */
+function escapeJsString(s) {
+  return String(s ?? '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\r\n/g, '\\n')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\n');
+}
+
+function catHeader(name) {
+  const base = `  // ── ${name} `;
+  const pad = Math.max(4, 70 - base.length);
+  return base + '─'.repeat(pad);
+}
+
+const HEADER_COMMENT_NAMES = `/* ═══════════════════════════════════════════════════════════════════
+   shop-names.js  —  公告消息 & 商品名稱多語系對照表
+   ═══════════════════════════════════════════════════════════════════
+
+   ✅ 這是唯一需要編輯的翻譯檔案
+      不需要動 shop.html 或任何其他檔案
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   新增翻譯：加一行即可
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   '商品中文名稱': { en: 'English', vi: '越南文', id: '印尼文', th: 'ภาษาไทย', zh: '中文' },
+
+   ⚠  KEY 必須和 Firebase 裡的商品名稱一字不差（含空格、全半形）
+   ⚠  en = 英文（菲律賓 PH），vi = 越南文，id = 印尼文 Club，th = 泰文，zh = 中文
+      其他語系不需要填，系統自動顯示原文
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   修改後如何生效？
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   上傳本檔到伺服器後，同時將 shop-sw.js 裡的 APP_VERSION 加一位
+   （如 v1.3.0 → v1.3.1），Service Worker 才會清除快取並拉取新版本。
+
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   📢 公告消息 ANNOUNCEMENTS
+   ═══════════════════════════════════════════════════════════════════
+
+   ✅ 在這裡新增 / 修改 / 刪除公告，支援五種語系
+
+   格式說明：
+     key  ── 唯一識別碼（不顯示給顧客）
+     emoji── 圖示（可留空 ''）
+     date ── 顯示日期，格式 'YYYY-MM-DD'（留空則不顯示）
+     th   ── 泰文
+     vi   ── 越南文
+     id   ── 印尼文
+     en   ── 英文（菲律賓用）
+     zh   ── 中文（台灣用）
+
+   ⚠️  語系欄位若留空，自動顯示泰文 (th) 作為備用
+
+   ─────────────────────────────────────────────────────────────────
+   範例：
+   { key: 'ann_001', emoji: '🛵', date: '2026-06-01',
+     th: 'ข้อความ',  vi: 'Thông báo', id: 'Pengumuman',
+     en: 'Announcement', zh: '公告' },
+
+  { key: 'ann_002', emoji: '🕘', date: '2026-06-23',
+    th:  'ร้านเปิดทุกวัน 09:00–21:00',
+    vi:  'Cửa hàng mở cửa mỗi ngày 09:00–21:00',
+    id:  'Toko buka setiap hari pukul 09:00–21:00',
+    en:  'Shop open daily 09:00–21:00',
+    zh:  '每日營業 09:00–21:00' },
+
+   ═══════════════════════════════════════════════════════════════════ */`;
+
+const DIVIDER_COMMENT = `/* ─────────────────────────────────────────────────────────────────
+   👇 以下為商品名稱翻譯對照表（請勿移動此行以上的內容）
+   ───────────────────────────────────────────────────────────────── */`;
+
+const HEADER_COMMENT_IMAGES = `/* ═══════════════════════════════════════════════════════════════════
+   shop-images.js  —  商品圖片設定
+   ═══════════════════════════════════════════════════════════════════
+
+   ✅ 這是唯一需要編輯的圖片設定檔
+      不需要動 shop.html 或 shop-sw.js 以外的任何檔案
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   使用方式
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   圖片統一放在：  images/{商品名稱}.webp
+   例：伯朗咖啡   → images/กาแฟกระป๋องไต้หวัน伯朗咖啡.webp
+
+   ① 把圖片放到 images/ 資料夾
+   ② 把下方對應的商品那一行去掉「// 」取消註解
+   ③ 上傳本檔到伺服器後，同時將 shop-sw.js 裡的
+      APP_VERSION 加一位（如 v1.5.0 → v1.5.1），
+      Service Worker 才會清除快取並拉取新版本。
+
+   ⚠  KEY 必須和 Firebase 裡的商品名稱一字不差（含空格、全半形）
+   ⚠  沒有取消註解的商品繼續顯示原本的漸層色塊
+
+   ═══════════════════════════════════════════════════════════════════ */`;
+
+function groupByCategory(items, categoryOrder) {
+  const byCat = new Map();
+  categoryOrder.forEach(c => byCat.set(c, []));
+  const fallback = [];
+  for (const it of items) {
+    const cat = (it.category || '').trim();
+    if (!cat) { fallback.push(it); continue; }
+    if (!byCat.has(cat)) byCat.set(cat, []);
+    byCat.get(cat).push(it);
+  }
+  return { byCat, fallback };
+}
+
+function buildAnnouncementsBlock(announcements) {
+  if (!announcements.length) return 'export const ANNOUNCEMENTS = [\n\n];';
+  const parts = announcements.map(a => {
+    return `  { key: '${escapeJsString(a.key)}', emoji: '${escapeJsString(a.emoji)}', date: '${escapeJsString(a.date)}',\n` +
+           `    th:  '${escapeJsString(a.th)}',\n` +
+           `    vi:  '${escapeJsString(a.vi)}',\n` +
+           `    id:  '${escapeJsString(a.id)}',\n` +
+           `    en:  '${escapeJsString(a.en)}',\n` +
+           `    zh:  '${escapeJsString(a.zh)}' },`;
+  });
+  return `export const ANNOUNCEMENTS = [\n\n${parts.join('\n\n')}\n\n];`;
+}
+
+function buildProductNameMapBlock(products, categoryOrder) {
+  const { byCat, fallback } = groupByCategory(products, categoryOrder);
+  const sections = [];
+  for (const [cat, items] of byCat) {
+    if (!items.length) continue;
+    const lines = items.map(p =>
+      `  '${escapeJsString(p.key)}': { en: '${escapeJsString(p.en)}', vi: '${escapeJsString(p.vi)}', id: '${escapeJsString(p.id)}', th: '${escapeJsString(p.th)}', zh: '${escapeJsString(p.zh)}' },`
+    );
+    sections.push(catHeader(cat) + '\n' + lines.join('\n'));
+  }
+  if (fallback.length) {
+    const lines = fallback.map(p =>
+      `  '${escapeJsString(p.key)}': { en: '${escapeJsString(p.en)}', vi: '${escapeJsString(p.vi)}', id: '${escapeJsString(p.id)}', th: '${escapeJsString(p.th)}', zh: '${escapeJsString(p.zh)}' },`
+    );
+    sections.push(catHeader('未分類 Uncategorized') + '\n' + lines.join('\n'));
+  }
+  const body = sections.join('\n\n');
+  return `export const PRODUCT_NAME_MAP = {\n\n${body}\n\n};`;
+}
+
+function buildImageSetBlock(products, categoryOrder) {
+  const active = products.filter(p => p.hasImage);
+  const { byCat, fallback } = groupByCategory(active, categoryOrder);
+  const sections = [];
+  for (const [cat, items] of byCat) {
+    if (!items.length) continue;
+    const lines = items.map(p => `  '${escapeJsString(p.key)}',`);
+    sections.push(catHeader(cat) + '\n' + lines.join('\n'));
+  }
+  if (fallback.length) {
+    const lines = fallback.map(p => `  '${escapeJsString(p.key)}',`);
+    sections.push(catHeader('未分類 Uncategorized') + '\n' + lines.join('\n'));
+  }
+  const body = sections.join('\n\n');
+  return `export const PRODUCT_IMAGE_SET = new Set([\n\n${body}\n\n]);`;
+}
+
+function buildNamesJS(state) {
+  return HEADER_COMMENT_NAMES + '\n\n' +
+    buildAnnouncementsBlock(state.announcements) + '\n\n' +
+    DIVIDER_COMMENT + '\n\n' +
+    buildProductNameMapBlock(state.products, state.categories) + '\n';
+}
+
+function buildImagesJS(state) {
+  return HEADER_COMMENT_IMAGES + '\n\n' +
+    buildImageSetBlock(state.products, state.categories) + '\n';
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   State
+   ═══════════════════════════════════════════════════════════════════ */
+
+const INITIAL_DATA = window.__INITIAL_DATA__ || { categories: [], announcements: [], products: [] };
+
+let uidCounter = 0;
+function nextUid() { return 'u' + (++uidCounter) + '_' + Math.random().toString(36).slice(2, 7); }
+
+let state = {
+  categories: [...INITIAL_DATA.categories],
+  announcements: INITIAL_DATA.announcements.map(a => ({ _uid: nextUid(), ...a })),
+  products: INITIAL_DATA.products.map(p => ({ _uid: nextUid(), ...p })),
+};
+let productByUid = new Map(state.products.map(p => [p._uid, p]));
+let expandedCats = new Set();
+let dirty = false;
+let searchQuery = '';
+
+// Exposed for debugging in the browser console (e.g. window.state.products.length)
+window.state = state;
+window.__debug = { state, productByUid, buildNamesJS, buildImagesJS };
+
+function ensureCategory(name) {
+  if (!state.categories.includes(name)) state.categories.push(name);
+}
+
+function markDirty() {
+  if (dirty) return;
+  dirty = true;
+  const el = document.getElementById('dirty-banner');
+  if (el) el.hidden = false;
+}
+function clearDirty() {
+  dirty = false;
+  const el = document.getElementById('dirty-banner');
+  if (el) el.hidden = true;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Visual helpers
+   ═══════════════════════════════════════════════════════════════════ */
+
+const GRADIENTS = [
+  'linear-gradient(135deg,#F3C6D3,#C94E6E)',
+  'linear-gradient(135deg,#FFD9A8,#E8892B)',
+  'linear-gradient(135deg,#BFE3D4,#2D9B6F)',
+  'linear-gradient(135deg,#E7D5C9,#9B7060)',
+  'linear-gradient(135deg,#F6E1B8,#C9721E)',
+  'linear-gradient(135deg,#E3C3CE,#A8365A)',
+];
+function gradientFor(cat) {
+  let h = 0;
+  const s = String(cat || '');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return GRADIENTS[h % GRADIENTS.length];
+}
+function initialOf(p) {
+  const s = (p.zh || p.th || p.key || '?').trim();
+  return s ? [...s][0] : '?';
+}
+function categoryIcon(name) {
+  const n = String(name || '').toLowerCase();
+  if (n.includes('drink') || n.includes('飲料')) return '🥤';
+  if (n.includes('food') || n.includes('食品')) return '🍡';
+  if (n.includes('season') || n.includes('調味')) return '🧂';
+  if (n.includes('alcohol') || n.includes('酒')) return '🍶';
+  if (n.includes('hygiene') || n.includes('beauty') || n.includes('清潔') || n.includes('保養')) return '🧴';
+  if (n.includes('frozen') || n.includes('冷凍')) return '🧊';
+  if (n.includes('rice') || n.includes('米')) return '🍚';
+  if (n.includes('新匯入') || n.toLowerCase().includes('import')) return '🆕';
+  if (n.includes('other') || n.includes('其他')) return '📦';
+  return '📁';
+}
+
+function thumbHTML(p) {
+  const grad = gradientFor(p.category);
+  if (!p.hasImage) {
+    return `<div class="thumb thumb-off" style="background:${grad}"><span>${escHtml(initialOf(p))}</span></div>`;
+  }
+  const src = `images/${encodeURIComponent(p.key)}.webp`;
+  return `<div class="thumb thumb-on" style="background:${grad}">
+    <img src="${escAttr(src)}" alt="" loading="lazy" onerror="handleThumbError(this)">
+    <span class="thumb-icon">⚠️</span>
+  </div>`;
+}
+function handleThumbError(img) {
+  img.parentElement.classList.add('thumb-broken');
+}
+function refreshThumb(uid) {
+  const card = document.querySelector(`.p-card[data-uid="${cssEscape(uid)}"]`);
+  if (!card) return;
+  const p = productByUid.get(uid);
+  if (!p) return;
+  const thumbEl = card.querySelector('.thumb');
+  if (thumbEl) thumbEl.outerHTML = thumbHTML(p);
+}
+function cssEscape(s) {
+  return String(s).replace(/[^a-zA-Z0-9_-]/g, c => '\\' + c);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Rendering — Products
+   ═══════════════════════════════════════════════════════════════════ */
+
+function computeCategoryGroups() {
+  const map = new Map();
+  for (const c of state.categories) map.set(c, []);
+  for (const p of state.products) {
+    if (!map.has(p.category)) { map.set(p.category, []); state.categories.push(p.category); }
+    map.get(p.category).push(p);
+  }
+  return map;
+}
+
+function productMatches(p, q) {
+  return [p.key, p.en, p.vi, p.id, p.th, p.zh].some(v => (v || '').toLowerCase().includes(q));
+}
+
+function productCardHTML(p) {
+  return `
+  <div class="p-card" data-uid="${escAttr(p._uid)}">
+    ${thumbHTML(p)}
+    <div class="p-body">
+      <div class="p-row-top">
+        <input class="p-key" data-field="key" type="text" value="${escAttr(p.key)}" placeholder="商品名稱（需與 Firebase 完全一致）" spellcheck="false" autocomplete="off">
+        <label class="p-toggle" title="是否已上傳圖片" aria-label="是否已上傳圖片">
+          <input type="checkbox" data-field="hasImage" ${p.hasImage ? 'checked' : ''}>
+          <span>📷</span>
+        </label>
+        <button type="button" class="icon-btn p-del" data-action="delete-product" title="刪除商品" aria-label="刪除商品">🗑️</button>
+      </div>
+      <div class="p-row-cat">
+        <select data-field="category" aria-label="所屬分類">${state.categories.map(c => `<option value="${escAttr(c)}" ${c === p.category ? 'selected' : ''}>${categoryIcon(c)} ${escHtml(c)}</option>`).join('')}</select>
+      </div>
+      <div class="lang-grid">
+        <label class="lang-field"><span class="flag">🇹🇭</span><input data-field="th" value="${escAttr(p.th)}" placeholder="ภาษาไทย"></label>
+        <label class="lang-field"><span class="flag">🇵🇭</span><input data-field="en" value="${escAttr(p.en)}" placeholder="English"></label>
+        <label class="lang-field"><span class="flag">🇻🇳</span><input data-field="vi" value="${escAttr(p.vi)}" placeholder="Tiếng Việt"></label>
+        <label class="lang-field"><span class="flag">🇮🇩</span><input data-field="id" value="${escAttr(p.id)}" placeholder="Bahasa Indonesia"></label>
+        <label class="lang-field"><span class="flag">🇹🇼</span><input data-field="zh" value="${escAttr(p.zh)}" placeholder="中文"></label>
+      </div>
+    </div>
+  </div>`;
+}
+
+function categorySectionHTML(cat, totalCount, shownCount, isOpen, cardsHtml, searching) {
+  return `
+  <div class="category ${isOpen ? 'open' : ''}" data-cat="${escAttr(cat)}">
+    <div class="category-head" data-action="toggle-category">
+      <span class="cat-chevron">▸</span>
+      <span class="cat-icon">${categoryIcon(cat)}</span>
+      <span class="cat-name">${escHtml(cat)}</span>
+      <span class="cat-count">${searching ? `${shownCount}/${totalCount}` : totalCount}</span>
+      <span class="cat-actions">
+        ${totalCount === 0
+          ? `<button type="button" class="icon-btn" data-action="remove-category" title="移除空分類" aria-label="移除空分類">🗑️</button>`
+          : `<button type="button" class="icon-btn" data-action="rename-category" title="重新命名分類" aria-label="重新命名分類">✏️</button>`}
+        <button type="button" class="btn-add-product" data-action="add-product" title="在此分類新增商品">＋ 新增商品</button>
+      </span>
+    </div>
+    <div class="category-body">${cardsHtml || (isOpen ? `<div class="cat-empty">這個分類還沒有商品，點右上角「＋ 新增商品」開始。</div>` : '')}</div>
+  </div>`;
+}
+
+function renderProducts() {
+  const groups = computeCategoryGroups();
+  const q = searchQuery.trim().toLowerCase();
+  const searching = q.length > 0;
+  const sections = [];
+  for (const cat of state.categories) {
+    const items = groups.get(cat) || [];
+    let matched = items;
+    if (searching) {
+      matched = items.filter(p => productMatches(p, q));
+      if (matched.length === 0) continue;
+    }
+    const isOpen = searching ? true : expandedCats.has(cat);
+    const cardsHtml = isOpen ? matched.map(productCardHTML).join('') : '';
+    sections.push(categorySectionHTML(cat, items.length, matched.length, isOpen, cardsHtml, searching));
+  }
+  const listEl = document.getElementById('category-list');
+  listEl.innerHTML = sections.join('') || `<div class="empty-state">🔍 沒有符合「${escHtml(searchQuery)}」的商品</div>`;
+  revalidateDuplicateKeys();
+  updateCounts();
+}
+
+function revalidateDuplicateKeys() {
+  const counts = new Map();
+  state.products.forEach(p => {
+    const k = (p.key || '').trim();
+    if (!k) return;
+    counts.set(k, (counts.get(k) || 0) + 1);
+  });
+  document.querySelectorAll('input[data-field="key"]').forEach(inp => {
+    const uid = inp.closest('.p-card')?.dataset.uid;
+    const p = productByUid.get(uid);
+    const k = p ? (p.key || '').trim() : '';
+    const isDup = k !== '' && counts.get(k) > 1;
+    inp.classList.toggle('input-dup', !!isDup);
+  });
+}
+
+function updateCounts() {
+  const cp = document.getElementById('count-products');
+  const ca = document.getElementById('count-ann');
+  if (cp) cp.textContent = state.products.length;
+  if (ca) ca.textContent = state.announcements.length;
+}
+
+/* ── Product actions ── */
+function addProduct(cat) {
+  const p = { _uid: nextUid(), key: '', category: cat, en: '', vi: '', id: '', th: '', zh: '', hasImage: false };
+  state.products.push(p);
+  productByUid.set(p._uid, p);
+  expandedCats.add(cat);
+  markDirty();
+  renderProducts();
+  requestAnimationFrame(() => {
+    const el = document.querySelector(`.p-card[data-uid="${cssEscape(p._uid)}"] input[data-field="key"]`);
+    if (el) { el.focus(); el.scrollIntoView && el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  });
+}
+function deleteProduct(uid) {
+  const idx = state.products.findIndex(p => p._uid === uid);
+  if (idx === -1) return;
+  state.products.splice(idx, 1);
+  productByUid.delete(uid);
+  markDirty();
+  renderProducts();
+  showToast('已刪除商品');
+}
+function renameCategory(oldName, newName) {
+  if (newName === oldName) return;
+  if (state.categories.includes(newName)) {
+    if (!confirm(`「${newName}」分類已經存在，要把「${oldName}」的商品合併進去嗎？`)) return;
+    state.products.forEach(p => { if (p.category === oldName) p.category = newName; });
+    state.categories = state.categories.filter(c => c !== oldName);
+  } else {
+    const i = state.categories.indexOf(oldName);
+    if (i !== -1) state.categories[i] = newName;
+    state.products.forEach(p => { if (p.category === oldName) p.category = newName; });
+  }
+  if (expandedCats.has(oldName)) { expandedCats.delete(oldName); expandedCats.add(newName); }
+  markDirty();
+  renderProducts();
+}
+function addCategory() {
+  const name = prompt('新增分類名稱：');
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  if (state.categories.includes(trimmed)) { showToast('這個分類已經存在', 'warn'); return; }
+  state.categories.push(trimmed);
+  expandedCats.add(trimmed);
+  markDirty();
+  renderProducts();
+}
+function removeEmptyCategory(cat) {
+  if (state.products.some(p => p.category === cat)) return;
+  state.categories = state.categories.filter(c => c !== cat);
+  expandedCats.delete(cat);
+  markDirty();
+  renderProducts();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Rendering — Announcements
+   ═══════════════════════════════════════════════════════════════════ */
+
+function announcementCardHTML(a, i, total) {
+  return `
+  <div class="ann-card" data-uid="${escAttr(a._uid)}">
+    <div class="ann-row-top">
+      <input class="ann-emoji" data-field="emoji" value="${escAttr(a.emoji)}" placeholder="🔔" aria-label="圖示">
+      <input class="ann-date" data-field="date" type="date" value="${escAttr(a.date)}" aria-label="日期">
+      <input class="ann-key" data-field="key" value="${escAttr(a.key)}" placeholder="識別碼，例如 ann_003" spellcheck="false" autocomplete="off" aria-label="識別碼">
+      <div class="ann-order">
+        <button type="button" class="icon-btn" data-action="ann-up" ${i === 0 ? 'disabled' : ''} title="上移" aria-label="上移">↑</button>
+        <button type="button" class="icon-btn" data-action="ann-down" ${i === total - 1 ? 'disabled' : ''} title="下移" aria-label="下移">↓</button>
+      </div>
+      <button type="button" class="icon-btn p-del" data-action="ann-delete" title="刪除公告" aria-label="刪除公告">🗑️</button>
+    </div>
+    <div class="lang-grid">
+      <label class="lang-field"><span class="flag">🇹🇭</span><input data-field="th" value="${escAttr(a.th)}" placeholder="ภาษาไทย"></label>
+      <label class="lang-field"><span class="flag">🇻🇳</span><input data-field="vi" value="${escAttr(a.vi)}" placeholder="Tiếng Việt"></label>
+      <label class="lang-field"><span class="flag">🇮🇩</span><input data-field="id" value="${escAttr(a.id)}" placeholder="Bahasa Indonesia"></label>
+      <label class="lang-field"><span class="flag">🇵🇭</span><input data-field="en" value="${escAttr(a.en)}" placeholder="English"></label>
+      <label class="lang-field"><span class="flag">🇹🇼</span><input data-field="zh" value="${escAttr(a.zh)}" placeholder="中文"></label>
+    </div>
+  </div>`;
+}
+
+function renderAnnouncements() {
+  const html = state.announcements.map((a, i) => announcementCardHTML(a, i, state.announcements.length)).join('');
+  document.getElementById('ann-list').innerHTML = html || `<div class="empty-state">目前沒有公告，點上面的「＋ 新增公告」建立第一則。</div>`;
+  updateCounts();
+}
+
+function addAnnouncement() {
+  const n = state.announcements.length + 1;
+  const a = {
+    _uid: nextUid(), key: `ann_${String(n).padStart(3, '0')}`, emoji: '📢',
+    date: new Date().toISOString().slice(0, 10), th: '', vi: '', id: '', en: '', zh: '',
+  };
+  state.announcements.push(a);
+  markDirty();
+  renderAnnouncements();
+  requestAnimationFrame(() => {
+    const el = document.querySelector(`.ann-card[data-uid="${cssEscape(a._uid)}"] input[data-field="th"]`);
+    if (el) { el.focus(); el.scrollIntoView && el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Import / Export
+   ═══════════════════════════════════════════════════════════════════ */
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/javascript;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+/* ── Dependency-free parser for imported .js files (no eval, no dynamic import) ── */
+function unescapeJsStr(s) {
+  return String(s).replace(/\\(.)/g, (_, c) => c);
+}
+const STR_BODY = "((?:[^'\\\\]|\\\\.)*)";
+
+function parseNamesJsText(text) {
+  const out = { announcements: [], products: [] };
+  const annStart = text.indexOf('export const ANNOUNCEMENTS');
+  const pmStart = text.indexOf('export const PRODUCT_NAME_MAP');
+
+  if (annStart !== -1) {
+    const annEnd = pmStart !== -1 ? pmStart : text.length;
+    const annSection = text.slice(annStart, annEnd);
+    const annRe = new RegExp(
+      "\\{\\s*key:\\s*'" + STR_BODY + "',\\s*emoji:\\s*'" + STR_BODY + "',\\s*date:\\s*'" + STR_BODY + "',\\s*" +
+      "th:\\s*'" + STR_BODY + "',\\s*vi:\\s*'" + STR_BODY + "',\\s*id:\\s*'" + STR_BODY + "',\\s*" +
+      "en:\\s*'" + STR_BODY + "',\\s*zh:\\s*'" + STR_BODY + "'\\s*\\}", 'gs'
+    );
+    let m;
+    while ((m = annRe.exec(annSection))) {
+      out.announcements.push({
+        key: unescapeJsStr(m[1]), emoji: unescapeJsStr(m[2]), date: unescapeJsStr(m[3]),
+        th: unescapeJsStr(m[4]), vi: unescapeJsStr(m[5]), id: unescapeJsStr(m[6]),
+        en: unescapeJsStr(m[7]), zh: unescapeJsStr(m[8]),
+      });
+    }
+  }
+  if (pmStart !== -1) {
+    const lines = text.slice(pmStart).split('\n');
+    const headerRe = /^\s*\/\/\s*[─—-]{2,}\s*(.+?)\s*[─—-]{2,}\s*$/;
+    const entryRe = new RegExp(
+      "^\\s*'" + STR_BODY + "':\\s*\\{\\s*en:\\s*'" + STR_BODY + "',\\s*vi:\\s*'" + STR_BODY + "',\\s*id:\\s*'" + STR_BODY + "',\\s*th:\\s*'" + STR_BODY + "',\\s*zh:\\s*'" + STR_BODY + "'\\s*\\}"
+    );
+    let currentCat = '未分類 Uncategorized';
+    for (const line of lines) {
+      const hm = line.match(headerRe);
+      if (hm) { currentCat = hm[1].trim(); continue; }
+      const m = line.match(entryRe);
+      if (m) {
+        out.products.push({
+          key: unescapeJsStr(m[1]), en: unescapeJsStr(m[2]), vi: unescapeJsStr(m[3]),
+          id: unescapeJsStr(m[4]), th: unescapeJsStr(m[5]), zh: unescapeJsStr(m[6]),
+          category: currentCat,
+        });
+      }
+    }
+  }
+  return out;
+}
+
+function parseImagesJsText(text) {
+  const out = { keys: [] };
+  const start = text.indexOf('export const PRODUCT_IMAGE_SET');
+  if (start === -1) return out;
+  const lines = text.slice(start).split('\n');
+  const headerRe = /^\s*\/\/\s*[─—-]{2,}\s*(.+?)\s*[─—-]{2,}\s*$/;
+  const entryRe = new RegExp("^\\s*'" + STR_BODY + "',?\\s*(?:\\/\\/.*)?$");
+  for (const line of lines) {
+    if (headerRe.test(line)) continue;
+    const m = line.match(entryRe);
+    if (m) out.keys.push(unescapeJsStr(m[1]));
+  }
+  return out;
+}
+
+async function handleImportNames(file) {
+  const text = await file.text();
+  const parsed = parseNamesJsText(text);
+  if (parsed.products.length === 0 && parsed.announcements.length === 0) {
+    throw new Error('沒有在檔案裡找到可辨識的資料，請確認選對檔案');
+  }
+  let added = 0, updated = 0;
+  for (const val of parsed.products) {
+    let p = state.products.find(x => x.key === val.key);
+    if (p) {
+      p.en = val.en; p.vi = val.vi; p.id = val.id; p.th = val.th; p.zh = val.zh;
+      updated++;
+    } else {
+      ensureCategory(val.category);
+      p = { _uid: nextUid(), key: val.key, category: val.category, en: val.en, vi: val.vi, id: val.id, th: val.th, zh: val.zh, hasImage: false };
+      state.products.push(p);
+      productByUid.set(p._uid, p);
+      added++;
+    }
+  }
+  let annReplaced = false;
+  if (parsed.announcements.length) {
+    if (confirm(`匯入的檔案包含 ${parsed.announcements.length} 則公告，要取代目前編輯器裡的公告清單嗎？`)) {
+      state.announcements = parsed.announcements.map(a => ({ _uid: nextUid(), ...a }));
+      annReplaced = true;
+    }
+  }
+  markDirty();
+  renderProducts();
+  renderAnnouncements();
+  showToast(`已匯入翻譯：新增 ${added} 筆、更新 ${updated} 筆${annReplaced ? '，公告已取代' : ''}`);
+}
+
+async function handleImportImages(file) {
+  const text = await file.text();
+  const parsed = parseImagesJsText(text);
+  if (parsed.keys.length === 0) {
+    throw new Error('沒有在檔案裡找到可辨識的資料，請確認選對檔案');
+  }
+  let count = 0;
+  for (const key of parsed.keys) {
+    let p = state.products.find(x => x.key === key);
+    if (p) {
+      if (!p.hasImage) { p.hasImage = true; count++; }
+    } else {
+      ensureCategory('🆕 新匯入 New Imports');
+      p = { _uid: nextUid(), key, category: '🆕 新匯入 New Imports', en: '', vi: '', id: '', th: '', zh: '', hasImage: true };
+      state.products.push(p);
+      productByUid.set(p._uid, p);
+      count++;
+    }
+  }
+  markDirty();
+  renderProducts();
+  showToast(`已匯入圖片設定：新增/更新 ${count} 筆`);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Toast
+   ═══════════════════════════════════════════════════════════════════ */
+let toastTimer = null;
+function showToast(msg, kind) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'toast show ' + (kind === 'warn' ? 'toast-warn' : 'toast-ok');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.classList.remove('show'); }, 2600);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Wire up events (called once DOM is ready)
+   ═══════════════════════════════════════════════════════════════════ */
+function initApp() {
+  renderProducts();
+  renderAnnouncements();
+  updateCounts();
+
+  // Tabs
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Search
+  const searchEl = document.getElementById('search');
+  if (searchEl) {
+    let t = null;
+    searchEl.addEventListener('input', e => {
+      clearTimeout(t);
+      const val = e.target.value;
+      t = setTimeout(() => { searchQuery = val; renderProducts(); }, 120);
+    });
+  }
+
+  // Expand/collapse all
+  document.getElementById('btn-expand-all')?.addEventListener('click', () => {
+    state.categories.forEach(c => expandedCats.add(c));
+    renderProducts();
+  });
+  document.getElementById('btn-collapse-all')?.addEventListener('click', () => {
+    expandedCats.clear();
+    renderProducts();
+  });
+  document.getElementById('btn-add-category')?.addEventListener('click', addCategory);
+  document.getElementById('btn-add-ann')?.addEventListener('click', addAnnouncement);
+
+  // Product list delegation
+  const catList = document.getElementById('category-list');
+  catList.addEventListener('click', e => {
+    const actionEl = e.target.closest('[data-action]');
+    if (!actionEl) return;
+    const action = actionEl.dataset.action;
+    const catEl = actionEl.closest('.category');
+    const cat = catEl?.dataset.cat;
+    const cardEl = actionEl.closest('.p-card');
+    const uid = cardEl?.dataset.uid;
+
+    if (action === 'toggle-category') {
+      if (expandedCats.has(cat)) expandedCats.delete(cat); else expandedCats.add(cat);
+      renderProducts();
+    } else if (action === 'rename-category') {
+      const name = prompt('重新命名分類：', cat);
+      if (name && name.trim() && name.trim() !== cat) renameCategory(cat, name.trim());
+    } else if (action === 'remove-category') {
+      removeEmptyCategory(cat);
+    } else if (action === 'add-product') {
+      addProduct(cat);
+    } else if (action === 'delete-product') {
+      const p = productByUid.get(uid);
+      if (p && confirm(`確定要刪除「${p.key || '(未命名商品)'}」嗎？`)) deleteProduct(uid);
+    }
+  });
+  catList.addEventListener('input', e => {
+    const t = e.target;
+    const field = t.dataset.field;
+    if (!field || field === 'category' || field === 'hasImage') return;
+    const uid = t.closest('.p-card')?.dataset.uid;
+    const p = productByUid.get(uid);
+    if (!p) return;
+    p[field] = t.value;
+    markDirty();
+  });
+  catList.addEventListener('change', e => {
+    const t = e.target;
+    const field = t.dataset.field;
+    const uid = t.closest('.p-card')?.dataset.uid;
+    const p = productByUid.get(uid);
+    if (!p) return;
+    if (field === 'hasImage') {
+      p.hasImage = t.checked;
+      markDirty();
+      refreshThumb(uid);
+    } else if (field === 'category') {
+      p.category = t.value;
+      markDirty();
+      renderProducts();
+    } else if (field === 'key') {
+      p.key = t.value;
+      markDirty();
+      refreshThumb(uid);
+      revalidateDuplicateKeys();
+    }
+  });
+
+  // Announcement list delegation
+  const annList = document.getElementById('ann-list');
+  annList.addEventListener('input', e => {
+    const t = e.target;
+    const field = t.dataset.field;
+    if (!field) return;
+    const uid = t.closest('.ann-card')?.dataset.uid;
+    const a = state.announcements.find(x => x._uid === uid);
+    if (!a) return;
+    a[field] = t.value;
+    markDirty();
+  });
+  annList.addEventListener('click', e => {
+    const actionEl = e.target.closest('[data-action]');
+    if (!actionEl) return;
+    const uid = actionEl.closest('.ann-card')?.dataset.uid;
+    const idx = state.announcements.findIndex(x => x._uid === uid);
+    if (idx === -1) return;
+    const action = actionEl.dataset.action;
+    if (action === 'ann-delete') {
+      if (confirm('確定要刪除這則公告嗎？')) { state.announcements.splice(idx, 1); markDirty(); renderAnnouncements(); }
+    } else if (action === 'ann-up' && idx > 0) {
+      [state.announcements[idx - 1], state.announcements[idx]] = [state.announcements[idx], state.announcements[idx - 1]];
+      markDirty(); renderAnnouncements();
+    } else if (action === 'ann-down' && idx < state.announcements.length - 1) {
+      [state.announcements[idx + 1], state.announcements[idx]] = [state.announcements[idx], state.announcements[idx + 1]];
+      markDirty(); renderAnnouncements();
+    }
+  });
+
+  // Modals
+  function openModal(id) { document.getElementById(id).hidden = false; }
+  function closeModal(id) { document.getElementById(id).hidden = true; }
+  document.getElementById('btn-export')?.addEventListener('click', () => openModal('export-modal'));
+  document.getElementById('btn-import')?.addEventListener('click', () => openModal('import-modal'));
+  document.querySelectorAll('.modal-close').forEach(b => b.addEventListener('click', () => closeModal(b.closest('.modal-overlay').id)));
+  document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); }));
+
+  document.getElementById('dl-names')?.addEventListener('click', () => {
+    downloadFile('shop-names.js', buildNamesJS(state));
+    showToast('已下載 shop-names.js');
+  });
+  document.getElementById('dl-images')?.addEventListener('click', () => {
+    downloadFile('shop-images.js', buildImagesJS(state));
+    showToast('已下載 shop-images.js');
+  });
+  document.getElementById('dl-both')?.addEventListener('click', () => {
+    downloadFile('shop-names.js', buildNamesJS(state));
+    setTimeout(() => downloadFile('shop-images.js', buildImagesJS(state)), 300);
+    clearDirty();
+    showToast('已下載兩個檔案');
+  });
+
+  document.getElementById('file-names')?.addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const statusEl = document.getElementById('import-status');
+    try {
+      await handleImportNames(file);
+      if (statusEl) statusEl.textContent = '✅ shop-names.js 匯入完成';
+    } catch (err) {
+      console.error(err);
+      if (statusEl) statusEl.textContent = '❌ 匯入失敗，請確認檔案格式正確';
+      showToast('匯入失敗，請確認檔案格式正確', 'warn');
+    } finally {
+      e.target.value = '';
+    }
+  });
+  document.getElementById('file-images')?.addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const statusEl = document.getElementById('import-status');
+    try {
+      await handleImportImages(file);
+      if (statusEl) statusEl.textContent = '✅ shop-images.js 匯入完成';
+    } catch (err) {
+      console.error(err);
+      if (statusEl) statusEl.textContent = '❌ 匯入失敗，請確認檔案格式正確';
+      showToast('匯入失敗，請確認檔案格式正確', 'warn');
+    } finally {
+      e.target.value = '';
+    }
+  });
+
+  document.getElementById('snapshot-banner-close')?.addEventListener('click', () => {
+    document.getElementById('snapshot-banner').hidden = true;
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+
+</script>
+</body>
+</html>
