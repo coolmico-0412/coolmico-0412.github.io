@@ -311,15 +311,6 @@ nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px 
 .rank-bar{height:100%;border-radius:3px;background:var(--accent);}
 .rank-val{font-family:var(--mono);font-size:12px;font-weight:700;text-align:right;min-width:70px;}
 
-/* donut */
-.donut-area{display:flex;gap:16px;align-items:center;padding:14px;}
-.donut-svg{width:100px;height:100px;flex-shrink:0;}
-.donut-legend{display:flex;flex-direction:column;gap:7px;flex:1;}
-.dl-row{display:flex;align-items:center;gap:7px;font-size:11px;}
-.dl-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-.dl-name{flex:1;color:var(--text2);font-family:var(--zh);}
-.dl-val{font-family:var(--mono);font-size:10px;color:var(--muted);font-weight:700;}
-
 /* ── REPORT PANELS (從 POS 移入的每日/週/月報表) ── */
 .report-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px;}
 .report-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;
@@ -839,10 +830,10 @@ function applyDark(dark){
       <div class="card-hd"><span class="card-hd-title">💰 銷售額排行</span><span class="card-hd-sub">Top 10</span></div>
       <table class="rank-table" id="rank-rev-table"></table>
     </div>
-    <!-- Category donut -->
+    <!-- Top10 daily sales in the last 12 months -->
     <div class="card">
-      <div class="card-hd"><span class="card-hd-title">📂 分類銷售佔比</span></div>
-      <div class="donut-area" id="rank-donut"></div>
+      <div class="card-hd"><span class="card-hd-title">🗓 近12個月日銷售排行</span><span class="card-hd-sub">Top 10</span></div>
+      <table class="rank-table" id="rank-daily-table"></table>
     </div>
     <!-- Never sold / slow movers -->
     <div class="card">
@@ -1578,31 +1569,31 @@ function renderRanking(){
   const cutoff  = new Date(now.getTime()-days*MS_DAY);
   const prods   = getProds(); const nobcPs=getNobcProds();
 
-  const qtyMap={}, revMap={}, catRevMap={};
+  const qtyMap={}, revMap={};
+  const dailyRevMap={};                      // 近12個月日銷售（取代原「分類銷售佔比」甜甜圖）
   /* 特殊商品名稱集合（排行內略過不顯示） */
   const specialNames = new Set();
   Object.values(prods).forEach(p=>{ if(p.special) specialNames.add(p.name); });
   nobcPs.forEach(p=>{ if(p.special) specialNames.add(p.name); });
 
-  /* ★ 效能優化：商品名稱 → 分類，先建一次查表（O(商品數)）。
-     原本每一筆交易的每一個品項都呼叫 getCatForName()，內部對
-     全部商品清單重新線性掃描一次（O(交易品項數 × 商品數)），
-     交易量隨時間累積後會越來越慢；改成查表後單次查詢是 O(1)。
-     優先序與原本的 getCatForName 一致：prods 優先於 nobcPs，
-     同一來源內先出現的商品優先。 */
-  const nameToCat = {};
-  Object.values(prods).forEach(p=>{ if(!(p.name in nameToCat)) nameToCat[p.name]=p.category||'other'; });
-  nobcPs.forEach(p=>{ if(!(p.name in nameToCat)) nameToCat[p.name]=p.category||'other'; });
+  /* 近12個月日銷售排行的區間下限：固定「12 個公曆月」，與上方
+     rank-range（7/14/30 天）選單完全獨立、不受影響。用年/月整數
+     運算取代 setMonth() 位移，理由同 Overview 頁「修正 1」，避免
+     月底、閏年 2/29 等邊界溢位問題。 */
+  const twNow     = toTW8(now);
+  const cutoff12m = new Date(Date.UTC(twNow.getUTCFullYear()-1, twNow.getUTCMonth(), twNow.getUTCDate()) - TZ8_MS);
 
   txList.forEach(tx=>{
     const d=new Date(tx.date);
+    if(d>=cutoff12m){                        // 近12個月：以交易總額累加到當天
+      const ds=fd(d);
+      dailyRevMap[ds]=(dailyRevMap[ds]||0)+tx.total;
+    }
     if(d<cutoff)return;
     tx.items.forEach(item=>{
       if(specialNames.has(item.name)) return;  // 略過特殊商品
       qtyMap[item.name]=(qtyMap[item.name]||0)+item.qty;
       revMap[item.name]=(revMap[item.name]||0)+item.price*item.qty;
-      const cat=nameToCat[item.name]||'other';
-      catRevMap[cat]=(catRevMap[cat]||0)+item.price*item.qty;
     });
   });
 
@@ -1616,33 +1607,15 @@ function renderRanking(){
   const maxR=topRev[0]?.[1]||1;
   renderRankTable('rank-rev-table', topRev, 'NT$', maxR, 'var(--gold)', true);
 
-  /* Category donut */
-  const catEntries=Object.entries(catRevMap).sort((a,b)=>b[1]-a[1]);
-  const catTotal=catEntries.reduce((s,[,v])=>s+v,0)||1;
-  const donutColors=['#1e3a8a','#2563eb','#7c3aed','#d97706','#059669','#94a3b8'];
-  const CIRC=2*Math.PI*22; // r=22
-  let offset=0;
-  const slices=catEntries.map(([id,v],i)=>{
-    const pctVal=v/catTotal;
-    const dash=pctVal*CIRC;
-    const slice=`<circle cx="50" cy="50" r="22" fill="none" stroke="${donutColors[i%6]}"
-      stroke-width="12" stroke-dasharray="${dash.toFixed(2)} ${(CIRC-dash).toFixed(2)}"
-      stroke-dashoffset="${(-offset).toFixed(2)}" transform="rotate(-90,50,50)"/>`;
-    offset+=dash;
-    return slice;
-  }).join('');
-  const legend=catEntries.map(([id,v],i)=>{
-    const c=getCatInfo(id);
-    return `<div class="dl-row"><div class="dl-dot" style="background:${donutColors[i%6]}"></div>
-      <div class="dl-name">${c.icon} ${c.zh}</div>
-      <div class="dl-val">${Math.round(v/catTotal*100)}%</div></div>`;
-  }).join('');
-  document.getElementById('rank-donut').innerHTML =
-    `<svg viewBox="0 0 100 100" class="donut-svg">
-      ${slices}
-      <text x="50" y="54" text-anchor="middle" font-size="7" font-weight="700" style="fill:var(--text)">本期</text>
-    </svg>
-    <div class="donut-legend">${legend}</div>`;
+  /* 近12個月內日銷售 Top10（依「每日交易總額」排序，取前10天） */
+  const dowNames=['週一','週二','週三','週四','週五','週六','週日'];
+  const topDaily=Object.entries(dailyRevMap).sort((a,b)=>b[1]-a[1]).slice(0,10)
+    .map(([ds,v])=>{
+      const dow=(new Date(ds+'T00:00:00Z').getUTCDay()+6)%7;  // 純日期字串換算星期幾，不需再套 toTW8
+      return [`${ds}（${dowNames[dow]}）`, v];
+    });
+  const maxDaily=topDaily[0]?.[1]||1;
+  renderRankTable('rank-daily-table', topDaily, 'NT$', maxDaily, 'var(--purple)', true);
 
   /* Slow movers */
   const soldNames=new Set(Object.keys(qtyMap));
