@@ -67,11 +67,11 @@ export const ANNOUNCEMENTS = [
     zh:  '外送到府，最低消費 NT$1,000，最遠 9 公里。' },
 
   { key: 'ann_002', emoji: '🕘', date: '2026-06-23',
-    th:  'จันทร์–ศุกร์: 12:00–21:00 น. เสาร์–อาทิตย์: 08:00–21:30 น.',
-    vi:  'Thứ 2 – Thứ 6: 12:00–21:00 Thứ 7 & Chủ Nhật: 08:00–21:30',
-    id:  'Senin–Jumat: 12.00–21.00 Sabtu–Minggu: 08.00–21.30',
-    en:  'Mon–Fri: 12:00–21:00 Sat–Sun: 08:00–21:30',
-    zh:  '週一至週五 12:00–21:00 週六及週日 08:00–21:30' },
+    th:  'จันทร์–ศุกร์: 12:00–21:30 น. เสาร์–อาทิตย์: 08:00–21:30 น.',
+    vi:  'Thứ 2 – Thứ 6: 12:00–21:30 Thứ 7 & Chủ Nhật: 08:00–21:30',
+    id:  'Senin–Jumat: 12.00–21.30 Sabtu–Minggu: 08.00–21.30',
+    en:  'Mon–Fri: 12:00–21:30 Sat–Sun: 08:00–21:30',
+    zh:  '週一至週五 12:00–21:30 週六及週日 08:00–21:30' },
 
 ];
 
@@ -168,7 +168,6 @@ export const PRODUCT_NAME_MAP = {
   'ขนม馬鈴薯餅乾1': { en: 'Potato Crackers', vi: 'Bánh quy khoai tây', id: 'Keripik Kentang', th: 'ขนม', zh: '馬鈴薯餅乾' },
   'ขนม番茄餅乾': { en: 'Tomato Crackers', vi: 'Bánh quy cà chua', id: 'Keripik Tomat', th: 'ขนม', zh: '番茄餅乾' },
   'ขนม樂事薯片': { en: 'Lay\'s Potato Chips', vi: 'Khoai tây chiên Lay\'s', id: 'Keripik Kentang Lay\'s', th: 'ขนม', zh: '樂事薯片' },
-  'ขนม蝦味先': { en: 'Shrimp Crackers', vi: 'Bánh phồng tôm Siaw-Wei-Sien', id: 'Kerupuk Udang', th: 'ขนม', zh: '蝦味先' },
   'ขนมขาไก่Mix香脆麵條': { en: 'Mix Crispy Noodle Snack', vi: 'Snack mì giòn Mix', id: 'Camilan Mie Krispi Mix', th: 'ขนมขาไก่Mix', zh: '香脆麵條' },
   'ขนมขาไก่Mix香脆麵條1': { en: 'Mix Crispy Noodle Snack', vi: 'Snack mì giòn Mix', id: 'Camilan Mie Krispi Mix', th: 'ขนมขาไก่Mix', zh: '香脆麵條' },
   'ขนมขาไก่Mix香脆麵條2': { en: 'Mix Crispy Noodle Snack', vi: 'Snack mì giòn Mix', id: 'Camilan Mie Krispi Mix', th: 'ขนมขาไก่Mix', zh: '香脆麵條' },
