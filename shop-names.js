@@ -81,7 +81,7 @@ export const ANNOUNCEMENTS = [
 
 export const PRODUCT_NAME_MAP = {
 
-  // ── 飲料 Drinks ──────────────────────────────────────────────────
+  // ── 飲料 Drinks ────────────────────────────────────────────────────
   'ลิ้นจี่ใส่วุ้นมะพร้าว荔枝椰果': { en: 'Lychee with Coconut Jelly', vi: 'Vải thiều thạch dừa', id: 'Leci dengan Jeli Kelapa', th: 'ลิ้นจี่ใส่วุ้นมะพร้าว', zh: '荔枝椰果' },
   'สับปะรดใส่วุ้นมะพร้าว鳳梨椰果': { en: 'Pineapple with Coconut Jelly', vi: 'Dứa thạch dừa', id: 'Nanas dengan Jeli Kelapa', th: 'สับปะรดใส่วุ้นมะพร้าว', zh: '鳳梨椰果' },
   'DoubleC飲料': { en: 'Double C Drink', vi: 'Nước uống Double C', id: 'Minuman Double C', th: 'DoubleC飲料', zh: 'DoubleC飲料' },
@@ -124,12 +124,7 @@ export const PRODUCT_NAME_MAP = {
   'โคคาโคล่า可口可樂330ml': { en: 'Coca-Cola330ml', vi: 'Coca-Cola330ml', id: 'Coca-Cola330ml', th: 'โคคาโคล่า330ml', zh: '可口可樂330ml' },
   'โคคาโคล่า可口可樂2L': { en: 'Coca-Cola2L', vi: 'Coca-Cola2L', id: 'Coca-Cola2L', th: 'โคคาโคล่า2L', zh: '可口可樂2L' },
 
-
-
-
-
-
-  // ── 食品 Food ────────────────────────────────────────────────────
+  // ── 食品 Food ──────────────────────────────────────────────────────
   '美露': { en: 'Milo', vi: 'Sữa Milo', id: 'Milo', th: 'Milo', zh: '美露' },
   'Birdy-red': { en: 'Birdy Cafe', vi: 'Cà phê Birdy', id: 'Kopi Birdy Cafe', th: 'BirdyCafe', zh: 'BirdyCafe' },
   'BirdyCafe': { en: 'Birdy Cafe', vi: 'Cà phê Birdy', id: 'Kopi Birdy Cafe', th: 'BirdyCafe', zh: 'BirdyCafe' },
@@ -197,10 +192,10 @@ export const PRODUCT_NAME_MAP = {
   'ส้มตำปูปลาร้า螃蟹涼拌青木瓜': { en: 'Green Papaya Salad with Crab and Fermented Fish (Tam Pu Pla Ra)', vi: 'Gỏi đu đủ ba khía mắm cá', id: 'Salad Pepaya Muda dengan Kepiting dan Pasta Ikan Fermentasi', th: 'ส้มตำปูปลาร้า', zh: '螃蟹涼拌青木瓜' },
   'มาม่ายกลัง泡麵箱': { en: 'Mama Instant Noodles Assorted (Case)', vi: 'Thùng mì Mama lộn xộn vị', id: 'Mi Instan Mama Aneka Rasa (Karton)', th: 'มาม่ายกลังคละรส', zh: '不指定口味泡麵箱' },
   'ข้าวเหนียว糯米飯': { en: 'Cooked Sticky Rice', vi: 'Xôi', id: 'Nasi Ketan Matang', th: 'ข้าวเหนียว', zh: '糯米飯' },
-  
+  'หมี่โกเร็งIndomie炒麵': { en: 'Indomie Mi Goreng', vi: 'Mì xào Indomie Mi Goreng', id: 'Indomie Mi Goreng', th: 'อินโดหมี่ หมี่โกเร็ง', zh: 'Indomie 營多炒麵' },
+  'รสฮอตชิลลี่辣味蝦餅': { en: 'Hanami Hot Chili Prawn Crackers', vi: 'Bánh phồng tôm Hanami vị cay', id: 'Kerupuk Udang Hanami Pedas', th: 'ฮานามิ รสฮอตชิลลี่', zh: 'Hanami 辣味蝦餅' },
 
-
-  // ── 調味品 Seasonings ─────────────────────────────────────────────
+  // ── 調味品 Seasonings ───────────────────────────────────────────────
   'น้ำตาล二號砂糖': { en: 'Brown Sugar', vi: 'Đường nâu', id: 'Gula Merah', th: 'น้ำตาล', zh: '二號砂糖' },
   'น้ำมันถั่วเหลือง大豆沙拉油': { en: 'Soybean Salad Oil', vi: 'Dầu đậu nành', id: 'Minyak Kedelai', th: 'น้ำมันถั่วเหลือง', zh: '大豆沙拉油' },
   'ซีอิ๊วหวานABC調味液': { en: 'ABC Sweet Soy Sauce', vi: 'Nước tương ngọt ABC', id: 'Kecap Manis ABC', th: 'ซีอิ๊วหวาน', zh: 'ABC調味液' },
@@ -351,8 +346,6 @@ export const PRODUCT_NAME_MAP = {
   'ใบมะกรูด檸檬葉': { en: 'Kaffir Lime Leaves', vi: 'Lá chanh', id: 'Daun jeruk', th: 'ใบมะกรูด', zh: '檸檬葉' },
   'ตะไคร้香茅': { en: 'Lemongrass', vi: 'Củ sả', id: 'Serai', th: 'ตะไคร้', zh: '香茅' },
 
- 
-
   // ── 酒 Alcohol ────────────────────────────────────────────────────
   'เบียร์ช้าง大象啤酒': { en: 'Chang Beer', vi: 'Bia Chang (Bia Voi Thái Lan)', id: 'Bir Chang', th: 'เบียร์ช้าง', zh: '大象啤酒' },
   'เบียร์ไต้หวัน金牌啤酒': { en: 'Taiwan Gold Medal Beer', vi: 'Bia Taiwan Beer Gold Medal', id: 'Bir Taiwan Gold Medal', th: 'เบียร์ไต้หวัน', zh: '金牌啤酒' },
@@ -368,10 +361,9 @@ export const PRODUCT_NAME_MAP = {
   'เหล้าขาว南都': { en: 'Nan Du White Liquor', vi: 'Rượu trắng Nam Đô', id: 'Arak Putih Nan Du', th: 'เหล้าขาว', zh: '南都' },
   'เหล้าเสือ紅虎': { en: 'Tiger Red Liquor', vi: 'Rượu hổ đỏ', id: 'Arak Macan Merah', th: 'เหล้าเสือ', zh: '紅虎' },
   'เบียร์ 3 กระป๋อง金牌啤酒3罐': { en: 'Taiwan Gold Medal Beer (3 Cans)', vi: 'Bia Taiwan Gold Medal (3 lon)', id: 'Bir Taiwan Gold Medal (3 Kaleng)', th: 'เบียร์ 3 กระป๋อง', zh: '金牌啤酒3罐' },
+  'เบียร์สิงห์泰國勝獅啤酒易開罐': { en: 'Singha Beer', vi: 'Bia Singha', id: 'Bir Singha', th: 'เบียร์สิงห์', zh: '泰國勝獅啤酒易開罐' },
 
-
-
-  // ── 清潔保養品 Hygiene & Beauty ───────────────────────────────────
+  // ── 清潔保養品 Hygiene & Beauty ───────────────────────────────────────
   'กันแดดผู้ชายNivea精華液': { en: 'Nivea Men Sunscreen Serum', vi: 'Tinh chất chống nắng Nivea Men', id: 'Serum Tabir Surya Nivea Men', th: 'กันแดดผู้ชาย', zh: 'Nivea精華液' },
   'ซีซีครีมCathyDollCC霜': { en: 'Cathy Doll CC Cream', vi: 'Kem CC Cathy Doll', id: 'Cathy Doll CC Cream', th: 'ซีซีครีม', zh: 'CathyDollCC霜' },
   'ซีซีครีมยกกล่องCathyDollCC霜盒': { en: 'Cathy Doll CC Cream (Box)', vi: 'Kem CC Cathy Doll (Hộp)', id: 'Cathy Doll CC Cream (Box)', th: 'ซีซีครีมยกกล่อง', zh: 'CathyDollCC霜盒' },
@@ -554,9 +546,9 @@ export const PRODUCT_NAME_MAP = {
   'สบู่I香皂10': { en: 'Imperial Leather Soap', vi: 'Xà bông Imperial Leather', id: 'Sabun Imperial Leather', th: 'สบู่ ไอ', zh: 'I香皂' },
   'สบู่I香皂11': { en: 'Imperial Leather Soap', vi: 'Xà bông Imperial Leather', id: 'Sabun Imperial Leather', th: 'สบู่ ไอ', zh: 'I香皂' },
   'โอโม่แกลลอนOMO洗衣精': { en: 'Omo Liquid Laundry Detergent (Gallon)', vi: 'Nước giặt Omo (Can)', id: 'Deterjen Cair Omo (Galon)', th: 'โอโม่แกลลอน', zh: 'OMO洗衣精' },
+  'ครีมอาบนํ้าLux沐浴乳7': { en: '', vi: '', id: '', th: '', zh: '' },
 
-
-  // ─── 冷凍食品 / FROZEN FOOD ─────────────────────────────────────────────
+  // ── 冷凍食品 / FROZEN FOOD ───────────────────────────────────────────
   'ไก่ทั้งตัว全雞': { en: 'Whole Chicken', vi: 'Gà nguyên con', id: 'Ayam Utuh', th: 'ไก่ทั้งตัว', zh: '全雞' },
   'ขาไก่雞腳': { en: 'Chicken Feet', vi: 'Chân gà', id: 'Ceker Ayam', th: 'ขาไก่', zh: '雞腳' },
   'ชุดเนื้อวัว牛肉組合': { en: 'Beef Combo Set', vi: 'Combo thịt bò', id: 'Paket Daging Sapi Set', th: 'ชุดเนื้อวัว', zh: '牛肉組合' },
@@ -588,14 +580,13 @@ export const PRODUCT_NAME_MAP = {
   'หมูยอ越南火腿': { en: 'Vietnamese Pork Sausage', vi: 'Chả lụa Việt Nam', id: 'Sosis Babi Vietnam', th: 'หมูยอ', zh: '越南火腿' },
   'หมูสด豬肉': { en: 'Frozen Raw Pork', vi: 'Thịt heo tươi đông lạnh', id: 'Daging Babi Mentah Beku', th: 'หมูสด', zh: '豬肉' },
 
-
-  // ─── 米類 / RICE ──────────────────────────────────────────────────
+  // ── 米類 / RICE ────────────────────────────────────────────────────
   'ข้าวเหนียว5กก.糯米5kg': { en: 'Sticky Rice 5kg', vi: 'Gạo nếp 5kg', id: 'Beras Ketan 5kg', th: 'ข้าวเหนียว 5 กก.', zh: '糯米5kg' },
   'ข้าวเหนียว30กก.糯米30kg': { en: 'Sticky Rice 30kg', vi: 'Gạo nếp 30kg', id: 'Beras Ketan 30kg', th: 'ข้าวเหนียว 30 กก.', zh: '糯米30kg' },
   'ข้าวหอมมะลิ5กก.香米5kg': { en: 'Jasmine Rice 5kg', vi: 'Gạo thơm 5kg', id: 'Beras Melati 5kg', th: 'ข้าวหอมมะลิ 5 กก.', zh: '香米5kg' },
   'ข้าวหอมมะลิ12กก.香米12kg': { en: 'Jasmine Rice 12kg', vi: 'Gạo thơm 12kg', id: 'Beras Melati 12kg', th: 'ข้าวหอมมะลิ 12 กก.', zh: '香米12kg' },
 
-  // ─── 其他 / OTHER & OTHERS ─────────────────────────────────────────────
+  // ── 其他 / OTHER & OTHERS ──────────────────────────────────────────
   'คลิป平口夾2': { en: 'Flat Clip', vi: 'Kẹp miệng phẳng', id: 'Klip Datar', th: 'คลิป', zh: '平口夾' },
   'คลิป平口夾1': { en: 'Flat Clip', vi: 'Kẹp miệng phẳng', id: 'Klip Datar', th: 'คลิป', zh: '平口夾' },
   '白色調胃素': { en: 'White Stomach Medicine', vi: 'Thuốc dạ dày màu trắng', id: 'Obat Lambung Putih', th: '白色調胃素', zh: '白色調胃素' },
@@ -643,7 +634,6 @@ export const PRODUCT_NAME_MAP = {
   'หม้ออลูมิเนียม鋁鍋': { en: 'Aluminum Pot', vi: 'Nồi nhôm', id: 'Panci Alumunium', th: 'หม้ออลูมิเนียม', zh: '鋁鍋' },
   'หวดนึ่งข้าว竹蒸籠三角': { en: 'Triangular Bamboo Sticky Rice Steaming Basket (Huat)', vi: 'Chõ tre hấp xôi hình nón', id: 'Kukusan Anyaman Bambu Segitiga (Huat)', th: 'หวดนึ่งข้าว', zh: '竹蒸籠三角' },
   'ลิปสติก護唇膏': { en: 'Lip Balm', vi: 'Son dưỡng môi', id: 'Pelembab Bibir', th: 'ลิปสติก', zh: '護唇膏' },
-  'ลิปสติก護唇膏1': { en: 'Lip Balm', vi: 'Son dưỡng môi', id: 'Pelembab Bibir', th: 'ลิปสติก', zh: '護唇膏' }
-
+  'ลิปสติก護唇膏1': { en: 'Lip Balm', vi: 'Son dưỡng môi', id: 'Pelembab Bibir', th: 'ลิปสติก', zh: '護唇膏' },
 
 };
