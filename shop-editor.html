@@ -612,6 +612,96 @@ input, select, button, textarea {
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 .toast-warn { background: var(--red); }
 
+/* ── AI identify ──────────────────────────────────────────────────── */
+.btn-ai-identify {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  border: 1px dashed var(--border2);
+  background: var(--surface2);
+  cursor: pointer;
+  margin-bottom: 12px;
+  text-align: left;
+}
+.btn-ai-identify:hover { background: var(--primary-glow); border-color: var(--primary); }
+.btn-ai-identify:active { transform: scale(.99); }
+.btn-ai-identify .ai-icon { font-size: 22px; flex-shrink: 0; }
+.btn-ai-identify .ai-text { min-width: 0; }
+.btn-ai-identify .ai-text strong { display: block; font-size: 14px; color: var(--text2); }
+.btn-ai-identify .ai-text small { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+.ai-field { margin-bottom: 14px; }
+.ai-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 6px;
+}
+.ai-field input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  font-size: 13px;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+.ai-field input[type="file"] {
+  width: 100%;
+  font-size: 12.5px;
+  padding: 8px;
+  border: 1px dashed var(--border2);
+  border-radius: var(--r-sm);
+  background: var(--surface2);
+}
+.ai-key-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 7px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.ai-key-row a { color: var(--primary2); font-weight: 600; text-decoration: none; }
+.ai-remember { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.ai-remember input { accent-color: var(--green); width: 14px; height: 14px; }
+
+.ai-photo-preview {
+  margin-top: 8px;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  max-width: 200px;
+}
+.ai-photo-preview img { display: block; width: 100%; height: auto; }
+
+.ai-status {
+  font-size: 13px;
+  color: var(--text2);
+  background: var(--surface2);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  margin-top: 10px;
+  line-height: 1.6;
+}
+.ai-status-error { background: var(--red-bg); color: var(--red); }
+
+.ai-result {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ai-result-divider { font-size: 12.5px; font-weight: 700; color: var(--primary2); margin-bottom: 2px; }
+.modal-btn:disabled { opacity: .45; cursor: default; }
+
 </style>
 </head>
 <body>
@@ -661,6 +751,13 @@ input, select, button, textarea {
         <button type="button" class="btn-link" id="btn-add-category">＋ 新增分類</button>
       </div>
     </div>
+    <button type="button" class="btn-ai-identify" id="btn-ai-identify">
+      <span class="ai-icon">🤖</span>
+      <span class="ai-text">
+        <strong>AI 拍照辨識新商品</strong>
+        <small>上傳照片，自動猜五語系名稱和分類</small>
+      </span>
+    </button>
     <div id="category-list"><!-- rendered by JS --></div>
   </section>
 
@@ -702,6 +799,51 @@ input, select, button, textarea {
       <input type="file" id="file-images" accept=".js,text/javascript">
     </div>
     <div id="import-status"></div>
+    <div class="modal-close-row"><button type="button" class="btn-link modal-close">關閉</button></div>
+  </div>
+</div>
+
+<!-- AI identify modal -->
+<div class="modal-overlay" id="ai-modal" hidden>
+  <div class="modal">
+    <h2>🤖 AI 辨識新商品</h2>
+    <p>上傳或拍一張商品照片，AI 會幫你猜商品名稱、分類，以及泰／英／越／印尼／中五語系翻譯。辨識結果都可以在送出前修改，不會自動蓋掉既有商品。</p>
+
+    <div class="ai-field">
+      <label for="ai-api-key">Gemini API Key</label>
+      <input type="text" id="ai-api-key" placeholder="貼上你的 Gemini API Key" autocomplete="off" spellcheck="false">
+      <div class="ai-key-row">
+        <label class="ai-remember"><input type="checkbox" id="ai-remember-key" checked>記住在這台裝置</label>
+        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">還沒有金鑰？免費申請 →</a>
+      </div>
+    </div>
+
+    <div class="ai-field">
+      <label for="ai-photo-input">商品照片</label>
+      <input type="file" id="ai-photo-input" accept="image/*" capture="environment">
+      <div class="ai-photo-preview" id="ai-photo-preview" hidden><img id="ai-photo-img" alt="商品照片預覽"></div>
+    </div>
+
+    <button type="button" class="modal-btn modal-btn-primary" id="ai-identify-btn" disabled>🔍 開始辨識</button>
+    <div class="ai-status" id="ai-status" hidden></div>
+
+    <div class="ai-result" id="ai-result" hidden>
+      <div class="ai-result-divider">✏️ 辨識結果，檢查後按下面「新增」</div>
+      <div class="p-row-cat">
+        <select id="ai-result-category" aria-label="所屬分類"></select>
+      </div>
+      <input class="p-key" id="ai-result-key" type="text" placeholder="商品名稱（需與 Firebase 完全一致）" spellcheck="false" autocomplete="off">
+      <div class="lang-grid">
+        <label class="lang-field"><span class="flag">🇹🇭</span><input id="ai-result-th" placeholder="ภาษาไทย"></label>
+        <label class="lang-field"><span class="flag">🇵🇭</span><input id="ai-result-en" placeholder="English"></label>
+        <label class="lang-field"><span class="flag">🇻🇳</span><input id="ai-result-vi" placeholder="Tiếng Việt"></label>
+        <label class="lang-field"><span class="flag">🇮🇩</span><input id="ai-result-id" placeholder="Bahasa Indonesia"></label>
+        <label class="lang-field"><span class="flag">🇹🇼</span><input id="ai-result-zh" placeholder="中文"></label>
+      </div>
+      <div class="hint">💡 key 只是 AI 照命名習慣猜的，記得核對是否跟 Firebase 裡的商品名稱一字不差。</div>
+      <button type="button" class="modal-btn modal-btn-primary" id="ai-confirm-add-btn">✅ 新增這個商品</button>
+    </div>
+
     <div class="modal-close-row"><button type="button" class="btn-link modal-close">關閉</button></div>
   </div>
 </div>
@@ -1368,6 +1510,202 @@ function showToast(msg, kind) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   AI 辨識新商品 (Google Gemini API — 免費層級)
+   ═══════════════════════════════════════════════════════════════════ */
+const AI_KEY_STORAGE_KEY = 'shopEditorGeminiApiKey';
+const AI_MODEL = 'gemini-3.5-flash';
+
+let aiPhotoBase64 = null;
+let aiPhotoMime = null;
+
+function aiLoadStoredKey() {
+  try {
+    const saved = localStorage.getItem(AI_KEY_STORAGE_KEY);
+    if (saved) {
+      const el = document.getElementById('ai-api-key');
+      if (el) el.value = saved;
+    }
+  } catch (e) {
+    // localStorage 不可用（例如在受限的預覽環境中）— 忽略，使用者可手動貼上金鑰
+  }
+}
+
+function aiPersistKey() {
+  const remember = document.getElementById('ai-remember-key')?.checked;
+  const key = document.getElementById('ai-api-key')?.value.trim() || '';
+  try {
+    if (remember && key) localStorage.setItem(AI_KEY_STORAGE_KEY, key);
+    else localStorage.removeItem(AI_KEY_STORAGE_KEY);
+  } catch (e) {
+    // 忽略：這台裝置/環境無法使用 localStorage
+  }
+}
+
+function aiUpdateIdentifyBtnState() {
+  const btn = document.getElementById('ai-identify-btn');
+  const key = document.getElementById('ai-api-key')?.value.trim();
+  if (btn) btn.disabled = !(key && aiPhotoBase64);
+}
+
+function aiSetStatus(msg, isError) {
+  const el = document.getElementById('ai-status');
+  if (!el) return;
+  if (!msg) { el.hidden = true; el.textContent = ''; return; }
+  el.hidden = false;
+  el.textContent = msg;
+  el.classList.toggle('ai-status-error', !!isError);
+}
+
+/* 把選取的照片縮小到最長邊 1280px 再轉成 JPEG base64，避免手機拍照檔案過大 */
+function aiDownscaleImage(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const scale = maxDim / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => reject(new Error('圖片無法讀取'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error('檔案無法讀取'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function aiHandlePhotoChange(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const dataUrl = await aiDownscaleImage(file, 1280, 0.85);
+    const m = /^data:(.+?);base64,(.*)$/.exec(dataUrl);
+    if (!m) throw new Error('圖片格式錯誤');
+    aiPhotoMime = m[1];
+    aiPhotoBase64 = m[2];
+    const img = document.getElementById('ai-photo-img');
+    const wrap = document.getElementById('ai-photo-preview');
+    if (img) img.src = dataUrl;
+    if (wrap) wrap.hidden = false;
+  } catch (err) {
+    console.error(err);
+    showToast('照片讀取失敗，請再試一次', 'warn');
+  } finally {
+    aiUpdateIdentifyBtnState();
+  }
+}
+
+async function aiIdentifyProduct() {
+  const apiKey = document.getElementById('ai-api-key')?.value.trim();
+  if (!apiKey || !aiPhotoBase64) return;
+  aiPersistKey();
+  document.getElementById('ai-identify-btn').disabled = true;
+  document.getElementById('ai-result').hidden = true;
+  aiSetStatus('辨識中，請稍候…');
+
+  const catList = state.categories.join(' / ');
+  const prompt = `你是台灣一間泰國、越南、印尼商品雜貨店的商品建檔助手。請辨識這張商品照片，只回答一個 JSON 物件，不要加任何說明文字或 markdown 標記，格式如下：
+{"th":"泰文商品名稱","vi":"越南文商品名稱","id":"印尼文商品名稱","en":"英文商品名稱","zh":"繁體中文商品名稱","category":"最接近的分類"}
+category 請從這些選項中選一個：${catList}
+zh 欄位請用簡短好記、可能包含品牌或規格的繁體中文商品名稱（例如「可口可樂330ml」、「泰式奶茶」）。如果照片不太清楚，也請盡量給出最合理的猜測，不要拒絕回答。`;
+
+  try {
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: prompt },
+            { inline_data: { mime_type: aiPhotoMime, data: aiPhotoBase64 } },
+          ],
+        }],
+        generationConfig: { responseMimeType: 'application/json' },
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data?.error?.message || `HTTP ${resp.status}`);
+    let text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('AI 沒有回傳內容，請再試一次');
+    text = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { throw new Error('AI 回傳的格式無法解析，請再試一次'); }
+
+    aiFillResult(parsed);
+    aiSetStatus('');
+    document.getElementById('ai-result').hidden = false;
+  } catch (err) {
+    console.error(err);
+    aiSetStatus('❌ 辨識失敗：' + (err.message || '請確認 API Key 或網路連線'), true);
+  } finally {
+    aiUpdateIdentifyBtnState();
+  }
+}
+
+function aiFillResult(parsed) {
+  const catSel = document.getElementById('ai-result-category');
+  if (catSel) {
+    catSel.innerHTML = state.categories.map(c => `<option value="${escAttr(c)}">${categoryIcon(c)} ${escHtml(c)}</option>`).join('');
+    if (parsed.category && state.categories.includes(parsed.category)) catSel.value = parsed.category;
+  }
+  const guessedKey = `${(parsed.th || '').trim()}${(parsed.zh || '').trim()}`.trim() || (parsed.en || '').trim();
+  document.getElementById('ai-result-key').value = guessedKey;
+  document.getElementById('ai-result-th').value = parsed.th || '';
+  document.getElementById('ai-result-en').value = parsed.en || '';
+  document.getElementById('ai-result-vi').value = parsed.vi || '';
+  document.getElementById('ai-result-id').value = parsed.id || '';
+  document.getElementById('ai-result-zh').value = parsed.zh || '';
+}
+
+function aiConfirmAdd() {
+  const cat = document.getElementById('ai-result-category')?.value || state.categories[0];
+  const key = document.getElementById('ai-result-key')?.value.trim() || '';
+  const p = {
+    _uid: nextUid(), key, category: cat,
+    en: document.getElementById('ai-result-en')?.value.trim() || '',
+    vi: document.getElementById('ai-result-vi')?.value.trim() || '',
+    id: document.getElementById('ai-result-id')?.value.trim() || '',
+    th: document.getElementById('ai-result-th')?.value.trim() || '',
+    zh: document.getElementById('ai-result-zh')?.value.trim() || '',
+    hasImage: false,
+  };
+  ensureCategory(cat);
+  state.products.push(p);
+  productByUid.set(p._uid, p);
+  expandedCats.add(cat);
+  markDirty();
+  renderProducts();
+  showToast('已新增商品，記得再檢查一次翻譯內容');
+  document.getElementById('ai-modal').hidden = true;
+  aiResetModal();
+  requestAnimationFrame(() => {
+    const el = document.querySelector(`.p-card[data-uid="${cssEscape(p._uid)}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+}
+
+function aiResetModal() {
+  aiPhotoBase64 = null;
+  aiPhotoMime = null;
+  const photoInput = document.getElementById('ai-photo-input');
+  if (photoInput) photoInput.value = '';
+  const preview = document.getElementById('ai-photo-preview');
+  if (preview) preview.hidden = true;
+  const result = document.getElementById('ai-result');
+  if (result) result.hidden = true;
+  aiSetStatus('');
+  aiUpdateIdentifyBtnState();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    Wire up events (called once DOM is ready)
    ═══════════════════════════════════════════════════════════════════ */
 function initApp() {
@@ -1501,6 +1839,18 @@ function initApp() {
   function closeModal(id) { document.getElementById(id).hidden = true; }
   document.getElementById('btn-export')?.addEventListener('click', () => openModal('export-modal'));
   document.getElementById('btn-import')?.addEventListener('click', () => openModal('import-modal'));
+
+  // AI identify
+  aiLoadStoredKey();
+  document.getElementById('btn-ai-identify')?.addEventListener('click', () => {
+    aiResetModal();
+    openModal('ai-modal');
+  });
+  document.getElementById('ai-api-key')?.addEventListener('input', aiUpdateIdentifyBtnState);
+  document.getElementById('ai-photo-input')?.addEventListener('change', aiHandlePhotoChange);
+  document.getElementById('ai-identify-btn')?.addEventListener('click', aiIdentifyProduct);
+  document.getElementById('ai-confirm-add-btn')?.addEventListener('click', aiConfirmAdd);
+
   document.querySelectorAll('.modal-close').forEach(b => b.addEventListener('click', () => closeModal(b.closest('.modal-overlay').id)));
   document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); }));
 
