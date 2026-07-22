@@ -1,0 +1,17 @@
+{
+  "name": "商品翻譯 & 圖片設定編輯器",
+  "short_name": "商品編輯器",
+  "description": "編輯 shop-names.js 與 shop-images.js 的獨立小工具，跟主要商店 App 互不影響。",
+  "lang": "zh-Hant",
+  "start_url": "./shop-editor.html",
+  "scope": "./shop-editor.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFF8F2",
+  "theme_color": "#C94E6E",
+  "icons": [
+    { "src": "icons/shop-editor-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/shop-editor-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/shop-editor-icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
