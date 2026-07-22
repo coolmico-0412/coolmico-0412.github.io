@@ -21,7 +21,7 @@
    下次開啟編輯器時就會自動清掉舊快取、抓新版本。
    ═══════════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1';
+const APP_VERSION = 'v2';
 const CACHE_NAME = `shop-editor-cache-${APP_VERSION}`;
 
 // App Shell：離線時仍要能開啟編輯器所需的最基本檔案

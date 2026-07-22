@@ -301,7 +301,8 @@ input, select, button, textarea {
   overflow: hidden;
   background: var(--surface);
 }
-.category-head {
+.category-head,
+.category-foot {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -310,6 +311,7 @@ input, select, button, textarea {
   background: var(--surface2);
   user-select: none;
 }
+.category-foot { border-top: 1px solid var(--border); }
 .cat-chevron {
   transition: transform .15s ease;
   color: var(--muted);
@@ -1217,10 +1219,8 @@ function productCardHTML(p) {
   </div>`;
 }
 
-function categorySectionHTML(cat, totalCount, shownCount, isOpen, cardsHtml, searching) {
+function categoryBarInnerHTML(cat, totalCount, shownCount, searching) {
   return `
-  <div class="category ${isOpen ? 'open' : ''}" data-cat="${escAttr(cat)}">
-    <div class="category-head" data-action="toggle-category">
       <span class="cat-chevron">▸</span>
       <span class="cat-icon">${categoryIcon(cat)}</span>
       <span class="cat-name">${escHtml(cat)}</span>
@@ -1230,9 +1230,21 @@ function categorySectionHTML(cat, totalCount, shownCount, isOpen, cardsHtml, sea
           ? `<button type="button" class="icon-btn" data-action="remove-category" title="移除空分類" aria-label="移除空分類">🗑️</button>`
           : `<button type="button" class="icon-btn" data-action="rename-category" title="重新命名分類" aria-label="重新命名分類">✏️</button>`}
         <button type="button" class="btn-add-product" data-action="add-product" title="在此分類新增商品">＋ 新增商品</button>
-      </span>
-    </div>
+      </span>`;
+}
+
+function categorySectionHTML(cat, totalCount, shownCount, isOpen, cardsHtml, searching) {
+  const barInner = categoryBarInnerHTML(cat, totalCount, shownCount, searching);
+  // 展開且至少有一個商品時，最後一個商品下方重複一份分類標題列（同樣可收合／新增商品／重新命名），
+  // 商品很多時不用滑回頂端操作
+  const footHtml = (isOpen && cardsHtml)
+    ? `<div class="category-foot" data-action="toggle-category">${barInner}</div>`
+    : '';
+  return `
+  <div class="category ${isOpen ? 'open' : ''}" data-cat="${escAttr(cat)}">
+    <div class="category-head" data-action="toggle-category">${barInner}</div>
     <div class="category-body">${cardsHtml || (isOpen ? `<div class="cat-empty">這個分類還沒有商品，點右上角「＋ 新增商品」開始。</div>` : '')}</div>
+    ${footHtml}
   </div>`;
 }
 
