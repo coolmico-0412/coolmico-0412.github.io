@@ -123,6 +123,7 @@ export const PRODUCT_NAME_MAP = {
   'เอ็ม150ยกลังM150箱': { en: 'M-150 Energy Drink (Case)', vi: 'Thùng nước tăng lực M-150', id: 'Minuman Energi M-150 (Karton)', th: 'เอ็ม-150 ยกลัง', zh: 'M150箱' },
   'โคคาโคล่า可口可樂330ml': { en: 'Coca-Cola330ml', vi: 'Coca-Cola330ml', id: 'Coca-Cola330ml', th: 'โคคาโคล่า330ml', zh: '可口可樂330ml' },
   'โคคาโคล่า可口可樂2L': { en: 'Coca-Cola2L', vi: 'Coca-Cola2L', id: 'Coca-Cola2L', th: 'โคคาโคล่า2L', zh: '可口可樂2L' },
+  'กระทิงแดงเอ็กซ์ตร้า紅牛能量飲料250ml': { en: 'Red Bull Extra Energy Drink 250ml', vi: 'Nước tăng lực Red Bull Extra 250ml', id: 'Red Bull Extra 250ml', th: 'กระทิงแดง เอ็กซ์ตร้า 250มล.', zh: '泰國紅牛能量飲料 Extra 250ml' },
 
   // ── 食品 Food ──────────────────────────────────────────────────────
   '美露': { en: 'Milo', vi: 'Sữa Milo', id: 'Milo', th: 'Milo', zh: '美露' },
@@ -194,6 +195,7 @@ export const PRODUCT_NAME_MAP = {
   'ข้าวเหนียว糯米飯': { en: 'Cooked Sticky Rice', vi: 'Xôi', id: 'Nasi Ketan Matang', th: 'ข้าวเหนียว', zh: '糯米飯' },
   'หมี่โกเร็งIndomie炒麵': { en: 'Indomie Mi Goreng', vi: 'Mì xào Indomie Mi Goreng', id: 'Indomie Mi Goreng', th: 'อินโดหมี่ หมี่โกเร็ง', zh: 'Indomie 營多炒麵' },
   'รสฮอตชิลลี่辣味蝦餅': { en: 'Hanami Hot Chili Prawn Crackers', vi: 'Bánh phồng tôm Hanami vị cay', id: 'Kerupuk Udang Hanami Pedas', th: 'ฮานามิ รสฮอตชิลลี่', zh: 'Hanami 辣味蝦餅' },
+  'ขนม大王餅乾3': { en: 'Dawang Biscuits', vi: 'Bánh quy Dawang', id: 'Biskuit Dawang', th: 'ขนม', zh: '大王餅乾' },
 
   // ── 調味品 Seasonings ───────────────────────────────────────────────
   'น้ำตาล二號砂糖': { en: 'Brown Sugar', vi: 'Đường nâu', id: 'Gula Merah', th: 'น้ำตาล', zh: '二號砂糖' },
@@ -345,6 +347,8 @@ export const PRODUCT_NAME_MAP = {
   'กะทิชาวเกาะ巧口牌椰漿': { en: 'Chaokoh Coconut Milk', vi: 'Nước cốt dừa Chaokoh', id: 'Santan Chaokoh', th: 'กะทิชาวเกาะ', zh: '巧口牌椰漿' },
   'ใบมะกรูด檸檬葉': { en: 'Kaffir Lime Leaves', vi: 'Lá chanh', id: 'Daun jeruk', th: 'ใบมะกรูด', zh: '檸檬葉' },
   'ตะไคร้香茅': { en: 'Lemongrass', vi: 'Củ sả', id: 'Serai', th: 'ตะไคร้', zh: '香茅' },
+  'กะทิคาร่า椰漿65ml': { en: 'Kara UHT Coconut Cream 65ml', vi: 'Nước cốt dừa Kara 65ml', id: 'Santan Kara 65ml', th: 'กะทิสำเร็จรูป Kara 65ml', zh: 'Kara 佳樂純椰漿 65ml' },
+  'พริกแห้ง辣椒干500kg': { en: 'Dried Chili500kg', vi: 'Ớt khô500kg', id: 'Cabe kering500kg', th: 'พริกแห้ง500kg', zh: '乾辣椒500kg' },
 
   // ── 酒 Alcohol ────────────────────────────────────────────────────
   'เบียร์ช้าง大象啤酒': { en: 'Chang Beer', vi: 'Bia Chang (Bia Voi Thái Lan)', id: 'Bir Chang', th: 'เบียร์ช้าง', zh: '大象啤酒' },
@@ -579,6 +583,7 @@ export const PRODUCT_NAME_MAP = {
   'หน่อไม้醃竹筍1': { en: 'Frozen Pickled Bamboo Shoots', vi: 'Măng ngâm đông lạnh', id: 'Rebung Acar Beku', th: 'หน่อไม้', zh: '醃竹筍' },
   'หมูยอ越南火腿': { en: 'Vietnamese Pork Sausage', vi: 'Chả lụa Việt Nam', id: 'Sosis Babi Vietnam', th: 'หมูยอ', zh: '越南火腿' },
   'หมูสด豬肉': { en: 'Frozen Raw Pork', vi: 'Thịt heo tươi đông lạnh', id: 'Daging Babi Mentah Beku', th: 'หมูสด', zh: '豬肉' },
+  'ไข่ไก่雞蛋': { en: 'Eggs', vi: 'Trứng gà', id: 'Telur Ayam', th: 'ไข่ไก่', zh: '雞蛋' },
 
   // ── 米類 / RICE ────────────────────────────────────────────────────
   'ข้าวเหนียว5กก.糯米5kg': { en: 'Sticky Rice 5kg', vi: 'Gạo nếp 5kg', id: 'Beras Ketan 5kg', th: 'ข้าวเหนียว 5 กก.', zh: '糯米5kg' },
