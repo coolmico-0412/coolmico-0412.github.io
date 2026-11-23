@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 
 <!-- ── PWA Core ── -->
 <link rel="manifest" href="shop-manifest.json">
@@ -28,6 +28,8 @@
 
 <title>สั่งซื้อออนไลน์ 線上訂購</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 /* ── CSS Variables ── */
@@ -58,7 +60,7 @@
   --zh:       'Noto Sans TC', sans-serif;
   --serif:    'Fraunces', serif;
   --cart-w:   340px;
-  --hdr-h:    64px;
+  --hdr-h:    calc(64px + env(safe-area-inset-top, 0px));
   --tab-h:    54px;
 }
 
@@ -70,6 +72,7 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  min-height: 100dvh;
   overscroll-behavior: none;
 }
 ::-webkit-scrollbar { width:5px; height:5px; }
@@ -92,7 +95,7 @@ button { cursor:pointer; font-family:var(--th); }
   box-shadow: var(--sh-sm);
   display: flex;
   align-items: center;
-  padding: 0 20px;
+  padding: env(safe-area-inset-top, 0px) 20px 0;
   gap: 16px;
 }
 .brand {
@@ -303,6 +306,7 @@ button { cursor:pointer; font-family:var(--th); }
   max-width: 1200px;
   margin: 0 auto;
   min-height: calc(100vh - var(--hdr-h) - var(--tab-h));
+  min-height: calc(100dvh - var(--hdr-h) - var(--tab-h));
   align-items: start;
 }
 @media(max-width:900px) {
@@ -1327,7 +1331,7 @@ body::after {
 }
 .ann-emoji { font-size: 15px; line-height: 1; }
 .ann-date  { font-size: 10px; color: var(--muted2); }
-.ann-text  { font-size: 13px; color: var(--text); line-height: 1.65; }
+.ann-text  { font-size: 13px; color: var(--text); line-height: 1.65; white-space: pre-line; }
 .ann-empty { text-align:center; color:var(--muted2); font-size:13px; padding:20px 0; }
 
 /* ── PWA: Install Banner ── */
@@ -1540,8 +1544,21 @@ body::after {
   .geo-row .field-input { grid-column:1 / -1; }
   .geo-btn { min-height:40px; }
 }
+
+/* ── a11y / 體驗補強 (v1.5.11) ── */
+button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 </style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 </head>
 <body>
 
@@ -1563,7 +1580,7 @@ body::after {
 <div class="member-drawer-overlay" id="member-overlay" onclick="handleMemberOutsideClick(event)">
   <div class="member-drawer" id="member-drawer">
     <div class="member-hd">
-      <button class="member-close-btn" onclick="closeMemberDrawer()">×</button>
+      <button class="member-close-btn" onclick="closeMemberDrawer()" type="button" data-aria-close aria-label="Close">×</button>
     </div>
     <div class="member-body">
       <!-- 聯絡客服（原本位於 Header 的獨立按鈕+下拉選單，併入抽屜並置於公告消息上方）-->
@@ -1606,7 +1623,7 @@ body::after {
     <div>
       <div class="brand-name" id="shop-name">ร้านค้าออนไลน์</div>
       <div class="brand-sub" id="brand-sub-text">คลิกสินค้าเพื่อเพิ่มลงตะกร้า</div>
-      <div class="brand-ver" id="brand-ver-text" title="v1.5.8 ‧ 會員系統完全移除（含相關 UI/JS/CSS/翻譯死程式碼），訂單改僅寫入 Firebase 供 POS 讀取＋LINE/FB 通知顧客">v1.5.8</div>
+      <div class="brand-ver" id="brand-ver-text" title="v1.5.11 ‧ 修正商品 ID 含單引號無法加入購物車、購物車持久化、Firebase 改非阻塞載入、SW 快取修正">v1.5.11</div>
     </div>
   </div>
   <div class="header-right">
@@ -1694,7 +1711,7 @@ body::after {
     <div class="drawer-handle"></div>
     <div class="drawer-hd">
       <div class="drawer-title">🛒 <span id="drawer-cart-title">ตะกร้าสินค้า</span></div>
-      <button class="drawer-close" onclick="closeDrawer()">×</button>
+      <button class="drawer-close" onclick="closeDrawer()" type="button" data-aria-close aria-label="Close">×</button>
     </div>
     <div class="drawer-body" id="drawer-cart-body">
       <!-- Cart items -->
@@ -1716,11 +1733,11 @@ body::after {
   <div class="modal-box" id="order-box">
     <div class="modal-hd">
       <div class="modal-title" id="modal-order-title">📋 ยืนยันคำสั่งซื้อ</div>
-      <button class="modal-close" onclick="closeModal('order-modal')">×</button>
+      <button class="modal-close" onclick="closeModal('order-modal')" type="button" data-aria-close aria-label="Close">×</button>
     </div>
     <div class="modal-body">
       <div class="field-group">
-        <label class="field-label" id="modal-delivery-label">📍 สถานที่จัดส่ง <span style="color:var(--primary);font-size:12px">*</span></label>
+        <label class="field-label" for="order-delivery"><span id="modal-delivery-label">📍 สถานที่จัดส่ง</span> <span style="color:var(--primary);font-size:12px" aria-hidden="true">*</span></label>
         <div class="geo-row">
           <input class="field-input" id="order-delivery" type="text" placeholder="請按「取得目前座標」" autocomplete="off" readonly
                  style="background:var(--surface2);cursor:default;color:var(--muted)">
@@ -1742,7 +1759,7 @@ body::after {
         <div class="field-hint" id="delivery-range-hint" style="margin-top:4px;line-height:1.7;display:none"></div>
       </div>
       <div class="field-group">
-        <label class="field-label" id="modal-note-label">หมายเหตุ <span style="font-weight:400;color:var(--muted2)">（ไม่บังคับ）</span></label>
+        <label class="field-label" for="order-note" id="modal-note-label">หมายเหตุ <span style="font-weight:400;color:var(--muted2)">（ไม่บังคับ）</span></label>
         <input class="field-input" id="order-note" type="text" placeholder="เช่น ไม่ใส่น้ำแข็ง">
       </div>
       <div>
@@ -1830,7 +1847,7 @@ body::after {
 </div>
 
 <!-- ── Toast ── -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script type="module">
 /* ═══════════════════════════════════════════════════════════════════
@@ -1857,18 +1874,14 @@ body::after {
    🔗 商品名稱的例外：shop-names.js 的 PRODUCT_NAME_MAP 負責商品多語系；
       getProductName(name) 會自動查表，不需要在 LANGS 加入商品名稱。
    ───────────────────────────────────────────────────────────────────
-   Firebase SDK v12 — Realtime Database only (no Firebase Auth)
-   會員系統：姓名 + 電話 → Firebase 流水號 M0001, M0002…
-             回訪者輸入編號 → 查詢 Firebase 取回資料
+   Firebase SDK v12 — Realtime Database + 匿名登入（動態載入，不阻塞首屏）
+   （會員系統已於 v1.5.8 完全移除，訪客直接選購）
    商品同步：meta diff（省流量）
    去重：同名+同價只顯示一個
 ═══════════════════════════════════════════════════════════════════ */
-import { initializeApp }
-  from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-import { getDatabase, ref, get, set }
-  from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
-import { getAuth, signInAnonymously }
-  from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+/* Firebase SDK 改為 initFirebase() 內動態 import（見下方）：
+   原本 3 個靜態 import 必須全部下載完，整個 module 才會開始執行 → 慢網路／gstatic 被擋時
+   商品格會一直空白。改成動態載入後，先用本機快取立刻渲染，Firebase 在背景接上。 */
 /* ── shop-names.js / shop-images.js 改為動態載入（在 init() 中執行）──────────
    原因：靜態 import 若任一檔案 404 / 網路錯誤，整個 <script type="module"> 會
          直接崩潰，導致 init() 永遠不被呼叫、商品格空白、頁面完全無法運作。
@@ -1904,17 +1917,35 @@ const LS = {
 
 let _db   = null;
 let _fbOK = false;
-// ★ 匿名登入 Promise（無畫面、顧客無感）：搭配資料庫規則 auth != null。
-//   不在此 await，避免延後整個模組載入；改為在真正讀寫 Firebase 前
-//   （serverGet / writeOrderToFirebase）才 await 這個 Promise。
-let _authReady = null;
-try {
-  const app = initializeApp(FIREBASE_CONFIG);
-  _db   = getDatabase(app);
-  _authReady = signInAnonymously(getAuth(app))
-    .catch(e => console.warn('[Shop] 匿名登入失敗:', e));
-  _fbOK = true;
-} catch(e) { console.warn('[Shop] Firebase init failed:', e); }
+let _fbApi = null;      // { ref, get, set } —— 動態載入完成後才有值
+let _authReady = null;  // ★ 匿名登入 Promise（無畫面、顧客無感）：搭配資料庫規則 auth != null。
+let _fbInit = null;
+const FIREBASE_SDK = 'https://www.gstatic.com/firebasejs/12.13.0';
+
+/* 動態載入 Firebase（只會執行一次；之後重複呼叫回傳同一個 Promise）。
+   serverGet() / writeOrderToFirebase() 在真正讀寫前都會先 await 它。 */
+function initFirebase() {
+  if (_fbInit) return _fbInit;
+  _fbInit = (async () => {
+    try {
+      const [appM, dbM, authM] = await Promise.all([
+        import(`${FIREBASE_SDK}/firebase-app.js`),
+        import(`${FIREBASE_SDK}/firebase-database.js`),
+        import(`${FIREBASE_SDK}/firebase-auth.js`),
+      ]);
+      const app = appM.initializeApp(FIREBASE_CONFIG);
+      _db     = dbM.getDatabase(app);
+      _fbApi  = { ref: dbM.ref, get: dbM.get, set: dbM.set };
+      _authReady = authM.signInAnonymously(authM.getAuth(app))
+        .catch(e => console.warn('[Shop] 匿名登入失敗:', e));
+      _fbOK = true;
+    } catch(e) {
+      console.warn('[Shop] Firebase init failed:', e);
+      _fbInit = null;   // 允許下次（例如下單時）再試一次
+    }
+  })();
+  return _fbInit;
+}
 
 /* ── App State ── */
 let allProducts   = [];
@@ -1929,6 +1960,19 @@ let memberOpen    = false;
 function h(v) {
   return String(v ?? '').replace(/[&<>"']/g,
     c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+/* 放進 inline onclick="fn(...)" 的「字串參數」專用：先 JSON.stringify（正確處理引號與反斜線），再做 HTML 屬性跳脫。
+   舊寫法 fn('${h(id)}') 的 &#39; 會在屬性解碼後還原成單引號 → 商品 ID 含 '（例：Lay's）時語法錯誤、無法加入購物車，
+   且理論上可被注入。 */
+function jsArg(v) { return h(JSON.stringify(String(v ?? ''))); }
+/* sessionStorage 在部分 in-app 瀏覽器（LINE / FB 內建瀏覽器）或隱私模式可能丟出 SecurityError */
+function ssGet(k)    { try { return sessionStorage.getItem(k); } catch(e) { return null; } }
+function ssSet(k, v) { try { sessionStorage.setItem(k, v); } catch(e) {} }
+function ssDel(k)    { try { sessionStorage.removeItem(k); } catch(e) {} }
+/* 依目前是否還有任何浮層開著，決定 body 是否鎖捲動（避免關掉 A 浮層時把仍開著的 B 浮層下方解鎖）*/
+function syncBodyScroll() {
+  const open = document.querySelector('.modal-overlay.open, .cart-drawer-overlay.open, .member-drawer-overlay.open, .map-overlay.open');
+  document.body.style.overflow = open ? 'hidden' : '';
 }
 function safeGetLS(key, fb) {
   try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : fb; }
@@ -1972,12 +2016,15 @@ function setFbIndicator(state) {
    提升至 module 層級：避免每次呼叫 syncProducts() 都重新建立 closure。
    ⚠️ 必須在 _db 初始化後才可呼叫（syncProducts 已有 !_fbOK 守衛）。  */
 function serverGet(path, ms = 8000) {
-  return Promise.race([
-    (async () => { if (_authReady) await _authReady; return get(ref(_db, path)); })(),
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`timeout: ${path}`)), ms)
-    )
-  ]);
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`timeout: ${path}`)), ms);
+  });
+  const read = (async () => {
+    if (_authReady) await _authReady;
+    return _fbApi.get(_fbApi.ref(_db, path));
+  })();
+  return Promise.race([read, timeout]).finally(() => clearTimeout(timer));
 }
 
 async function syncProducts() {
@@ -2004,8 +2051,16 @@ async function syncProducts() {
     const noMeta         = fbTs === null;             // meta 不存在也同步
 
     if (!forceByCount && !forceByVersion && !noMeta) {
-      console.log('[Shop] 商品已是最新，跳過同步');
-      setFbIndicator('local');
+      console.log('[Shop] 商品已是最新，跳過商品同步');
+      // 缺貨清單體積很小且可能單獨變動（不一定會更新 meta.updatedAt）→ 仍輕量更新，避免顯示已缺貨的商品
+      try {
+        const oosOnly = await serverGet(FB.OOS);
+        safeSetLS(LS.OOS, oosOnly.exists() ? (oosOnly.val() || {}) : {});
+        setFbIndicator('synced');
+      } catch(e) {
+        console.warn('[Shop] 缺貨清單更新失敗（沿用本機快取）:', e.message);
+        setFbIndicator('local');
+      }
       return;
     }
 
@@ -2075,13 +2130,19 @@ async function syncProducts() {
    ⚠️ 會員系統已完全移除：不再記錄/查詢任何顧客身份資料；
       訂單僅單向寫入 Firebase 供 POS 端讀取，顧客端另以 LINE / FB 訊息通知賣家。
 ══════════════════════════════════════════════ */
-async function writeOrderToFirebase(orderObj) {
-  if (!_fbOK) return false;
-  try {
+async function writeOrderToFirebase(orderObj, timeoutMs = 15000) {
+  const work = (async () => {
+    await initFirebase();
+    if (!_fbOK || !_db || !_fbApi) return false;
     if (_authReady) await _authReady;
-    await set(ref(_db, `${FB.ORDERS}/${orderObj.id}`), orderObj);
+    // RTDB 不接受 undefined（整筆 set 會被拒絕、訂單默默沒寫進去）→ 先 JSON 往返清掉 undefined / NaN
+    const clean = JSON.parse(JSON.stringify(orderObj));
+    await _fbApi.set(_fbApi.ref(_db, `${FB.ORDERS}/${clean.id}`), clean);
     return true;
-  } catch(e) { console.warn('[Shop] writeOrder:', e); return false; }
+  })().catch(e => { console.warn('[Shop] writeOrder:', e); return false; });
+  // 離線時 RTDB 的 set() 不會 reject 而是一直等待 → 加逾時，讓顧客能得到失敗提示
+  const timeout = new Promise(resolve => setTimeout(() => resolve(false), timeoutMs));
+  return Promise.race([work, timeout]);
 }
 
 /* ══════════════════════════════════════════════
@@ -2099,30 +2160,11 @@ function closeMemberDrawer() {
   if (!memberOpen) return;
   memberOpen = false;
   document.getElementById('member-overlay')?.classList.remove('open');
-  document.body.style.overflow = '';
+  syncBodyScroll();
 }
 function handleMemberOutsideClick(e) {
   if (e.target === document.getElementById('member-overlay')) closeMemberDrawer();
 }
-/* ── 將 Firebase 中已完成的訂單同步寫入本機資料庫 ── */
-function syncCompletedOrdersToLocal(firebaseOrders) {
-  try {
-    const completed = firebaseOrders.filter(o => o.status === 'completed');
-    if (!completed.length) return;
-    const lo = safeGetLS('pos_online_orders', []) || [];
-    const tx = safeGetLS('pos_transactions', []) || [];
-    const loIds = new Set(lo.map(o => o.id));
-    const txIds = new Set(tx.map(o => o.id));
-    let loChanged = false, txChanged = false;
-    for (const o of completed) {
-      if (!loIds.has(o.id)) { lo.push(o); loChanged = true; }
-      if (!txIds.has(o.id)) { tx.push(o); txChanged = true; }
-    }
-    if (loChanged) safeSetLS('pos_online_orders', lo);
-    if (txChanged) safeSetLS('pos_transactions', tx);
-  } catch(e) { console.warn('[Shop] syncCompletedOrdersToLocal:', e); }
-}
-
 async function renderMemberDrawer() {
   // 簡化後抽屜不再顯示會員個人資料，任何人（含訪客）皆可開啟，
   // 內容僅剩「聯絡客服」（純靜態 HTML，由 applyLang 處理文字）與「公告消息」。
@@ -2200,6 +2242,8 @@ const LANGS = {
     toastAdded:'เพิ่มแล้ว', toastCleared:'ล้างตะกร้าแล้ว',
     toastCartEmpty:'ตะกร้าว่างเปล่า！', toastOrderSent:'ส่งออเดอร์ไปยัง Firebase ✓',
     toastFail:'ส่งไม่สำเร็จ กรุณาลองใหม่',
+    toastSyncFail:'บันทึกออเดอร์ไม่สำเร็จ กรุณาส่งข้อความยืนยันทาง LINE/Facebook',
+    toastCartSynced:'อัปเดตตะกร้าตามราคา/สต็อกล่าสุดแล้ว',
     deliveryRule:'🛵 NT$1,000→3km/1วัน | NT$2,000→6km/2วัน | NT$3,000→9km/3วัน',
     deliveryRuleNote:'(เพิ่มทุก NT$1,000 ได้ +3km +1วัน)',
     deliveryYours:'📍 ออเดอร์ของคุณ NT$%t：%kkm ภายใน %d วัน',
@@ -2292,6 +2336,8 @@ const LANGS = {
     toastAdded:'Đã thêm', toastCleared:'Đã xóa giỏ hàng',
     toastCartEmpty:'Giỏ hàng đang trống！', toastOrderSent:'Đã gửi đơn hàng lên Firebase ✓',
     toastFail:'Gửi thất bại, vui lòng thử lại',
+    toastSyncFail:'Chưa lưu được đơn hàng, vui lòng gửi tin nhắn xác nhận qua LINE/Facebook',
+    toastCartSynced:'Giỏ hàng đã cập nhật theo giá/tồn kho mới nhất',
     deliveryRule:'🛵 NT$1.000→3km/1ng | NT$2.000→6km/2ng | NT$3.000→9km/3ng',
     deliveryRuleNote:'(Mỗi NT$1.000 thêm được +3km +1 ngày)',
     deliveryYours:'📍 Đơn của bạn NT$%t：%kkm trong %d ngày',
@@ -2384,6 +2430,8 @@ const LANGS = {
     toastAdded:'Ditambahkan', toastCleared:'Keranjang dikosongkan',
     toastCartEmpty:'Keranjang masih kosong！', toastOrderSent:'Pesanan dikirim ke Firebase ✓',
     toastFail:'Gagal mengirim, coba lagi',
+    toastSyncFail:'Pesanan belum tersimpan, mohon kirim pesan konfirmasi lewat LINE/Facebook',
+    toastCartSynced:'Keranjang diperbarui sesuai harga/stok terbaru',
     deliveryRule:'🛵 NT$1.000→3km/1hr | NT$2.000→6km/2hr | NT$3.000→9km/3hr',
     deliveryRuleNote:'(Setiap tambah NT$1.000 dapat +3km +1 hari)',
     deliveryYours:'📍 Pesanan Anda NT$%t：%kkm dalam %d hari',
@@ -2476,6 +2524,8 @@ const LANGS = {
     toastAdded:'Added', toastCleared:'Cart cleared',
     toastCartEmpty:'Cart is empty！', toastOrderSent:'Order sent to Firebase ✓',
     toastFail:'Failed to send, please try again',
+    toastSyncFail:'Order was not saved. Please send the confirmation message via LINE/Facebook',
+    toastCartSynced:'Cart updated to match the latest prices/stock',
     deliveryRule:'🛵 NT$1,000→3km/1day | NT$2,000→6km/2days | NT$3,000→9km/3days',
     deliveryRuleNote:'(Every NT$1,000 more = +3km +1 day)',
     deliveryYours:'📍 Your order NT$%t：%kkm within %d day(s)',
@@ -2568,6 +2618,8 @@ const LANGS = {
     toastAdded:'已加入', toastCleared:'購物車已清空',
     toastCartEmpty:'購物車是空的！', toastOrderSent:'訂單已寫入 Firebase ✓',
     toastFail:'送出失敗，請再試一次',
+    toastSyncFail:'訂單尚未成功儲存，請務必透過 LINE／Facebook 傳送確認訊息',
+    toastCartSynced:'購物車已依最新價格／庫存更新',
     deliveryRule:'🛵 NT$1,000→3km/1日 | NT$2,000→6km/2日 | NT$3,000→9km/3日',
     deliveryRuleNote:'（每增加 NT$1,000 多 3km、多 1 天）',
     deliveryYours:'📍 您的訂單 NT$%t：%kkm 以內 / %d 日內送達',
@@ -2666,9 +2718,9 @@ function detectLang() {
     // 2. 手機/瀏覽器語言
     const navLangs = navigator.languages || [navigator.language || 'th'];
     for (const nl of navLangs) {
-      const code = nl.slice(0,2).toLowerCase();
+      const code = nl.split(/[-_]/)[0].toLowerCase();
       // 瀏覽器 language code → LANGS key 對應
-      const MAP = { th:'th', vi:'vi', id:'id', ms:'id', en:'ph', zh:'tw', 'zh-tw':'tw', 'zh-hant':'tw' };
+      const MAP = { th:'th', vi:'vi', id:'id', ms:'id', en:'ph', fil:'ph', tl:'ph', zh:'tw', 'zh-tw':'tw', 'zh-hant':'tw' };
       const full = nl.toLowerCase().replace('_','-');
       if (MAP[full]) { _lang = MAP[full]; return; }
       if (MAP[code]) { _lang = MAP[code]; return; }
@@ -2754,6 +2806,7 @@ function applyLang() {
   set('pwa-install-btn',  L.pwaInstall);
   const pwaDismissBtn = document.getElementById('pwa-banner-dismiss');
   if (pwaDismissBtn) pwaDismissBtn.setAttribute('aria-label', L.pwaClose);
+  document.querySelectorAll('[data-aria-close]').forEach(el => el.setAttribute('aria-label', L.pwaClose));
 
   // manual-address-input placeholder
   setP('manual-address-input', L.placeholderDeliveryManual);
@@ -2937,7 +2990,7 @@ function loadAllProducts() {
       if (!name) return;
       if (oosMap[p.id] || p.outOfStock) return;  // 缺貨 → 跳過
       const idFallback = 'NOBC-' + name.replace(/\s+/g,'').slice(0,12) + '-' + (p.price??0);
-      raw.push({ id:p.id??idFallback,
+      raw.push({ id:String(p.id ?? idFallback),
         name, price:Number(p.price??0),
         category:normalizeCat(p.category), image:p.image??null, type:'nobc' });
     });
@@ -2987,7 +3040,7 @@ function renderProducts() {
     const qty  = (cart.find(c=>c.id===p.id)||{}).qty||0;
     const grad = CAT_GRAD[p.category||'other']||'grad-other';
     const icon = getCatIcon(p.category||'other');
-    const init = (p.name||'?')[0];
+    const init = Array.from(String(p.name||'?'))[0];   // 用 Array.from 避免 emoji / 代理對被切半
     // ── 翻譯商品名稱：只顯示當前語系名稱，不顯示原文 KEY ──
     const dName   = getProductName(p.name);
     // ── 圖片優先順序：shop-images.js 本地圖 → Firebase 圖 → 漸層色塊 ──
@@ -3000,7 +3053,7 @@ function renderProducts() {
            <div class="ph-emoji">${h(icon)}</div><div class="ph-initial">${h(init)}</div></div>`
       : `<div class="card-placeholder ${grad}">
            <div class="ph-emoji">${h(icon)}</div><div class="ph-initial">${h(init)}</div></div>`;
-    return `<div class="product-card" onclick="addToCart('${h(p.id)}')"
+    return `<div class="product-card" data-id="${h(p.id)}" onclick="addToCart(${jsArg(p.id)})"
           style="animation-delay:${Math.min(i*.04,.5)}s">
       <div class="card-img-wrap">
         ${imgHtml}
@@ -3010,7 +3063,7 @@ function renderProducts() {
         <div class="card-name">${h(dName)}</div>
         <div class="card-footer">
           <div class="card-price"><span>NT$</span> ${h(String(p.price))}</div>
-          <button class="add-btn" onclick="event.stopPropagation();addToCart('${h(p.id)}')" aria-label="เพิ่ม">＋</button>
+          <button class="add-btn" type="button" onclick="event.stopPropagation();addToCart(${jsArg(p.id)})" aria-label="${h(dName)}">＋</button>
         </div>
       </div></div>`;
   }).join('');
@@ -3025,7 +3078,7 @@ function addToCart(id) {
     if (!p) return;
     const ex = cart.find(c=>c.id===id);
     if (ex) ex.qty+=1; else cart.push({id:p.id,name:p.name,price:p.price,category:p.category,qty:1});
-    updateAllCartUI(); renderProducts();
+    updateAllCartUI(); refreshCardBadges();
     showToast(`${t('toastAdded')}：${getProductName(p.name)}`,'ok');
     const b = document.getElementById('hdr-badge');
     if (b) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
@@ -3036,16 +3089,88 @@ function changeQty(id, delta) {
   const item = cart.find(c=>c.id===id);
   if (!item) return;
   item.qty = Math.max(1, item.qty+delta);
-  updateAllCartUI(); renderProducts();
+  updateAllCartUI(); refreshCardBadges();
 }
-function removeFromCart(id) { cart=cart.filter(c=>c.id!==id); updateAllCartUI(); renderProducts(); }
+function removeFromCart(id) { cart=cart.filter(c=>c.id!==id); updateAllCartUI(); refreshCardBadges(); }
 function clearCart() {
   if (!cart.length) return;
-  cart=[]; updateAllCartUI(); renderProducts();
+  cart=[]; updateAllCartUI(); refreshCardBadges();
   showToast(t('toastCleared'));
 }
 function getTotal()    { return cart.reduce((s,i)=>s+Number(i.price||0)*Number(i.qty||0),0); }
 function getTotalQty() { return cart.reduce((s,i)=>s+Number(i.qty||0),0); }
+
+/* 只更新商品卡右上角的「已加入數量」徽章，不整格重繪。
+   原本每點一下 ＋ 都 renderProducts()：所有卡片重播 fade-up 動畫（閃爍）、<img> 全部重建。 */
+function refreshCardBadges() {
+  const grid = document.getElementById('product-grid');
+  if (!grid) return;
+  grid.querySelectorAll('.product-card[data-id]').forEach(card => {
+    const it  = cart.find(c => c.id === card.dataset.id);
+    const qty = it ? it.qty : 0;
+    let badge = card.querySelector('.in-cart-badge');
+    if (qty > 0) {
+      if (!badge) {
+        badge = document.createElement('div');
+        badge.className = 'in-cart-badge';
+        (card.querySelector('.card-img-wrap') || card).appendChild(badge);
+      }
+      badge.textContent = qty;
+    } else if (badge) {
+      badge.remove();
+    }
+  });
+}
+
+/* ── 購物車持久化 ─────────────────────────────────────────────
+   原本購物車只存在記憶體：SW 自動更新 reload、iOS 把 PWA 從背景回收、不小心下拉重整，
+   顧客選好的商品全部消失。改存 localStorage（僅存 id+數量，價格/名稱每次依最新商品資料重建，
+   避免出現過期價格），24 小時後自動失效。 */
+const CART_KEY = 'shop_cart_v1';
+const CART_TTL = 24 * 60 * 60 * 1000;
+let _lastCartJson = '';
+function saveCart() {
+  try {
+    const items = cart.map(i => ({ id: i.id, qty: i.qty }));
+    const json  = JSON.stringify(items);
+    if (json === _lastCartJson) return;
+    _lastCartJson = json;
+    if (!items.length) localStorage.removeItem(CART_KEY);
+    else localStorage.setItem(CART_KEY, JSON.stringify({ t: Date.now(), items }));
+  } catch(e) {}
+}
+function restoreCart() {
+  try {
+    const raw = safeGetLS(CART_KEY, null);
+    if (!raw || !Array.isArray(raw.items) || Date.now() - Number(raw.t || 0) > CART_TTL) {
+      try { localStorage.removeItem(CART_KEY); } catch(e) {}
+      return;
+    }
+    const byId = new Map(allProducts.map(p => [p.id, p]));
+    cart = raw.items.map(it => {
+      const p = byId.get(String(it.id));
+      const q = Math.floor(Number(it.qty));
+      return (p && q > 0) ? { id:p.id, name:p.name, price:p.price, category:p.category, qty:q } : null;
+    }).filter(Boolean);
+    _lastCartJson = '';   // 讓下一次 saveCart() 把「已剔除下架商品」的結果寫回去
+  } catch(e) { cart = []; }
+}
+/* 商品資料更新後（價格變動 / 缺貨下架 / 改名），同步購物車，避免用過期價格下單 */
+function reconcileCartWithProducts() {
+  if (!cart.length) return false;
+  const byId = new Map(allProducts.map(p => [p.id, p]));
+  let changed = false;
+  cart = cart.filter(it => {
+    const p = byId.get(it.id);
+    if (!p) { changed = true; return false; }
+    if (p.price !== it.price || p.name !== it.name || p.category !== it.category) {
+      it.price = p.price; it.name = p.name; it.category = p.category; changed = true;
+    }
+    return true;
+  });
+  if (changed) { updateAllCartUI(); refreshCardBadges(); }
+  return changed;
+}
 
 /* ── 賒帳 (Credit) helpers ── */
 function isCreditChecked() {
@@ -3096,11 +3221,11 @@ function buildCartHTML() {
   return cart.map(item=>`
     <div class="cart-item">
       <div class="ci-name">${h(getProductName(item.name))}</div>
-      <button class="ci-remove" onclick="removeFromCart('${h(item.id)}')">×</button>
+      <button class="ci-remove" type="button" onclick="removeFromCart(${jsArg(item.id)})" aria-label="${h(t('clearCart'))}">×</button>
       <div class="ci-controls">
-        <button class="qty-btn-sm" onclick="changeQty('${h(item.id)}',-1)">−</button>
+        <button class="qty-btn-sm" type="button" onclick="changeQty(${jsArg(item.id)},-1)">−</button>
         <span class="qty-num">${item.qty}</span>
-        <button class="qty-btn-sm" onclick="changeQty('${h(item.id)}',1)">＋</button>
+        <button class="qty-btn-sm" type="button" onclick="changeQty(${jsArg(item.id)},1)">＋</button>
       </div>
       <div class="ci-sub">NT$ ${item.price*item.qty}</div>
     </div>`).join('');
@@ -3139,6 +3264,7 @@ function updateAllCartUI() {
        <div class="mcb-info"><div class="mcb-count">${t('cartItems')}: ${tq}</div><div class="mcb-amt">NT$ ${total}</div></div>
        <div class="mcb-go">${t('drawerView')}</div>`
     : `<div class="mcb-empty">${t('barEmpty')}</div>`;
+  saveCart();
 }
 
 /* ══════════════════════════════════════════════
@@ -3155,8 +3281,7 @@ function closeDrawer() {
   if(!drawerOpen) return; drawerOpen=false;
   const o=document.getElementById('drawer-overlay');
   o.classList.remove('visible');
-  setTimeout(()=>{o.classList.remove('open');},300);
-  document.body.style.overflow='';
+  setTimeout(()=>{o.classList.remove('open'); syncBodyScroll();},300);
 }
 function handleDrawerOutsideClick(e) { if(e.target===document.getElementById('drawer-overlay')) closeDrawer(); }
 
@@ -3169,7 +3294,7 @@ function openModal(id) {
 function closeModal(id) {
   const o=document.getElementById(id); if(!o) return;
   o.classList.remove('visible');
-  setTimeout(()=>{o.classList.remove('open'); document.body.style.overflow='';},280);
+  setTimeout(()=>{o.classList.remove('open'); syncBodyScroll();},280);
 }
 function handleModalOutsideClick(e,id) { if(e.target===document.getElementById(id)) closeModal(id); }
 
@@ -3249,12 +3374,15 @@ const LINE_OA_ID = '@239fgqbz';
 
 // 舊版獨立客服選單按鈕（toggleContactMenu/closeContactMenu）已於會員抽屜合併時移除，
 // #contact-menu 元素不再存在於畫面中，故一併移除這兩個函式與呼叫點。
+/* 外開連結一律 noopener,noreferrer（不讓對方頁面取得 window.opener）*/
+function openExternal(url) { window.open(url, '_blank', 'noopener,noreferrer'); }
+
 function openLineInquiry() {
-  window.open(`https://line.me/R/ti/p/${LINE_OA_ID}`, '_blank');
+  openExternal(`https://line.me/R/ti/p/${LINE_OA_ID}`);
 }
 
 function openFBInquiry() {
-  window.open('https://m.me/thailasai', '_blank');
+  openExternal('https://m.me/thailasai');
 }
 
 function buildLineOrderText(orderObj) {
@@ -3280,12 +3408,16 @@ function buildLineOrderText(orderObj) {
     '🆕 線上新訂單',
     `單號：${orderObj.id}`,
     '－－－－－－－－－－',
-    `👤 姓名：${orderObj.customerName}`,
-    `📱 電話：${orderObj.customerPhone || '（未填寫）'}`,
-    `📍 地址：${orderObj.deliveryLocation}`,
   ];
+  // 會員系統已移除：訪客姓名固定為「แขก / 訪客」、電話恆為空 → 不再輸出這兩行雜訊；有實際資料才顯示
+  if (orderObj.customerName && !orderObj.isGuest) lines.push(`👤 姓名：${orderObj.customerName}`);
+  if (orderObj.customerPhone) lines.push(`📱 電話：${orderObj.customerPhone}`);
+  lines.push(`📍 地址：${orderObj.deliveryLocation}`);
+  // 有座標時附上地圖連結，員工可直接點開導航（短地址常缺門牌號碼）
+  if (Number.isFinite(orderObj.deliveryLat) && Number.isFinite(orderObj.deliveryLng)) {
+    lines.push(`🗺 https://www.google.com/maps?q=${orderObj.deliveryLat},${orderObj.deliveryLng}`);
+  }
   if (orderObj.note) lines.push(`📝 備註：${orderObj.note}`);
-  if (orderObj.memberId) lines.push(`🪪 會員編號：${orderObj.memberId}`);
   lines.push('－－－－－－－－－－');
   lines.push('🛒 商品清單：');
   orderObj.items.forEach(it => {
@@ -3312,7 +3444,7 @@ function openLineWithOrder(orderObj) {
     // 嘗試複製到剪貼簿：若裝置/瀏覽器無法自動帶入文字，客人仍可在 LINE 視窗手動貼上後送出
     try { navigator.clipboard && navigator.clipboard.writeText(text).catch(()=>{}); } catch(e) {}
     const lineUrl = `https://line.me/R/oaMessage/${LINE_OA_ID}/?${encodeURIComponent(text)}`;
-    window.open(lineUrl, '_blank');
+    openExternal(lineUrl);
   } catch(e) { console.error('[Shop] openLineWithOrder:', e); }
 }
 
@@ -3322,7 +3454,7 @@ function openFBWithOrder(orderObj) {
     // Facebook Messenger 不支援 URL 帶入文字；改為複製到剪貼簿，
     // 讓客人開啟聊天視窗後直接貼上即可送出。
     try { navigator.clipboard && navigator.clipboard.writeText(text).catch(()=>{}); } catch(e) {}
-    window.open('https://m.me/thailasai', '_blank');
+    openExternal('https://m.me/thailasai');
   } catch(e) { console.error('[Shop] openFBWithOrder:', e); }
 }
 
@@ -3362,9 +3494,6 @@ async function submitOrder() {
     : (manualAddressVal || (creditApplied ? t('pickupStore') : ''));
   const _deliveryRemark = (document.getElementById('delivery-remark')?.value || '').trim();
   const deliveryVal     = _deliveryRemark ? `${_deliveryBase}【${_deliveryRemark}】` : _deliveryBase;
-  // 記住本次地點
-  try{ localStorage.setItem('shop_last_delivery', deliveryVal); }catch(e){}
-
   const btn=document.getElementById('confirm-btn');
   // Fix: 不可用 btn.textContent 整個覆寫按鈕內容，否則會把內層
   // <span id="modal-btn-confirm-text"> 一併刪除，導致之後 getElementById
@@ -3374,7 +3503,8 @@ async function submitOrder() {
   if(btn){btn.disabled=true;} if(btnTxt){btnTxt.textContent=t('submitting');}
   try {
     const noteVal  = (document.getElementById('order-note')?.value||'').trim();
-    const now=new Date(), orderId='ONL-'+now.getTime().toString(36).toUpperCase();
+    // 時間戳 + 3 碼亂數：避免兩位顧客同一毫秒下單、set() 互相覆蓋
+    const now=new Date(), orderId='ONL-'+now.getTime().toString(36).toUpperCase()+Math.random().toString(36).slice(2,5).toUpperCase();
     const baseAmt      = getTotal();
     // creditApplied 已在外層宣告，此處直接使用
     const total        = creditApplied ? Math.round(baseAmt * 1.1) : baseAmt;
@@ -3423,13 +3553,12 @@ async function submitOrder() {
       openLineWithOrder(orderObj); // 預設 LINE
     }
 
-    // ⚠️ 不在此寫入 localStorage：
-    //    pending 訂單只存 Firebase；
-    //    僅當狀態變為 completed 時才寫入本機資料庫（由 syncCompletedOrdersToLocal 處理）
+    // ⚠️ 不在此寫入 localStorage：pending 訂單只存 Firebase，由 POS 端讀取處理。
 
     // Firebase 非同步寫入（供 POS 端讀取）
     writeOrderToFirebase(orderObj).then(ok=>{
       if(ok) showToast(t('toastOrderSent'),'ok');
+      else   showToast(t('toastSyncFail'),'err',6000);   // 先前失敗時顧客完全沒有任何提示
     });
 
     const si=document.getElementById('success-order-id');
@@ -3441,7 +3570,7 @@ async function submitOrder() {
     if (creditNoteEl)    creditNoteEl.style.display = '';
     if (creditNoteTxtEl) creditNoteTxtEl.textContent = t('creditOrderNote');
 
-    cart=[]; updateAllCartUI(); renderProducts();
+    cart=[]; updateAllCartUI(); refreshCardBadges();
     closeModal('order-modal');
     setTimeout(()=>openModal('success-modal'),300);
     try {
@@ -3473,6 +3602,8 @@ const TITLES = {
 function updatePageTitle() {
   const title = TITLES[_lang] || TITLES.th;
   document.title = title;
+  // 讓螢幕閱讀器 / 瀏覽器字型選擇 / 翻譯提示跟著目前語系
+  document.documentElement.lang = ({ th:'th', vi:'vi', id:'id', ph:'en', tw:'zh-Hant' })[_lang] || 'th';
   // 更新 PWA manifest name 動態覆蓋（部分瀏覽器支援）
   const metaAppName = document.querySelector('meta[name="application-name"]');
   if (metaAppName) metaAppName.content = title;
@@ -3496,12 +3627,12 @@ let _selectedMsgTool = 'line'; // 預設 LINE
 function getDefaultMsgTool(lang) {
   return (lang === 'th' || lang === 'tw') ? 'line' : 'fb';
 }
-function showToast(msg,type) {
+function showToast(msg,type,ms=2800) {
   try {
     const t=document.getElementById('toast'); if(!t) return;
     t.textContent=String(msg??'');
     t.className='toast show'+(type?' '+type:'');
-    clearTimeout(_tt); _tt=setTimeout(()=>{t.className='toast';},2800);
+    clearTimeout(_tt); _tt=setTimeout(()=>{t.className='toast';},ms);
   } catch(e){}
 }
 
@@ -3525,6 +3656,7 @@ async function init() {
   //            → 首次渲染一定空白，用戶看到空畫面。
   //    修正：先填好 allProducts，applyLang() 呼叫 renderProducts() 時已有資料。
   allProducts = loadAllProducts();
+  restoreCart();   // 還原上次未送出的購物車（依最新商品資料重建價格）
 
   // ⑤ 套用語言（applyLang 內含 renderTabs + renderProducts + updateAllCartUI）
   applyLang();
@@ -3541,7 +3673,7 @@ async function init() {
     import('./shop-images.js')
       .then(m => { if (m?.PRODUCT_IMAGE_SET) PRODUCT_IMAGE_SET = m.PRODUCT_IMAGE_SET; })
       .catch(e => console.warn('[Shop] shop-images.js 載入失敗（非致命）:', e)),
-  ]).then(() => renderProducts()); // 有翻譯名稱 + 本地圖後重繪一次
+  ]).then(() => { renderProducts(); updateAllCartUI(); }); // 有翻譯名稱 + 本地圖後重繪（購物車內的商品名稱也要換成翻譯）
 
   // ⑦ Firebase 背景同步商品（10 秒 timeout，失敗不影響 UI）
   syncProductsBackground();
@@ -3549,19 +3681,19 @@ async function init() {
 
 // Firebase 商品同步（背景執行，不阻塞 UI）
 async function syncProductsBackground() {
-  if (!_fbOK) { setFbIndicator('local'); return; }
+  setFbIndicator('connecting');
 
+  // 20 秒總逾時（含 Firebase SDK 動態下載 + 匿名登入 + 讀取），逾時只是不再等待，不影響畫面
   const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('timeout')), 10000)
+    setTimeout(() => reject(new Error('timeout')), 20000)
   );
 
   try {
-    setFbIndicator('connecting');
-    await Promise.race([syncProducts(), timeout]);
+    await Promise.race([ initFirebase().then(() => syncProducts()), timeout ]);
 
     // 同步成功後重新載入並比對，若有變化就重新渲染
     const fresh = loadAllProducts();
-    // Fix: 比對簽章含 id、price、category、name，避免分類或名稱改了卻不重繪
+    // 比對簽章含 id、price、category、name，避免分類或名稱改了卻不重繪
     const sig      = p => `${p.id}|${p.price}|${p.category}|${p.name}`;
     const prevIds  = allProducts.map(sig).sort().join(',');
     const freshIds = fresh.map(sig).sort().join(',');
@@ -3571,6 +3703,8 @@ async function syncProductsBackground() {
       allProducts = fresh;
       renderTabs();
       renderProducts();
+      // 價格 / 庫存變動後，同步購物車（剔除已缺貨、更新價格），避免用舊價格下單
+      if (reconcileCartWithProducts()) showToast(t('toastCartSynced'), 'ok', 4000);
     } else {
       console.log('[Shop] 商品無變化，保持現有畫面');
     }
@@ -3582,7 +3716,7 @@ async function syncProductsBackground() {
 
 window.addEventListener('storage', e => {
   if(e.key===LS.PROD || e.key===LS.NOBC) {
-    try { allProducts=loadAllProducts(); renderTabs(); renderProducts(); } catch(e){}
+    try { allProducts=loadAllProducts(); renderTabs(); renderProducts(); if (reconcileCartWithProducts()) showToast(t('toastCartSynced'),'ok',4000); } catch(e){}
   }
 });
 
@@ -3605,7 +3739,7 @@ function initPWA() {
     //   版本更新：hadController = true（v1 仍在控制）→ reload 正常觸發。
     const hadController = !!navigator.serviceWorker.controller;
 
-    navigator.serviceWorker.register('./shop-sw.js', { scope: '/shop.html' })
+    navigator.serviceWorker.register('./shop-sw.js', { scope: './shop.html', updateViaCache: 'none' })
       .then(reg => {
         console.log('[PWA] SW registered:', reg.scope);
 
@@ -3624,9 +3758,9 @@ function initPWA() {
         // ── 頁面載入時，若已有 waiting worker → 自動更新（Trigger B）──
         // ⚠️ Bug fix（已有）：sessionStorage 防護，避免 reload 後再次觸發
         if (reg.waiting && navigator.serviceWorker.controller) {
-          if (sessionStorage.getItem('sw-just-updated')) {
+          if (ssGet('sw-just-updated')) {
             // 這次 reload 是因為我們自己觸發的更新，跳過並清除旗標
-            sessionStorage.removeItem('sw-just-updated');
+            ssDel('sw-just-updated');
           } else {
             autoApplySwUpdate(reg);  // Trigger B
           }
@@ -3636,6 +3770,10 @@ function initPWA() {
         // ⚠️ Bug fix #4：若頁面載入時 SW v2 仍在 installing 狀態（Trigger B 沒抓到），
         //   且 updatefound 在監聽器加入前就發出（Trigger A 也沒抓到），
         //   v2 會永遠停在 waiting。interval 內再次檢查 reg.waiting 作為保底。
+        // 每 5 分鐘檢查一次（原本每 60 秒），並在頁面回到前景時立即檢查
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') reg.update().catch(() => {});
+        });
         setInterval(() => {
           reg.update().catch(() => {});
           // 若有 waiting worker 但雙重觸發保護旗標都未設定 → 保底觸發
@@ -3643,11 +3781,11 @@ function initPWA() {
             reg.waiting &&
             navigator.serviceWorker.controller &&
             !_swUpdatePending &&
-            !sessionStorage.getItem('sw-just-updated')
+            !ssGet('sw-just-updated')
           ) {
             autoApplySwUpdate(reg);  // Trigger C（保底）
           }
-        }, 60_000);
+        }, 300_000);
       })
       .catch(err => console.warn('[PWA] SW registration failed:', err));
 
@@ -3659,7 +3797,7 @@ function initPWA() {
       if (_swRefreshing) return;
       _swRefreshing = true;
       // 標記此次 reload 由 SW 更新引發，讓新頁面跳過 Trigger B
-      sessionStorage.setItem('sw-just-updated', '1');
+      ssSet('sw-just-updated', '1');
       location.reload();
     });
   }
@@ -3683,7 +3821,7 @@ function initPWA() {
     e.preventDefault();
     _deferredInstallPrompt = e;
     // Only show if not already installed and not dismissed this session
-    if (!sessionStorage.getItem('pwa-dismissed')) {
+    if (!ssGet('pwa-dismissed')) {
       const banner = document.getElementById('pwa-banner');
       if (banner) banner.classList.add('show');
     }
@@ -3710,6 +3848,8 @@ function initPWA() {
       新做法：一律不在此 reload，完全依賴 controllerchange handler 統一處理。      */
 function autoApplySwUpdate(reg) {
   if (_swUpdatePending) return;   // 防止 Trigger A + B + C 雙重觸發
+  // 顧客正在填寫訂單 / 選地圖時不強制重整（會中斷填寫），留待下次檢查（Trigger C）再套用
+  if (document.querySelector('.modal-overlay.open, .map-overlay.open')) return;
   _swUpdatePending = true;
 
   if (reg?.waiting) {
@@ -3740,7 +3880,7 @@ function pwaInstall() {
 function pwaDismiss() {
   const banner = document.getElementById('pwa-banner');
   if (banner) banner.classList.remove('show');
-  sessionStorage.setItem('pwa-dismissed', '1');
+  ssSet('pwa-dismissed', '1');
 }
 
 /* ══════════════════════════════════════════════
@@ -3789,6 +3929,7 @@ let _storeMarker = null;
 // 防抖：連續快速點地圖時，等最後一次點擊停止 350ms 才發 Nominatim 請求，
 // 避免每次 click 都觸發一次 HTTP request 打到 rate limit (429)。
 let _mapClickDebounceTimer = null;
+let _pinReqId = 0;   // 地圖連點時，只採用最後一次點擊的反查結果（避免慢的舊回應覆蓋新的）
 // 反查快取：相同座標（±0.0005° ≒ 55m 精度）只查一次，節省請求次數。
 // key: "lat_rounded,lng_rounded"  value: nominatim display_name string
 const _nominatimCache = new Map();
@@ -3808,9 +3949,15 @@ async function nominatimReverse(lat, lng) {
   if (_nominatimCache.has(cacheKey)) return { display_name: _nominatimCache.get(cacheKey) };
 
   const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=zh-TW`;
-  const res = await fetch(url, { headers: { 'Accept-Language': 'zh-TW,zh;q=0.9' } });
-  if (!res.ok) throw new Error('Reverse geocode error');
-  const data = await res.json();
+  // 加 8 秒逾時：Nominatim 無回應時，原本「定位中…」按鈕會永遠 disabled
+  const ctrl  = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+  let data;
+  try {
+    const res = await fetch(url, { headers: { 'Accept-Language': 'zh-TW,zh;q=0.9' }, signal: ctrl.signal });
+    if (!res.ok) throw new Error('Reverse geocode error');
+    data = await res.json();
+  } finally { clearTimeout(timer); }
   if (data?.display_name) _nominatimCache.set(cacheKey, data.display_name);
   return data;
 }
@@ -4024,17 +4171,23 @@ async function getCurrentLocation() {
   if (btn) { btn.disabled = true; btn.textContent = t('geoLocating'); }
   setGeoStatus(t('geoGetting'), 'loading');
 
-  await _doGeolocateAndCommit({
-    onStatus:     (msg, type) => setGeoStatus(msg, type),
-    onSuccess:    (_distKm) => { /* 狀態已由 onStatus 更新，無需額外操作 */ },
-    onOutOfRange: (region)  => showTooFarStatus(region),
-    onError:      (err)     => {
-      resetDeliveryCoords({ clearDisplay: true });
-      setGeoStatus(getLocationErrorMessage(err), 'err');
-    },
-  });
-
-  if (btn) { btn.disabled = false; btn.textContent = originalText; }
+  try {
+    await _doGeolocateAndCommit({
+      onStatus:     (msg, type) => setGeoStatus(msg, type),
+      onSuccess:    (_distKm) => { /* 狀態已由 onStatus 更新，無需額外操作 */ },
+      onOutOfRange: (region)  => showTooFarStatus(region),
+      onError:      (err)     => {
+        resetDeliveryCoords({ clearDisplay: true });
+        setGeoStatus(getLocationErrorMessage(err), 'err');
+      },
+    });
+  } catch(e) {
+    console.warn('[Shop] getCurrentLocation:', e);
+    setGeoStatus(t('geoErrDefault'), 'err');
+  } finally {
+    // 無論成功失敗都要還原按鈕，否則會卡在「定位中…」
+    if (btn) { btn.disabled = false; btn.textContent = originalText; }
+  }
 }
 
 /* ── 手動地址輸入模式（GPS 失敗時的降級方案） ── */
@@ -4087,12 +4240,39 @@ function geocodeAddress() {
   return getCurrentLocation();
 }
 
-function openMapPicker() {
+/* Leaflet 改為第一次開「地圖選點」才載入（約省下首屏 150KB 與一個阻塞渲染的 CSS 請求）*/
+const LEAFLET_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/';
+let _leafletPromise = null;
+function loadLeaflet() {
+  if (window.L) return Promise.resolve(window.L);
+  if (_leafletPromise) return _leafletPromise;
+  const css = new Promise((resolve, reject) => {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet'; l.href = LEAFLET_BASE + 'leaflet.min.css';
+    l.onload = resolve; l.onerror = () => reject(new Error('leaflet css'));
+    document.head.appendChild(l);
+  });
+  const js = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = LEAFLET_BASE + 'leaflet.min.js'; s.async = true;
+    s.onload = resolve; s.onerror = () => reject(new Error('leaflet js'));
+    document.head.appendChild(s);
+  });
+  _leafletPromise = Promise.all([css, js])
+    .then(() => { if (!window.L) throw new Error('L missing'); return window.L; })
+    .catch(e => { _leafletPromise = null; throw e; });   // 失敗後允許重試
+  return _leafletPromise;
+}
+
+async function openMapPicker() {
   const overlay = document.getElementById('map-overlay');
   if (!overlay) return;
   if (!window.L) {
-    setGeoStatus(t('mapNotLoaded'), 'err');
-    return;
+    const mapBtn = document.getElementById('map-pick-btn');
+    if (mapBtn) mapBtn.disabled = true;
+    try { await loadLeaflet(); }
+    catch(e) { setGeoStatus(t('mapNotLoaded'), 'err'); return; }
+    finally { if (mapBtn) mapBtn.disabled = false; }
   }
   // Fix: 記錄這次開地圖「前」的已確認座標狀態，供取消時還原（見 closeMapPicker）
   _pinSnapshotBeforeMapOpen = {
@@ -4140,6 +4320,7 @@ function openMapPicker() {
 }
 
 async function placePinAt(lat, lng) {
+  const reqId = ++_pinReqId;
   if (_pinMarker) { _mapInstance.removeLayer(_pinMarker); _pinMarker = null; }
 
   const pinIcon = L.divIcon({
@@ -4155,13 +4336,14 @@ async function placePinAt(lat, lng) {
 
   try {
     const rev = await nominatimReverse(lat, lng);
+    if (reqId !== _pinReqId) return;   // 已有更新的點擊，丟棄這個過期結果
     const displayName = rev?.display_name || '';
 
     if (displayName && !isAddressAllowed(displayName)) {
       const region = getTaiwanRegionMention(displayName);
       const regionLabel = region ? `（${region}）` : '';
       const distLabel = t('pinDistStore').replace('%d', distKm.toFixed(1));
-      if (mapInfo) mapInfo.innerHTML = `${t('pinTooFarMap').replace('%r', regionLabel)}<br>${displayName}<br><b>${distLabel}</b>`;
+      if (mapInfo) mapInfo.innerHTML = `${t('pinTooFarMap').replace('%r', regionLabel)}<br>${h(displayName)}<br><b>${distLabel}</b>`;
       _pinMarker.bindPopup(`${t('pinTooFarMap').replace('%r', '')}<br>${distLabel}`).openPopup();
       const btn = document.getElementById('map-confirm-btn');
       if (btn) btn.disabled = true;
@@ -4178,12 +4360,13 @@ async function placePinAt(lat, lng) {
 
     const shortAddr = shortAddress(displayName) || _pinAddress;
     const distLabel = t('pinDistStore').replace('%d', distKm.toFixed(1));
-    if (mapInfo) mapInfo.innerHTML = `📍 ${shortAddr}<br><b>${distLabel}</b>`;
-    _pinMarker.bindPopup(`📍 ${shortAddr}<br>${distLabel}`).openPopup();
+    if (mapInfo) mapInfo.innerHTML = `📍 ${h(shortAddr)}<br><b>${distLabel}</b>`;
+    _pinMarker.bindPopup(`📍 ${h(shortAddr)}<br>${distLabel}`).openPopup();
 
     const btn = document.getElementById('map-confirm-btn');
     if (btn) btn.disabled = false;
   } catch(e) {
+    if (reqId !== _pinReqId) return;
     _pinLat = Number(lat); _pinLng = Number(lng);
     _pinAddress = formatCoords(lat, lng);
     _pinSource = 'pin';
@@ -4212,7 +4395,7 @@ function confirmMapPin() {
 function closeMapPicker() {
   const overlay = document.getElementById('map-overlay');
   if (overlay) overlay.classList.remove('open');
-  document.body.style.overflow = '';
+  syncBodyScroll();
   // Fix: 使用者在地圖上點選但沒按「確認位置」就關閉（取消/✕）時，
   // 還原成開地圖前的已確認狀態，避免畫面仍顯示舊地址、但內部座標已被
   // 未確認的點擊覆寫、getDeliveryCoords() 回傳 null 的不一致情形。
@@ -4287,10 +4470,6 @@ document.addEventListener('input', (e) => {
     resetDeliveryCoords();
     clearGeoStatus();
   }
-  if (e.target && e.target.id === 'auth-phone') {
-    const errEl = document.getElementById('auth-register-phone-err');
-    if (errEl) errEl.style.display = 'none';
-  }
 });
 </script>
 <!-- ── Map Picker Modal ── -->
@@ -4298,7 +4477,7 @@ document.addEventListener('input', (e) => {
   <div class="map-box">
     <div class="map-hd">
       <div class="map-title" id="map-title-text">📍 點選送貨位置</div>
-      <button class="map-close" onclick="closeMapPicker()">×</button>
+      <button class="map-close" onclick="closeMapPicker()" type="button" data-aria-close aria-label="Close">×</button>
     </div>
     <div id="map-container"></div>
     <div class="map-info" id="map-info"></div>
@@ -4314,9 +4493,7 @@ document.addEventListener('input', (e) => {
   </div>
 </div>
 
-<!-- Leaflet JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-
+<!-- Leaflet（CSS + JS）改為使用者第一次開啟「地圖選點」時才動態載入，見 loadLeaflet() -->
 </body>
 </html>
 
