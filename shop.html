@@ -2777,10 +2777,8 @@ function applyLang() {
     const tier  = Math.max(1, Math.floor(total / 1000));
     const km    = tier * 3;
     const days  = tier;
-    const yourMsg = total >= 1000
-      ? t('deliveryYours').replace('%t',total).replace('%k',km).replace('%d',days)
-      : `⚠ ${t('minOrder')}`;
-    const yourColor = total >= 1000 ? 'var(--green)' : 'var(--primary)';
+    const yourMsg = t('deliveryYours').replace('%t',total).replace('%k',km).replace('%d',days);
+    const yourColor = 'var(--green)';
     hintEl.innerHTML = `${t('deliveryRule')}<br>
       <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
       <b style="color:${yourColor}">${yourMsg}</b>`;
@@ -3067,8 +3065,8 @@ function onCreditCheckChange() {
   const tel = document.getElementById('modal-order-total');
   if (tel) {
     tel.textContent = `NT$ ${total}`;
-    // 賒帳勾選時豁免最低消費限制，不顯示紅色
-    tel.style.color = (checked || baseTotal >= 1000) ? 'var(--primary)' : 'var(--red)';
+    // 已取消最低消費限制，總額一律顯示主色
+    tel.style.color = 'var(--primary)';
   }
   // 勾選且未滿 1000 元 → 顯示「現場取貨」提示（不自動消失）
   const msg = document.getElementById('credit-under-limit-msg');
@@ -3190,17 +3188,15 @@ function openOrderModal() {
   const errEl = document.getElementById('modal-delivery-err');
   if(errEl) errEl.style.display = 'none';
 
-  // 動態送貨範圍說明（金額不足時顯示最低消費提醒）
+  // 動態送貨範圍說明
   const hintEl = document.getElementById('delivery-range-hint');
   if(hintEl) {
     hintEl.style.display = '';
     const tier = Math.max(1, Math.floor(total / 1000));
     const km   = tier * 3;
     const days = tier;
-    const yourMsg = total >= 1000
-      ? t('deliveryYours').replace('%t',total).replace('%k',km).replace('%d',days)
-      : `⚠ ${t('minOrder')}`;
-    const yourColor = total >= 1000 ? 'var(--green)' : 'var(--primary)';
+    const yourMsg = t('deliveryYours').replace('%t',total).replace('%k',km).replace('%d',days);
+    const yourColor = 'var(--green)';
     hintEl.innerHTML = `${t('deliveryRule')}<br>
       <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
       <b style="color:${yourColor}">${yourMsg}</b>`;
@@ -3232,7 +3228,7 @@ function openOrderModal() {
   const tel=document.getElementById('modal-order-total');
   if(tel) {
     tel.textContent=`NT$ ${total}`;
-    tel.style.color = total >= 1000 ? 'var(--primary)' : 'var(--red)';
+    tel.style.color = 'var(--primary)';
   }
   openModal('order-modal');
 
@@ -3336,13 +3332,7 @@ function openFBWithOrder(orderObj) {
 async function submitOrder() {
   if(!cart.length) return;
 
-  // 最低 1000 元在確認送出時攔截（賒帳勾選時豁免）
-  const baseTotal = getTotal();
-  if(baseTotal < 1000 && !isCreditChecked()) {
-    const need = 1000 - baseTotal;
-    showToast(`${t('minOrder')} — ${t('minOrderShort').replace('%n', need)}`, 'err');
-    return;
-  }
+  // 已取消最低消費限制：不限金額皆可送出訂單
 
   // 送貨地點驗證：優先使用 GPS/地圖座標；若無座標，允許手動填寫的文字地址作降級
   // 賒帳勾選時視為現場取貨，豁免地址必填限制
@@ -3389,7 +3379,8 @@ async function submitOrder() {
     // creditApplied 已在外層宣告，此處直接使用
     const total        = creditApplied ? Math.round(baseAmt * 1.1) : baseAmt;
 
-    const tier = Math.floor(baseAmt / 1000);
+    // 無最低消費：未滿 1000 元也至少算第 1 階（3km / 1 天），避免 maxKm = 0 擋掉所有外送
+    const tier = Math.max(1, Math.floor(baseAmt / 1000));
     const coords = deliveryCoordsForSubmit;
     const distKm = coords ? calcDistKm(STORE.lat, STORE.lng, coords.lat, coords.lng) : null;
     const maxKm  = tier * 3;
@@ -3949,13 +3940,6 @@ function updateDeliveryHintWithDist(distKm) {
   const hintEl  = document.getElementById('delivery-range-hint');
   if (!hintEl) return;
   hintEl.style.display = '';
-
-  if (total < 1000) {
-    hintEl.innerHTML = `${t('deliveryRule')}<br>
-      <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
-      <b style="color:var(--primary)">⚠ ${t('minOrder')}</b>`;
-    return;
-  }
 
   if (distKm === Number.POSITIVE_INFINITY) {
     hintEl.innerHTML = `${t('deliveryRule')}<br>
