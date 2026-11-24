@@ -1737,6 +1737,8 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
     </div>
     <div class="modal-body">
       <div class="field-group">
+        <!-- 送貨地點輸入區：未滿 NT$1,000 僅能到店領貨時由 updatePickupMode() 整塊隱藏 -->
+        <div id="delivery-inputs">
         <label class="field-label" for="order-delivery"><span id="modal-delivery-label">📍 สถานที่จัดส่ง</span> <span style="color:var(--primary);font-size:12px" aria-hidden="true">*</span></label>
         <div class="geo-row">
           <input class="field-input" id="order-delivery" type="text" placeholder="請按「取得目前座標」" autocomplete="off" readonly
@@ -1756,6 +1758,9 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
                placeholder="備註收貨地點，例如：3樓、門口停車場旁"
                style="margin-top:7px;font-size:13px">
         <div class="field-hint" id="modal-delivery-err" style="color:var(--primary);display:none">กรุณากรอกสถานที่จัดส่ง</div>
+        </div>
+        <!-- ⚠️ 未滿 1000 元僅能到店領貨說明；文字由 updatePickupMode() 透過 t('under1000Pickup') 動態填入，請勿硬編碼 -->
+        <div id="under1000-pickup-msg" style="display:none;color:#d97706;font-size:13px;font-weight:600;padding:8px 10px;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-radius:8px;text-align:center"></div>
         <div class="field-hint" id="delivery-range-hint" style="margin-top:4px;line-height:1.7;display:none"></div>
       </div>
       <div class="field-group">
@@ -1781,9 +1786,6 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
             <span class="credit-surcharge" id="credit-surcharge-text">總金額增加 10%</span>
           </span>
         </label>
-        <div id="credit-under-limit-msg" style="display:none;color:#d97706;font-size:12px;font-weight:600;padding:6px 10px;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-radius:8px;margin-top:4px;text-align:center">
-          <!-- ⚠️ 此文字由 applyLang() 透過 t('creditUnderLimit') 動態填入，請勿在此硬編碼 -->
-        </div>
         <!-- 訊息工具選擇（固定顯示，無論賒帳與否均可選擇）-->
         <div class="credit-msg-tools" id="credit-msg-tools">
           <div class="credit-msg-tools-label" id="credit-msg-tools-label">📲 選擇傳送確認訊息的工具</div>
@@ -2245,7 +2247,7 @@ const LANGS = {
     toastSyncFail:'บันทึกออเดอร์ไม่สำเร็จ กรุณาส่งข้อความยืนยันทาง LINE/Facebook',
     toastCartSynced:'อัปเดตตะกร้าตามราคา/สต็อกล่าสุดแล้ว',
     deliveryRule:'🛵 NT$1,000→3km/1วัน | NT$2,000→6km/2วัน | NT$3,000→9km/3วัน',
-    deliveryRuleNote:'(เพิ่มทุก NT$1,000 ได้ +3km +1วัน)',
+    deliveryRuleNote:'(ทุก NT$1,000 เพิ่ม +3km +1วัน เตรียมสินค้า สูงสุด 7 วัน/21km)',
     deliveryYours:'📍 ออเดอร์ของคุณ NT$%t：%kkm ภายใน %d วัน',
     clearCart:'ล้างตะกร้า',
     cats:{ frozen:'อาหารแช่แข็ง', seasoning:'เครื่องปรุง', drink:'เครื่องดื่ม',
@@ -2301,7 +2303,7 @@ const LANGS = {
     // ── 賒帳（信用）勾選區塊 ── ⚠️ 新增 key 時請同步更新 vi / id / ph / tw
     creditLbl:'สมัครเครดิตสำหรับออเดอร์นี้',
     creditSurcharge:'ยอดรวมเพิ่มขึ้น 10%',
-    creditUnderLimit:'⚠ ต่ำกว่า NT$1,000 รับสินค้าที่ร้านเท่านั้น',
+    under1000Pickup:'⚠ ออเดอร์ต่ำกว่า NT$1,000 รับสินค้าที่ร้านเท่านั้น',
     pickupStore:'รับสินค้าที่ร้าน',
     creditMsgToolLabel:'📲 เลือกช่องทางแจ้งการสั่งซื้อ',
     creditMsgLine:'LINE',
@@ -2339,7 +2341,7 @@ const LANGS = {
     toastSyncFail:'Chưa lưu được đơn hàng, vui lòng gửi tin nhắn xác nhận qua LINE/Facebook',
     toastCartSynced:'Giỏ hàng đã cập nhật theo giá/tồn kho mới nhất',
     deliveryRule:'🛵 NT$1.000→3km/1ng | NT$2.000→6km/2ng | NT$3.000→9km/3ng',
-    deliveryRuleNote:'(Mỗi NT$1.000 thêm được +3km +1 ngày)',
+    deliveryRuleNote:'(Mỗi NT$1.000 thêm +3km +1 ngày chuẩn bị hàng, tối đa 7 ngày/21km)',
     deliveryYours:'📍 Đơn của bạn NT$%t：%kkm trong %d ngày',
     clearCart:'Xóa giỏ',
     cats:{ frozen:'Thực phẩm đông lạnh', seasoning:'Gia vị', drink:'Đồ uống',
@@ -2395,7 +2397,7 @@ const LANGS = {
     // ── 賒帳（信用）勾選區塊 ──
     creditLbl:'Đăng ký trả chậm cho đơn này',
     creditSurcharge:'Tổng cộng tăng thêm 10%',
-    creditUnderLimit:'⚠ Dưới NT$1.000 chỉ nhận hàng tại cửa hàng',
+    under1000Pickup:'⚠ Đơn hàng dưới NT$1.000 chỉ nhận hàng tại cửa hàng',
     pickupStore:'Nhận hàng tại cửa hàng',
     creditMsgToolLabel:'📲 Chọn kênh nhắn tin xác nhận',
     creditMsgLine:'LINE',
@@ -2433,7 +2435,7 @@ const LANGS = {
     toastSyncFail:'Pesanan belum tersimpan, mohon kirim pesan konfirmasi lewat LINE/Facebook',
     toastCartSynced:'Keranjang diperbarui sesuai harga/stok terbaru',
     deliveryRule:'🛵 NT$1.000→3km/1hr | NT$2.000→6km/2hr | NT$3.000→9km/3hr',
-    deliveryRuleNote:'(Setiap tambah NT$1.000 dapat +3km +1 hari)',
+    deliveryRuleNote:'(Setiap tambah NT$1.000 dapat +3km +1 hari persiapan, maksimal 7 hari/21km)',
     deliveryYours:'📍 Pesanan Anda NT$%t：%kkm dalam %d hari',
     clearCart:'Kosongkan',
     cats:{ frozen:'Makanan Beku', seasoning:'Bumbu', drink:'Minuman',
@@ -2489,7 +2491,7 @@ const LANGS = {
     // ── 賒帳（信用）勾選區塊 ──
     creditLbl:'Ajukan pembayaran kredit untuk pesanan ini',
     creditSurcharge:'Total meningkat 10%',
-    creditUnderLimit:'⚠ Di bawah NT$1.000 hanya bisa ambil di toko',
+    under1000Pickup:'⚠ Pesanan di bawah NT$1.000 hanya bisa diambil di toko',
     pickupStore:'Ambil di toko',
     creditMsgToolLabel:'📲 Pilih saluran konfirmasi',
     creditMsgLine:'LINE',
@@ -2527,7 +2529,7 @@ const LANGS = {
     toastSyncFail:'Order was not saved. Please send the confirmation message via LINE/Facebook',
     toastCartSynced:'Cart updated to match the latest prices/stock',
     deliveryRule:'🛵 NT$1,000→3km/1day | NT$2,000→6km/2days | NT$3,000→9km/3days',
-    deliveryRuleNote:'(Every NT$1,000 more = +3km +1 day)',
+    deliveryRuleNote:'(Every NT$1,000 more = +3km +1 prep day, up to 7 days / 21km)',
     deliveryYours:'📍 Your order NT$%t：%kkm within %d day(s)',
     clearCart:'Clear Cart',
     cats:{ frozen:'Frozen Food', seasoning:'Seasonings', drink:'Beverages',
@@ -2583,7 +2585,7 @@ const LANGS = {
     // ── Credit checkbox block ──
     creditLbl:'Apply credit payment for this order',
     creditSurcharge:'Total increases by 10%',
-    creditUnderLimit:'⚠ Orders under NT$1,000 are pickup only',
+    under1000Pickup:'⚠ Orders under NT$1,000 are available for store pickup only',
     pickupStore:'Pickup at store',
     creditMsgToolLabel:'📲 Choose your messaging channel',
     creditMsgLine:'LINE',
@@ -2621,7 +2623,7 @@ const LANGS = {
     toastSyncFail:'訂單尚未成功儲存，請務必透過 LINE／Facebook 傳送確認訊息',
     toastCartSynced:'購物車已依最新價格／庫存更新',
     deliveryRule:'🛵 NT$1,000→3km/1日 | NT$2,000→6km/2日 | NT$3,000→9km/3日',
-    deliveryRuleNote:'（每增加 NT$1,000 多 3km、多 1 天）',
+    deliveryRuleNote:'（每增加 NT$1,000 多 3km、多 1 日備貨，最多 7 日 / 21km）',
     deliveryYours:'📍 您的訂單 NT$%t：%kkm 以內 / %d 日內送達',
     clearCart:'清空購物車',
     cats:{ frozen:'冷凍食品', seasoning:'調味品', drink:'飲料',
@@ -2677,7 +2679,7 @@ const LANGS = {
     // ── 賒帳勾選區塊 ──
     creditLbl:'申請本筆帳款賒帳',
     creditSurcharge:'總金額增加 10%',
-    creditUnderLimit:'⚠ 未滿 NT$1,000 僅允許現場取貨',
+    under1000Pickup:'⚠ 未滿 NT$1,000 僅能到店領貨',
     pickupStore:'現場取貨',
     creditMsgToolLabel:'📲 選擇傳送確認訊息的工具',
     creditMsgLine:'LINE',
@@ -2813,11 +2815,10 @@ function applyLang() {
 
   // ── 賒帳（信用）勾選區塊 ──────────────────────────────────────────
   // ⚠️ 這些文字先前被硬編碼為中文，現已改為透過 i18n 動態填入。
-  //    未來若修改賒帳相關文字，請在 LANGS 的 creditLbl / creditSurcharge /
-  //    creditUnderLimit 等 key 中更新所有 5 種語言，勿直接在 HTML 或 JS 中硬編碼。
+  //    未來若修改賒帳相關文字，請在 LANGS 的 creditLbl / creditSurcharge
+  //    等 key 中更新所有 5 種語言，勿直接在 HTML 或 JS 中硬編碼。
   set('credit-lbl-text',       L.creditLbl);
   set('credit-surcharge-text', L.creditSurcharge);
-  set('credit-under-limit-msg', L.creditUnderLimit);
   // 訊息工具選擇器
   set('credit-msg-tools-label', L.creditMsgToolLabel);
   set('credit-msg-line-text',   L.creditMsgLine);
@@ -2826,15 +2827,8 @@ function applyLang() {
   // Update delivery range hint if order modal is open
   const hintEl = document.getElementById('delivery-range-hint');
   if(hintEl && hintEl.style.display !== 'none') {
-    const total = getTotal();
-    const tier  = Math.max(1, Math.floor(total / 1000));
-    const km    = tier * 3;
-    const days  = tier;
-    const yourMsg = t('deliveryYours').replace('%t',total).replace('%k',km).replace('%d',days);
-    const yourColor = 'var(--green)';
-    hintEl.innerHTML = `${t('deliveryRule')}<br>
-      <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
-      <b style="color:${yourColor}">${yourMsg}</b>`;
+    renderDeliveryHint();
+    updatePickupMode();
   }
 
   // Update page title + PWA meta to match language
@@ -3181,6 +3175,68 @@ function getFinalTotal() {
   const base = getTotal();
   return isCreditChecked() ? Math.round(base * 1.1) : base;
 }
+/* ══════════════════════════════════════════════
+   配送規則（單一來源，請勿在其他地方再寫死 1000 / 3）
+   · 未滿 NT$1,000          → 僅能到店領貨（不外送、不需填地址）
+   · 每滿 NT$1,000          → 可送距離 +3km、備貨 +1 日
+   · 最多 7 階              → 21km / 7 日（超過 NT$7,000 仍以 21km / 7 日計）
+   ⚠️ 以「賒帳加成前」的商品小計 getTotal() 判斷，不含 10% 賒帳手續費
+   ⚠️ 修改規則時請同步更新 LANGS 的 deliveryRule / deliveryRuleNote / under1000Pickup
+══════════════════════════════════════════════ */
+const DELIVERY_MIN_AMOUNT  = 1000;
+const DELIVERY_KM_PER_TIER = 3;
+const DELIVERY_MAX_TIER    = 7;
+function getDeliveryTier(amount) {
+  return Math.min(DELIVERY_MAX_TIER, Math.floor(amount / DELIVERY_MIN_AMOUNT)); // 0 = 僅能到店領貨
+}
+function isPickupOnly(amount) { return amount < DELIVERY_MIN_AMOUNT; }
+
+/* 配送範圍說明（規則 + 本單可送距離 / 備貨日）
+   distKm：null = 尚未定位；Infinity = 距離過遠；數字 = 實際距離 */
+function renderDeliveryHint(distKm = null) {
+  const hintEl = document.getElementById('delivery-range-hint');
+  if (!hintEl) return;
+  hintEl.style.display = '';
+  const total = getTotal();
+  const tier  = getDeliveryTier(total);
+  const rule  = `${t('deliveryRule')}<br>
+      <span style="opacity:.8">${t('deliveryRuleNote')}</span>`;
+
+  // 未滿 1000：只顯示規則；「僅能到店領貨」由 #under1000-pickup-msg 說明，不顯示可送距離
+  if (tier === 0) { hintEl.innerHTML = rule; return; }
+
+  const maxKm = tier * DELIVERY_KM_PER_TIER;
+  const days  = tier;
+  if (distKm === Number.POSITIVE_INFINITY) {
+    hintEl.innerHTML = `${rule}<br>
+      <b style="color:var(--red)">⚠ ${t('geoTooFar').replace('%r', '')}</b>`;
+    return;
+  }
+  const hasDist    = typeof distKm === 'number' && isFinite(distKm);
+  const distStr    = hasDist ? t('geoDist').replace('%d', distKm.toFixed(1)) : '';
+  const canDeliver = !hasDist || distKm <= maxKm;
+  const yourMsg    = t('deliveryYours').replace('%t', total).replace('%k', maxKm).replace('%d', days);
+  hintEl.innerHTML = `${rule}<br>
+    <b style="color:${canDeliver ? 'var(--green)' : 'var(--red)'}">
+      ${canDeliver
+        ? yourMsg + distStr
+        : t('geoOutOfRange').replace('%d', distKm.toFixed(1)).replace('%k', maxKm)}
+    </b>`;
+}
+
+/* 未滿 1000 元 → 到店領貨模式：隱藏送貨地點輸入區、顯示「僅能到店領貨」說明
+   （不論有無勾選賒帳，只看商品小計）。回傳是否為到店領貨。 */
+function updatePickupMode() {
+  const pickup = isPickupOnly(getTotal());
+  const inputs = document.getElementById('delivery-inputs');
+  if (inputs) inputs.style.display = pickup ? 'none' : '';
+  const el = document.getElementById('under1000-pickup-msg');
+  if (el) {
+    if (pickup) { el.textContent = t('under1000Pickup'); el.style.display = ''; }
+    else        { el.style.display = 'none'; }
+  }
+  return pickup;
+}
 function onCreditCheckChange() {
   const baseTotal = getTotal();
   const checked   = isCreditChecked();
@@ -3192,16 +3248,6 @@ function onCreditCheckChange() {
     tel.textContent = `NT$ ${total}`;
     // 已取消最低消費限制，總額一律顯示主色
     tel.style.color = 'var(--primary)';
-  }
-  // 勾選且未滿 1000 元 → 顯示「現場取貨」提示（不自動消失）
-  const msg = document.getElementById('credit-under-limit-msg');
-  if (msg) {
-    clearTimeout(_creditMsgTimer);
-    if (checked && baseTotal < 1000) {
-      msg.style.display = '';
-    } else {
-      msg.style.display = 'none';
-    }
   }
 }
 
@@ -3313,19 +3359,9 @@ function openOrderModal() {
   const errEl = document.getElementById('modal-delivery-err');
   if(errEl) errEl.style.display = 'none';
 
-  // 動態送貨範圍說明
-  const hintEl = document.getElementById('delivery-range-hint');
-  if(hintEl) {
-    hintEl.style.display = '';
-    const tier = Math.max(1, Math.floor(total / 1000));
-    const km   = tier * 3;
-    const days = tier;
-    const yourMsg = t('deliveryYours').replace('%t',total).replace('%k',km).replace('%d',days);
-    const yourColor = 'var(--green)';
-    hintEl.innerHTML = `${t('deliveryRule')}<br>
-      <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
-      <b style="color:${yourColor}">${yourMsg}</b>`;
-  }
+  // 動態送貨範圍說明；未滿 1000 元 → 到店領貨模式（隱藏地址欄位、顯示說明）
+  renderDeliveryHint();
+  const pickupOnly = updatePickupMode();
 
   // Fill order table
   const tb=document.getElementById('modal-order-body');
@@ -3342,10 +3378,6 @@ function openOrderModal() {
   if (creditCb) creditCb.checked = false;
   const creditWrap = document.getElementById('credit-row-wrap');
   if (creditWrap) creditWrap.classList.remove('active');
-  // 重置未滿千元提示
-  clearTimeout(_creditMsgTimer);
-  const creditMsg = document.getElementById('credit-under-limit-msg');
-  if (creditMsg) creditMsg.style.display = 'none';
   // 重置訊息工具選擇器（依語言預設：泰文/中文 → LINE；英文/越南文/印尼文 → Facebook）
   _selectedMsgTool = getDefaultMsgTool(_lang);
   selectMsgTool(_selectedMsgTool);
@@ -3358,7 +3390,8 @@ function openOrderModal() {
   openModal('order-modal');
 
   // 開啟後自動靜默定位（delay 讓 Modal 動畫先完成再開始 GPS 請求）
-  if (!getDeliveryCoords()) {
+  // 到店領貨（未滿 1000 元）不需要地址，也就不必向使用者要定位權限
+  if (!pickupOnly && !getDeliveryCoords()) {
     setTimeout(() => autoDetectLocation(), 420);
   }
 }
@@ -3412,7 +3445,11 @@ function buildLineOrderText(orderObj) {
   // 會員系統已移除：訪客姓名固定為「แขก / 訪客」、電話恆為空 → 不再輸出這兩行雜訊；有實際資料才顯示
   if (orderObj.customerName && !orderObj.isGuest) lines.push(`👤 姓名：${orderObj.customerName}`);
   if (orderObj.customerPhone) lines.push(`📱 電話：${orderObj.customerPhone}`);
-  lines.push(`📍 地址：${orderObj.deliveryLocation}`);
+  if (orderObj.pickupOnly) {
+    lines.push(`🏪 取貨方式：到店領貨（未滿 NT$${DELIVERY_MIN_AMOUNT.toLocaleString('en-US')}）`);
+  } else {
+    lines.push(`📍 地址：${orderObj.deliveryLocation}`);
+  }
   // 有座標時附上地圖連結，員工可直接點開導航（短地址常缺門牌號碼）
   if (Number.isFinite(orderObj.deliveryLat) && Number.isFinite(orderObj.deliveryLng)) {
     lines.push(`🗺 https://www.google.com/maps?q=${orderObj.deliveryLat},${orderObj.deliveryLng}`);
@@ -3469,9 +3506,12 @@ async function submitOrder() {
   // 送貨地點驗證：優先使用 GPS/地圖座標；若無座標，允許手動填寫的文字地址作降級
   // 賒帳勾選時視為現場取貨，豁免地址必填限制
   const creditApplied = isCreditChecked();
-  const deliveryCoordsForSubmit = getDeliveryCoords();
-  const manualAddressVal = (document.getElementById('manual-address-input')?.value || '').trim();
-  if (!creditApplied && !deliveryCoordsForSubmit && !manualAddressVal) {
+  // 未滿 1000 元僅能到店領貨：不需要送貨地址，也不採用先前可能殘留的座標 / 手動地址
+  const pickupOnly      = isPickupOnly(getTotal());
+  const noAddressNeeded = creditApplied || pickupOnly;
+  const deliveryCoordsForSubmit = pickupOnly ? null : getDeliveryCoords();
+  const manualAddressVal = pickupOnly ? '' : (document.getElementById('manual-address-input')?.value || '').trim();
+  if (!noAddressNeeded && !deliveryCoordsForSubmit && !manualAddressVal) {
     const errEl = document.getElementById('modal-delivery-err');
     if(errEl) errEl.style.display = '';
     setGeoStatus(t('geoNoCoords'), 'err');
@@ -3482,7 +3522,7 @@ async function submitOrder() {
   // Fix: 手動輸入地址沒有座標可算距離，但仍要檔掉「明顯超出配送範圍的縣市」，
   // 否則 GPS / 地圖選點都擋了，使用者只要手動打字就能完全跳過配送範圍限制。
   // isKnownTaiwanRegionTooFar() 原本就是為此設計的檢查，但先前沒有被呼叫到。
-  if (!creditApplied && !deliveryCoordsForSubmit && manualAddressVal && isKnownTaiwanRegionTooFar(manualAddressVal)) {
+  if (!noAddressNeeded && !deliveryCoordsForSubmit && manualAddressVal && isKnownTaiwanRegionTooFar(manualAddressVal)) {
     showTooFarStatus(getTaiwanRegionMention(manualAddressVal));
     document.getElementById('manual-address-input')?.focus();
     showToast(t('geoTooFar').replace('%r', ''), 'err');
@@ -3490,9 +3530,9 @@ async function submitOrder() {
   }
   const _deliveryBase = deliveryCoordsForSubmit
     ? (document.getElementById('order-delivery')?.value || deliveryCoordsForSubmit.address || `${deliveryCoordsForSubmit.lat}, ${deliveryCoordsForSubmit.lng}`).trim()
-    // ⚠️ 賒帳勾選時視為現場取貨，使用 t('pickupStore') 取得多語系文字，禁止硬編碼
-    : (manualAddressVal || (creditApplied ? t('pickupStore') : ''));
-  const _deliveryRemark = (document.getElementById('delivery-remark')?.value || '').trim();
+    // ⚠️ 賒帳勾選或未滿 1000 元時視為現場取貨，使用 t('pickupStore') 取得多語系文字，禁止硬編碼
+    : (manualAddressVal || (noAddressNeeded ? t('pickupStore') : ''));
+  const _deliveryRemark = pickupOnly ? '' : (document.getElementById('delivery-remark')?.value || '').trim();
   const deliveryVal     = _deliveryRemark ? `${_deliveryBase}【${_deliveryRemark}】` : _deliveryBase;
   const btn=document.getElementById('confirm-btn');
   // Fix: 不可用 btn.textContent 整個覆寫按鈕內容，否則會把內層
@@ -3509,11 +3549,11 @@ async function submitOrder() {
     // creditApplied 已在外層宣告，此處直接使用
     const total        = creditApplied ? Math.round(baseAmt * 1.1) : baseAmt;
 
-    // 無最低消費：未滿 1000 元也至少算第 1 階（3km / 1 天），避免 maxKm = 0 擋掉所有外送
-    const tier = Math.max(1, Math.floor(baseAmt / 1000));
+    // 每滿 1000 元 +3km / +1 日，最多 7 階（21km / 7 日）；未滿 1000 元 tier = 0 → 到店領貨（上方已清掉座標，不驗證距離）
+    const tier = getDeliveryTier(baseAmt);
     const coords = deliveryCoordsForSubmit;
     const distKm = coords ? calcDistKm(STORE.lat, STORE.lng, coords.lat, coords.lng) : null;
-    const maxKm  = tier * 3;
+    const maxKm  = tier * DELIVERY_KM_PER_TIER;
 
     // 如果有座標，驗證距離
     if (distKm !== null && distKm > maxKm) {
@@ -3537,7 +3577,8 @@ async function submitOrder() {
       deliveryKm:       distKm !== null ? Math.round(distKm * 10) / 10 : null,
       storeAddress:     STORE.name,
       storeCoords:      { lat: STORE.lat, lng: STORE.lng },
-      deliveryDays:     tier,
+      deliveryDays:     Math.max(1, tier),   // 到店領貨至少記 1 日備貨，維持 POS 端既有欄位行為
+      pickupOnly:       pickupOnly,          // true = 未滿 1000 元僅能到店領貨
       note:             noteVal,
       items: cart.map(i=>({id:i.id,name:i.name,price:i.price,qty:i.qty})),
       subtotal: baseAmt, total,
@@ -3620,7 +3661,6 @@ function closeSuccess() { closeModal('success-modal'); }
    Toast
 ══════════════════════════════════════════════ */
 let _tt=null;
-let _creditMsgTimer = null;
 let _selectedMsgTool = 'line'; // 預設 LINE
 
 /* 依語言取得預設通訊工具：泰文/中文 → LINE；英文/越南文/印尼文 → Facebook */
@@ -4080,30 +4120,7 @@ function clearGeoStatus() {
 }
 
 function updateDeliveryHintWithDist(distKm) {
-  const total   = getTotal();
-  const tier    = Math.max(1, Math.floor(total / 1000));
-  const maxKm   = tier * 3;
-  const days    = tier;
-  const hintEl  = document.getElementById('delivery-range-hint');
-  if (!hintEl) return;
-  hintEl.style.display = '';
-
-  if (distKm === Number.POSITIVE_INFINITY) {
-    hintEl.innerHTML = `${t('deliveryRule')}<br>
-      <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
-      <b style="color:var(--red)">⚠ ${t('geoTooFar').replace('%r', '')}</b>`;
-    return;
-  }
-
-  const distStr = distKm !== null ? t('geoDist').replace('%d', distKm.toFixed(1)) : '';
-  const canDeliver = distKm === null || distKm <= maxKm;
-  hintEl.innerHTML = `${t('deliveryRule')}<br>
-    <span style="opacity:.8">${t('deliveryRuleNote')}</span><br>
-    <b style="color:${canDeliver?'var(--green)':'var(--red)'}">
-      ${canDeliver
-        ? t('deliveryYours').replace('%t',total).replace('%k',maxKm).replace('%d',days) + distStr
-        : t('geoOutOfRange').replace('%d', distKm?.toFixed(1)).replace('%k', maxKm)}
-    </b>`;
+  renderDeliveryHint(distKm);
 }
 
 /* ── 共用 Geolocation + Nominatim 核心邏輯 ──────────────────────────
