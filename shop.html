@@ -906,6 +906,55 @@ button { cursor:pointer; font-family:var(--th); }
   user-select: none;
   line-height: 1.4;
 }
+/* ── 到店取貨勾選列（購物車側欄 / 手機抽屜共用）── */
+.pickup-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--r-sm);
+  background: var(--surface2);
+  cursor: pointer;
+  transition: border-color .18s, background .18s;
+}
+.pickup-row:hover { border-color: var(--green); }
+.pickup-row.active { border-color: var(--green); background: rgba(45,155,111,.08); }
+.pickup-row.locked { cursor: default; }
+.pickup-cb {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--green);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+.pickup-row.locked .pickup-cb { cursor: default; }
+.pickup-lbl {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  user-select: none;
+  line-height: 1.4;
+}
+.pickup-sub { font-size: 11px; font-weight: 500; color: var(--muted); }
+.pickup-row.locked .pickup-sub { color: var(--accent2); font-weight: 700; }
+/* 確認訂單視窗內的「到店領貨 / 到店取貨」說明 */
+.pickup-notice {
+  display: none;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: #d97706;
+  background: rgba(217,119,6,.08);
+  border: 1px solid rgba(217,119,6,.25);
+}
+.pickup-notice.chosen { color: var(--green); background: rgba(45,155,111,.08); border-color: rgba(45,155,111,.25); }
 .credit-surcharge {
   font-size: 11px;
   font-weight: 700;
@@ -1690,6 +1739,11 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
         </div>
         <div class="cart-items-lbl" id="sb-items-lbl"></div>
       </div>
+      <!-- 到店取貨：勾選後（或未滿 1000 元時自動鎖定）確認訂單不會出現任何送貨地址欄位；文字由 updatePickupCartUI() 以 t() 填入 -->
+      <label class="pickup-row js-pickup-row" style="display:none">
+          <input type="checkbox" class="pickup-cb js-pickup-cb" onchange="onPickupToggle(this.checked)">
+          <span class="pickup-lbl"><span class="js-pickup-text"></span><span class="pickup-sub js-pickup-sub"></span></span>
+        </label>
       <button class="checkout-btn" id="sb-checkout-btn" onclick="openOrderModal()" disabled>
         🎉 สั่งซื้อ
       </button>
@@ -1721,6 +1775,11 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
         <span class="cart-total-label" id="drawer-total-label">ยอดรวม</span>
         <span class="cart-total-amt" id="drawer-total">NT$ 0</span>
       </div>
+      <!-- 到店取貨（與側欄同步） -->
+      <label class="pickup-row js-pickup-row" style="display:none">
+          <input type="checkbox" class="pickup-cb js-pickup-cb" onchange="onPickupToggle(this.checked)">
+          <span class="pickup-lbl"><span class="js-pickup-text"></span><span class="pickup-sub js-pickup-sub"></span></span>
+        </label>
       <button class="checkout-btn" id="drawer-checkout-btn" onclick="closeDrawer();openOrderModal()" disabled>
         🎉 สั่งซื้อ
       </button>
@@ -1759,8 +1818,8 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
                style="margin-top:7px;font-size:13px">
         <div class="field-hint" id="modal-delivery-err" style="color:var(--primary);display:none">กรุณากรอกสถานที่จัดส่ง</div>
         </div>
-        <!-- ⚠️ 未滿 1000 元僅能到店領貨說明；文字由 updatePickupMode() 透過 t('under1000Pickup') 動態填入，請勿硬編碼 -->
-        <div id="under1000-pickup-msg" style="display:none;color:#d97706;font-size:13px;font-weight:600;padding:8px 10px;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-radius:8px;text-align:center"></div>
+        <!-- ⚠️ 未滿 1000 元僅能到店領貨說明；文字由 updatePickupMode() 透過 t('under1000Pickup') / t('pickupChosen') 動態填入，請勿硬編碼 -->
+        <div id="under1000-pickup-msg" class="pickup-notice"></div>
         <div class="field-hint" id="delivery-range-hint" style="margin-top:4px;line-height:1.7;display:none"></div>
       </div>
       <div class="field-group">
@@ -1952,6 +2011,7 @@ function initFirebase() {
 /* ── App State ── */
 let allProducts   = [];
 let cart          = [];
+let _pickupChecked = false;   // 顧客在購物車勾選「到店取貨」（購物車清空時自動重置）
 let activeCat     = 'frozen';  // 預設顯示冷凍食品
 let drawerOpen    = false;
 let memberOpen    = false;
@@ -2304,6 +2364,10 @@ const LANGS = {
     creditLbl:'สมัครเครดิตสำหรับออเดอร์นี้',
     creditSurcharge:'ยอดรวมเพิ่มขึ้น 10%',
     under1000Pickup:'⚠ ออเดอร์ต่ำกว่า NT$1,000 รับสินค้าที่ร้านเท่านั้น',
+    pickupLabel:'รับสินค้าที่ร้าน',
+    pickupHint:'ไม่ต้องกรอกที่อยู่จัดส่ง',
+    pickupLocked:'ต่ำกว่า NT$1,000 รับสินค้าที่ร้านเท่านั้น',
+    pickupChosen:'🏪 รับสินค้าที่ร้าน — ไม่ต้องกรอกที่อยู่จัดส่ง',
     pickupStore:'รับสินค้าที่ร้าน',
     creditMsgToolLabel:'📲 เลือกช่องทางแจ้งการสั่งซื้อ',
     creditMsgLine:'LINE',
@@ -2398,6 +2462,10 @@ const LANGS = {
     creditLbl:'Đăng ký trả chậm cho đơn này',
     creditSurcharge:'Tổng cộng tăng thêm 10%',
     under1000Pickup:'⚠ Đơn hàng dưới NT$1.000 chỉ nhận hàng tại cửa hàng',
+    pickupLabel:'Nhận hàng tại cửa hàng',
+    pickupHint:'Không cần nhập địa chỉ giao hàng',
+    pickupLocked:'Dưới NT$1.000 chỉ nhận hàng tại cửa hàng',
+    pickupChosen:'🏪 Nhận hàng tại cửa hàng — không cần địa chỉ giao hàng',
     pickupStore:'Nhận hàng tại cửa hàng',
     creditMsgToolLabel:'📲 Chọn kênh nhắn tin xác nhận',
     creditMsgLine:'LINE',
@@ -2492,6 +2560,10 @@ const LANGS = {
     creditLbl:'Ajukan pembayaran kredit untuk pesanan ini',
     creditSurcharge:'Total meningkat 10%',
     under1000Pickup:'⚠ Pesanan di bawah NT$1.000 hanya bisa diambil di toko',
+    pickupLabel:'Ambil di toko',
+    pickupHint:'Tidak perlu mengisi alamat pengiriman',
+    pickupLocked:'Di bawah NT$1.000 hanya bisa diambil di toko',
+    pickupChosen:'🏪 Ambil di toko — tidak perlu alamat pengiriman',
     pickupStore:'Ambil di toko',
     creditMsgToolLabel:'📲 Pilih saluran konfirmasi',
     creditMsgLine:'LINE',
@@ -2586,6 +2658,10 @@ const LANGS = {
     creditLbl:'Apply credit payment for this order',
     creditSurcharge:'Total increases by 10%',
     under1000Pickup:'⚠ Orders under NT$1,000 are available for store pickup only',
+    pickupLabel:'Store pickup',
+    pickupHint:'No delivery address needed',
+    pickupLocked:'Under NT$1,000: store pickup only',
+    pickupChosen:'🏪 Store pickup — no delivery address needed',
     pickupStore:'Pickup at store',
     creditMsgToolLabel:'📲 Choose your messaging channel',
     creditMsgLine:'LINE',
@@ -2680,6 +2756,10 @@ const LANGS = {
     creditLbl:'申請本筆帳款賒帳',
     creditSurcharge:'總金額增加 10%',
     under1000Pickup:'⚠ 未滿 NT$1,000 僅能到店領貨',
+    pickupLabel:'到店取貨',
+    pickupHint:'勾選後不需填寫送貨地址',
+    pickupLocked:'未滿 NT$1,000 僅能到店領貨',
+    pickupChosen:'🏪 到店取貨，無需填寫送貨地址',
     pickupStore:'現場取貨',
     creditMsgToolLabel:'📲 選擇傳送確認訊息的工具',
     creditMsgLine:'LINE',
@@ -2826,7 +2906,7 @@ function applyLang() {
 
   // Update delivery range hint if order modal is open
   const hintEl = document.getElementById('delivery-range-hint');
-  if(hintEl && hintEl.style.display !== 'none') {
+  if (document.getElementById('order-modal')?.classList.contains('open')) {
     renderDeliveryHint();
     updatePickupMode();
   }
@@ -3126,11 +3206,11 @@ let _lastCartJson = '';
 function saveCart() {
   try {
     const items = cart.map(i => ({ id: i.id, qty: i.qty }));
-    const json  = JSON.stringify(items);
+    const json  = JSON.stringify({ items, pickup: _pickupChecked });
     if (json === _lastCartJson) return;
     _lastCartJson = json;
     if (!items.length) localStorage.removeItem(CART_KEY);
-    else localStorage.setItem(CART_KEY, JSON.stringify({ t: Date.now(), items }));
+    else localStorage.setItem(CART_KEY, JSON.stringify({ t: Date.now(), items, pickup: _pickupChecked }));
   } catch(e) {}
 }
 function restoreCart() {
@@ -3146,6 +3226,7 @@ function restoreCart() {
       const q = Math.floor(Number(it.qty));
       return (p && q > 0) ? { id:p.id, name:p.name, price:p.price, category:p.category, qty:q } : null;
     }).filter(Boolean);
+    _pickupChecked = !!raw.pickup;   // 一併還原「到店取貨」勾選
     _lastCartJson = '';   // 讓下一次 saveCart() 把「已剔除下架商品」的結果寫回去
   } catch(e) { cart = []; }
 }
@@ -3190,12 +3271,36 @@ function getDeliveryTier(amount) {
   return Math.min(DELIVERY_MAX_TIER, Math.floor(amount / DELIVERY_MIN_AMOUNT)); // 0 = 僅能到店領貨
 }
 function isPickupOnly(amount) { return amount < DELIVERY_MIN_AMOUNT; }
+/* 到店取貨模式 = 未滿 1000 元（強制）或 顧客在購物車勾選「到店取貨」（不論金額）
+   ⚠️ 此模式下：不顯示任何送貨地址欄位、不要求地址、不要求定位、不驗證距離 */
+function isPickupMode(amount) { return isPickupOnly(amount) || _pickupChecked; }
+
+/* 購物車「到店取貨」勾選列（桌機側欄 + 手機抽屜共用同一個狀態）
+   · 未滿 1000 元：自動勾選並鎖定（只能到店領貨）
+   · 滿 1000 元：由顧客自行勾選 / 取消
+   · 購物車為空：隱藏 */
+function onPickupToggle(v) { _pickupChecked = !!v; updateAllCartUI(); }
+function updatePickupCartUI() {
+  const has     = cart.length > 0;
+  const forced  = has && isPickupOnly(getTotal());
+  const checked = has && (forced || _pickupChecked);
+  document.querySelectorAll('.js-pickup-row').forEach(r => {
+    r.style.display = has ? '' : 'none';
+    r.classList.toggle('active', checked);
+    r.classList.toggle('locked', forced);
+  });
+  document.querySelectorAll('.js-pickup-cb').forEach(c => { c.checked = checked; c.disabled = forced; });
+  document.querySelectorAll('.js-pickup-text').forEach(e => { e.textContent = t('pickupLabel'); });
+  document.querySelectorAll('.js-pickup-sub').forEach(e => { e.textContent = forced ? t('pickupLocked') : t('pickupHint'); });
+}
 
 /* 配送範圍說明（規則 + 本單可送距離 / 備貨日）
    distKm：null = 尚未定位；Infinity = 距離過遠；數字 = 實際距離 */
 function renderDeliveryHint(distKm = null) {
   const hintEl = document.getElementById('delivery-range-hint');
   if (!hintEl) return;
+  // 顧客勾選「到店取貨」→ 與配送有關的說明一律不顯示
+  if (_pickupChecked) { hintEl.style.display = 'none'; return; }
   hintEl.style.display = '';
   const total = getTotal();
   const tier  = getDeliveryTier(total);
@@ -3224,19 +3329,25 @@ function renderDeliveryHint(distKm = null) {
     </b>`;
 }
 
-/* 未滿 1000 元 → 到店領貨模式：隱藏送貨地點輸入區、顯示「僅能到店領貨」說明
-   （不論有無勾選賒帳，只看商品小計）。回傳是否為到店領貨。 */
+/* 到店取貨模式（未滿 1000 元強制，或顧客勾選）：隱藏送貨地點輸入區、顯示說明。回傳是否為到店取貨。 */
 function updatePickupMode() {
-  const pickup = isPickupOnly(getTotal());
+  const forced = isPickupOnly(getTotal());
+  const pickup = forced || _pickupChecked;
   const inputs = document.getElementById('delivery-inputs');
   if (inputs) inputs.style.display = pickup ? 'none' : '';
   const el = document.getElementById('under1000-pickup-msg');
   if (el) {
-    if (pickup) { el.textContent = t('under1000Pickup'); el.style.display = ''; }
-    else        { el.style.display = 'none'; }
+    if (pickup) {
+      el.textContent = forced ? t('under1000Pickup') : t('pickupChosen');
+      el.classList.toggle('chosen', !forced);
+      el.style.display = 'block';
+    } else {
+      el.style.display = 'none';
+    }
   }
   return pickup;
 }
+
 function onCreditCheckChange() {
   const baseTotal = getTotal();
   const checked   = isCreditChecked();
@@ -3279,6 +3390,7 @@ function buildCartHTML() {
 
 function updateAllCartUI() {
   const total=getTotal(), tq=getTotalQty(), has=cart.length>0;
+  if (!has) _pickupChecked = false;   // 購物車清空（含下單成功）→ 到店取貨勾選一併重置
   const emptyHTML = `<div class="cart-empty"><div class="cart-empty-icon">🛒</div><div class="cart-empty-text">${t('cartEmpty').replace(/\n/g,'<br>')}</div></div>`;
   const cartH = has ? buildCartHTML() : emptyHTML;
   // Header
@@ -3305,6 +3417,7 @@ function updateAllCartUI() {
   if(dc) dc.disabled=!has;
   // Mobile bar
   const mb=document.getElementById('mcb-inner');
+  updatePickupCartUI();
   if(mb) mb.innerHTML = has
     ? `<div class="mcb-icon">🛒</div>
        <div class="mcb-info"><div class="mcb-count">${t('cartItems')}: ${tq}</div><div class="mcb-amt">NT$ ${total}</div></div>
@@ -3446,7 +3559,9 @@ function buildLineOrderText(orderObj) {
   if (orderObj.customerName && !orderObj.isGuest) lines.push(`👤 姓名：${orderObj.customerName}`);
   if (orderObj.customerPhone) lines.push(`📱 電話：${orderObj.customerPhone}`);
   if (orderObj.pickupOnly) {
-    lines.push(`🏪 取貨方式：到店領貨（未滿 NT$${DELIVERY_MIN_AMOUNT.toLocaleString('en-US')}）`);
+    lines.push(orderObj.pickupChosen
+      ? '🏪 取貨方式：到店取貨（顧客勾選）'
+      : `🏪 取貨方式：到店領貨（未滿 NT$${DELIVERY_MIN_AMOUNT.toLocaleString('en-US')}）`);
   } else {
     lines.push(`📍 地址：${orderObj.deliveryLocation}`);
   }
@@ -3506,8 +3621,8 @@ async function submitOrder() {
   // 送貨地點驗證：優先使用 GPS/地圖座標；若無座標，允許手動填寫的文字地址作降級
   // 賒帳勾選時視為現場取貨，豁免地址必填限制
   const creditApplied = isCreditChecked();
-  // 未滿 1000 元僅能到店領貨：不需要送貨地址，也不採用先前可能殘留的座標 / 手動地址
-  const pickupOnly      = isPickupOnly(getTotal());
+  // 到店取貨（未滿 1000 元強制，或顧客勾選）：不需要送貨地址，也不採用先前可能殘留的座標 / 手動地址
+  const pickupOnly      = isPickupMode(getTotal());   // 未滿 1000 元，或顧客勾選「到店取貨」
   const noAddressNeeded = creditApplied || pickupOnly;
   const deliveryCoordsForSubmit = pickupOnly ? null : getDeliveryCoords();
   const manualAddressVal = pickupOnly ? '' : (document.getElementById('manual-address-input')?.value || '').trim();
@@ -3578,7 +3693,8 @@ async function submitOrder() {
       storeAddress:     STORE.name,
       storeCoords:      { lat: STORE.lat, lng: STORE.lng },
       deliveryDays:     Math.max(1, tier),   // 到店領貨至少記 1 日備貨，維持 POS 端既有欄位行為
-      pickupOnly:       pickupOnly,          // true = 未滿 1000 元僅能到店領貨
+      pickupOnly:       pickupOnly,          // true = 到店取貨（未滿 1000 元，或顧客勾選）
+      pickupChosen:     _pickupChecked && !isPickupOnly(baseAmt), // true = 滿 1000 元但顧客自行勾選到店取貨
       note:             noteVal,
       items: cart.map(i=>({id:i.id,name:i.name,price:i.price,qty:i.qty})),
       subtotal: baseAmt, total,
@@ -4445,7 +4561,7 @@ Object.assign(window, {
   getCurrentLocation, geocodeAddress, openMapPicker, closeMapPicker, confirmMapPin,
   autoDetectLocation, enableManualDeliveryInput,
   lsExpand, lsCollapse, updatePageTitle,
-  selectMsgTool, onCreditCheckChange,
+  selectMsgTool, onCreditCheckChange, onPickupToggle,
 });
 
 document.addEventListener('DOMContentLoaded', init);
